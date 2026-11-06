@@ -13,6 +13,6 @@ An extruded K with cream faces on a tomato-red (`#D94836`) badge, inspired by th
 
 The native toolbar uses generated egui vector geometry, so it stays sharp at any display scale without a new runtime dependency. The desktop executable sets its window icon; the ICO and ICNS assets are also available for future installers/application bundles.
 
-GNOME on Wayland resolves the icon from the `io.github.Ketchup3D.Ketchup` application ID, its matching desktop entry, and the installed icon theme assets. Run `python3 scripts/install_linux_desktop.py` after compiling to install the launcher and icons for your user. The desktop entry's `StartupWMClass=ketchup-app` also associates X11 windows with the launcher.
+GNOME on Wayland resolves the icon from the `io.github.Ketchup3D.Ketchup` application ID, its matching desktop entry, and the installed icon theme assets. Run `python3 scripts/install_linux_desktop.py` after compiling to install the launcher and icons for your user. The desktop entry's `StartupWMClass=sketcraft` also associates X11 windows with the launcher.
 
 To change the mark, edit `scripts/generate_branding.py`, then run `python3 scripts/generate_branding.py` from the repository root. This regenerates the SVG, PNG, ICO, ICNS, and Rust geometry together. It requires Python 3, Pillow, and `rustfmt`. Update the UI accent, HTML theme color, and manifest theme color if changing the brand red.

@@ -46,15 +46,15 @@ jobs:
           - platform: windows-x64
             os: windows-2022
             target: x86_64-pc-windows-msvc
-            executable: ketchup-app.exe
+            executable: sketcraft.exe
           - platform: macos-arm64
             os: macos-15
             target: aarch64-apple-darwin
-            executable: ketchup-app
+            executable: sketcraft
           - platform: linux-x64
             os: ubuntu-22.04
             target: x86_64-unknown-linux-gnu
-            executable: ketchup-app
+            executable: sketcraft
 
     defaults:
       run:
@@ -121,19 +121,19 @@ jobs:
           key: desktop-${{ matrix.target }}
 
       - name: Build release executable
-        run: cargo build -p ketchup-app --bin ketchup-app --release --locked --target "${{ matrix.target }}"
+        run: cargo build -p sketcraft --bin sketcraft --release --locked --target "${{ matrix.target }}"
 
       - name: Test update and restart behavior
         run: |
-          cargo test -p ketchup-app --lib --release --locked --target "${{ matrix.target }}" updates::
+          cargo test -p sketcraft-ui --lib --release --locked --target "${{ matrix.target }}" updates::
 
       - name: Stage distribution
         run: |
           mkdir -p dist package/licenses/skp
           cp "target/${{ matrix.target }}/release/${{ matrix.executable }}" package/
           cp LICENSE README.md package/
-          cp crates/ketchup-app/vendor/skp/LICENSE* package/licenses/skp/
-          cp crates/ketchup-app/vendor/skp/native/miniz/LICENSE package/licenses/skp/LICENSE-miniz
+          cp crates/sketcraft-ui/vendor/skp/LICENSE* package/licenses/skp/
+          cp crates/sketcraft-ui/vendor/skp/native/miniz/LICENSE package/licenses/skp/LICENSE-miniz
 
       - name: Create installer and update feed
         run: python scripts/desktop_release.py package --tag "$TAG_NAME" --platform "${{ matrix.platform }}"

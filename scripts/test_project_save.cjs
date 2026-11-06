@@ -5,7 +5,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const save = new Function('window', 'name', 'contents', fs.readFileSync(
-    path.join(__dirname, '../crates/ketchup-app/src/project_save.js'), 'utf8',
+    path.join(__dirname, '../crates/sketcraft-ui/src/project_save.js'), 'utf8',
 ));
 
 test('save prompts immediately and reports the chosen name only after committing the file', async () => {

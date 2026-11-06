@@ -32,7 +32,7 @@ For instructions on using KetchUp, see the [user documentation](docs/README.md).
 ## Run on desktop
 
 ```sh
-cargo run -p ketchup-app
+cargo run -p sketcraft
 ```
 
 On Linux, register the application launcher and icons once after compiling:
@@ -41,7 +41,7 @@ On Linux, register the application launcher and icons once after compiling:
 python3 scripts/install_linux_desktop.py
 ```
 
-This installs into your user data directory (`$XDG_DATA_HOME`, or `~/.local/share`) without root access. GNOME on Wayland uses the application's ID and matching desktop entry to find its icon. Restart KetchUp after installing. The launcher points to `target/debug/ketchup-app`, so later development compilations update the same executable. For a release installation, pass its path: `python3 scripts/install_linux_desktop.py target/release/ketchup-app`. Keep that executable in place, or rerun the installer with its new path if you move it.
+This installs into your user data directory (`$XDG_DATA_HOME`, or `~/.local/share`) without root access. GNOME on Wayland uses the application's ID and matching desktop entry to find its icon. Restart KetchUp after installing. The launcher points to `target/debug/sketcraft`, so later development compilations update the same executable. For a release installation, pass its path: `python3 scripts/install_linux_desktop.py target/release/sketcraft`. Keep that executable in place, or rerun the installer with its new path if you move it.
 
 ## Run in a browser
 
@@ -67,10 +67,10 @@ Development builds use light optimization for application code and stronger opti
 Desktop, on the OS you want to target:
 
 ```sh
-cargo build -p ketchup-app --release --locked
+cargo build -p sketcraft --release --locked
 ```
 
-The executable is `target/release/ketchup-app` (`ketchup-app.exe` on Windows). These commands produce executables, not installers or signed application bundles. Native builds should run on the corresponding OS; this project does not configure cross-linkers or signing identities.
+The executable is `target/release/sketcraft` (`sketcraft.exe` on Windows). These commands produce executables, not installers or signed application bundles. Native builds should run on the corresponding OS; this project does not configure cross-linkers or signing identities.
 
 ### Automated desktop builds
 
@@ -216,7 +216,7 @@ python3 -B scripts/capture_readme_desktop.py
 
 On Linux, this requires X11 or XWayland, ImageMagick's `import` command, and
 Python Pillow. The script selects the newest existing executable from the native
-release and debug output directories; `--binary /path/to/ketchup-app` selects one
+release and debug output directories; `--binary /path/to/sketcraft` selects one
 explicitly. It launches the desktop app in an isolated temporary profile, loads
 [`assets/examples/Example.ketchup`](assets/examples/Example.ketchup) with its saved
 camera and display settings, captures the settled window at 1920 × 1080, and
@@ -240,7 +240,7 @@ node --test scripts/test_web_shortcuts.cjs
 An optional offscreen GPU test renders the actual UI and custom viewport to PNGs without opening a window:
 
 ```sh
-cargo test -p ketchup-app gpu_renders_empty_and_modeled_workspace --locked -- --ignored --nocapture
+cargo test -p sketcraft-ui gpu_renders_empty_and_modeled_workspace --locked -- --ignored --nocapture
 ```
 
 Snapshots appear in `target/qa/`. This test requires a working native GPU adapter. Normal tests cover document validation, geometry, inference, camera math, selection, undo/redo, and synthetic keyboard/pointer interactions through egui.
@@ -250,7 +250,7 @@ Run the repeatable CPU interaction benchmarks explicitly (10/100-face drawing,
 and 256/1,024 shadow casters over a large receiving face):
 
 ```sh
-cargo test -p ketchup-app --locked --config 'profile.test.package.ketchup-app.opt-level=2' --config 'profile.test.package.ketchup-core.opt-level=2' workload_benchmark -- --ignored --nocapture --test-threads=1
+cargo test -p sketcraft-ui --locked --config 'profile.test.package.sketcraft-ui.opt-level=2' --config 'profile.test.package.sketcraft-core.opt-level=2' workload_benchmark -- --ignored --nocapture --test-threads=1
 ```
 
 These settings optimize application geometry and rendering code while retaining
@@ -279,8 +279,8 @@ Verified during implementation: native Linux and browser WASM Cargo checks; core
 
 ## Layout
 
-- `crates/ketchup-core`: double-precision document geometry, planar face discovery/triangulation, inference, picking, camera, tool definitions, and bounded history. It has no GUI or GPU dependencies.
-- `crates/ketchup-app`: egui workspace, gesture routing, local persistence, native/browser launchers, and the wgpu/WGSL edge renderer. Model coordinates remain independent of GPU resources.
+- `crates/sketcraft-core`: double-precision document geometry, planar face discovery/triangulation, inference, picking, camera, tool definitions, and bounded history. It has no GUI or GPU dependencies.
+- `crates/sketcraft-ui`: egui workspace, gesture routing, local persistence, native/browser launchers, and the wgpu/WGSL edge renderer. Model coordinates remain independent of GPU resources.
 - `index.html` and `Trunk.toml`: static browser host and WASM development configuration.
 
 The viewport uses depth-tested filled triangles and antialiased triangle strips for consistent edge widths, CPU projection/clipping, and the same shader and editor behavior on every target. Rendering is event-driven rather than a continuous idle loop.
@@ -292,8 +292,8 @@ repository at `/home/dcoulombe/dev/ketchup-server`. See its `README.md` for OAut
 configuration and startup instructions.
 
 The account server is deployment configuration, with no address field in the app.
-Launch the desktop app with `ketchup-app --server-url https://accounts.example.com`
-or `cargo run -p ketchup-app -- --server-url http://localhost:8081`.
+Launch the desktop app with `sketcraft --server-url https://accounts.example.com`
+or `cargo run -p sketcraft -- --server-url http://localhost:8081`.
 Both `--server-url URL` and `--server-url=URL` are supported.
 
 Alternatively, copy `.env.example` to `.env` in the workspace root and set
@@ -302,7 +302,7 @@ Trunk; for native-only development, use port 8081. Builds embed this value for d
 causes Cargo to refresh it on the next build. You can also supply it directly:
 
 ```sh
-KETCHUP_SERVER_URL=https://accounts.example.com cargo build -p ketchup-app
+KETCHUP_SERVER_URL=https://accounts.example.com cargo build -p sketcraft
 KETCHUP_SERVER_URL=https://accounts.example.com trunk build --release
 ```
 
