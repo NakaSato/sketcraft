@@ -1,5 +1,5 @@
 use super::*;
-use ketchup_core::DVec3;
+use sketcraft_core::DVec3;
 
 #[cfg(not(target_arch = "wasm32"))]
 #[test]

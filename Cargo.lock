@@ -1707,6 +1707,9 @@ name = "glam"
 version = "0.30.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "19fc433e8437a212d1b6f1e68c7824af3aed907da60afa994e7f542d18d12aa9"
+dependencies = [
+ "serde_core",
+]
 
 [[package]]
 name = "glifo"
@@ -4202,6 +4205,7 @@ dependencies = [
 name = "sketcraft-core"
 version = "0.40.0-rc.2"
 dependencies = [
+ "cc",
  "earcutr",
  "glam",
  "serde",
@@ -4319,6 +4323,7 @@ dependencies = [
  "serde",
  "serde_json",
  "sha2 0.10.9",
+ "sketcraft-core",
  "sketcraft-doc",
  "sketcraft-geom",
  "sketcraft-kernel",

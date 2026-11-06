@@ -973,6 +973,7 @@ fn recent_kind(app: &SolveApp, path: &str) -> String {
         "glb" | "gltf" => "glTF",
         "fcstd" => "FreeCAD",
         "3dm" => "Rhino",
+        "skp" => "SketchUp",
         other if !other.is_empty() => return other.to_ascii_uppercase(),
         _ => return app.tr("home.design_workspace").to_string(),
     };
@@ -1089,7 +1090,7 @@ fn dispatch(app: &mut SolveApp, ctx: &egui::Context, action: FileAction) {
             }
         }),
         FileAction::Import => {
-            app.pick_open_for(&["step", "stp", "iges", "igs", "stl", "obj", "3mf", "gltf", "glb", "ply", "xyz", "pts"], |app, path| {
+            app.pick_open_for(&["step", "stp", "iges", "igs", "stl", "obj", "3mf", "gltf", "glb", "ply", "xyz", "pts", "skp"], |app, path| {
                 if let Some(path) = path {
                     app.open_path_async(&path);
                 }

@@ -49,6 +49,8 @@ mod gltf_in;
 pub use gltf_in::{GltfImport, Loader, MAX_GLTF_BYTES, MeshPlan, PlanPlace, glb_container, is_gltf_path, read_gltf};
 mod obj;
 pub use obj::read_obj;
+mod skp_in;
+pub use skp_in::read_skp;
 pub use threemf::{
     MAX_3MF_BYTES, MeshObject, model_xml, model_xml_parts, model_xml_with, read_3mf, weld, write_3mf, write_3mf_parts, write_3mf_with,
 };
@@ -273,12 +275,12 @@ pub fn step_import_feature_named(bytes: &[u8], file: &str, names: StepNames) -> 
     })
 }
 
-/// Is this a mesh file we import (`.3mf`, `.stl`, `.obj`, `.glb`, `.gltf`, any case)?
+/// Is this a mesh file we import (`.3mf`, `.stl`, `.obj`, `.glb`, `.gltf`, `.skp`, any case)?
 pub fn is_mesh_path(path: &str) -> bool {
     std::path::Path::new(path)
         .extension()
         .and_then(|e| e.to_str())
-        .is_some_and(|e| ["3mf", "stl", "obj", "glb", "gltf"].iter().any(|x| e.eq_ignore_ascii_case(x)))
+        .is_some_and(|e| ["3mf", "stl", "obj", "glb", "gltf", "skp"].iter().any(|x| e.eq_ignore_ascii_case(x)))
 }
 
 /// A 3MF, STL, OBJ or glTF file read as a mesh import feature.
@@ -328,6 +330,9 @@ pub fn mesh_import_feature_in(bytes: &[u8], file: &str, mm_per_unit: f64) -> Res
     let ext = path.extension().and_then(|e| e.to_str()).unwrap_or("").to_ascii_lowercase();
     let (mut objects, warnings) = if ext == "obj" {
         obj::read_obj(bytes, &stem)?
+    } else if ext == "skp" {
+        own_units("SketchUp")?;
+        skp_in::read_skp(bytes, &stem)?
     } else if ext == "ply" {
         ply::read_ply_mesh(bytes, &stem)?
     } else if ext == "stl" {

@@ -1380,7 +1380,10 @@ fn gpu_test_state() -> eframe::egui_wgpu::RenderState {
         device,
         queue,
         target_format: format,
+        msaa_samples: 1,
+        msaa_supported: vec![1],
         renderer: Arc::new(egui::epaint::mutex::RwLock::new(renderer)),
+        device_lost: Default::default(),
     }
 }
 

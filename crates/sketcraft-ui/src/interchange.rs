@@ -1,5 +1,5 @@
 //! Geometry interchange with a native SKP reader on desktop and a browser worker.
-use ketchup_core::Model;
+use sketcraft_core::Model;
 
 // Published JavaScript artifacts are vendored to avoid an SDK, subprocess,
 // network request, or JavaScript build step in either application.

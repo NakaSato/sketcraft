@@ -797,6 +797,10 @@ fn file_menu(app: &mut SolveApp, ctx: &egui::Context) {
                     FileAction::Command("file.insert_mesh").run(app);
                     close = true;
                 }
+                if item_if(ui, "Insert SketchUp (.skp)…", "", "import", shown) {
+                    FileAction::Command("file.insert_mesh").run(app);
+                    close = true;
+                }
                 if item_if(ui, &format!("{}…", app.tr_label("Insert Point Cloud")), "", "import", shown) {
                     app.start("pointcloud.insert");
                     close = true;
@@ -3750,8 +3754,21 @@ pub fn shortcuts(app: &mut SolveApp, ctx: &egui::Context) {
                 }
             }
             Key::F6 => app.animate_view("fit"),
+            Key::Space if !mods.shift && !mods.alt && !mods.command => {
+                if app.tool.is_some() {
+                    crate::tools::finish(app);
+                } else if app.dialog.is_some() {
+                    crate::dialogs::cancel(app);
+                }
+            }
             Key::Backspace if crate::tools::undo_spline_point(app) => {}
-            Key::Delete | Key::Backspace => {
+            Key::P if !mods.shift && !mods.alt && !mods.command && app.session.active_sketch.is_none() => {
+                app.start("solid.extrude");
+            }
+            Key::T if !mods.shift && !mods.alt && !mods.command && app.session.active_sketch.is_none() => {
+                app.start("inspect.measure");
+            }
+            Key::Delete | Key::Backspace | Key::E => {
                 if !crate::timeline_left::delete_selected_folders(app) {
                     crate::viewport::delete_selection(app);
                 }
