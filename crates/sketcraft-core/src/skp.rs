@@ -1,12 +1,12 @@
 //! SketchUp (.skp) import and interchange.
 use crate::{Model};
 
-pub const MAX_SKP_BYTES: usize = 64 * 1024 * 1024;
+pub const MAX_SKP_BYTES: usize = 512 * 1024 * 1024;
 
 #[cfg(not(target_arch = "wasm32"))]
 pub fn import_skp(bytes: &[u8], name: &str) -> Result<Model, String> {
     if bytes.len() > MAX_SKP_BYTES {
-        return Err("SketchUp import is limited to 64 MiB per file".into());
+        return Err("SketchUp import is limited to 512 MiB per file".into());
     }
     let json = parse_skp(bytes).map_err(|e| format!("Could not read SketchUp file: {e}"))?;
     decode_model(&json, name)
@@ -32,13 +32,17 @@ fn parse_skp(bytes: &[u8]) -> Result<String, String> {
         fn ketchup_skp_free(value: *mut c_char);
     }
     let mut success = 0;
+    // SAFETY: bytes.as_ptr() is valid for bytes.len() reads, and ketchup_skp_parse
+    // returns a newly allocated null-terminated C string on heap or NULL on OOM.
     let value = unsafe { ketchup_skp_parse(bytes.as_ptr(), bytes.len(), &mut success) };
     if value.is_null() {
         return Err("Not enough memory to read this SketchUp file".into());
     }
+    // SAFETY: value is guaranteed non-null, points to valid null-terminated C string.
     let text = unsafe { CStr::from_ptr(value) }
         .to_string_lossy()
         .into_owned();
+    // SAFETY: value was allocated by ketchup_skp_parse and is freed by matching ketchup_skp_free.
     unsafe {
         ketchup_skp_free(value);
     }
@@ -49,7 +53,6 @@ fn parse_skp(bytes: &[u8]) -> Result<String, String> {
 /// faces keeps holes intact even in readers without polygon-hole support.
 pub fn export_obj(model: &Model) -> Result<String, String> {
     use std::{collections::BTreeMap, fmt::Write};
-    let mut out = String::from("# SketCraft OBJ export\n# Units: metres; Z up\n");
     let visible_vertices: std::collections::BTreeSet<_> = model
         .edges
         .values()
@@ -63,6 +66,10 @@ pub fn export_obj(model: &Model) -> Result<String, String> {
                 .flat_map(|f| f.vertices.iter().chain(f.holes.iter().flatten()).copied()),
         )
         .collect();
+    // Pre-allocate buffer based on geometry count to prevent unbounded reallocations on large models.
+    let estimated_bytes = visible_vertices.len() * 32 + model.faces.len() * 64 + 64;
+    let mut out = String::with_capacity(estimated_bytes);
+    out.push_str("# SketCraft OBJ export\n# Units: metres; Z up\n");
     let mut indices = BTreeMap::new();
     let mut positions = BTreeMap::new();
     for vertex in model

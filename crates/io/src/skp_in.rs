@@ -18,7 +18,7 @@ pub fn read_skp(bytes: &[u8], default_name: &str) -> Result<(Vec<MeshObject>, Ve
     }
 
     // Map each face to its named parent group/component, if any.
-    let mut face_group: HashMap<u64, String> = HashMap::new();
+    let mut face_group: HashMap<u64, &str> = HashMap::with_capacity(model.faces.len());
     let is_root_container = |name: &str| name == "SketchUp import" || name == default_name;
     for obj in model.objects.values() {
         if is_root_container(&obj.name) && model.objects.len() > 1 {
@@ -26,18 +26,18 @@ pub fn read_skp(bytes: &[u8], default_name: &str) -> Result<(Vec<MeshObject>, Ve
         }
         for &ent in &obj.entities {
             if model.faces.contains_key(&ent) {
-                face_group.entry(ent).or_insert_with(|| obj.name.clone());
+                face_group.entry(ent).or_insert(&obj.name);
             }
         }
     }
 
     // Group faces by body name.
-    let mut grouped_faces: BTreeMap<String, Vec<&sketcraft_core::Face>> = BTreeMap::new();
+    let mut grouped_faces: BTreeMap<&str, Vec<&sketcraft_core::Face>> = BTreeMap::new();
     for (id, face) in &model.faces {
         if model.is_hidden(*id) {
             continue;
         }
-        let group_name = face_group.get(id).cloned().unwrap_or_else(|| default_name.to_string());
+        let group_name = face_group.get(id).copied().unwrap_or(default_name);
         grouped_faces.entry(group_name).or_default().push(face);
     }
 
@@ -48,9 +48,10 @@ pub fn read_skp(bytes: &[u8], default_name: &str) -> Result<(Vec<MeshObject>, Ve
     let mut objects = Vec::new();
 
     for (name, faces) in grouped_faces {
-        let mut raw_positions: Vec<Vec3> = Vec::new();
-        let mut raw_triangles: Vec<[u32; 3]> = Vec::new();
-        let mut face_colors: Vec<[f32; 3]> = Vec::new();
+        // Pre-allocate capacity based on face count to avoid repeated reallocations on large models.
+        let mut raw_positions: Vec<Vec3> = Vec::with_capacity(faces.len() * 3);
+        let mut raw_triangles: Vec<[u32; 3]> = Vec::with_capacity(faces.len());
+        let mut face_colors: Vec<[f32; 3]> = Vec::with_capacity(faces.len());
 
         for face in faces {
             let tris = model.face_triangles(face);
@@ -99,7 +100,7 @@ pub fn read_skp(bytes: &[u8], default_name: &str) -> Result<(Vec<MeshObject>, Ve
         };
 
         objects.push(MeshObject {
-            name,
+            name: name.to_string(),
             positions,
             triangles,
             color,

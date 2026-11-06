@@ -138,8 +138,8 @@ pub fn weld(positions: &[Vec3], triangles: &[[u32; 3]], eps: f64) -> (Vec<Vec3>,
 pub fn weld_tagged(positions: &[Vec3], triangles: &[[u32; 3]], tags: &[u32], eps: f64) -> (Vec<Vec3>, Vec<[u32; 3]>, Vec<u32>) {
     // Merge on a grid of cell `eps` (a vertex joins one already in its own or a neighbour cell).
     let cell = |p: Vec3| [(p.x / eps).round() as i64, (p.y / eps).round() as i64, (p.z / eps).round() as i64];
-    let mut grid: HashMap<[i64; 3], Vec<u32>> = HashMap::new();
-    let mut verts: Vec<Vec3> = Vec::new();
+    let mut grid: HashMap<[i64; 3], Vec<u32>> = HashMap::with_capacity(positions.len() / 3);
+    let mut verts: Vec<Vec3> = Vec::with_capacity(positions.len());
     let mut remap = Vec::with_capacity(positions.len());
     for p in positions {
         let c = cell(*p);

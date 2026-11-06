@@ -4242,17 +4242,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "sketcraft-dynamics"
-version = "0.40.0-rc.2"
-dependencies = [
- "serde",
- "serde_json",
- "sketcraft-geom",
- "solidcore-record",
- "thiserror 2.0.21",
-]
-
-[[package]]
 name = "sketcraft-engine"
 version = "0.40.0-rc.2"
 dependencies = [

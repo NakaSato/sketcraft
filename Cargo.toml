@@ -23,7 +23,6 @@ sketcraft-kernel = { path = "crates/kernel" }
 sketcraft-smlib = { path = "crates/smlib" }
 sketcraft-step = { path = "crates/step" }
 sketcraft-render = { path = "crates/render" }
-sketcraft-dynamics = { path = "crates/dynamics" }
 sketcraft-gpu = { path = "crates/gpu" }
 sketcraft-doc = { path = "crates/doc" }
 sketcraft-io = { path = "crates/io" }

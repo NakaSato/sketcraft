@@ -20,6 +20,7 @@ pub mod surface_treatment;
 pub mod tags;
 pub mod units;
 pub mod skp;
+pub mod canopy;
 
 pub use annotations::TextAnnotation;
 pub use camera::{Camera, CameraView, Projection, Ray, StandardView};
