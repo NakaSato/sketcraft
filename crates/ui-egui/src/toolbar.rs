@@ -3521,6 +3521,21 @@ pub(crate) fn cancel_unfinished(app: &mut SolveApp) -> bool {
     true
 }
 
+fn ensure_active_sketch(app: &mut SolveApp) {
+    if app.session.active_sketch.is_some() {
+        return;
+    }
+    let face_pt = app.session.selection.iter().find_map(|s| match s {
+        sketcraft_engine::Sel::Face { point, .. } => Some(*point),
+        _ => None,
+    });
+    if let Some(pt) = face_pt {
+        let _ = app.run("sketch.create", json!({ "plane": { "face": [pt.x, pt.y, pt.z] } }));
+    } else {
+        let _ = app.run("sketch.create", json!({ "plane": "XY" }));
+    }
+}
+
 /// Global keyboard shortcuts (when no text field has focus).
 pub fn shortcuts(app: &mut SolveApp, ctx: &egui::Context) {
     crate::viewport_status::reconcile(app, ctx);
@@ -3737,6 +3752,18 @@ pub fn shortcuts(app: &mut SolveApp, ctx: &egui::Context) {
                 // A single Esc with nothing left to cancel keeps the sketch open (#1804); a quick
                 // second press finishes it (above).
             }
+            Key::S if !mods.shift && !mods.alt && !mods.command && app.session.active_sketch.is_none() => {
+                let bodies: Vec<String> = app.session.selection.iter().filter_map(|s| match s {
+                    sketcraft_engine::Sel::Body { name } => Some(name.clone()),
+                    sketcraft_engine::Sel::Face { body, .. } => Some(body.clone()),
+                    _ => None,
+                }).collect();
+                if !bodies.is_empty() {
+                    app.start("solid.scale");
+                } else {
+                    app.start("ui.palette");
+                }
+            }
             Key::S if !mods.shift && !mods.alt => {
                 app.start("ui.palette");
             }
@@ -3758,9 +3785,33 @@ pub fn shortcuts(app: &mut SolveApp, ctx: &egui::Context) {
                     crate::tools::finish(app);
                 } else if app.dialog.is_some() {
                     crate::dialogs::cancel(app);
+                } else {
+                    let _ = app.run("select.clear", json!({}));
                 }
             }
             Key::Backspace if crate::tools::undo_spline_point(app) => {}
+            Key::L if !mods.shift && !mods.alt && !mods.command => {
+                ensure_active_sketch(app);
+                app.start("sketch.line");
+            }
+            Key::R if !mods.shift && !mods.alt && !mods.command => {
+                ensure_active_sketch(app);
+                app.start("sketch.rectangle");
+            }
+            Key::C if !mods.shift && !mods.alt && !mods.command => {
+                ensure_active_sketch(app);
+                app.start("sketch.circle");
+            }
+            Key::M if !mods.shift && !mods.alt && !mods.command && app.session.active_sketch.is_none() => {
+                app.start("occurrence.move");
+            }
+            Key::D if !mods.shift && !mods.alt && !mods.command => {
+                if app.session.active_sketch.is_some() {
+                    app.start("sketch.dimension");
+                } else {
+                    app.start("inspect.measure");
+                }
+            }
             Key::P if !mods.shift && !mods.alt && !mods.command => {
                 app.start("solid.press_pull");
             }
