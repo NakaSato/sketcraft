@@ -470,7 +470,7 @@ pub fn remote(path: &str) -> Option<Remote> {
 }
 
 /// Which network hosts the paths a design names may lead to. Empty by default: a design that
-/// names `\\host\share\part.solidcraft` reaches nothing on the network until the user allows that
+/// names `\\host\share\part.sketcraft` reaches nothing on the network until the user allows that
 /// host, since on Windows merely asking whether the file exists connects to the host and sends
 /// it the user's sign-in.
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
@@ -651,7 +651,7 @@ pub fn long_names(path: &std::path::Path) -> std::path::PathBuf {
 /// in memory, neither stored nor downloaded (#7192).
 pub const BROWSER_TEMP: &str = "/tmp";
 
-/// The temporary folder spelled with long names ([`long_names`]), for the folders SolidCraft
+/// The temporary folder spelled with long names ([`long_names`]), for the folders SketCraft
 /// makes in it; [`BROWSER_TEMP`] in the browser.
 pub fn temp_dir() -> std::path::PathBuf {
     if cfg!(target_arch = "wasm32") {
@@ -1018,8 +1018,8 @@ mod tests {
         // Named on purpose, a folder reaches its hidden files too.
         assert!(PathScope::new([proj.clone()]).check(&s(proj.join(".env"))).is_ok());
         // A design saved at `/` or in a missing folder adds nothing.
-        assert!(PathScope::new([]).with_design(Some("/part.solidcraft")).design_roots().is_empty());
-        assert!(PathScope::new([]).with_design(Some(&s(base.join("missing/p.solidcraft")))).design_roots().is_empty());
+        assert!(PathScope::new([]).with_design(Some("/part.sketcraft")).design_roots().is_empty());
+        assert!(PathScope::new([]).with_design(Some(&s(base.join("missing/p.sketcraft")))).design_roots().is_empty());
         let _ = std::fs::remove_dir_all(&base);
     }
 
@@ -1044,7 +1044,7 @@ mod tests {
         let canon = |d: &std::path::Path| std::fs::canonicalize(d).unwrap();
         assert_eq!(scope.design_roots().len(), MAX_DESIGN_FOLDERS, "{scope:?}");
         assert_eq!(scope.design_roots().last(), Some(&canon(&dirs[MAX_DESIGN_FOLDERS])), "{scope:?}");
-        let file = |d: &std::path::Path| d.join("part.solidcraft").to_string_lossy().to_string();
+        let file = |d: &std::path::Path| d.join("part.sketcraft").to_string_lossy().to_string();
         assert!(scope.check(&file(&dirs[1])).is_ok());
         assert!(scope.check(&file(&dirs[0])).is_err(), "the oldest gave way");
         assert!(scope.check(&file(&base.join(".hidden"))).is_err(), "a hidden folder never counts");
@@ -1063,24 +1063,24 @@ mod tests {
         let (root, out) = (base.join("root"), base.join("out"));
         std::fs::create_dir_all(&root).unwrap();
         std::fs::create_dir_all(&out).unwrap();
-        std::fs::write(out.join("part.solidcraft"), "outside").unwrap();
-        std::fs::write(root.join("real.solidcraft"), "inside").unwrap();
-        std::os::unix::fs::symlink(out.join("part.solidcraft"), root.join("part.solidcraft")).unwrap();
-        std::os::unix::fs::symlink("real.solidcraft", root.join("a.solidcraft")).unwrap();
-        std::os::unix::fs::symlink("a.solidcraft", root.join("b.solidcraft")).unwrap();
-        std::os::unix::fs::symlink("../out/new.solidcraft", root.join("dangling.solidcraft")).unwrap();
+        std::fs::write(out.join("part.sketcraft"), "outside").unwrap();
+        std::fs::write(root.join("real.sketcraft"), "inside").unwrap();
+        std::os::unix::fs::symlink(out.join("part.sketcraft"), root.join("part.sketcraft")).unwrap();
+        std::os::unix::fs::symlink("real.sketcraft", root.join("a.sketcraft")).unwrap();
+        std::os::unix::fs::symlink("a.sketcraft", root.join("b.sketcraft")).unwrap();
+        std::os::unix::fs::symlink("../out/new.sketcraft", root.join("dangling.sketcraft")).unwrap();
         let scope = PathScope::new([root.clone()]);
         let s = |p: std::path::PathBuf| p.to_string_lossy().to_string();
-        assert!(scope.check(&s(root.join("part.solidcraft"))).is_err());
-        assert!(scope.check(&s(root.join("dangling.solidcraft"))).is_err());
-        assert!(scope.check(&s(root.join("b.solidcraft"))).is_ok());
+        assert!(scope.check(&s(root.join("part.sketcraft"))).is_err());
+        assert!(scope.check(&s(root.join("dangling.sketcraft"))).is_err());
+        assert!(scope.check(&s(root.join("b.sketcraft"))).is_ok());
         super::scoped(Some(scope), || {
-            let path = s(root.join("part.solidcraft"));
+            let path = s(root.join("part.sketcraft"));
             let refused = super::check(&path).and_then(|()| crate::safe_write::write_atomic(std::path::Path::new(&path), b"agent", false));
             assert!(refused.is_err());
         });
-        assert_eq!(std::fs::read_to_string(out.join("part.solidcraft")).unwrap(), "outside");
-        assert!(!out.join("new.solidcraft").exists());
+        assert_eq!(std::fs::read_to_string(out.join("part.sketcraft")).unwrap(), "outside");
+        assert!(!out.join("new.sketcraft").exists());
         let _ = std::fs::remove_dir_all(&base);
     }
 
@@ -1093,12 +1093,12 @@ mod tests {
         use super::{Remote, check_design_path, design_path_is_file, design_path_refusal, read_design_path, remote};
         let net = |h: &str| Some(Remote::Network(h.into()));
         for (path, want) in [
-            (r"\\server\share\part.solidcraft", net("server")),
-            ("//server/share/part.solidcraft", net("server")),
+            (r"\\server\share\part.sketcraft", net("server")),
+            ("//server/share/part.sketcraft", net("server")),
             (r"\\Server.corp.example\share", net("Server.corp.example")),
-            (r"\\10.0.0.5\c$\x.solidcraft", net("10.0.0.5")),
-            (r"\\?\UNC\server\share\part.solidcraft", net("server")),
-            (r"\\?\unc\server\share\part.solidcraft", net("server")),
+            (r"\\10.0.0.5\c$\x.sketcraft", net("10.0.0.5")),
+            (r"\\?\UNC\server\share\part.sketcraft", net("server")),
+            (r"\\?\unc\server\share\part.sketcraft", net("server")),
             (r"\??\UNC\server\share\x", net("server")),
             ("//?/UNC/server/share/x", net("server")),
             (r"\\.\pipe\x", Some(Remote::Device)),
@@ -1110,22 +1110,22 @@ mod tests {
             (r"\\.", Some(Remote::Device)),
             ("CON", Some(Remote::Device)),
             ("nul", Some(Remote::Device)),
-            ("NUL.solidcraft", Some(Remote::Device)),
+            ("NUL.sketcraft", Some(Remote::Device)),
             ("COM1", Some(Remote::Device)),
-            ("com1.txt.solidcraft", Some(Remote::Device)),
+            ("com1.txt.sketcraft", Some(Remote::Device)),
             ("LPT9.ttf", Some(Remote::Device)),
             (r"C:\work\aux.step", Some(Remote::Device)),
-            ("parts/Con .solidcraft", Some(Remote::Device)),
+            ("parts/Con .sketcraft", Some(Remote::Device)),
             (r"\\?\C:\work\prn", Some(Remote::Device)),
             // Local: unchanged.
-            (r"C:\work\part.solidcraft", None),
-            ("C:/work/part.solidcraft", None),
-            (r"\\?\C:\work\part.solidcraft", None),
-            ("/home/me/parts/plate.solidcraft", None),
-            ("parts/plate.solidcraft", None),
-            ("../parts/plate.solidcraft", None),
-            ("console.solidcraft", None),
-            (r"C:\com10\x.solidcraft", None),
+            (r"C:\work\part.sketcraft", None),
+            ("C:/work/part.sketcraft", None),
+            (r"\\?\C:\work\part.sketcraft", None),
+            ("/home/me/parts/plate.sketcraft", None),
+            ("parts/plate.sketcraft", None),
+            ("../parts/plate.sketcraft", None),
+            ("console.sketcraft", None),
+            (r"C:\com10\x.sketcraft", None),
         ] {
             assert_eq!(remote(path), want, "{path}");
             assert_eq!(design_path_refusal(path, None), want, "{path}");
@@ -1146,7 +1146,7 @@ mod tests {
         // A local file is read as before.
         let dir = std::env::temp_dir().join(format!("sketcraft-vfs-design-path-{}", std::process::id()));
         let _ = std::fs::create_dir_all(&dir);
-        let p = dir.join("part.solidcraft").to_string_lossy().to_string();
+        let p = dir.join("part.sketcraft").to_string_lossy().to_string();
         super::write(&p, b"x").unwrap();
         assert_eq!(read_design_path(&p, None, 16).unwrap(), b"x");
         assert_eq!(design_path_is_file(&p, None), Some(true));
@@ -1159,7 +1159,7 @@ mod tests {
     #[test]
     fn an_allowed_network_host_passes_and_only_that_one() {
         use super::{NetworkPolicy, Remote, allowing_hosts, design_path_refusal};
-        let unc = r"\\files.corp\cad\part.solidcraft";
+        let unc = r"\\files.corp\cad\part.sketcraft";
         assert!(design_path_refusal(unc, None).is_some());
         allowing_hosts(&["FILES.corp".into()], || {
             assert_eq!(design_path_refusal(unc, None), None);
@@ -1169,9 +1169,9 @@ mod tests {
         });
         assert!(design_path_refusal(unc, None).is_some(), "allowed for that action only");
         // The design was opened from that server: its links beside it are reached.
-        assert_eq!(design_path_refusal(unc, Some(r"\\Files.Corp\cad\asm.solidcraft")), None);
-        assert!(design_path_refusal(unc, Some(r"\\other\cad\asm.solidcraft")).is_some());
-        assert!(design_path_refusal(unc, Some("/home/me/asm.solidcraft")).is_some());
+        assert_eq!(design_path_refusal(unc, Some(r"\\Files.Corp\cad\asm.sketcraft")), None);
+        assert!(design_path_refusal(unc, Some(r"\\other\cad\asm.sketcraft")).is_some());
+        assert!(design_path_refusal(unc, Some("/home/me/asm.sketcraft")).is_some());
         let listed = NetworkPolicy { allow_all: false, hosts: vec![r"\\Files.corp".into()] };
         assert!(listed.allows("files.corp") && !listed.allows("evil") && !listed.allows(""));
         assert!(NetworkPolicy { allow_all: true, hosts: vec![] }.allows("anything"));

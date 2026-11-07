@@ -1,6 +1,6 @@
 {
   "dark": {
-    "format": "solidcraft-theme/1",
+    "format": "sketcraft-theme/1",
     "name": "Tabs dark",
     "base": "dark",
     "colors": {"panel":"#18202a", "text":"#f5f7fa", "text_dim":"#dce3ec", "form_ink":"#f5f7fa", "dialog_label":"#f5f7fa"},
@@ -16,7 +16,7 @@
     }
   },
   "light": {
-    "format": "solidcraft-theme/1",
+    "format": "sketcraft-theme/1",
     "name": "Tabs light",
     "base": "light",
     "colors": {"panel":"#fafbfc", "text":"#172333", "text_dim":"#334155", "form_ink":"#172333", "dialog_label":"#172333"},

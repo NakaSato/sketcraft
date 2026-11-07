@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#2552"
+  "NakaSato/sketcraft#2552"
  ],
  "what": "a square-wire coil (diameter 10, section 0.9 inside, pitch 1.5, height 10) cut as a helical groove into the wall of a bore of radius 4.1 in a 30 x 30 x 12 block (crash report: unclean exit in solid.coil)",
  "source": "analytic",

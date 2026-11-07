@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#4927"
+  "NakaSato/sketcraft#4927"
  ],
  "what": "a 5 mm slot cut end to end through one wall of a tube (r 20..30 x 100) whose top rims are chamfered (2.5 outside, 4 inside): the cut hung (moving the chamfers after the cut worked)",
  "source": "analytic",

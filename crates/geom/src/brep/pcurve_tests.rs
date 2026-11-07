@@ -440,7 +440,7 @@ fn closes_around_the_box(surface: &Surface, l: &[EdgeUse<'_>], seam: [usize; 2],
 fn a_seam_on_a_spline_closed_in_u_gets_pcurves_a_period_apart() {
     let full = [0., TAU];
     let (big, small) = (5., 1.);
-    // Each surface and circle on its NURBS form (`form`), as SolidCraft's builders give them.
+    // Each surface and circle on its NURBS form (`form`), as SketCraft's builders give them.
     let on = |c: &Curve, iv: [f64; 2]| crate::brep::form::curve(c, iv).unwrap();
     // The torus band: the tube's quarter from its outer equator to its top.
     let torus = Surface::Torus { frame: about_z([0.; 3], false), major_radius: big, minor_radius: small, tube_start: 0.0 };

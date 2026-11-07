@@ -1,8 +1,8 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#851",
-  "tangency-labs/solidcraft#1113",
-  "tangency-labs/solidcraft#854"
+  "NakaSato/sketcraft#851",
+  "NakaSato/sketcraft#1113",
+  "NakaSato/sketcraft#854"
  ],
  "what": "the top edge of #851's concave R21 wall chamfered 9.5, just under its height",
  "source": "analytic",

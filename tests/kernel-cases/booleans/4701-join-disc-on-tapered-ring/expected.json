@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#4701"
+  "NakaSato/sketcraft#4701"
  ],
  "what": "a 3 mm disc (r23) joined on the top face of a ring extruded 14 mm with a 10 deg outward taper (r 18.5 growing, bore 13.75 shrinking): 202 s in truck before the right result",
  "source": "analytic",

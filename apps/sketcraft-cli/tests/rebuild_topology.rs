@@ -71,7 +71,7 @@ fn errors(s: &Session) -> Vec<u64> {
 fn designs() -> Vec<(String, Session)> {
     let root = root();
     let mut out = Vec::new();
-    for dir in ["apps/solidcraft-cli/tests/corpus", "tests/action_matrix/designs"] {
+    for dir in ["apps/sketcraft-cli/tests/corpus", "tests/action_matrix/designs"] {
         let mut files: Vec<PathBuf> = std::fs::read_dir(root.join(dir))
             .unwrap()
             .flatten()
@@ -127,7 +127,7 @@ fn a_parameter_edit_rebuilds_like_a_fresh_build_and_reverts_exactly() {
             tried += 1;
             checked += 1;
             let edited = topology(&t);
-            let fresh = topology(&rebuilt(&t, &dir.join(format!("{name}-{}.solidcraft", p.name))));
+            let fresh = topology(&rebuilt(&t, &dir.join(format!("{name}-{}.sketcraft", p.name))));
             if edited != fresh {
                 problems.push(format!("{name}: {} = {expr}: edited {edited:?}\n  fresh {fresh:?}", p.name));
             }
@@ -164,10 +164,10 @@ fn pi_case_sides_stay_whole_at_both_heights() {
         std::fs::write(&path, serde_json::to_vec(&d).unwrap()).unwrap();
         open(&path)
     };
-    let a = at("24 mm", "pi-24.solidcraft");
-    let mut b = at("24 mm", "pi-24-to-32.solidcraft");
+    let a = at("24 mm", "pi-24.sketcraft");
+    let mut b = at("24 mm", "pi-24-to-32.sketcraft");
     b.execute("parameters.change", &json!({"name": "height", "expression": "32 mm"})).unwrap();
-    let c = at("32 mm", "pi-32.solidcraft");
+    let c = at("32 mm", "pi-32.sketcraft");
     let _ = std::fs::remove_dir_all(&dir);
     let mut per_case = Vec::new();
     for (case, s, h) in [("(a) at 24", a, 24.), ("(b) 24 changed to 32", b, 32.), ("(c) at 32", c, 32.)] {

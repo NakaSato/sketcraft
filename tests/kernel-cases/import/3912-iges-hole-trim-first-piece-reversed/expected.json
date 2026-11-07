@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#3912"
+  "NakaSato/sketcraft#3912"
  ],
  "what": "a 10 x 10 trimmed patch with a 4 x 4 square hole whose composite trim curve starts with a reversed piece: the hole stays a hole",
  "source": "analytic",

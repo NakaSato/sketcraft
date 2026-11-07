@@ -1,6 +1,6 @@
 {
   "sources": [
-    "tangency-labs/solidcraft#3540"
+    "NakaSato/sketcraft#3540"
   ],
   "what": "a groove cut whose r33 arcs lie exactly on the r33 cylinder of an earlier slot cut and overlap it in Z: minutes of CPU",
   "source": "analytic",

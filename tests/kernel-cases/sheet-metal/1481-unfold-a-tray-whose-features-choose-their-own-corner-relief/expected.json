@@ -1,7 +1,7 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#1232",
-  "tangency-labs/solidcraft#1481"
+  "NakaSato/sketcraft#1232",
+  "NakaSato/sketcraft#1481"
  ],
  "what": "a 120 x 90 base with two edge flange features (bottom and left edges with a round relief, top and right edges with a square one) over a rule whose relief is a notch, unfolded",
  "source": "analytic",

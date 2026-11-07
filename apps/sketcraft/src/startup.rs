@@ -394,9 +394,9 @@ pub fn no_window_message(error: &str, settings: Option<&Path>) -> String {
          The software renderer was tried too. Things to try:\n\
          - Install or update the graphics driver (on Windows, from the GPU maker's site rather than Windows Update).\n\
          - Over Remote Desktop or in a virtual machine, enable 3D acceleration or run it on the machine itself.\n\
-         - Start it once with `solidcraft --safe-mode`.\n\
+         - Start it once with `sketcraft --safe-mode`.\n\
          - Rename the settings folder: {folder}\n\n\
-         More: https://docs.solidcraft.io/guide/troubleshooting.html"
+         More: https://docs.sketcraft.io/guide/troubleshooting.html"
     )
 }
 
@@ -683,8 +683,8 @@ mod tests {
 
     #[test]
     fn the_message_names_the_settings_folder_and_safe_mode() {
-        let m = no_window_message("no adapter", Some(Path::new("/x/SolidCraft")));
-        assert!(m.contains("no adapter") && m.contains("/x/SolidCraft") && m.contains("--safe-mode"));
+        let m = no_window_message("no adapter", Some(Path::new("/x/SketCraft")));
+        assert!(m.contains("no adapter") && m.contains("/x/SketCraft") && m.contains("--safe-mode"));
     }
 
     #[test]

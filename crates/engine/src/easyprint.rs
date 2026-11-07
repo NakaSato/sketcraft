@@ -20,7 +20,7 @@ pub fn file_name(design: &str, ext: &str) -> String {
 /// The upload form: its `Content-Type` and the body, a `file` part holding `bytes` and a
 /// `file_name` field.
 pub fn multipart(file_name: &str, bytes: &[u8]) -> (String, Vec<u8>) {
-    let mut boundary = String::from("----solidcraft-easyprint-6b1f0d");
+    let mut boundary = String::from("----sketcraft-easyprint-6b1f0d");
     while bytes.windows(boundary.len()).any(|w| w == boundary.as_bytes()) {
         boundary.push('x');
     }
@@ -103,7 +103,7 @@ mod tests {
         assert!(body.windows(bytes.len()).any(|w| w == bytes.as_slice()));
         assert!(text.ends_with(&format!("--{boundary}--\r\n")));
         // A file that happens to hold the usual boundary gets another one.
-        let (ct, _) = multipart("m.stl", b"x----solidcraft-easyprint-6b1f0dx");
+        let (ct, _) = multipart("m.stl", b"x----sketcraft-easyprint-6b1f0dx");
         assert!(!ct.ends_with("6b1f0d"));
     }
 

@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#1411"
+  "NakaSato/sketcraft#1411"
  ],
  "what": "a 4-turn coil (centre diameter 40, wire 3 mm, pitch 8) intersected with a cylinder of radius 25 and height 40 that holds it (crash report: unclean exit in solid.coil)",
  "source": "analytic",

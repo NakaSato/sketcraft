@@ -7,7 +7,7 @@ use std::sync::Arc;
 /// A key pair made with `minisign -G -W` for these tests, and its signature of [`SIGNED_SUMS`]
 /// with the trusted comment "SketCraft v9.9.9".
 const TEST_KEY: &str = "RWSnDqhIJ/zGKMSbsGUl4/prZLXqi3PwpEeY/D8gvdsEUeZRO9yWCoSM";
-const SIGNED_SUMS: &str = "aaaa  solidcraft-linux-x86_64.AppImage\n";
+const SIGNED_SUMS: &str = "aaaa  sketcraft-linux-x86_64.AppImage\n";
 const SIGNATURE: &str = "untrusted comment: signature from minisign secret key\nRUSnDqhIJ/zGKEyvbowsT8vEGvdv2OL9Rwv4bo2m7pJC54t2UQWXjU0+V7ayPB0Okk1teY53qZSTugz2Dnko35A3Xc1jdNFZCwU=\ntrusted comment: SketCraft v9.9.9\npCRA0RNYxyt4SSqLbfI3p00xsCE4Rt8ixJWAQfoyb226cz/XdS7A2PRdG7hFmRmfg4h6zmtIt3iRLSKjk6RsAQ==\n";
 
 fn scratch(name: &str) -> PathBuf {
@@ -26,7 +26,7 @@ fn hex(bytes: &[u8]) -> String {
 fn checksum_lists_are_read() {
     let h = "a".repeat(64);
     let sums = format!(
-        "{h}  solidcraft-linux-x86_64.AppImage\n{}  *solidcraft-windows-x64.msi\nnot a line\n{}  short.txt\n",
+        "{h}  sketcraft-linux-x86_64.AppImage\n{}  *sketcraft-windows-x64.msi\nnot a line\n{}  short.txt\n",
         "B".repeat(64),
         "c".repeat(10)
     );
@@ -40,7 +40,7 @@ fn checksum_lists_are_read() {
 fn signatures_must_match_the_key_the_list_and_the_release() {
     assert_eq!(verify_signature(SIGNED_SUMS.as_bytes(), SIGNATURE, TEST_KEY, "v9.9.9"), Ok(()));
     assert!(verify_signature(SIGNED_SUMS.as_bytes(), SIGNATURE, TEST_KEY, "v9.9.8").is_err(), "an older release's signed list");
-    assert!(verify_signature(b"bbbb  solidcraft-linux-x86_64.AppImage\n", SIGNATURE, TEST_KEY, "v9.9.9").is_err(), "a changed list");
+    assert!(verify_signature(b"bbbb  sketcraft-linux-x86_64.AppImage\n", SIGNATURE, TEST_KEY, "v9.9.9").is_err(), "a changed list");
     let other = "RWQf6LRCGA9i53mlYecO4IzT51TGPpvWucNSCh1CBM0QTaLn73Y7GFO3";
     assert!(verify_signature(SIGNED_SUMS.as_bytes(), SIGNATURE, other, "v9.9.9").is_err(), "another key");
     assert!(verify_signature(SIGNED_SUMS.as_bytes(), "garbage", TEST_KEY, "v9.9.9").is_err());
@@ -48,7 +48,7 @@ fn signatures_must_match_the_key_the_list_and_the_release() {
 
 #[test]
 fn methods_per_installation() {
-    let exe = Path::new("/x/solidcraft.exe");
+    let exe = Path::new("/x/sketcraft.exe");
     assert_eq!(method(&InstallKind::AppImage("/a/S.AppImage".into()), Some(exe)), Some(Method::AppImage("/a/S.AppImage".into())));
     assert_eq!(method(&InstallKind::WindowsMsi, Some(exe)), Some(Method::Msi));
     assert_eq!(method(&InstallKind::WindowsPortable, Some(exe)), Some(Method::PortableZip(exe.into())));
@@ -68,14 +68,14 @@ fn methods_per_installation() {
     }
 }
 
-const BASE: &str = "https://github.com/bherbruck/solidcraft/releases/download/v9.9.9/";
+const BASE: &str = "https://github.com/NakaSato/sketcraft/releases/download/v9.9.9/";
 
 fn release_with(assets: &[(&str, usize)]) -> Release {
     Release {
         tag: "v9.9.9".into(),
         name: "SketCraft v9.9.9".into(),
         notes: String::new(),
-        page: "https://github.com/bherbruck/solidcraft/releases/tag/v9.9.9".into(),
+        page: "https://github.com/NakaSato/sketcraft/releases/tag/v9.9.9".into(),
         assets: assets.iter().map(|(n, size)| Asset { name: n.to_string(), url: format!("{BASE}{n}"), size: *size as u64 }).collect(),
     }
 }
@@ -236,14 +236,14 @@ fn installers_and_disk_images_are_handed_over() {
 
 #[test]
 fn windows_installer_is_followed_by_the_new_version() {
-    let args = vec!["/i".to_string(), r"C:\Users\a b\Temp\solidcraft-update\x.msi".to_string(), "/passive".to_string()];
-    let (program, out) = relaunch_after(Path::new("msiexec"), &args, Path::new(r"C:\Program Files\SolidCraft\it's.exe"));
+    let args = vec!["/i".to_string(), r"C:\Users\a b\Temp\sketcraft-update\x.msi".to_string(), "/passive".to_string()];
+    let (program, out) = relaunch_after(Path::new("msiexec"), &args, Path::new(r"C:\Program Files\SketCraft\it's.exe"));
     assert_eq!(program, PathBuf::from("powershell"));
     assert_eq!(
         out.last().unwrap(),
         &concat!(
-            r#"Start-Process -FilePath 'msiexec' -ArgumentList '/i','"C:\Users\a b\Temp\solidcraft-update\x.msi"','/passive' -Wait; "#,
-            r"Start-Process -FilePath 'C:\Program Files\SolidCraft\it''s.exe'"
+            r#"Start-Process -FilePath 'msiexec' -ArgumentList '/i','"C:\Users\a b\Temp\sketcraft-update\x.msi"','/passive' -Wait; "#,
+            r"Start-Process -FilePath 'C:\Program Files\SketCraft\it''s.exe'"
         )
     );
     assert!(out.iter().any(|a| a == "-Command"));
@@ -252,11 +252,11 @@ fn windows_installer_is_followed_by_the_new_version() {
 #[test]
 fn an_updated_appimage_takes_the_release_file_name() {
     let new = |p: &str| release_named(Path::new(p), "v0.17.0", "x86_64");
-    assert_eq!(new("/a/solidcraft-0.16.2-linux-x86_64.AppImage"), Path::new("/a/solidcraft-0.17.0-linux-x86_64.AppImage"));
-    assert_eq!(new("/a/solvecraft-0.9.0-linux-x86_64.AppImage"), Path::new("/a/solidcraft-0.17.0-linux-x86_64.AppImage"));
-    assert_eq!(new("/a/SolidCraft.AppImage"), Path::new("/a/SolidCraft.AppImage"), "a name the user chose");
-    assert_eq!(new("/a/solidcraft-linux-x86_64.AppImage"), Path::new("/a/solidcraft-linux-x86_64.AppImage"), "no version in it");
-    assert_eq!(new("/a/solidcraft-0.16.2-linux-x86_64.AppImage.bak"), Path::new("/a/solidcraft-0.16.2-linux-x86_64.AppImage.bak"));
+    assert_eq!(new("/a/sketcraft-0.16.2-linux-x86_64.AppImage"), Path::new("/a/sketcraft-0.17.0-linux-x86_64.AppImage"));
+    assert_eq!(new("/a/solvecraft-0.9.0-linux-x86_64.AppImage"), Path::new("/a/sketcraft-0.17.0-linux-x86_64.AppImage"));
+    assert_eq!(new("/a/SketCraft.AppImage"), Path::new("/a/SketCraft.AppImage"), "a name the user chose");
+    assert_eq!(new("/a/sketcraft-linux-x86_64.AppImage"), Path::new("/a/sketcraft-linux-x86_64.AppImage"), "no version in it");
+    assert_eq!(new("/a/sketcraft-0.16.2-linux-x86_64.AppImage.bak"), Path::new("/a/sketcraft-0.16.2-linux-x86_64.AppImage.bak"));
 
     // End to end: the old versioned file is gone, the new one has the release's name and works.
     let dir = scratch("appimage-name");
@@ -283,7 +283,7 @@ fn installation_refreshes_the_release_and_verifies_the_final_package() {
     let target = dir.join("SketCraft.AppImage");
     let name = "sketcraft-linux-x86_64.AppImage";
     let shown = release_with(&[(name, 3), (SUMS, 100)]);
-    let base = "https://github.com/tangency-labs/solidcraft/releases/download/v10.0.0/";
+    let base = "https://github.com/NakaSato/sketcraft/releases/download/v10.0.0/";
     let feed = serde_json::json!({
         "tag_name": "v10.0.0",
         "assets": [

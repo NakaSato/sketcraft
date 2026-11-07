@@ -1,7 +1,7 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#881",
-  "tangency-labs/solidcraft#956"
+  "NakaSato/sketcraft#881",
+  "NakaSato/sketcraft#956"
  ],
  "what": "a ruled loft between two 18-vertex zig-zag sections with the same start vertex and winding, whose first-vertex direction is ambiguous from the section centroid",
  "source": "analytic",

@@ -1,7 +1,7 @@
-//! `solidcraft-cli mcp setup` and Help > Connect AI assistants: add a `solidcraft` MCP server entry
-//! to the AI clients installed on this machine, using the `solidcraft-cli` path given.
+//! `sketcraft-cli mcp setup` and Help > Connect AI assistants: add a `sketcraft` MCP server entry
+//! to the AI clients installed on this machine, using the `sketcraft-cli` path given.
 //!
-//! Only the `solidcraft` entries change; every other byte (other servers, other settings, comments,
+//! Only the `sketcraft` entries change; every other byte (other servers, other settings, comments,
 //! key order) stays as it was. Updates replace the file atomically, keeping the previous version
 //! as `<name>.bak`. A file that cannot be read as JSON (with comments) or TOML is
 //! left alone, and so is an entry the user changed (its command is not a SketCraft CLI, or its
@@ -94,7 +94,7 @@ struct Target {
 /// The names `--client` takes.
 pub const CLIENTS: &[&str] = &["opencode", "claude-desktop", "claude-code", "cursor", "codex", "gemini", "copilot", "windsurf", "zed", "vscode"];
 
-/// The server entries to write: `solidcraft`, and `solidcraft-live` with `--live`.
+/// The server entries to write: `sketcraft`, and `sketcraft-live` with `--live`.
 fn servers(live: bool) -> Vec<(&'static str, Vec<&'static str>)> {
     let mut v = vec![("sketcraft", vec!["mcp"])];
     if live {
@@ -233,7 +233,7 @@ enum Verdict {
 }
 
 /// Whether `command` runs a SketCraft CLI (under this name or the pre-rename one).
-fn is_solidcraft_cli(command: &str) -> bool {
+fn is_sketcraft_cli(command: &str) -> bool {
     let name = command.rsplit(['/', '\\']).next().unwrap_or(command).to_ascii_lowercase();
     let stem = name.strip_suffix(".exe").unwrap_or(&name);
     stem == "sketcraft-cli" || stem == "solvecraft-cli"
@@ -261,7 +261,7 @@ fn judge(existing: Option<&Value>, exe: &str, args: &[&str]) -> Verdict {
     }
     if cmd == exe {
         Verdict::Same
-    } else if is_solidcraft_cli(&cmd) {
+    } else if is_sketcraft_cli(&cmd) {
         Verdict::Stale
     } else {
         Verdict::Custom
@@ -641,7 +641,7 @@ fn read_config(path: &Path) -> std::io::Result<Option<String>> {
     }
 }
 
-/// Refuse a stale edit before writing. Other clients do not share a lock with SolidCraft, so
+/// Refuse a stale edit before writing. Other clients do not share a lock with SketCraft, so
 /// this narrows the race with their writes; it cannot exclude a write after the comparison.
 fn write_config(path: &Path, expected: Option<&str>, text: &str) -> std::io::Result<()> {
     if let Some(dir) = path.parent() {
@@ -654,7 +654,7 @@ fn write_config(path: &Path, expected: Option<&str>, text: &str) -> std::io::Res
 }
 
 /// Set up every detected client (or `--client NAME`; flags `--dry-run`, `--live`) for the
-/// `solidcraft-cli` at `exe`. Returns the result lines, one per client file, and whether every
+/// `sketcraft-cli` at `exe`. Returns the result lines, one per client file, and whether every
 /// client succeeded.
 pub fn setup(args: &[String], env: &Env, exe: &str) -> Result<(Vec<String>, bool), String> {
     let dry_run = args.iter().any(|a| a == "--dry-run");
@@ -701,15 +701,15 @@ pub struct Quiet {
     pub removed: Vec<&'static str>,
 }
 
-/// Make `solidcraft-cli` at `exe` available to every installed client (`Mode::Add`), or take
+/// Make `sketcraft-cli` at `exe` available to every installed client (`Mode::Add`), or take
 /// the entries setup wrote out of them again (`remove`). Quiet and best effort, for the app: a
 /// client that fails is skipped. The rules for the user's own entries are the same as `setup`'s.
 pub fn quiet(env: &Env, exe: &str, remove: bool) -> Quiet {
     let mode = if remove { Mode::Remove } else { Mode::Add };
     let mut q = Quiet::default();
     for t in detect(env, None) {
-        // Adding writes `solidcraft` only (plain `mcp` finds the app by itself); removing also
-        // takes out a `solidcraft-live` that is ours.
+        // Adding writes `sketcraft` only (plain `mcp` finds the app by itself); removing also
+        // takes out a `sketcraft-live` that is ours.
         let Ok((_, changes)) = configure_file(&t, exe, remove, false, mode) else { continue };
         if changes.iter().any(|(n, c)| *n == "sketcraft" && *c == Change::Added) {
             q.added.push(t.client);
@@ -725,7 +725,7 @@ pub fn quiet(env: &Env, exe: &str, remove: bool) -> Quiet {
 mod tests {
     use super::*;
 
-    const EXE: &str = "/opt/solidcraft/solidcraft-cli";
+    const EXE: &str = "/opt/sketcraft/sketcraft-cli";
 
     fn edit(text: &str, shape: Shape) -> (String, Vec<(&'static str, Change)>) {
         let mut t = text.to_owned();
@@ -761,7 +761,7 @@ mod tests {
 
     #[test]
     fn stale_path_is_updated_and_custom_entries_are_not() {
-        let old = r#"{"mcpServers": {"sketcraft": {"command": "C:\\Old\\solidcraft-cli.exe", "args": ["mcp"], "env": {"A": "1"}}}}"#;
+        let old = r#"{"mcpServers": {"sketcraft": {"command": "C:\\Old\\sketcraft-cli.exe", "args": ["mcp"], "env": {"A": "1"}}}}"#;
         let (t, c) = edit(old, Shape::McpServers);
         assert_eq!(c, [("sketcraft", Change::Updated)]);
         let v: Value = serde_json::from_str(&t).unwrap();
@@ -769,7 +769,7 @@ mod tests {
         assert_eq!(v["mcpServers"]["sketcraft"]["env"], json!({"A": "1"}), "other fields stay");
 
         // The user added an argument: theirs.
-        let custom = r#"{"mcpServers": {"sketcraft": {"command": "/x/solidcraft-cli", "args": ["mcp", "--allow-any-path"]}}}"#;
+        let custom = r#"{"mcpServers": {"sketcraft": {"command": "/x/sketcraft-cli", "args": ["mcp", "--allow-any-path"]}}}"#;
         let (t, c) = edit(custom, Shape::McpServers);
         assert_eq!(c, [("sketcraft", Change::Custom)]);
         assert_eq!(t.trim_end(), custom);
@@ -787,7 +787,7 @@ mod tests {
         let (t, _) = edit("{\"mcp\": {}}", Shape::OpenCode);
         let v: Value = serde_json::from_str(&t).unwrap();
         assert_eq!(v["mcp"]["sketcraft"], json!({"type": "local", "command": [EXE, "mcp"], "enabled": true}));
-        let stale = r#"{"mcp": {"sketcraft": {"type": "local", "command": ["/old/solidcraft-cli", "mcp"], "enabled": false}}}"#;
+        let stale = r#"{"mcp": {"sketcraft": {"type": "local", "command": ["/old/sketcraft-cli", "mcp"], "enabled": false}}}"#;
         let (t, c) = edit(stale, Shape::OpenCode);
         assert_eq!(c, [("sketcraft", Change::Updated)]);
         let v: Value = serde_json::from_str(&t).unwrap();
@@ -809,24 +809,24 @@ mod tests {
         let c = edit_toml(&mut t, EXE, true, Mode::Add).unwrap();
         assert_eq!(c, [("sketcraft", Change::Added), ("sketcraft-live", Change::Added)]);
         assert!(t.starts_with(src), "{t}");
-        assert!(t.contains("[mcp_servers.solidcraft]") && t.contains(&format!("command = \"{EXE}\"")), "{t}");
+        assert!(t.contains("[mcp_servers.sketcraft]") && t.contains(&format!("command = \"{EXE}\"")), "{t}");
         // Stale path, then a user-changed entry.
-        let mut stale = "[mcp_servers.solidcraft]\ncommand = \"/old/solidcraft-cli\"\nargs = [\"mcp\"]\nstartup_timeout_sec = 30\n".to_owned();
+        let mut stale = "[mcp_servers.sketcraft]\ncommand = \"/old/sketcraft-cli\"\nargs = [\"mcp\"]\nstartup_timeout_sec = 30\n".to_owned();
         assert_eq!(edit_toml(&mut stale, EXE, false, Mode::Add).unwrap(), [("sketcraft", Change::Updated)]);
         assert!(stale.contains("startup_timeout_sec = 30") && stale.contains(EXE), "{stale}");
-        let mut custom = "[mcp_servers.solidcraft]\ncommand = \"/x/solidcraft-cli\"\nargs = [\"mcp\", \"--headless\"]\n".to_owned();
+        let mut custom = "[mcp_servers.sketcraft]\ncommand = \"/x/sketcraft-cli\"\nargs = [\"mcp\", \"--headless\"]\n".to_owned();
         let before = custom.clone();
         assert_eq!(edit_toml(&mut custom, EXE, false, Mode::Add).unwrap(), [("sketcraft", Change::Custom)]);
         assert_eq!(custom, before);
         // An empty file works too.
         let mut empty = String::new();
         edit_toml(&mut empty, EXE, false, Mode::Add).unwrap();
-        assert!(empty.contains("[mcp_servers.solidcraft]"), "{empty}");
+        assert!(empty.contains("[mcp_servers.sketcraft]"), "{empty}");
     }
 
     #[test]
     fn removing_takes_out_only_our_entries_and_keeps_the_rest() {
-        let src = "{\n  \"mcpServers\": {\n    \"a\": {\"command\": \"x\"},\n    \"sketcraft\": {\"command\": \"/old/solidcraft-cli\", \"args\": [\"mcp\"]},\n    \"sketcraft-live\": {\"command\": \"/old/solidcraft-cli\", \"args\": [\"mcp\", \"--connect\", \"127.0.0.1:7878\"]}\n  },\n  \"k\": 1\n}\n";
+        let src = "{\n  \"mcpServers\": {\n    \"a\": {\"command\": \"x\"},\n    \"sketcraft\": {\"command\": \"/old/sketcraft-cli\", \"args\": [\"mcp\"]},\n    \"sketcraft-live\": {\"command\": \"/old/sketcraft-cli\", \"args\": [\"mcp\", \"--connect\", \"127.0.0.1:7878\"]}\n  },\n  \"k\": 1\n}\n";
         let mut t = src.to_owned();
         let c = edit_json(&mut t, Shape::McpServers, EXE, true, Mode::Remove).unwrap();
         assert_eq!(c, [("sketcraft", Change::Removed), ("sketcraft-live", Change::Removed)]);
@@ -843,7 +843,7 @@ mod tests {
         assert_eq!(none.trim_end(), "{\"k\": 1}");
         // TOML.
         let mut toml =
-            "[mcp_servers.other]\ncommand = \"o\"\n\n[mcp_servers.solidcraft]\ncommand = \"/old/solidcraft-cli\"\nargs = [\"mcp\"]\n".to_owned();
+            "[mcp_servers.other]\ncommand = \"o\"\n\n[mcp_servers.sketcraft]\ncommand = \"/old/sketcraft-cli\"\nargs = [\"mcp\"]\n".to_owned();
         assert_eq!(edit_toml(&mut toml, EXE, false, Mode::Remove).unwrap(), [("sketcraft", Change::Removed)]);
         assert!(toml.contains("[mcp_servers.other]") && !toml.contains("sketcraft"), "{toml}");
     }
@@ -866,16 +866,16 @@ mod tests {
         assert_eq!(std::fs::read_to_string(&backup).unwrap(), original);
         let changed_by_client = std::fs::read_to_string(&target.file).unwrap().replace("true", "false");
         std::fs::write(&target.file, &changed_by_client).unwrap();
-        configure_file(&target, "/new/solidcraft-cli", false, false, Mode::Add).unwrap();
+        configure_file(&target, "/new/sketcraft-cli", false, false, Mode::Add).unwrap();
         assert_eq!(std::fs::read_to_string(&backup).unwrap(), changed_by_client);
         let current = std::fs::read_to_string(&target.file).unwrap();
-        assert!(current.contains("false") && current.contains("/new/solidcraft-cli"));
+        assert!(current.contains("false") && current.contains("/new/sketcraft-cli"));
         // A no-op or dry run must leave both the file and its backup alone.
-        configure_file(&target, "/new/solidcraft-cli", false, false, Mode::Add).unwrap();
-        configure_file(&target, "/future/solidcraft-cli", false, true, Mode::Add).unwrap();
+        configure_file(&target, "/new/sketcraft-cli", false, false, Mode::Add).unwrap();
+        configure_file(&target, "/future/sketcraft-cli", false, true, Mode::Add).unwrap();
         assert_eq!(std::fs::read_to_string(&target.file).unwrap(), current);
         assert_eq!(std::fs::read_to_string(&backup).unwrap(), changed_by_client);
-        configure_file(&target, "/new/solidcraft-cli", false, false, Mode::Remove).unwrap();
+        configure_file(&target, "/new/sketcraft-cli", false, false, Mode::Remove).unwrap();
         assert_eq!(std::fs::read_to_string(&backup).unwrap(), current);
         assert!(!std::fs::read_to_string(&target.file).unwrap().contains("sketcraft"));
         std::fs::remove_dir_all(dir).unwrap();
@@ -952,7 +952,7 @@ mod tests {
         // A second run changes nothing and names nobody.
         assert_eq!(quiet(&env, EXE, false), Quiet::default());
         // An old path is refreshed without being called new.
-        std::fs::write(h.join(".cursor/mcp.json"), t.replace(EXE, "/gone/solidcraft-cli")).unwrap();
+        std::fs::write(h.join(".cursor/mcp.json"), t.replace(EXE, "/gone/sketcraft-cli")).unwrap();
         assert_eq!(quiet(&env, EXE, false), Quiet::default());
         assert!(std::fs::read_to_string(h.join(".cursor/mcp.json")).unwrap().contains(EXE));
         // Turning it off takes the entries out again.

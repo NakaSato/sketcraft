@@ -1,7 +1,7 @@
 {
   "sources": [
-    "tangency-labs/solidcraft#1615",
-    "tangency-labs/solidcraft#1653"
+    "NakaSato/sketcraft#1615",
+    "NakaSato/sketcraft#1653"
   ],
   "what": "two lofted tubes that cross and are joined (the bike-frame case): the trimmed loft faces along the intersection curves used to mesh with a flat sheet across the tube and slivers inside it",
   "source": "analytic",

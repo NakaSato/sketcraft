@@ -1,9 +1,9 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#2341",
-  "tangency-labs/solidcraft#2774",
-  "tangency-labs/solidcraft#2775",
-  "tangency-labs/solidcraft#2342"
+  "NakaSato/sketcraft#2341",
+  "NakaSato/sketcraft#2774",
+  "NakaSato/sketcraft#2775",
+  "NakaSato/sketcraft#2342"
  ],
  "what": "a 2 x 2 grid made by a feature pattern of a boss and its two chamfers (a concave root chamfer and a convex tip chamfer)",
  "source": "analytic",

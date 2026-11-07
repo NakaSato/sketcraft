@@ -504,7 +504,7 @@ fn temp_design(tag: &str) -> (std::path::PathBuf, String) {
     let dir = std::env::temp_dir().join(format!("sketcraft-user-material-{tag}-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&dir);
     std::fs::create_dir_all(&dir).unwrap();
-    let path = dir.join("design.solidcraft").to_string_lossy().to_string();
+    let path = dir.join("design.sketcraft").to_string_lossy().to_string();
     (dir, path)
 }
 

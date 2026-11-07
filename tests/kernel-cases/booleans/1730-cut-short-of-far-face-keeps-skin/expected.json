@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#1730"
+  "NakaSato/sketcraft#1730"
  ],
  "what": "an extrude cut whose profile stops 0.25 mm short of a wall's far face must leave that skin (it was grown through)",
  "source": "analytic",

@@ -65,7 +65,7 @@ pub const MAX_DPI: f64 = 2400.0;
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Drawing {
-    /// `solidcraft-drawing/N`: the format this build writes, whatever the file said.
+    /// `sketcraft-drawing/N`: the format this build writes, whatever the file said.
     pub format: String,
     /// The changes of `format` this drawing has while they are pending
     /// ([`Family::pending_names`](crate::format::Family::pending_names)). Empty, and not saved,

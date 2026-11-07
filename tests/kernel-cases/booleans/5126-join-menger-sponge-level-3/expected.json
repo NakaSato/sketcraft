@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#5126"
+  "NakaSato/sketcraft#5126"
  ],
  "what": "a join of the 20 level-2 Menger sponges (45 mm, 5 mm cubes) of a level-3 sponge, touching face to face with the same hole pattern on both faces of each contact: truck failed depending on the tools' order ('coincident faces were left in place', 'shell not oriented and closed')",
  "source": "analytic",

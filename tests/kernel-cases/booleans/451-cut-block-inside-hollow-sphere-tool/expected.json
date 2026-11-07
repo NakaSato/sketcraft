@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#451"
+  "NakaSato/sketcraft#451"
  ],
  "what": "a block wholly inside the void of a hollow spherical-shell tool (r 18.5 to 40): cutting leaves it untouched, the tool never reaches it",
  "source": "analytic",

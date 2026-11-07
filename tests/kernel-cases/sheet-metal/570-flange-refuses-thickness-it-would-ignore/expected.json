@@ -1,8 +1,8 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#570",
-  "tangency-labs/solidcraft#594",
-  "tangency-labs/solidcraft#572"
+  "NakaSato/sketcraft#570",
+  "NakaSato/sketcraft#594",
+  "NakaSato/sketcraft#572"
  ],
  "what": "sheet.flange given thickness, k_factor and bend_radius, which the rule alone defines, used to ignore them silently and build the 2.5 mm default",
  "source": "invariants",

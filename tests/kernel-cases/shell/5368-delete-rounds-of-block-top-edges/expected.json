@@ -1,7 +1,7 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#5368",
-  "tangency-labs/solidcraft#5182"
+  "NakaSato/sketcraft#5368",
+  "NakaSato/sketcraft#5182"
  ],
  "what": "the four rounds of a block's top edges (r2, sharp vertical edges) deleted, so the planar top and sides extend to close the gap: refused ('only planar neighbours can extend to close the gap yet')",
  "source": "analytic",

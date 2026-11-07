@@ -1,6 +1,6 @@
 {
   "sources": [
-    "tangency-labs/solidcraft#1219"
+    "NakaSato/sketcraft#1219"
   ],
   "what": "24 small grooves cut into a bore whose top edge has an unrelated 1 mm fillet: 73 s and 24 boolean retries instead of 0.2 s",
   "source": "analytic",

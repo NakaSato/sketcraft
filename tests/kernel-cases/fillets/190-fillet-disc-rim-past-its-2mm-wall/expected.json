@@ -1,7 +1,7 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#190",
-  "tangency-labs/solidcraft#318"
+  "NakaSato/sketcraft#190",
+  "NakaSato/sketcraft#318"
  ],
  "what": "an R2.5 round of the top rim of a disc R13 x 2: the round runs past the bottom of its 2 mm wall (a cliff) and is built as if the wall went on, cut by the bottom face",
  "source": "analytic",

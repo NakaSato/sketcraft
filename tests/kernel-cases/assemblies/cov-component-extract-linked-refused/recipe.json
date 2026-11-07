@@ -72,14 +72,14 @@
    "command": "component.extract",
    "params": {
     "component": "Arm",
-    "path": "$OUT/arm.solidcraft"
+    "path": "$OUT/arm.sketcraft"
    }
   },
   {
    "command": "component.extract",
    "params": {
     "component": "Arm",
-    "path": "$OUT/arm2.solidcraft"
+    "path": "$OUT/arm2.sketcraft"
    }
   }
  ]

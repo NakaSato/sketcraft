@@ -1,6 +1,6 @@
 {
   "sources": [
-    "tangency-labs/solidcraft#4008"
+    "NakaSato/sketcraft#4008"
   ],
   "what": "symmetric 180 deg revolve cut about a vertical edge of a block, the tool's end faces lying in the block's side face",
   "source": "analytic",

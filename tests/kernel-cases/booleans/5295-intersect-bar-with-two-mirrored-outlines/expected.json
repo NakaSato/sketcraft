@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#5295"
+  "NakaSato/sketcraft#5295"
  ],
  "what": "a bar intersected in one extrude with two mirrored outlines (slanted on their inner sides): truck deleted the body with only a warning; each outline alone worked",
  "source": "analytic",

@@ -1,7 +1,7 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#2891",
-  "tangency-labs/solidcraft#3695"
+  "NakaSato/sketcraft#2891",
+  "NakaSato/sketcraft#3695"
  ],
  "what": "a 20 x 20 square swept 250 mm along the axis of a tube (ID 20, OD 30, 250 long) with a 30 degree twist, cut from it (the twisted cut froze the app)",
  "source": "analytic",

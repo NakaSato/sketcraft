@@ -22,8 +22,8 @@ The existing [render/materials catalog](../../../../docs/render-materials/README
 Run from the repository root, using the pinned improved native file:
 
 ```sh
-python3 assets/render/selene/tools/prepare.py inspect --model assets/render/selene/source/SELENE-showcase.solidcraft --out target/render-selene/inspection.json
-python3 assets/render/selene/tools/prepare.py template --model assets/render/selene/source/SELENE-showcase.solidcraft --out target/render-selene/bindings.json
+python3 assets/render/selene/tools/prepare.py inspect --model assets/render/selene/source/SELENE-showcase.sketcraft --out target/render-selene/inspection.json
+python3 assets/render/selene/tools/prepare.py template --model assets/render/selene/source/SELENE-showcase.sketcraft --out target/render-selene/bindings.json
 ```
 
 Inspection and template generation do not approve a model. Review the source identity, license/admission record and exact body selections. Preserve the unreviewed template and save the reviewed bindings separately. The source lock contains `active_source.status = "pinned_native"` and records the accepted file's SHA-256, byte size, format, units and Z-up frame. It must match the selected file exactly. Reviewed body bindings remain necessary before compilation.
@@ -31,7 +31,7 @@ Inspection and template generation do not approve a model. Review the source ide
 After those checks, the prepared opaque-body subset can be compiled:
 
 ```sh
-python3 assets/render/selene/tools/prepare.py compile --model assets/render/selene/source/SELENE-showcase.solidcraft --bindings target/render-selene/bindings-reviewed.json --lock assets/render/selene/source-lock.json --out target/render-selene/opaque-overlay.json
+python3 assets/render/selene/tools/prepare.py compile --model assets/render/selene/source/SELENE-showcase.sketcraft --bindings target/render-selene/bindings-reviewed.json --lock assets/render/selene/source-lock.json --out target/render-selene/opaque-overlay.json
 ```
 
 The tool does not overwrite outputs. Use a new output path for a new inspection, review or compilation. The compiled overlay is a reviewed native **BODY-only opaque diagnostic subset**. It does not apply these complete shot specifications, create terrain, reproduce layered materials or enable a future renderer.

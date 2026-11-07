@@ -1,6 +1,6 @@
 {
   "sources": [
-    "tangency-labs/solidcraft#3968"
+    "NakaSato/sketcraft#3968"
   ],
   "what": "a hole of diameter 10 drilled into the top of a truncated cone whose top is also diameter 10 (the hole wall meets the cone at the top rim)",
   "source": "analytic",

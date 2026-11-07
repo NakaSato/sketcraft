@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#5322"
+  "NakaSato/sketcraft#5322"
  ],
  "what": "an r2.5 hole cut through a 40x30x10 block's 30 mm side by a 5000 mm extrude: truck panicked ('tolerance must be no less than 1e-6') at 5000 mm (4999 worked)",
  "source": "analytic",

@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#349"
+  "NakaSato/sketcraft#349"
  ],
  "what": "a 2000 x 2500 tray with four 38.6 mm flanges at 72 degrees whose sketch is driven by parameters W and H, shrunk to 400 x 300 and unfolded (the solver leaves 1e-13 mm residuals: the planar region arrangement failed)",
  "source": "analytic",

@@ -1,7 +1,7 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#3156",
-  "tangency-labs/solidcraft#3224"
+  "NakaSato/sketcraft#3156",
+  "NakaSato/sketcraft#3224"
  ],
  "what": "a rectangle revolved plus and minus 90 degrees about an axis in a plate top face: both planar end faces lie in that face and the join needed a tool nudge",
  "source": "analytic",

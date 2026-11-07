@@ -1475,7 +1475,7 @@ fn blind_bore_into_a_joined_boss_meshes() {
 #[test]
 fn cutting_a_text_removes_each_letter_whether_its_letters_stand_apart_or_touch() {
     // Letters apart (cut at once by all of them), and two touching blocks (cut one after the other).
-    for (text, touching) in [("SOLIDCRAFT", false), ("", true)] {
+    for (text, touching) in [("SKETCRAFT", false), ("", true)] {
         let mut s = Session::default();
         run(&mut s, "sketch.create", json!({"plane":"XY"}));
         run(&mut s, "sketch.rectangle.two_point", json!({"p0":[0,0],"p1":[200,40]}));

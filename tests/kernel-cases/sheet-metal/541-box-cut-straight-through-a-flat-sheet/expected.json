@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#541"
+  "NakaSato/sketcraft#541"
  ],
  "what": "a solid.box cut straight through a 100 x 60 x 2.5 sheet was refused, though the same rectangle as an extrude cut works",
  "source": "analytic",

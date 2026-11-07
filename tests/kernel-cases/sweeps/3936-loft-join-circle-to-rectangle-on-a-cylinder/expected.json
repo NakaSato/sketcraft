@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#3936"
+  "NakaSato/sketcraft#3936"
  ],
  "what": "a loft from the circle on top of a cylinder (r 10, height 15) to a 40 x 30 rectangle 30 mm above, joined to the cylinder (builds as a new body in 2 ms, the join never returns)",
  "source": "invariants",

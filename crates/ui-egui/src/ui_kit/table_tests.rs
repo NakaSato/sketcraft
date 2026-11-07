@@ -314,7 +314,7 @@ fn horizontal_bar_is_painted_only_for_actual_table_overflow() {
 /// on the right), and is only cut, with the full name on hover, when even that is too narrow.
 #[test]
 fn name_list_gives_the_name_the_width_the_other_cells_leave() {
-    let long = "a-rather-long-stored-design-name-for-the-bracket-v12.solidcraft";
+    let long = "a-rather-long-stored-design-name-for-the-bracket-v12.sketcraft";
     for (width, cut) in [(900.0, false), (420.0, true)] {
         let ctx = crate::fonts::test_context();
         for _ in 0..4 {

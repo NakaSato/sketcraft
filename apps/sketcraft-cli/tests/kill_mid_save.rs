@@ -16,7 +16,7 @@ fn killed_mid_save_the_old_file_survives() {
     let dir = std::env::temp_dir().join(format!("sketcraft-kill-mid-save-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&dir);
     std::fs::create_dir_all(&dir).unwrap();
-    let path = dir.join("design.solidcraft");
+    let path = dir.join("design.sketcraft");
     let ok = Command::new(exe).args(["save-stress", &path.to_string_lossy(), "1"]).status().unwrap();
     assert!(ok.success());
     assert_eq!(round_of(&path).as_deref(), Some("0"));

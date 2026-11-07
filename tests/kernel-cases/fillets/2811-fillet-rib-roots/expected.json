@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#2811"
+  "NakaSato/sketcraft#2811"
  ],
  "what": "an R1.5 fillet of the 32 vertical root edges of 8 ribs between two walls of a grille tray (a performance case: the time must not blow up)",
  "source": "analytic",

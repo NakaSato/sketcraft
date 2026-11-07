@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#451"
+  "NakaSato/sketcraft#451"
  ],
  "what": "a 12x8x8 block (x 8..20) crossing the inner sphere r=18.5 of a hollow spherical-shell tool: the cut keeps the part inside r=18.5",
  "source": "analytic",

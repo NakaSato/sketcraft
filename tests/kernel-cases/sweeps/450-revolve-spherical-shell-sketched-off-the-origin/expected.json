@@ -1,7 +1,7 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#450",
-  "tangency-labs/solidcraft#452"
+  "NakaSato/sketcraft#450",
+  "NakaSato/sketcraft#452"
  ],
  "what": "a half ring between two arcs (both radial lines on the axis) revolved a full turn from a sketch plane 10 mm above the origin (volume +34 %)",
  "source": "analytic",

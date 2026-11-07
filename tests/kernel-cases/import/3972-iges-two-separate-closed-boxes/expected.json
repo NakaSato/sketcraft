@@ -1,7 +1,7 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#3928",
-  "tangency-labs/solidcraft#3972"
+  "NakaSato/sketcraft#3928",
+  "NakaSato/sketcraft#3972"
  ],
  "what": "an IGES file of twelve trimmed planes forming two separate closed boxes (10x20x30, one 100 mm along x): they must come in as two solids, not one open body",
  "source": "analytic",

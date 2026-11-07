@@ -284,7 +284,7 @@ pub enum WindowEvent {
     /// - Only available on **macOS**, **iOS** and **Wayland**.
     /// - On iOS, not recognized by default. It must be enabled when needed.
     /// - On Wayland, delivered when the compositor implements the `zwp_pointer_gestures_v1`
-    ///   protocol. SolidCraft: backported from winit 0.31 (rust-windowing/winit#4338).
+    ///   protocol. SketCraft: backported from winit 0.31 (rust-windowing/winit#4338).
     PinchGesture {
         device_id: DeviceId,
         /// Positive values indicate magnification (zooming in) and  negative
@@ -338,7 +338,7 @@ pub enum WindowEvent {
     /// - Only available on **macOS**, **iOS** and **Wayland**.
     /// - On iOS, not recognized by default. It must be enabled when needed.
     /// - On Wayland, delivered when the compositor implements the `zwp_pointer_gestures_v1`
-    ///   protocol. SolidCraft: backported from winit 0.31 (rust-windowing/winit#4338).
+    ///   protocol. SketCraft: backported from winit 0.31 (rust-windowing/winit#4338).
     RotationGesture {
         device_id: DeviceId,
         /// change in rotation in degrees

@@ -647,7 +647,7 @@ fn invalid_zero_negative_failed_open_and_click_away_leave_no_dimension() {
         h.step(&json!({"key":"Escape"})).unwrap();
     }
     place(&mut h, &[[10., 0.]], [10., 5.]);
-    assert!(h.app.run("doc.open", json!({"path":"missing-dimension-draft-design.solidcraft"})).is_err());
+    assert!(h.app.run("doc.open", json!({"path":"missing-dimension-draft-design.sketcraft"})).is_err());
     assert!(crate::dim_view::editing(), "failed replacement must preserve the draft");
     assert_eq!(h.app.session.doc.to_json(), baseline);
     h.frames(8);

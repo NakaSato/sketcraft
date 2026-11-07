@@ -1576,7 +1576,7 @@ mod tests {
         start.elapsed().as_secs_f64() * 1000.0 / n as f64
     }
 
-    /// Frame times with the window closed and open (`cargo test -p solidcraft-ui-egui params_frame_time -- --nocapture`).
+    /// Frame times with the window closed and open (`cargo test -p sketcraft-ui-egui params_frame_time -- --nocapture`).
     #[test]
     fn params_frame_time() {
         let mut h = big_design();

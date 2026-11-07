@@ -1,7 +1,7 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#602",
-  "tangency-labs/solidcraft#618"
+  "NakaSato/sketcraft#602",
+  "NakaSato/sketcraft#618"
  ],
  "what": "rounding the top edges of a hex head on a shaft with a modelled thread (it froze the app)",
  "source": "analytic",

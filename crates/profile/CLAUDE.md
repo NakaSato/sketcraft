@@ -35,7 +35,7 @@ cargo check -p sketcraft-profile --target wasm32-unknown-unknown
 - Use `web_time::Instant`, never `std::time::Instant`: std's panics on wasm32.
 - Keep the off path cheap: one relaxed atomic load per span.
 - The crate root denies `unwrap`, `expect`, `panic!` and friends.
-  See `skills/solidcraft-crash-safety/SKILL.md` and `skills/solidcraft-performance/SKILL.md`.
+  See `skills/sketcraft-crash-safety/SKILL.md` and `skills/sketcraft-performance/SKILL.md`.
 
 ## Gotchas
 

@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#839"
+  "NakaSato/sketcraft#839"
  ],
  "what": "a 200 x 100 plate with its corners rounded 8 and one 40 mm inside flange on its bottom edge, unfolded: the trim made the outline's arcs chords",
  "source": "analytic",

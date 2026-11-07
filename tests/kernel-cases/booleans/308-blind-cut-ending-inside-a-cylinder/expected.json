@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#308"
+  "NakaSato/sketcraft#308"
  ],
  "what": "a hinge leaf (40x30x3) with a joined r4 knuckle cylinder along X and a O4 pin hole, then a 3.3 mm blind cut of x 12..28, y 29..40 ending inside the cylinder: the result grew a sphere and a freeform face",
  "source": "analytic",

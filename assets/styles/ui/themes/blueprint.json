@@ -1,6 +1,6 @@
 {
   "order": 120,
-  "provenance": "Original SolidCraft theme",
+  "provenance": "Original SketCraft theme",
   "base": "dark",
   "colors": {
     "accent": "#66ddff",
@@ -190,7 +190,7 @@
     "viewport_top": "#143b67",
     "warning": "#f0d18c"
   },
-  "format": "solidcraft-theme/1",
+  "format": "sketcraft-theme/1",
   "name": "Blueprint",
   "radii": {
     "radius_sm": 4,

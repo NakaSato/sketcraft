@@ -550,7 +550,7 @@ fn cold_native_reopen_keeps_owned_opaque_values_without_pack_metadata_or_assets(
     let nonce = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos();
     let dir = std::env::temp_dir().join(format!("sketcraft-pack-{}-{nonce}", std::process::id()));
     std::fs::create_dir(&dir).unwrap();
-    let path = dir.join("opaque.solidcraft");
+    let path = dir.join("opaque.sketcraft");
     s.execute("file.save", &json!({"path":path.to_str().unwrap()})).unwrap();
     let mut reopened = Session::default();
     reopened.execute("doc.open", &json!({"path":path.to_str().unwrap()})).unwrap();

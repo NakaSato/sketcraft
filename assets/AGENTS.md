@@ -17,6 +17,6 @@ These files are the specification; chat history and old previews are not require
 - Add an exact `ATTRIBUTION.md` row for every non-Markdown asset, including tool
   code, web UI sources and metadata. Remove rows for intentionally retired files.
 - Never copy or derive iconography from commercial CAD products. Use original
-  SolidCraft artwork, analytic geometry and the approved local references.
+  SketCraft artwork, analytic geometry and the approved local references.
 - Run `cargo xtask assets` and `cargo xtask icons`. Full repository gates still
   apply before a commit. Never refresh acceptance hashes to bypass a failed check.

@@ -188,7 +188,7 @@ fn a_step_assembly_comes_in_as_nested_components_with_its_instances() {
     assert_eq!(shown_boxes(&s), file_boxes(&path));
 
     // Saved and opened again, it is the same.
-    let design = dir.join("rig.solidcraft").to_string_lossy().to_string();
+    let design = dir.join("rig.sketcraft").to_string_lossy().to_string();
     run(&mut s, "file.save_as", json!({"path": design}));
     let mut again = Session::default();
     run(&mut again, "doc.open", json!({"path": design}));
@@ -309,7 +309,7 @@ fn a_design_with_a_loose_import_rebuilds_unchanged() {
     let mut json: Value = serde_json::from_str(&doc.to_json()).unwrap();
     json["format"] = json!("sketcraft/21");
     assert!(json["features"][0]["kind"].get("skip").is_none());
-    let file = dir.join("old.solidcraft");
+    let file = dir.join("old.sketcraft");
     std::fs::write(&file, json.to_string()).unwrap();
     let mut s = Session::default();
     run(&mut s, "doc.open", json!({"path": file.to_string_lossy()}));

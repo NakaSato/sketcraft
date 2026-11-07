@@ -28,7 +28,7 @@ const MAX_BATCH: usize = 1000;
 
 /// What every MCP client is told at `initialize`: how to plan, build and verify a part. It stays
 /// version-neutral (no workaround for a quirk of the current kernel or solver: those belong in
-/// `skills/solidcraft-modeling/reference.md`, which `skill_reference` serves per release), and
+/// `skills/sketcraft-modeling/reference.md`, which `skill_reference` serves per release), and
 /// `tests::instructions_name_only_real_tools` checks every tool and command id it names.
 const INSTRUCTIONS: &str = "SketCraft is an independent parametric 3D CAD app, and these tools drive it: when its window is \
 open the user watches the model appear, otherwise a headless session builds it. When asked to design or build a part, do it \
@@ -102,13 +102,13 @@ impl Server {
     pub fn new(backend: Box<dyn Backend>) -> Self {
         Self { backend, initialized: false, scope: None, options: Options::default(), app_options: None }
     }
-    /// Confine the files tool calls may reach to `scope` (`None`: anywhere). `solidcraft-cli mcp`
+    /// Confine the files tool calls may reach to `scope` (`None`: anywhere). `sketcraft-cli mcp`
     /// always sets one unless started with `--allow-any-path` (docs/mcp.md).
     pub fn with_path_scope(mut self, scope: Option<PathScope>) -> Self {
         self.scope = scope;
         self
     }
-    /// Shape tool output with `options` (default: as always; `solidcraft-cli mcp --compact` or
+    /// Shape tool output with `options` (default: as always; `sketcraft-cli mcp --compact` or
     /// `SKETCRAFT_MCP_COMPACT=1` turn on compact output, docs/mcp.md). The app's Preferences can
     /// turn an option on too ([`Server::options`]).
     pub fn with_options(mut self, options: Options) -> Self {

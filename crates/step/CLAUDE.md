@@ -25,8 +25,8 @@ SKETCRAFT_STEP_CORPUS=/path/to/models cargo test -p sketcraft-step -- --ignored 
 
 ## Rules
 
-- Written from the public ISO 10303-21, -41, -42 and -43 specifications. Do not copy third-party STEP code. See `skills/solidcraft-ground-rules/SKILL.md`.
-- Input is hostile. Cap sizes, entity counts and nesting depth, check every reference, and return an error message, never a panic. See `skills/solidcraft-crash-safety/SKILL.md`.
+- Written from the public ISO 10303-21, -41, -42 and -43 specifications. Do not copy third-party STEP code. See `skills/sketcraft-ground-rules/SKILL.md`.
+- Input is hostile. Cap sizes, entity counts and nesting depth, check every reference, and return an error message, never a panic. See `skills/sketcraft-crash-safety/SKILL.md`.
 - Keep this crate backend-free. Do not depend on `kernel`, `smlib`, `doc` or anything higher.
 - Keep STEP's own parameterisation, so 2D curves in a surface's parameter space keep their meaning.
 - A new entity gets read, write and read → write → read cases in `src/geom_tests.rs` or `src/topology_tests.rs`, with analytic expected values.

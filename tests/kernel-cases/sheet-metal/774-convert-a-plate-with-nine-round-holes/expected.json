@@ -1,7 +1,7 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#774",
-  "tangency-labs/solidcraft#977"
+  "NakaSato/sketcraft#774",
+  "NakaSato/sketcraft#977"
  ],
  "what": "a 30 x 30 x 2 plate with nine 4 mm holes converted to sheet metal (refused as not a plate of even thickness: the holes were read as polygons)",
  "source": "analytic",

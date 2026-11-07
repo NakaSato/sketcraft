@@ -258,7 +258,7 @@ pub fn step_export_products(products: &[ExportProduct], root: usize, header: &St
     let _ = writeln!(text, "FILE_DESCRIPTION(({}),'2;1');", string(description));
     let _ = writeln!(
         text,
-        "FILE_NAME({},{},({}),({}),'SolidCraft','SolidCraft','');",
+        "FILE_NAME({},{},({}),({}),'SketCraft','SketCraft','');",
         string(&header.file_name),
         string(&header.time_stamp),
         string(&header.author),

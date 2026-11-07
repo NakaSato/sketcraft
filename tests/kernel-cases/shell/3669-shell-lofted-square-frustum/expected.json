@@ -1,7 +1,7 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#3669",
-  "tangency-labs/solidcraft#2990"
+  "NakaSato/sketcraft#3669",
+  "NakaSato/sketcraft#2990"
  ],
  "what": "a loft between a 40 mm and a 20 mm square 80 mm apart, shelled 2 mm open at the small end",
  "source": "analytic",

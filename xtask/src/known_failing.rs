@@ -6,8 +6,8 @@
 //! pull request); a listed test that did not run (a pull request tests only the packages it
 //! touches) is neither. The list has the kernel rig's format (`kernel_cases::known_failing`):
 //! one test a line, `<test> <why it fails today>`, sorted, with `<test>` nextest's
-//! `<binary id>::<test name>` (`solidcraft-kernel::tests::...`, or
-//! `solidcraft-cli::action_matrix::action_matrix_sample` for an integration test binary).
+//! `<binary id>::<test name>` (`sketcraft-kernel::tests::...`, or
+//! `sketcraft-cli::action_matrix::action_matrix_sample` for an integration test binary).
 
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
@@ -225,20 +225,20 @@ mod tests {
     #[test]
     fn the_gate_passes_listed_failures_and_fails_on_a_new_failure_or_a_fixed_test() {
         let list = "# today\n\
-            solidcraft-kernel::tests::fails SMLib status 1001\n\
-            solidcraft-kernel::tests::not_run_here volume 1e-4 off (#2422)\n\
-            solidcraft-kernel::tests::times_out SMLib hangs on the corner\n";
+            sketcraft-kernel::tests::fails SMLib status 1001\n\
+            sketcraft-kernel::tests::not_run_here volume 1e-4 off (#2422)\n\
+            sketcraft-kernel::tests::times_out SMLib hangs on the corner\n";
         let ok = grade(list, &outcomes(REPORT)).unwrap();
         assert_eq!(ok, "known-failing: 5 ran, 3 pass, 2 known failing, 1 listed did not run here; no regression");
 
         let fixed = REPORT.replace("<error message=\"timed out\" type=\"test timeout\"/>", "");
         let err = grade(list, &outcomes(&fixed)).unwrap_err();
-        assert!(err.contains("FIXED, remove it from the known-failing list: solidcraft-kernel::tests::times_out"), "{err}");
+        assert!(err.contains("FIXED, remove it from the known-failing list: sketcraft-kernel::tests::times_out"), "{err}");
         assert!(err.starts_with("known-failing: 5 ran, 4 pass, 1 known failing"), "{err}");
 
         let shorter = list.replace("sketcraft-kernel::tests::fails SMLib status 1001\n", "");
         let err = grade(&shorter, &outcomes(REPORT)).unwrap_err();
-        assert!(err.contains("REGRESSION, failed and not on the known-failing list: solidcraft-kernel::tests::fails"), "{err}");
+        assert!(err.contains("REGRESSION, failed and not on the known-failing list: sketcraft-kernel::tests::fails"), "{err}");
         assert!(!err.contains("FIXED"), "{err}");
     }
 

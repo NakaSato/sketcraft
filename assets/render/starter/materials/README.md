@@ -35,7 +35,7 @@ to the Rust application.
 The four 8-bit roles are bounded texture inputs intended for a future explicit
 renderer adapter. Their manifest consumer is
 `bounded_texture_input_compatible_not_runtime_bound`. Their file shape and color
-space do not establish that a particular SolidCraft build imports or applies them.
+space do not establish that a particular SketCraft build imports or applies them.
 The 16-bit height role is **authoring-only** until an adapter explicitly supports
 its physical displacement contract; its consumer is
 `authoring_only_requires_explicit_height_adapter`.
@@ -91,7 +91,7 @@ scale and relief authority.
 
 Each whole UV repeat spans `tile_mm = [width, height]`. These are local physical
 surface dimensions in millimetres; maintain them when a CAD body is resized.
-SolidCraft's model frame remains Z-up. UV directions must be bound to a reviewed
+SketCraft's model frame remains Z-up. UV directions must be bound to a reviewed
 surface frame rather than inferred from the world axes or camera.
 
 The normal convention is **OpenGL +Y, +U right, +V image-up**. Image rows increase
@@ -265,7 +265,7 @@ runtime evidence.
 
 ## Clean-room provenance and license
 
-The recipes, periodic fields, tools and exports are original SolidCraft
+The recipes, periodic fields, tools and exports are original SketCraft
 contributor work under **MIT OR Apache-2.0**. No external texture, photograph,
 material library, commercial CAD output or third-party artwork was used as an
 input. The generator uses original numerical constructions and deterministic

@@ -1,7 +1,7 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#593",
-  "tangency-labs/solidcraft#601"
+  "NakaSato/sketcraft#593",
+  "NakaSato/sketcraft#601"
  ],
  "what": "an edge flange stands on the far edge of another edge flange (a lip turned in over the base), both 90 degrees",
  "source": "analytic",

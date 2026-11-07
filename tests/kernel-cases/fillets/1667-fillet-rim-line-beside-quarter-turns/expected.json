@@ -1,7 +1,7 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#1667",
-  "tangency-labs/solidcraft#1702"
+  "NakaSato/sketcraft#1667",
+  "NakaSato/sketcraft#1702"
  ],
  "what": "an R5 round of the top rim of a 297 mm long box whose corners are R5 (a 287 mm line beside 7.85 mm quarter turns)",
  "source": "analytic",

@@ -1,7 +1,7 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#3435",
-  "tangency-labs/solidcraft#3441"
+  "NakaSato/sketcraft#3435",
+  "NakaSato/sketcraft#3441"
  ],
  "what": "a fillet of radius 6.9 on a cylinder rim whose flat top ring (round the joined boss) is only 4.3 mm wide must be refused, not grow the part",
  "source": "invariants",

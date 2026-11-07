@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#3412"
+  "NakaSato/sketcraft#3412"
  ],
  "what": "a loft through two circles drawn on the same plane (no volume between them; it built a flat zero-volume body and reported success)",
  "source": "invariants",

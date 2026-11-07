@@ -39,4 +39,3 @@ This crate has no tests of its own. Its output is tested through `sketcraft-doc`
 - Fields are visited in declaration order. Order matters: the order of expression inputs gives
   the `dN` parameter names. Use `after = field` instead of reordering struct fields.
 - An `Expr` or bare `Vec3` field without a role does not compile on purpose. Give it a role.
-- Doc comments still say `solidcraft-doc`; the package is `sketcraft-doc`.

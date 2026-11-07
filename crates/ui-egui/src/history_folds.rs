@@ -178,13 +178,13 @@ mod tests {
     fn a_choice_stays_with_the_design_it_was_made_in() {
         let dir = folder("stays");
         let mut app = new_app();
-        let first = design(&mut app, &dir, "first.solidcraft");
+        let first = design(&mut app, &dir, "first.sketcraft");
         super::set_open(&mut app, "timeline_group:7", true);
         assert!(super::is_open(&app, "timeline_group:7", false));
 
         crate::documents::new_design(&mut app);
         assert!(!super::is_open(&app, "timeline_group:7", false), "a new design in its own tab");
-        let second = design(&mut app, &dir, "second.solidcraft");
+        let second = design(&mut app, &dir, "second.sketcraft");
         super::set_open(&mut app, "timeline_group:7", false);
         assert!(!super::is_open(&app, "timeline_group:7", true));
 
@@ -203,10 +203,10 @@ mod tests {
     fn choices_are_remembered_by_file_between_runs() {
         let dir = folder("between-runs");
         let mut app = new_app();
-        let first = design(&mut app, &dir, "first.solidcraft");
+        let first = design(&mut app, &dir, "first.sketcraft");
         super::set_open(&mut app, "timeline_component:3:9", true);
         crate::documents::new_design(&mut app);
-        let second = design(&mut app, &dir, "second.solidcraft");
+        let second = design(&mut app, &dir, "second.sketcraft");
         let mut prefs: serde_json::Value = serde_json::from_str(&app.prefs()).expect("preferences");
         prefs["browser_expanded"] = json!(["c0/bodies", "timeline_group:8", "timeline_component:1:2", "timeline_joints:8"]);
 
@@ -229,9 +229,9 @@ mod tests {
     fn a_folder_folded_for_all_designs_before_stays_folded_until_chosen() {
         let dir = folder("legacy-folded");
         let mut app = new_app();
-        let first = design(&mut app, &dir, "first.solidcraft");
+        let first = design(&mut app, &dir, "first.sketcraft");
         crate::documents::new_design(&mut app);
-        let second = design(&mut app, &dir, "second.solidcraft");
+        let second = design(&mut app, &dir, "second.sketcraft");
         let mut prefs: serde_json::Value = serde_json::from_str(&app.prefs()).expect("preferences");
         prefs["browser_collapsed"] = json!(["c0/bodies", "timeline_group:8", "timeline_component:1:2", "timeline_joints:8"]);
 
@@ -260,12 +260,12 @@ mod tests {
         let mut app = new_app();
         app.run("solid.box", json!({"length": 10, "width": 10, "height": 10})).expect("a box");
         super::set_open(&mut app, "timeline_group:4", true);
-        let first = dir.join("first.solidcraft").to_string_lossy().into_owned();
+        let first = dir.join("first.sketcraft").to_string_lossy().into_owned();
         crate::save_job::start(&mut app, "file.save_as", json!({"path": first}));
         crate::save_job::tick(&mut app, true);
         assert_eq!(app.session.path.as_deref(), Some(first.as_str()));
         super::set_open(&mut app, "timeline_group:5", true);
-        let copy = dir.join("copy.solidcraft").to_string_lossy().into_owned();
+        let copy = dir.join("copy.sketcraft").to_string_lossy().into_owned();
         app.run("file.save_as", json!({"path": copy})).expect("saved as a copy");
         super::set_open(&mut app, "timeline_group:6", true);
 
@@ -285,11 +285,11 @@ mod tests {
         let mut folds = Folds::default();
         folds.set("timeline_group:1", true);
         for i in 0..=DESIGNS_MAX {
-            remembered.put(&format!("{i}.solidcraft"), &folds);
+            remembered.put(&format!("{i}.sketcraft"), &folds);
         }
         assert_eq!(remembered.0.len(), DESIGNS_MAX);
-        assert!(remembered.get("0.solidcraft").is_none(), "the least recently used");
-        remembered.put("1.solidcraft", &Folds::default());
-        assert!(remembered.get("1.solidcraft").is_none(), "no choice left");
+        assert!(remembered.get("0.sketcraft").is_none(), "the least recently used");
+        remembered.put("1.sketcraft", &Folds::default());
+        assert!(remembered.get("1.sketcraft").is_none(), "no choice left");
     }
 }

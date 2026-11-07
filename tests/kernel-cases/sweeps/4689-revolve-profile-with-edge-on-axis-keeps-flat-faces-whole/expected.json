@@ -1,8 +1,8 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#4689",
-  "tangency-labs/solidcraft#5317",
-  "tangency-labs/solidcraft#4521"
+  "NakaSato/sketcraft#4689",
+  "NakaSato/sketcraft#5317",
+  "NakaSato/sketcraft#4521"
  ],
  "what": "an L profile whose long leg lies on the revolve axis (the axis is the profile's own line), revolved 360 deg: the flat faces came out split into three 120 deg sectors",
  "source": "analytic",

@@ -1,7 +1,7 @@
 //! `cargo xtask web-offline [DIR]`: let a web build work offline and update itself.
 //!
-//! Runs as Trunk's post_build hook (apps/solidcraft-web/Trunk.toml) on the staging directory
-//! (`TRUNK_STAGING_DIR`), or on DIR. It writes `sw.js` from apps/solidcraft-web/sw.js with this
+//! Runs as Trunk's post_build hook (apps/sketcraft-web/Trunk.toml) on the staging directory
+//! (`TRUNK_STAGING_DIR`), or on DIR. It writes `sw.js` from apps/sketcraft-web/sw.js with this
 //! build's version and files (each with its SHA-256, which the worker checks every download
 //! against, so a deployment that changes mid-download never mixes into a kept build), and the
 //! same as `build.json` (which launches check to find a newly deployed build). The version is the
@@ -20,7 +20,7 @@ const MARKER: &str = "/* @build */";
 const SW: &str = "sw.js";
 const BUILD: &str = "build.json";
 /// Files the app fetches only when it needs them (Japanese ~4.7 MB and Chinese subsets under
-/// `fonts/` in apps/solidcraft-web): not kept for offline use, so not every user downloads them.
+/// `fonts/` in apps/sketcraft-web): not kept for offline use, so not every user downloads them.
 /// The worker leaves them to the network.
 const ON_DEMAND: &[&str] = &["fonts/"];
 /// The version that makes sw.js retire (the template's own).
@@ -73,7 +73,7 @@ pub fn retire(root: &Path, dir: &Path) -> Result<(), String> {
 }
 
 fn template(root: &Path) -> Result<String, String> {
-    let path = root.join("apps/solidcraft-web").join(SW);
+    let path = root.join("apps/sketcraft-web").join(SW);
     std::fs::read_to_string(&path).map_err(|e| format!("{}: {e}", path.display()))
 }
 
@@ -143,7 +143,7 @@ mod tests {
 
     #[test]
     fn the_template_has_the_marker() {
-        let t = std::fs::read_to_string(crate::root().join("apps/solidcraft-web").join(SW)).unwrap_or_default();
+        let t = std::fs::read_to_string(crate::root().join("apps/sketcraft-web").join(SW)).unwrap_or_default();
         assert!(render(&t, "v", &json!(["x"])).is_ok_and(|s| s.contains("FILES = [\"x\"]")));
     }
 

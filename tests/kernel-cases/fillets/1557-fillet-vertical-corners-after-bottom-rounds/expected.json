@@ -1,7 +1,7 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#1557",
-  "tangency-labs/solidcraft#1581"
+  "NakaSato/sketcraft#1557",
+  "NakaSato/sketcraft#1581"
  ],
  "what": "vertical corner fillets R2 on a 25x25x10 box whose four bottom edges are already rounded R2 (the round meets the earlier mitre)",
  "source": "analytic",

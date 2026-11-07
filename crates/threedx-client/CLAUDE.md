@@ -34,7 +34,7 @@ Use the app's `.app` bundle to see the cap move.
   `Cargo.toml` copies the workspace lints by hand: keep them in sync with `[workspace.lints]`.
 - Never link against, bundle or redistribute the framework. The declarations are our own.
 - The app must run without the driver: return `Error::NotInstalled` / `MissingSymbol`, never panic.
-  Callbacks run under `catch_unwind`. See `skills/solidcraft-crash-safety/SKILL.md`.
+  Callbacks run under `catch_unwind`. See `skills/sketcraft-crash-safety/SKILL.md`.
 - Call `stop()` when the app ends. The driver keeps a dead client registered otherwise, and a later
   client gets nothing until the device is replugged.
 
@@ -43,4 +43,3 @@ Use the app's `.app` bundle to see the cap move.
 - `start` returns once the client thread runs. The registration outcome arrives later through the
   `connected` callback, on the client's thread (registration needs the main run loop).
 - Only one client per process (`Error::AlreadyStarted`).
-- The doc comment in `examples/dump.rs` says `solidcraft-3dx-client`; use `sketcraft-3dx-client`.

@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#793"
+  "NakaSato/sketcraft#793"
  ],
  "what": "the same coil trimmed flat by cutting away everything above z = 12.5 with a box (trimming a coil to length)",
  "source": "analytic",

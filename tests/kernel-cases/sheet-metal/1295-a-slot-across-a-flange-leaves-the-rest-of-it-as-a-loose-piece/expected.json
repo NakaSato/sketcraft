@@ -1,7 +1,7 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#1295",
-  "tangency-labs/solidcraft#1338"
+  "NakaSato/sketcraft#1295",
+  "NakaSato/sketcraft#1338"
  ],
  "what": "a 100 x 60 sheet with a 45 degree 40 mm flange and a slot cut across the flange just past its bend: the rest of the flange keeps no material joining it to the base",
  "source": "analytic",

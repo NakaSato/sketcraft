@@ -1,7 +1,7 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#784",
-  "tangency-labs/solidcraft#811"
+  "NakaSato/sketcraft#784",
+  "NakaSato/sketcraft#811"
  ],
  "what": "two bodies whose STL export used to have open edges where faces were meshed apart: a 40x30x20 box with all twelve edges rounded 2 mm, and a cylinder R15 x 20 with a coaxial 6 mm bore",
  "source": "analytic",

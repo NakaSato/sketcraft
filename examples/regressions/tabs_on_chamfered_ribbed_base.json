@@ -1,5 +1,5 @@
 {
-  "description": "Reduced reproduction for #2059, constructed from the public SolidCraft screenshot: eighteen 1 x 2 mm tabs extend six ribs on a chamfered round base. The tabs share the ribs' side planes; the remote conical chamfer made the join fail with Union: no result. This is an original analytic example, not the reporter's unavailable design.",
+  "description": "Reduced reproduction for #2059, constructed from the public SketCraft screenshot: eighteen 1 x 2 mm tabs extend six ribs on a chamfered round base. The tabs share the ribs' side planes; the remote conical chamfer made the join fail with Union: no result. This is an original analytic example, not the reporter's unavailable design.",
   "commands": [
     {"command": "solid.cylinder", "params": {"radius": 40, "height": 4, "body_name": "Base"}},
     {"command": "solid.chamfer", "params": {"edges": [[40, 0, 4]], "distance": 1}},

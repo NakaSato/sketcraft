@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#4702"
+  "NakaSato/sketcraft#4702"
  ],
  "what": "a disc (r16 x 5) with a radial slot cut 3.2 down (65..115 deg, r 10 out through the rim): the vertical edge where a slot wall meets the outer cylinder chamfered 0.4: refused ('both faces next to the edge must be planar')",
  "source": "analytic",

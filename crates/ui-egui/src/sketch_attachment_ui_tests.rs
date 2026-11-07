@@ -47,7 +47,7 @@ fn actual_picked_face_and_noop_edit_preserve_exact_anchor_and_dimensions() {
     h.settle();
     h.app.finish_sketch();
     assert_eq!(serde_json::to_value(&h.app.session.doc.feature(sketch).unwrap().kind).unwrap(), before);
-    let path = h.dir.join("picked-face.solidcraft");
+    let path = h.dir.join("picked-face.sketcraft");
     h.app.run("file.save", json!({"path":path})).unwrap();
     h.app.run("doc.open", json!({"path":path})).unwrap();
     assert_eq!(serde_json::to_value(&h.app.session.doc.feature(sketch).unwrap().kind).unwrap(), before);
@@ -115,7 +115,7 @@ fn lost_attachment_ghost_rebind_preview_cancel_apply_and_undo_preserve_sketch() 
     let boss = h.app.session.world_state().unwrap().body("Boss").unwrap().mesh().bounds();
     assert!((boss.min.z - 30.0).abs() < 1e-7 && (boss.max.z - 32.0).abs() < 1e-7);
     let repaired = h.app.session.doc.to_json();
-    let path = h.dir.join("rebound-face.solidcraft");
+    let path = h.dir.join("rebound-face.sketcraft");
     h.app.run("file.save", json!({"path":path})).unwrap();
     // Saving the untitled design names it after its file; everything else is exact.
     let named = |doc: &str| {
@@ -138,7 +138,7 @@ fn attachment_drafts_leave_on_document_replacement_but_survive_failed_open() {
     h.frames(2);
     h.step(&json!({"widget":"Use XZ plane"})).unwrap();
     assert!(crate::sketch_attachment_ui::commands(&h.app).is_some());
-    assert!(h.app.run("doc.open", json!({"path":h.dir.join("missing.solidcraft")})).is_err());
+    assert!(h.app.run("doc.open", json!({"path":h.dir.join("missing.sketcraft")})).is_err());
     assert!(crate::sketch_attachment_ui::commands(&h.app).is_some());
     h.app.run("file.new", json!({})).unwrap();
     assert!(h.app.tree.redefine.is_none());
@@ -232,7 +232,7 @@ fn actual_nested_second_placement_face_pick_keeps_target_and_author_paths() {
     h.app.finish_sketch();
     assert_eq!((h.app.session.active_component, h.app.session.active_occurrence_path.as_ref()), (0, None), "the design is active again (#8127)");
     assert_eq!(h.app.session.doc.feature(sketch).unwrap().kind, kind);
-    let file = h.dir.join("nested-face.solidcraft");
+    let file = h.dir.join("nested-face.sketcraft");
     h.app.run("file.save", json!({"path":file})).unwrap();
     h.app.run("doc.open", json!({"path":file})).unwrap();
     assert_eq!(h.app.session.doc.feature(sketch).unwrap().kind, kind);

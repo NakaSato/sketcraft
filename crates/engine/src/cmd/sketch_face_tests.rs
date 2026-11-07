@@ -679,7 +679,7 @@ fn sketch_and_extrude_on_every_flat_face(s: &Session, dir: &std::path::Path, lab
             assert_eq!(timeline_errors(t), before, "{what} ({when}): no new timeline errors");
         };
         check(&t, "fresh");
-        let reopened = save_and_reopen(&mut t, dir, &format!("{label}-{index}.solidcraft"));
+        let reopened = save_and_reopen(&mut t, dir, &format!("{label}-{index}.sketcraft"));
         check(&reopened, "after save and reopen");
     }
     faces.len()
@@ -698,7 +698,7 @@ fn every_flat_face_of_one_sketch_extruded_up_and_down_takes_an_attached_sketch()
     s.run_script(&script).unwrap();
     assert_eq!(s.world_state().unwrap().bodies.len(), 1, "the two extrudes join into one body");
     assert_eq!(sketch_and_extrude_on_every_flat_face(&s, &dir, "synthetic"), 12, "8 side walls, top, bottom, 2 at the sketch plane");
-    let reopened = save_and_reopen(&mut s, &dir, "synthetic.solidcraft");
+    let reopened = save_and_reopen(&mut s, &dir, "synthetic.sketcraft");
     assert_eq!(sketch_and_extrude_on_every_flat_face(&reopened, &dir, "synthetic-reopened"), 12);
     // The logo design as it was reported (format 17, with a removed shelled body before it).
     let mut logo = Session::default();

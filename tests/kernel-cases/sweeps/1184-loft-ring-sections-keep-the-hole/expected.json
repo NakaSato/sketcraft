@@ -1,9 +1,9 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#1184",
-  "tangency-labs/solidcraft#1254",
-  "tangency-labs/solidcraft#2435",
-  "tangency-labs/solidcraft#2447"
+  "NakaSato/sketcraft#1184",
+  "NakaSato/sketcraft#1254",
+  "NakaSato/sketcraft#2435",
+  "NakaSato/sketcraft#2447"
  ],
  "what": "a loft between two ring sections (outer r 20, inner r 12) 20 mm apart (the hole was dropped and a solid disc built)",
  "source": "analytic",

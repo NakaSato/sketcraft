@@ -26,7 +26,7 @@ overrides and two closed-mesh dielectric overrides retain their named ordinals.
 The render request is copied byte-for-byte from `coffee-framing-render.json`,
 including the corrected fill, 1920x1080 camera, 256 samples and depth 12.
 
-This is independently authored SolidCraft geometry under MIT OR Apache-2.0.
+This is independently authored SketCraft geometry under MIT OR Apache-2.0.
 No reference models, image assets, logos, product-specific detailing or triangle
 soups are imported. Dimensions describe an original generic appliance study.
 

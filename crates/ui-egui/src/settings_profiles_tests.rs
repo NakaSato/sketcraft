@@ -623,7 +623,7 @@ fn general_inactive_profile_rows_export_rename_import_and_delete_without_applyin
     );
     h.step(&json!({"click":{"handle":"prefs:profile:Laptop:export"}})).unwrap();
     h.frames(6);
-    let path = h.dir.join("Laptop.solidcraft-profile.json");
+    let path = h.dir.join("Laptop.sketcraft-profile.json");
     let exported: Value = serde_json::from_str(&std::fs::read_to_string(&path).unwrap()).unwrap();
     assert_eq!(exported["name"], "Laptop");
     assert_eq!(exported["preferences"]["zoom_reverse"], true);
@@ -653,7 +653,7 @@ fn general_inactive_profile_rows_export_rename_import_and_delete_without_applyin
         "the row rename editor does not fill the independent name entry"
     );
 
-    h.step(&json!({"choose_file":"Laptop.solidcraft-profile.json"})).unwrap();
+    h.step(&json!({"choose_file":"Laptop.sketcraft-profile.json"})).unwrap();
     h.step(&json!({"click":{"handle":"prefs:profile:import"}})).unwrap();
     h.frames(6);
     assert_eq!(h.app.settings_profiles.names(), ["Travel", "Desk", "Laptop"]);
@@ -894,7 +894,7 @@ fn moved_profile_settings_survive_saved_roundtrip_and_apply() {
     assert_eq!(sanitize(&doc).unwrap(), doc);
     h.app.settings_profiles.load(&serde_json::from_str::<Value>(&serde_json::to_string(&saved).unwrap()).unwrap());
     assert_eq!(h.app.settings_profiles.list[0], doc);
-    let path = h.dir.join("moved.solidcraft-profile.json");
+    let path = h.dir.join("moved.sketcraft-profile.json");
     let exported = run(&mut h, "settings.profile.export", json!({"name":"Moved", "path":path}));
     assert_eq!(exported["profile"], doc);
     let written: Value = serde_json::from_str(&std::fs::read_to_string(&path).unwrap()).unwrap();

@@ -1,7 +1,7 @@
 {
   "sources": [
-    "tangency-labs/solidcraft#819",
-    "tangency-labs/solidcraft#921"
+    "NakaSato/sketcraft#819",
+    "NakaSato/sketcraft#921"
   ],
   "what": "a disc with a pocket that splits the outer cylinder wall's seam edges at the pocket floor: the wall used to be meshed with fans cutting through the disc, so the measured volume and the STL read too small",
   "source": "analytic",

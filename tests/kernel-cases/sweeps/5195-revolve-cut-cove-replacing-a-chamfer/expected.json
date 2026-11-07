@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#5195"
+  "NakaSato/sketcraft#5195"
  ],
  "what": "a cylinder whose 5 mm chamfered rim is revolve-cut to a concave cove: a quarter-circle arc through the chamfer's two ends, centred on the old corner, the region between it and the old corner (the chamfer's triangle and the lens) cut round 360 deg: 'boolean Cut: no result'",
  "source": "analytic",

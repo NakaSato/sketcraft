@@ -1,7 +1,7 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#485",
-  "tangency-labs/solidcraft#604"
+  "NakaSato/sketcraft#485",
+  "NakaSato/sketcraft#604"
  ],
  "what": "an R0.5 round on both top perimeter edges (the arc and the flat) of a D-shaped prism, the two edges meeting at sharp 90 degree corners",
  "source": "analytic",

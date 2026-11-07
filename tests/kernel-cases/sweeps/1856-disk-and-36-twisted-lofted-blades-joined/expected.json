@@ -1,7 +1,7 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#2992",
-  "tangency-labs/solidcraft#1856"
+  "NakaSato/sketcraft#2992",
+  "NakaSato/sketcraft#1856"
  ],
  "what": "a disk joined to 36 patterned twisted lofted blades (each a loft of 9 rectangle sections turning 7.5 degrees apart, rooted 2 mm inside the disk): hang of minutes",
  "source": "analytic",

@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#1666"
+  "NakaSato/sketcraft#1666"
  ],
  "what": "a ruled loft from an 18-vertex zig-zag section to a flat 52 x 3 rectangle with 18 vertices (8 of them collinear), whose twisted ruled faces were exported as crossing triangles",
  "source": "analytic",

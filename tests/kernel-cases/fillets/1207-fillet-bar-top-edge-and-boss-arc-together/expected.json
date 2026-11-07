@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#1207"
+  "NakaSato/sketcraft#1207"
  ],
  "what": "the bar's top edge and the partial base arc of a boss standing out over the bar's side, rounded r2 together: the corner patch where they meet must join the bar's round at least G1 (today a 15.6° crease)",
  "source": "analytic",

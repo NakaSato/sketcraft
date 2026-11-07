@@ -16,7 +16,7 @@ fn v(x: f64, y: f64) -> Vec2 {
     Vec2::new(x, y)
 }
 
-/// The reporter's sketch, at the pose saved in `Sketch bug.solidcraft`: `l3` is a construction
+/// The reporter's sketch, at the pose saved in `Sketch bug.sketcraft`: `l3` is a construction
 /// line whose ends are ~1e-6 apart at the origin.
 fn collapsed_construction_sketch() -> Sketch {
     let mut sk = Sketch::new();

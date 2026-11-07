@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#4005"
+  "NakaSato/sketcraft#4005"
  ],
  "what": "a cylinder r=5 h=10 whose side is a CONICAL_SURFACE with a semi-angle of 8e-12 rad (a cylinder to within rounding, as the exporter wrote it): the face must be read, not refused as a 'bad cone'",
  "source": "analytic",

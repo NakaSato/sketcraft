@@ -1,7 +1,7 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#1666",
-  "tangency-labs/solidcraft#1670"
+  "NakaSato/sketcraft#1666",
+  "NakaSato/sketcraft#1670"
  ],
  "what": "a loft between two 18-vertex polylines whose side faces are twisted ruled (bilinear) patches: each used to be exported as two flat triangles with crossing diagonals",
  "source": "analytic",

@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#3098"
+  "NakaSato/sketcraft#3098"
  ],
  "what": "a block whose 12 straight edges are degree-1 B-spline curves over a knot span of 1e-7 (as NX writes short edges); the faces must be kept",
  "source": "analytic",

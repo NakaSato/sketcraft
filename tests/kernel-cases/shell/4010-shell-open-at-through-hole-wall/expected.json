@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#4010"
+  "NakaSato/sketcraft#4010"
  ],
  "what": "plate with a through hole shelled 2.5 mm with only the hole's wall removed",
  "source": "analytic",

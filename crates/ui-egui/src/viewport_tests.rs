@@ -1707,7 +1707,7 @@ fn mesh_outline_hover_cache_follows_measure_and_preserves_modeling_picks() {
 /// before instancing) and as instances. Prints the median frame time of each.
 #[cfg(not(target_arch = "wasm32"))]
 #[test]
-#[ignore = "manual: SKETCRAFT_BENCH_MESH=part.stl cargo test --release -p solidcraft-ui-egui --lib -- --ignored instanced_scene_gpu_benchmark --nocapture"]
+#[ignore = "manual: SKETCRAFT_BENCH_MESH=part.stl cargo test --release -p sketcraft-ui-egui --lib -- --ignored instanced_scene_gpu_benchmark --nocapture"]
 fn instanced_scene_gpu_benchmark() {
     use egui_wgpu::wgpu;
     let Some(path) = std::env::var_os("SKETCRAFT_BENCH_MESH") else { return };

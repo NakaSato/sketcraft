@@ -153,7 +153,7 @@ primitive!(cone, "cone");
 primitive!(frustum, "frustum");
 primitive!(torus, "torus");
 
-/// A valid box passes every test at level 2 (SolidCraft's level), with an empty report.
+/// A valid box passes every test at level 2 (SketCraft's level), with an empty report.
 #[test]
 fn a_valid_box_passes_level_2() {
     let (b, _) = case("box");

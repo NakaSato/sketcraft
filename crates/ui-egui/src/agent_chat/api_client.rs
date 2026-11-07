@@ -1,7 +1,7 @@
 //! The API backend (desktop only): a model behind an endpoint SketCraft talks to itself, either
 //! OpenAI-compatible (Ollama, LM Studio, OpenAI, any URL the user gives) or Anthropic-compatible
 //! (the Anthropic Messages API, or an endpoint that speaks it). SketCraft runs the tool loop
-//! itself, with the same tools the ACP agents get: it starts the same MCP server (`solidcraft-cli
+//! itself, with the same tools the ACP agents get: it starts the same MCP server (`sketcraft-cli
 //! mcp --connect` to the chat's own endpoint) and is its client, so every tool call passes the
 //! same gate, limits and folder checks. The key, when there is one, comes from the system keychain
 //! for this connection only.
@@ -35,7 +35,7 @@ const MAX_HISTORY_IMAGES: usize = 2;
 const DROPPED_VIEW_NOTE: &str = "[an earlier picture of the view, removed to keep the request small]";
 const DROPPED_THINKING_NOTE: &str = "[earlier reasoning, removed with older history]";
 /// How long one tool call may take (it may wait for the user's Allow, declined after four
-/// minutes). It does not depend on the endpoint's request timeout: a tool call is SolidCraft's own
+/// minutes). It does not depend on the endpoint's request timeout: a tool call is SketCraft's own
 /// work and the user's answer, never a wait for the model, so a longer request timeout does not
 /// need a longer tool timeout.
 const TOOL_TIMEOUT: Duration = Duration::from_secs(330);

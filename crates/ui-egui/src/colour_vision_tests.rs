@@ -1129,7 +1129,7 @@ fn saved_preferences_load_the_mode_and_a_bad_one_loads_as_off() {
         assert_eq!(v["color_vision"], mode.id());
         assert_eq!(serde_json::from_value::<Prefs>(v).unwrap(), p);
     }
-    // A value this version doesn't know (a later SolidCraft's mode, a hand edit) is Off, and the
+    // A value this version doesn't know (a later SketCraft's mode, a hand edit) is Off, and the
     // rest of the preferences still load.
     for bad in [json!("achromat"), json!("PROTAN"), json!(""), json!(3), json!(null), json!(true), json!({"protan": 1}), json!(["tritan"])] {
         let p: Prefs = serde_json::from_value(json!({"theme": "light", "color_vision": bad})).unwrap();

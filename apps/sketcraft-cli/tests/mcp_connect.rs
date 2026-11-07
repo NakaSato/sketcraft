@@ -239,7 +239,7 @@ mod setup {
         std::fs::write(h.join(".claude.json"), cc).unwrap();
         assert!(run(&h, &[]).status.success());
         let toml = std::fs::read_to_string(h.join(".codex/config.toml")).unwrap();
-        assert!(toml.starts_with("# mine\nmodel = \"x\"\n") && toml.contains("[mcp_servers.solidcraft]"), "{toml}");
+        assert!(toml.starts_with("# mine\nmodel = \"x\"\n") && toml.contains("[mcp_servers.sketcraft]"), "{toml}");
         let c = json_of(&h.join(".claude.json"));
         assert_eq!(c["numStartups"], 3);
         assert_eq!(c["mcpServers"]["sketcraft"], json!({"type": "stdio", "command": exe(), "args": ["mcp"]}));

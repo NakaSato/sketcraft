@@ -1,6 +1,6 @@
 //! The walks over a feature: its expressions (`params`), its references to the rest of the design
 //! (`feature_refs`) and its geometry (`feature_geometry`). `#[derive(Walk)]`
-//! (`solidcraft-derive`) generates them from `#[walk(...)]` roles on the fields of `FeatureKind`
+//! (`sketcraft-derive`) generates them from `#[walk(...)]` roles on the fields of `FeatureKind`
 //! and the types inside it, so what a field is, is written once, where it is declared. The
 //! traits here carry the walks through the types the fields have: options, lists, arrays, planes
 //! and construction definitions.

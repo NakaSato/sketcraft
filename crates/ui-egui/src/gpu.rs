@@ -1,6 +1,6 @@
 //! The GPU viewport in egui: the viewport's pipelines ([`sketcraft_gpu::view`]) drawn in an
 //! `egui_wgpu` paint callback. Everything that draws lives in the GPU crate, so headless pictures
-//! (`solidcraft-cli snapshot`, MCP screenshots, `ui.render`) use the same pipelines; this is the
+//! (`sketcraft-cli snapshot`, MCP screenshots, `ui.render`) use the same pipelines; this is the
 //! glue that hands them egui's device and render pass.
 
 #[cfg(all(test, not(target_arch = "wasm32")))]
@@ -463,7 +463,7 @@ pub fn analysis_colors(c: &crate::theme::AnalysisColors) -> [f32; 36] {
 }
 
 /// The backends the offscreen tests start, chosen once per test process as the app chooses them
-/// (`apps/solidcraft/src/startup.rs`, `choose_backends`): what `WGPU_BACKEND` names; on Windows one
+/// (`apps/sketcraft/src/startup.rs`, `choose_backends`): what `WGPU_BACKEND` names; on Windows one
 /// backend, the first of D3D12, Vulkan and OpenGL with a hardware adapter (else D3D12); elsewhere
 /// wgpu's default. wgpu's default on Windows starts Vulkan, D3D12 and OpenGL together, and tests
 /// starting them side by side hung or crashed the test process inside the Vulkan driver.

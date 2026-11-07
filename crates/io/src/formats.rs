@@ -180,7 +180,7 @@ pub static FORMATS: &[FormatSpec] = &[
     FormatSpec {
         id: "design",
         label: "SketCraft design",
-        extensions: &[crate::DESIGN_EXTS[0], crate::DESIGN_EXTS[1], crate::DESIGN_EXTS[2], crate::DESIGN_EXTS[3], "json"],
+        extensions: &[crate::DESIGN_EXTS[0], crate::DESIGN_EXTS[1], crate::DESIGN_EXTS[2], "json"],
         role: Role::Design,
         import: Some(ImportSpec { target: ImportTarget::Design, options: &[], native_only: false }),
         export: None,
@@ -488,7 +488,7 @@ mod tests {
 
     #[test]
     fn paths_resolve_to_the_canonical_rows() {
-        assert_eq!(for_path("a.SolidCraft").map(|f| f.id), Some("design"));
+        assert_eq!(for_path("a.SketCraft").map(|f| f.id), Some("design"));
         assert_eq!(for_path("a.json").map(|f| f.id), Some("design"));
         assert_eq!(for_path("a.STEP").map(|f| f.id), Some("step"));
         assert_eq!(for_path("a.3mf").map(|f| f.id), Some("3mf"));

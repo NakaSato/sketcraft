@@ -1,7 +1,7 @@
 {
   "sources": [
-    "tangency-labs/solidcraft#1648",
-    "tangency-labs/solidcraft#1850"
+    "NakaSato/sketcraft#1648",
+    "NakaSato/sketcraft#1850"
   ],
   "what": "a sphere that touches a box's bottom edge at one point: the union leaves a sliver face pinched to zero height, whose loop touches itself within tolerance, and it must still mesh",
   "source": "analytic",

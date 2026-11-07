@@ -1,7 +1,7 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#3850",
-  "tangency-labs/solidcraft#3741"
+  "NakaSato/sketcraft#3850",
+  "NakaSato/sketcraft#3741"
  ],
  "what": "a O50 x 50 cylinder with a 25 mm square through-hole, then a cross cut by a O40 circle split into two halves by a line (both halves picked, merged into one round tool whose end face x=25 touches the cylinder's side along y=0): the result must be one shell, not a good shell plus a zero-area one",
  "source": "analytic",

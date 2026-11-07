@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#1207"
+  "NakaSato/sketcraft#1207"
  ],
  "what": "the bar's top edge and the partial base arc of a boss standing out over the bar's side, rounded r2 together (corner g2 acts where three or more rounded edges meet: none here, so the rounds are as rolling): they meet at a vertex whose third edge (the boss's line on the side face) is concave",
  "source": "analytic",

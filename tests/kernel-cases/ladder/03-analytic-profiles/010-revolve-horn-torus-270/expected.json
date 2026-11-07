@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#4007"
+  "NakaSato/sketcraft#4007"
  ],
  "what": "the half disc of radius 14 on the far side of a diameter 14 mm from the axis (the full circle would touch the axis: a horn torus) revolved 270 degrees",
  "source": "analytic",

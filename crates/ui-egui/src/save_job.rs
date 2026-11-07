@@ -67,7 +67,7 @@ pub fn tick(app: &mut SolveApp, wait: bool) {
         None => Err(format!("{command}: the save stopped")),
     };
     app.finish_command(command, &r);
-    // Saving a newer SolidCraft's file keeps what this version can't read, unless it was changed
+    // Saving a newer SketCraft's file keeps what this version can't read, unless it was changed
     // around: then the save says what went.
     if let Some(first) = r.as_ref().ok().and_then(|v| v["warnings"].as_array()).and_then(|w| w.first()).and_then(serde_json::Value::as_str) {
         app.set_status(first, true);
@@ -127,7 +127,7 @@ mod tests {
         let mut h = crate::scenario::Harness::new();
         h.app.home.open = false;
         h.app.run("solid.box", json!({"length": 10, "width": 10, "height": 10})).unwrap();
-        let path = h.dir.join("Plate.solidcraft");
+        let path = h.dir.join("Plate.sketcraft");
         // The save, written on a worker, finishes when the test says.
         let mut copy = h.app.session.scratch();
         copy.execute("file.save_as", &json!({"path": path.to_string_lossy()})).unwrap();
@@ -156,7 +156,7 @@ mod tests {
         let mut h = crate::scenario::Harness::new();
         h.app.home.open = false;
         h.app.run("solid.box", json!({"length": 10, "width": 10, "height": 10})).unwrap();
-        let path = h.dir.join("Plate.solidcraft");
+        let path = h.dir.join("Plate.sketcraft");
         let mut copy = h.app.session.scratch();
         copy.execute("file.save_as", &json!({"path": path.to_string_lossy()})).unwrap();
         let (finish, done) = std::sync::mpsc::channel();
@@ -177,7 +177,7 @@ mod tests {
     fn save_writes_on_a_worker_and_is_taken_up_like_a_save_here() {
         let mut h = crate::scenario::Harness::new();
         h.app.run("solid.box", json!({"length": 10, "width": 10, "height": 10})).unwrap();
-        let path = h.dir.join("Plate.solidcraft");
+        let path = h.dir.join("Plate.sketcraft");
         assert!(super::start(&mut h.app, "file.save_as", json!({"path": path.to_string_lossy()})), "under way on a worker");
         assert!(h.app.file_picker_busy() && h.app.run("solid.sphere", json!({"diameter": 4})).is_err(), "the design waits for it");
         h.frame();
@@ -189,7 +189,7 @@ mod tests {
         assert!(h.app.session.log.iter().any(|l| l.contains("Save As")), "{:?}", h.app.session.log);
         // A failing save reports why, and leaves the changes unsaved.
         h.app.run("solid.sphere", json!({"diameter": 4})).unwrap();
-        let bad = h.dir.join("missing").join("x.solidcraft");
+        let bad = h.dir.join("missing").join("x.sketcraft");
         super::start(&mut h.app, "file.save_as", json!({"path": bad.to_string_lossy()}));
         super::tick(&mut h.app, true);
         assert!(h.app.session.is_dirty() && h.app.status.as_ref().is_some_and(|(_, _, error)| *error));

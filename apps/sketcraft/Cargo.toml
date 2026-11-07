@@ -12,7 +12,7 @@ default = ["raytrace-cpu", "bundled-render-library", "profile"]
 bundled-render-library = ["sketcraft-engine/bundled-render-library"]
 raytrace-cpu = ["sketcraft-engine/raytrace-cpu"]
 # The profiler, compiled in so any build can say where its time goes (the Profile operations
-# preference, SOLIDCRAFT_PROFILE=1, diagnostics.profile); it records nothing until asked.
+# preference, SKETCRAFT_PROFILE=1, diagnostics.profile); it records nothing until asked.
 profile = ["sketcraft-engine/profile"]
 
 # The workspace lints, except unsafe_code: denied, not forbidden, so that src/open_documents.rs

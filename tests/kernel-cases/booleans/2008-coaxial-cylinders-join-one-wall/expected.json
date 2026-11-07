@@ -1,7 +1,7 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#2008",
-  "tangency-labs/solidcraft#1986"
+  "NakaSato/sketcraft#2008",
+  "NakaSato/sketcraft#1986"
  ],
  "what": "a join of coaxial cylinders of one radius whose walls overlap leaves one cylindrical wall in one face (it came out as a stack of faces, so a later chamfer on its top edge refused)",
  "source": "analytic",

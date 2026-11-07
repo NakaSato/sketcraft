@@ -1,7 +1,7 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#2907",
-  "tangency-labs/solidcraft#3861"
+  "NakaSato/sketcraft#2907",
+  "NakaSato/sketcraft#3861"
  ],
  "what": "a 1.5 mm chamfer of both end outlines (sides, top and the two top arcs) of a prism with rounded top corners, bottom edges left alone",
  "source": "analytic",

@@ -1,6 +1,6 @@
 {
   "sources": [
-    "tangency-labs/solidcraft#3383"
+    "NakaSato/sketcraft#3383"
   ],
   "what": "a root body joined into a body inside a component whose occurrence is turned a quarter turn: the tool must stay where it is in the world",
   "source": "analytic",

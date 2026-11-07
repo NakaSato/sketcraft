@@ -16,7 +16,7 @@ python3 tools/oracle-analytic/cases_surfaces.py     # 83: boundary surfaces
 python3 tools/oracle-analytic/cases_workshop.py     # W23 (#4950): parameterized plates, round corners and top chamfer
 ```
 
-Where a value depends on a SolidCraft convention rather than on geometry alone (a shell's sharp
+Where a value depends on a SketCraft convention rather than on geometry alone (a shell's sharp
 inner corner, a sheet-metal corner relief, where a flange height is measured), `method` or
-`note` says which convention is used. Never change a value to match SolidCraft's output: if they
+`note` says which convention is used. Never change a value to match SketCraft's output: if they
 disagree, find out which one is wrong.

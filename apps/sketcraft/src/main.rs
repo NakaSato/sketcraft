@@ -1,6 +1,6 @@
 //! SketCraft desktop app.
 //!
-//! Usage: `solidcraft [--control <port>] [--sample] [--crash-log] [--safe-mode] [design.sc | part.step]`
+//! Usage: `sketcraft [--control <port>] [--sample] [--crash-log] [--safe-mode] [design.sc | part.step]`
 //!
 //! `--safe-mode` (or `SKETCRAFT_SAFE_MODE=1`) starts with default settings, no recovery offer and
 //! the software renderer; see `startup` and docs/book/src/guide/troubleshooting.md.
@@ -207,7 +207,7 @@ impl eframe::App for App {
                     ctx.send_viewport_cmd(egui::ViewportCommand::Focus);
                 }
                 sketcraft_engine::crash::phase(sketcraft_engine::crash::RUNNING);
-                // A DMG install has no installer step: put solidcraft-cli on PATH, quietly.
+                // A DMG install has no installer step: put sketcraft-cli on PATH, quietly.
                 #[cfg(target_os = "macos")]
                 std::thread::spawn(sketcraft_ui_egui::cli_link::install_on_launch);
                 // Automation runs (a control port was asked for) leave the user's AI apps alone.
@@ -974,7 +974,7 @@ fn main() -> eframe::Result {
                         for r in sketcraft_engine::crash::list(&dir).iter().take(5) {
                             println!("  {}  {}  {}", r.id, r.kind, r.message);
                         }
-                        println!("more: solidcraft-cli crashes");
+                        println!("more: sketcraft-cli crashes");
                     }
                     None => println!("no crash folder on this system"),
                 }
@@ -982,7 +982,7 @@ fn main() -> eframe::Result {
             }
             "--help" | "-h" => {
                 println!(
-                    "usage: solidcraft [--control PORT] [--sample] [--theme-file THEME.json] [--crash-log] [--safe-mode] [--max-file-size SIZE] [design.sc | part.step]"
+                    "usage: sketcraft [--control PORT] [--sample] [--theme-file THEME.json] [--crash-log] [--safe-mode] [--max-file-size SIZE] [design.sc | part.step]"
                 );
                 return Ok(());
             }
@@ -1726,14 +1726,14 @@ mod dialog_folder_tests {
     #[test]
     fn the_open_design_moves_the_folder_only_when_it_changes() {
         let folder = DialogFolder::default();
-        folder.design(Some("/work/lid/lid.solidcraft"));
+        folder.design(Some("/work/lid/lid.sketcraft"));
         assert_eq!(folder.folder(), Some(PathBuf::from("/work/lid")));
         folder.chosen(Path::new("/exports/lid.3mf"));
-        folder.design(Some("/work/lid/lid.solidcraft"));
+        folder.design(Some("/work/lid/lid.sketcraft"));
         assert_eq!(folder.folder(), Some(PathBuf::from("/exports")), "the same design again leaves the export folder");
         folder.design(None);
         assert_eq!(folder.folder(), Some(PathBuf::from("/exports")), "a new, unsaved design has no folder of its own");
-        folder.design(Some("/work/base/base.solidcraft"));
+        folder.design(Some("/work/base/base.sketcraft"));
         assert_eq!(folder.folder(), Some(PathBuf::from("/work/base")));
     }
 }

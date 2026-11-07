@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#2038"
+  "NakaSato/sketcraft#2038"
  ],
  "what": "cutting an externally threaded stud out of a block bored at the tap drill (to make the internal thread): the boolean found no result",
  "source": "analytic",

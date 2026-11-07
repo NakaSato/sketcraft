@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#1080"
+  "NakaSato/sketcraft#1080"
  ],
  "what": "the 1 mm front rim of a sloped basin's top chamfered 2: its leg on the top runs off the rim over the slab's front face (a cliff), so it builds as if the top went on and is cut by the front face, which it lowers to z = 29.570689 where it crosses it",
  "source": "analytic",

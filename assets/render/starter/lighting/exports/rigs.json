@@ -1,9 +1,9 @@
 {
-  "schema": "solidcraft-authored-light-rigs/1",
+  "schema": "sketcraft-authored-light-rigs/1",
   "version": "1.0.0",
-  "generator": "solidcraft-light-author/1.0.0",
+  "generator": "sketcraft-light-author/1.0.0",
   "generator_sha256": "540120c61226e775b9b18f75c4bec5b44cf57305902e24020a52927cd0491bdf",
-  "recipe_sha256": "ee6f7066a041e9d51da815cda54a49cfc92c6cb6d3581d0eb88764495934048e",
+  "recipe_sha256": "503d4c060ce4f54b27bf10297102a2e7c5353d3dc35d5e1128c7190a38a135ff",
   "source": {
     "path": "docs/render-materials/studio-presets.json",
     "sha256": "175e117fe286da592b982a69472aec7a001d10a707d002b189a745dd2f77cd53",
@@ -170,7 +170,7 @@
         "Resolve source and modifier clearance before authoring. Block unresolved or intersecting placements instead of silently moving geometry.",
         "One energy owner per physical emitter. Analytic and visible mesh representations must not double-count emission.",
         "Check every required capability before authoring or rendering. If any is unavailable, keep the scene unchanged and report the missing capability IDs.",
-        "All samples are specified_unbound: no SolidCraft runtime adapter, asset installation or renderer support is promised.",
+        "All samples are specified_unbound: no SketCraft runtime adapter, asset installation or renderer support is promised.",
         "For the calibrated studio comparison, require zero unaccounted environment illumination. Preserve existing environment data; ask for an explicit compatible lighting variant rather than changing it silently."
       ],
       "validation_scope": "Isolated analytic reference fixture; no subject visibility, adapter, optics, CAD or runtime rendering verified."
@@ -378,7 +378,7 @@
         "Resolve source and modifier clearance before authoring. Block unresolved or intersecting placements instead of silently moving geometry.",
         "One energy owner per physical emitter. Analytic and visible mesh representations must not double-count emission.",
         "Check every required capability before authoring or rendering. If any is unavailable, keep the scene unchanged and report the missing capability IDs.",
-        "All samples are specified_unbound: no SolidCraft runtime adapter, asset installation or renderer support is promised.",
+        "All samples are specified_unbound: no SketCraft runtime adapter, asset installation or renderer support is promised.",
         "For the calibrated studio comparison, require zero unaccounted environment illumination. Preserve existing environment data; ask for an explicit compatible lighting variant rather than changing it silently."
       ],
       "validation_scope": "Isolated analytic reference fixture; no subject visibility, adapter, optics, CAD or runtime rendering verified."
@@ -609,7 +609,7 @@
         "Resolve source and modifier clearance before authoring. Block unresolved or intersecting placements instead of silently moving geometry.",
         "One energy owner per physical emitter. Analytic and visible mesh representations must not double-count emission.",
         "Check every required capability before authoring or rendering. If any is unavailable, keep the scene unchanged and report the missing capability IDs.",
-        "All samples are specified_unbound: no SolidCraft runtime adapter, asset installation or renderer support is promised.",
+        "All samples are specified_unbound: no SketCraft runtime adapter, asset installation or renderer support is promised.",
         "For the calibrated studio comparison, require zero unaccounted environment illumination. Preserve existing environment data; ask for an explicit compatible lighting variant rather than changing it silently."
       ],
       "validation_scope": "Isolated analytic reference fixture; no subject visibility, adapter, optics, CAD or runtime rendering verified."
@@ -802,7 +802,7 @@
         "Resolve source and modifier clearance before authoring. Block unresolved or intersecting placements instead of silently moving geometry.",
         "One energy owner per physical emitter. Analytic and visible mesh representations must not double-count emission.",
         "Check every required capability before authoring or rendering. If any is unavailable, keep the scene unchanged and report the missing capability IDs.",
-        "All samples are specified_unbound: no SolidCraft runtime adapter, asset installation or renderer support is promised.",
+        "All samples are specified_unbound: no SketCraft runtime adapter, asset installation or renderer support is promised.",
         "For the calibrated studio comparison, require zero unaccounted environment illumination. Preserve existing environment data; ask for an explicit compatible lighting variant rather than changing it silently."
       ],
       "validation_scope": "Isolated analytic reference fixture; no subject visibility, adapter, optics, CAD or runtime rendering verified."
@@ -1011,7 +1011,7 @@
         "Resolve source and modifier clearance before authoring. Block unresolved or intersecting placements instead of silently moving geometry.",
         "One energy owner per physical emitter. Analytic and visible mesh representations must not double-count emission.",
         "Check every required capability before authoring or rendering. If any is unavailable, keep the scene unchanged and report the missing capability IDs.",
-        "All samples are specified_unbound: no SolidCraft runtime adapter, asset installation or renderer support is promised.",
+        "All samples are specified_unbound: no SketCraft runtime adapter, asset installation or renderer support is promised.",
         "For the calibrated studio comparison, require zero unaccounted environment illumination. Preserve existing environment data; ask for an explicit compatible lighting variant rather than changing it silently."
       ],
       "validation_scope": "Isolated analytic reference fixture; no subject visibility, adapter, optics, CAD or runtime rendering verified."
@@ -1167,7 +1167,7 @@
         "Resolve source and modifier clearance before authoring. Block unresolved or intersecting placements instead of silently moving geometry.",
         "One energy owner per physical emitter. Analytic and visible mesh representations must not double-count emission.",
         "Check every required capability before authoring or rendering. If any is unavailable, keep the scene unchanged and report the missing capability IDs.",
-        "All samples are specified_unbound: no SolidCraft runtime adapter, asset installation or renderer support is promised.",
+        "All samples are specified_unbound: no SketCraft runtime adapter, asset installation or renderer support is promised.",
         "For the calibrated studio comparison, require zero unaccounted environment illumination. Preserve existing environment data; ask for an explicit compatible lighting variant rather than changing it silently."
       ],
       "validation_scope": "Isolated analytic reference fixture; no subject visibility, adapter, optics, CAD or runtime rendering verified."
@@ -1346,7 +1346,7 @@
         "Resolve source and modifier clearance before authoring. Block unresolved or intersecting placements instead of silently moving geometry.",
         "One energy owner per physical emitter. Analytic and visible mesh representations must not double-count emission.",
         "Check every required capability before authoring or rendering. If any is unavailable, keep the scene unchanged and report the missing capability IDs.",
-        "All samples are specified_unbound: no SolidCraft runtime adapter, asset installation or renderer support is promised.",
+        "All samples are specified_unbound: no SketCraft runtime adapter, asset installation or renderer support is promised.",
         "For the calibrated studio comparison, require zero unaccounted environment illumination. Preserve existing environment data; ask for an explicit compatible lighting variant rather than changing it silently."
       ],
       "validation_scope": "Isolated analytic reference fixture; no subject visibility, adapter, optics, CAD or runtime rendering verified."
@@ -1541,7 +1541,7 @@
         "Resolve source and modifier clearance before authoring. Block unresolved or intersecting placements instead of silently moving geometry.",
         "One energy owner per physical emitter. Analytic and visible mesh representations must not double-count emission.",
         "Check every required capability before authoring or rendering. If any is unavailable, keep the scene unchanged and report the missing capability IDs.",
-        "All samples are specified_unbound: no SolidCraft runtime adapter, asset installation or renderer support is promised.",
+        "All samples are specified_unbound: no SketCraft runtime adapter, asset installation or renderer support is promised.",
         "For the calibrated studio comparison, require zero unaccounted environment illumination. Preserve existing environment data; ask for an explicit compatible lighting variant rather than changing it silently."
       ],
       "validation_scope": "Isolated analytic reference fixture; no subject visibility, adapter, optics, CAD or runtime rendering verified."
@@ -1643,7 +1643,7 @@
         "Resolve source and modifier clearance before authoring. Block unresolved or intersecting placements instead of silently moving geometry.",
         "One energy owner per physical emitter. Analytic and visible mesh representations must not double-count emission.",
         "Check every required capability before authoring or rendering. If any is unavailable, keep the scene unchanged and report the missing capability IDs.",
-        "All samples are specified_unbound: no SolidCraft runtime adapter, asset installation or renderer support is promised.",
+        "All samples are specified_unbound: no SketCraft runtime adapter, asset installation or renderer support is promised.",
         "For the calibrated studio comparison, require zero unaccounted environment illumination. Preserve existing environment data; ask for an explicit compatible lighting variant rather than changing it silently.",
         "Keep existing display emission unchanged and record its material source; do not create an equivalent screen light."
       ],
@@ -1854,7 +1854,7 @@
         "Resolve source and modifier clearance before authoring. Block unresolved or intersecting placements instead of silently moving geometry.",
         "One energy owner per physical emitter. Analytic and visible mesh representations must not double-count emission.",
         "Check every required capability before authoring or rendering. If any is unavailable, keep the scene unchanged and report the missing capability IDs.",
-        "All samples are specified_unbound: no SolidCraft runtime adapter, asset installation or renderer support is promised.",
+        "All samples are specified_unbound: no SketCraft runtime adapter, asset installation or renderer support is promised.",
         "For the calibrated studio comparison, require zero unaccounted environment illumination. Preserve existing environment data; ask for an explicit compatible lighting variant rather than changing it silently."
       ],
       "validation_scope": "Isolated analytic reference fixture; no subject visibility, adapter, optics, CAD or runtime rendering verified."
@@ -2010,7 +2010,7 @@
         "Resolve source and modifier clearance before authoring. Block unresolved or intersecting placements instead of silently moving geometry.",
         "One energy owner per physical emitter. Analytic and visible mesh representations must not double-count emission.",
         "Check every required capability before authoring or rendering. If any is unavailable, keep the scene unchanged and report the missing capability IDs.",
-        "All samples are specified_unbound: no SolidCraft runtime adapter, asset installation or renderer support is promised.",
+        "All samples are specified_unbound: no SketCraft runtime adapter, asset installation or renderer support is promised.",
         "For the calibrated studio comparison, require zero unaccounted environment illumination. Preserve existing environment data; ask for an explicit compatible lighting variant rather than changing it silently."
       ],
       "validation_scope": "Isolated analytic reference fixture; no subject visibility, adapter, optics, CAD or runtime rendering verified."
@@ -2166,7 +2166,7 @@
         "Resolve source and modifier clearance before authoring. Block unresolved or intersecting placements instead of silently moving geometry.",
         "One energy owner per physical emitter. Analytic and visible mesh representations must not double-count emission.",
         "Check every required capability before authoring or rendering. If any is unavailable, keep the scene unchanged and report the missing capability IDs.",
-        "All samples are specified_unbound: no SolidCraft runtime adapter, asset installation or renderer support is promised.",
+        "All samples are specified_unbound: no SketCraft runtime adapter, asset installation or renderer support is promised.",
         "For the calibrated studio comparison, require zero unaccounted environment illumination. Preserve existing environment data; ask for an explicit compatible lighting variant rather than changing it silently."
       ],
       "validation_scope": "Isolated analytic reference fixture; no subject visibility, adapter, optics, CAD or runtime rendering verified."
@@ -2307,7 +2307,7 @@
         "Resolve source and modifier clearance before authoring. Block unresolved or intersecting placements instead of silently moving geometry.",
         "One energy owner per physical emitter. Analytic and visible mesh representations must not double-count emission.",
         "Check every required capability before authoring or rendering. If any is unavailable, keep the scene unchanged and report the missing capability IDs.",
-        "All samples are specified_unbound: no SolidCraft runtime adapter, asset installation or renderer support is promised.",
+        "All samples are specified_unbound: no SketCraft runtime adapter, asset installation or renderer support is promised.",
         "For the calibrated studio comparison, require zero unaccounted environment illumination. Preserve existing environment data; ask for an explicit compatible lighting variant rather than changing it silently."
       ],
       "validation_scope": "Isolated analytic reference fixture; no subject visibility, adapter, optics, CAD or runtime rendering verified."
@@ -2570,7 +2570,7 @@
         "Resolve source and modifier clearance before authoring. Block unresolved or intersecting placements instead of silently moving geometry.",
         "One energy owner per physical emitter. Analytic and visible mesh representations must not double-count emission.",
         "Check every required capability before authoring or rendering. If any is unavailable, keep the scene unchanged and report the missing capability IDs.",
-        "All samples are specified_unbound: no SolidCraft runtime adapter, asset installation or renderer support is promised.",
+        "All samples are specified_unbound: no SketCraft runtime adapter, asset installation or renderer support is promised.",
         "For the calibrated studio comparison, require zero unaccounted environment illumination. Preserve existing environment data; ask for an explicit compatible lighting variant rather than changing it silently."
       ],
       "validation_scope": "Isolated analytic reference fixture; no subject visibility, adapter, optics, CAD or runtime rendering verified."
@@ -2726,7 +2726,7 @@
         "Resolve source and modifier clearance before authoring. Block unresolved or intersecting placements instead of silently moving geometry.",
         "One energy owner per physical emitter. Analytic and visible mesh representations must not double-count emission.",
         "Check every required capability before authoring or rendering. If any is unavailable, keep the scene unchanged and report the missing capability IDs.",
-        "All samples are specified_unbound: no SolidCraft runtime adapter, asset installation or renderer support is promised.",
+        "All samples are specified_unbound: no SketCraft runtime adapter, asset installation or renderer support is promised.",
         "For the calibrated studio comparison, require zero unaccounted environment illumination. Preserve existing environment data; ask for an explicit compatible lighting variant rather than changing it silently."
       ],
       "validation_scope": "Isolated analytic reference fixture; no subject visibility, adapter, optics, CAD or runtime rendering verified."
@@ -2935,7 +2935,7 @@
         "Resolve source and modifier clearance before authoring. Block unresolved or intersecting placements instead of silently moving geometry.",
         "One energy owner per physical emitter. Analytic and visible mesh representations must not double-count emission.",
         "Check every required capability before authoring or rendering. If any is unavailable, keep the scene unchanged and report the missing capability IDs.",
-        "All samples are specified_unbound: no SolidCraft runtime adapter, asset installation or renderer support is promised.",
+        "All samples are specified_unbound: no SketCraft runtime adapter, asset installation or renderer support is promised.",
         "For the calibrated studio comparison, require zero unaccounted environment illumination. Preserve existing environment data; ask for an explicit compatible lighting variant rather than changing it silently.",
         "Check source clearance against the user-declared robot swept volume; retain the same stage across pose snapshots."
       ],
@@ -3145,7 +3145,7 @@
         "Resolve source and modifier clearance before authoring. Block unresolved or intersecting placements instead of silently moving geometry.",
         "One energy owner per physical emitter. Analytic and visible mesh representations must not double-count emission.",
         "Check every required capability before authoring or rendering. If any is unavailable, keep the scene unchanged and report the missing capability IDs.",
-        "All samples are specified_unbound: no SolidCraft runtime adapter, asset installation or renderer support is promised.",
+        "All samples are specified_unbound: no SketCraft runtime adapter, asset installation or renderer support is promised.",
         "For the calibrated studio comparison, require zero unaccounted environment illumination. Preserve existing environment data; ask for an explicit compatible lighting variant rather than changing it silently.",
         "Label output as an integration studio; do not present it as natural space illumination."
       ],
@@ -3291,7 +3291,7 @@
         "Resolve source and modifier clearance before authoring. Block unresolved or intersecting placements instead of silently moving geometry.",
         "One energy owner per physical emitter. Analytic and visible mesh representations must not double-count emission.",
         "Check every required capability before authoring or rendering. If any is unavailable, keep the scene unchanged and report the missing capability IDs.",
-        "All samples are specified_unbound: no SolidCraft runtime adapter, asset installation or renderer support is promised.",
+        "All samples are specified_unbound: no SketCraft runtime adapter, asset installation or renderer support is promised.",
         "For the calibrated studio comparison, require zero unaccounted environment illumination. Preserve existing environment data; ask for an explicit compatible lighting variant rather than changing it silently.",
         "The analytic led_strip is the sole LED energy owner. Existing diffuser material remains unchanged.",
         "The source-to-diffuser clearance must be confirmed against actual free space; block an unresolved aperture frame."
@@ -3386,7 +3386,7 @@
         "Resolve source and modifier clearance before authoring. Block unresolved or intersecting placements instead of silently moving geometry.",
         "One energy owner per physical emitter. Analytic and visible mesh representations must not double-count emission.",
         "Check every required capability before authoring or rendering. If any is unavailable, keep the scene unchanged and report the missing capability IDs.",
-        "All samples are specified_unbound: no SolidCraft runtime adapter, asset installation or renderer support is promised.",
+        "All samples are specified_unbound: no SketCraft runtime adapter, asset installation or renderer support is promised.",
         "For the calibrated studio comparison, require zero unaccounted environment illumination. Preserve existing environment data; ask for an explicit compatible lighting variant rather than changing it silently.",
         "No light is added at the guide exit. Guide material, absorption and surface topology remain unchanged."
       ],
@@ -3465,7 +3465,7 @@
         "Resolve source and modifier clearance before authoring. Block unresolved or intersecting placements instead of silently moving geometry.",
         "One energy owner per physical emitter. Analytic and visible mesh representations must not double-count emission.",
         "Check every required capability before authoring or rendering. If any is unavailable, keep the scene unchanged and report the missing capability IDs.",
-        "All samples are specified_unbound: no SolidCraft runtime adapter, asset installation or renderer support is promised.",
+        "All samples are specified_unbound: no SketCraft runtime adapter, asset installation or renderer support is promised.",
         "The rig owns the only sun. Block application if the environment already emits an equivalent sun unless ownership is explicitly transferred.",
         "Require no atmospheric sky illumination, atmospheric haze or unexplained ambient fill. Preserve real terrain-reflected light.",
         "Solar direction and size are illustrative authoring inputs, not a mission ephemeris or measured irradiance."
@@ -3512,7 +3512,7 @@
         "Resolve source and modifier clearance before authoring. Block unresolved or intersecting placements instead of silently moving geometry.",
         "One energy owner per physical emitter. Analytic and visible mesh representations must not double-count emission.",
         "Check every required capability before authoring or rendering. If any is unavailable, keep the scene unchanged and report the missing capability IDs.",
-        "All samples are specified_unbound: no SolidCraft runtime adapter, asset installation or renderer support is promised.",
+        "All samples are specified_unbound: no SketCraft runtime adapter, asset installation or renderer support is promised.",
         "Require exactly one resolved environment-owned sun and record its parameters. This preset never creates a second sun.",
         "Require no atmospheric sky or haze. No studio fill or constant ambient is introduced.",
         "Low solar elevation is an explicit environment input, not an inferred date or mission condition.",
@@ -3559,7 +3559,7 @@
         "Resolve source and modifier clearance before authoring. Block unresolved or intersecting placements instead of silently moving geometry.",
         "One energy owner per physical emitter. Analytic and visible mesh representations must not double-count emission.",
         "Check every required capability before authoring or rendering. If any is unavailable, keep the scene unchanged and report the missing capability IDs.",
-        "All samples are specified_unbound: no SolidCraft runtime adapter, asset installation or renderer support is promised.",
+        "All samples are specified_unbound: no SketCraft runtime adapter, asset installation or renderer support is promised.",
         "Require explicitly zero incident environment radiance and no enabled local emitters for this diagnostic; black background color alone is insufficient.",
         "Do not create a sun, Earth source, atmosphere, sky fill or exposure compensation.",
         "Any visible energy must be traced to a declared source or reported as a diagnostic discrepancy.",
@@ -3609,7 +3609,7 @@
         "Resolve source and modifier clearance before authoring. Block unresolved or intersecting placements instead of silently moving geometry.",
         "One energy owner per physical emitter. Analytic and visible mesh representations must not double-count emission.",
         "Check every required capability before authoring or rendering. If any is unavailable, keep the scene unchanged and report the missing capability IDs.",
-        "All samples are specified_unbound: no SolidCraft runtime adapter, asset installation or renderer support is promised.",
+        "All samples are specified_unbound: no SketCraft runtime adapter, asset installation or renderer support is promised.",
         "Require one resolved environment-owned sun. Rig adds no atmospheric sky, haze or fill.",
         "Arm pose and sample geometry are supplied externally and do not change when applying this preset.",
         "Hold environment solar state and manual camera exposure fixed between arm snapshots.",
@@ -3703,7 +3703,7 @@
         "Resolve source and modifier clearance before authoring. Block unresolved or intersecting placements instead of silently moving geometry.",
         "One energy owner per physical emitter. Analytic and visible mesh representations must not double-count emission.",
         "Check every required capability before authoring or rendering. If any is unavailable, keep the scene unchanged and report the missing capability IDs.",
-        "All samples are specified_unbound: no SolidCraft runtime adapter, asset installation or renderer support is promised.",
+        "All samples are specified_unbound: no SketCraft runtime adapter, asset installation or renderer support is promised.",
         "Require exactly one environment-owned sun and do not modify it.",
         "Calibrate CAL-ENV-SUN-001 from the environment sun alone in the reference scene, then set this fill relative to that signal. Block if the reference is unresolved.",
         "Mark the result lunar_editorial. The fill is deliberate added energy and must never be labeled unassisted natural lunar illumination.",

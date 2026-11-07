@@ -1,7 +1,7 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#405",
-  "tangency-labs/solidcraft#406"
+  "NakaSato/sketcraft#405",
+  "NakaSato/sketcraft#406"
  ],
  "what": "a 120 x 90 tray with four 38.6 mm flanges at 72 degrees, closed at the corners with the rule's gap, unfolded",
  "source": "analytic",

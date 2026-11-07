@@ -1,7 +1,7 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#561",
-  "tangency-labs/solidcraft#677"
+  "NakaSato/sketcraft#561",
+  "NakaSato/sketcraft#677"
  ],
  "what": "the small end face of a square-to-square loft (40 mm side to 20 mm over 40 mm) extruded 10 mm (loft faces had no attachable source)",
  "source": "analytic",

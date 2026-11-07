@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#3832"
+  "NakaSato/sketcraft#3832"
  ],
  "what": "a 7-turn coil (centre diameter 80, wire 1 mm, pitch -2 so it winds downward) cut from a cylinder that holds it entirely (boolean Cut: no result)",
  "source": "analytic",

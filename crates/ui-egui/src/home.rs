@@ -758,7 +758,7 @@ fn navigation(app: &SolveApp, ui: &mut egui::Ui, action: &mut Option<FileAction>
         ("home:settings", app.tr("home.settings"), format!("{primary},"), None, true, FileAction::Settings),
         ("home:shortcuts", app.tr("home.shortcuts"), String::new(), None, true, FileAction::Shortcuts),
         ("home:crashes", app.tr("home.crashes"), String::new(), None, true, FileAction::Crashes),
-        ("home:about", app.tr_label("About SolidCraft"), String::new(), None, true, FileAction::About),
+        ("home:about", app.tr_label("About SketCraft"), String::new(), None, true, FileAction::About),
     ];
     for (index, (id, label, key, section, enabled, picked)) in nav.into_iter().enumerate() {
         if index == 4 || index == 8 {
@@ -1138,17 +1138,17 @@ mod tests {
     #[test]
     fn recent_paths_only_abbreviate_complete_home_ancestors() {
         let home = Some(std::path::Path::new("/Users/sample"));
-        assert_eq!(abbreviated_path("/Users/sample/Designs/plate.solidcraft", home), "~/Designs/plate.solidcraft");
+        assert_eq!(abbreviated_path("/Users/sample/Designs/plate.sketcraft", home), "~/Designs/plate.sketcraft");
         assert_eq!(abbreviated_path("/Users/sample", home), "~");
-        assert_eq!(abbreviated_path("/Users/sample-other/plate.solidcraft", home), "/Users/sample-other/plate.solidcraft");
-        assert_eq!(abbreviated_path("/disk/design.solidcraft", None), "/disk/design.solidcraft");
+        assert_eq!(abbreviated_path("/Users/sample-other/plate.sketcraft", home), "/Users/sample-other/plate.sketcraft");
+        assert_eq!(abbreviated_path("/disk/design.sketcraft", None), "/disk/design.sketcraft");
     }
 
     #[test]
     fn recent_kind_names_imports_by_extension() {
         let app = crate::test_support::sample_app();
         assert_eq!(recent_kind(&app, "/tmp/plate.sc"), "Design");
-        assert_eq!(recent_kind(&app, "/tmp/plate.solidcraft"), "Design");
+        assert_eq!(recent_kind(&app, "/tmp/plate.sketcraft"), "Design");
         assert_eq!(recent_kind(&app, "/tmp/plate.step"), "STEP");
         assert_eq!(recent_kind(&app, "/tmp/plate.STL"), "STL");
         assert_eq!(recent_kind(&app, "/tmp/plate.3mf"), "3MF");
@@ -1204,16 +1204,16 @@ mod tests {
         let sink = asked.clone();
         h.app.services.can_restore = Some(Box::new(|p| p.starts_with("/disk/known/")));
         h.app.services.restore_file = Some(Box::new(move |p| sink.borrow_mut().push(p.to_string())));
-        assert!(available(&h.app, "/disk/known/Bracket.solidcraft"));
+        assert!(available(&h.app, "/disk/known/Bracket.sketcraft"));
         // A file is taken to be there until the background check says it is not.
-        assert!(available(&h.app, "/disk/other/Bracket.solidcraft"));
-        h.app.home.present.insert("/disk/other/Bracket.solidcraft".into(), false);
-        assert!(!available(&h.app, "/disk/other/Bracket.solidcraft"));
-        h.app.home.add_recent("/disk/known/Bracket.solidcraft");
+        assert!(available(&h.app, "/disk/other/Bracket.sketcraft"));
+        h.app.home.present.insert("/disk/other/Bracket.sketcraft".into(), false);
+        assert!(!available(&h.app, "/disk/other/Bracket.sketcraft"));
+        h.app.home.add_recent("/disk/known/Bracket.sketcraft");
         h.app.home.show(h.app.session.revision);
         click_file(&mut h, "home:recent:0");
-        assert_eq!(*asked.borrow(), ["/disk/known/Bracket.solidcraft"]);
-        open_recent(&mut h.app, "/disk/other/Bracket.solidcraft");
+        assert_eq!(*asked.borrow(), ["/disk/known/Bracket.sketcraft"]);
+        open_recent(&mut h.app, "/disk/other/Bracket.sketcraft");
         assert_eq!(asked.borrow().len(), 1, "a file the host doesn't remember is not asked for");
         assert!(h.app.status.as_ref().is_some_and(|(text, _, error)| *error && text.contains("no longer there")));
     }
@@ -1250,7 +1250,7 @@ mod tests {
             return;
         }
         let nonce = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos();
-        let path = std::env::temp_dir().join(format!("sketcraft-thumb-{}-{nonce}.solidcraft", std::process::id()));
+        let path = std::env::temp_dir().join(format!("sketcraft-thumb-{}-{nonce}.sketcraft", std::process::id()));
         // Deliberately invalid design: a cached recent must not parse/evaluate it.
         let bytes = b"{\"thumbnail_test\":true}";
         std::fs::write(&path, bytes).unwrap();
@@ -1286,7 +1286,7 @@ mod tests {
         let image = decode_thumbnail(png).unwrap();
         assert_eq!(image.size, THUMB);
         let nonce = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos();
-        let path = std::env::temp_dir().join(format!("sketcraft-portable-thumb-{}-{nonce}.solidcraft", std::process::id()));
+        let path = std::env::temp_dir().join(format!("sketcraft-portable-thumb-{}-{nonce}.sketcraft", std::process::id()));
         std::fs::write(&path, bytes).unwrap();
         let key = path.to_string_lossy().to_string();
         assert!(cached(&key).is_none());
@@ -1342,7 +1342,7 @@ mod tests {
             return;
         }
         let nonce = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos();
-        let path = std::env::temp_dir().join(format!("sketcraft-fast-thumb-{}-{nonce}.solidcraft", std::process::id()));
+        let path = std::env::temp_dir().join(format!("sketcraft-fast-thumb-{}-{nonce}.sketcraft", std::process::id()));
         let key = path.to_string_lossy().into_owned();
         let mut s = Session::default();
         s.execute("solid.box", &serde_json::json!({"length":10,"width":20,"height":30})).unwrap();
@@ -1465,12 +1465,12 @@ mod tests {
     fn recent_list_is_newest_first_and_bounded() {
         let mut h = HomeState::default();
         for i in 0..20 {
-            h.add_recent(&format!("/d/{i}.solidcraft"));
+            h.add_recent(&format!("/d/{i}.sketcraft"));
         }
-        h.add_recent("/d/5.solidcraft");
+        h.add_recent("/d/5.sketcraft");
         assert_eq!(h.recent.len(), MAX_RECENT);
-        assert_eq!(h.recent.first().map(String::as_str), Some("/d/5.solidcraft"));
-        assert_eq!(h.recent.iter().filter(|p| p.as_str() == "/d/5.solidcraft").count(), 1);
+        assert_eq!(h.recent.first().map(String::as_str), Some("/d/5.sketcraft"));
+        assert_eq!(h.recent.iter().filter(|p| p.as_str() == "/d/5.sketcraft").count(), 1);
     }
 
     /// Samples build in the background and make a picture; picking one opens its design.
@@ -1674,7 +1674,7 @@ mod tests {
     fn file_view_save_as_shortcut_uses_the_picker_without_overwriting_the_source() {
         let mut h = crate::scenario::Harness::new();
         h.app.run("solid.box", serde_json::json!({"length":10,"width":12,"height":14})).unwrap();
-        let source = h.dir.join("source.solidcraft");
+        let source = h.dir.join("source.sketcraft");
         h.app.run("file.save_as", serde_json::json!({"path":source})).unwrap();
         let bytes = std::fs::read(&source).unwrap();
         h.app.session.doc = std::sync::Arc::new({

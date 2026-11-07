@@ -1,8 +1,8 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#271",
-  "tangency-labs/solidcraft#286",
-  "tangency-labs/solidcraft#299"
+  "NakaSato/sketcraft#271",
+  "NakaSato/sketcraft#286",
+  "NakaSato/sketcraft#299"
  ],
  "what": "a loft cut limited by targets to one body while a second body lies inside the loft",
  "source": "analytic",

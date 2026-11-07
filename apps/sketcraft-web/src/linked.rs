@@ -111,7 +111,7 @@ async fn fetch(value: &str) -> Reply {
     let url = design_url(value, &page_origin)?;
     let name = url.path_segments().and_then(|mut segments| segments.next_back()).filter(|name| !name.is_empty()).unwrap_or("Design");
     let decoded = js_sys::decode_uri_component(name).ok().and_then(|name| name.as_string()).unwrap_or_else(|| name.to_owned());
-    // `arm.sc` (or a legacy `arm.solidcraft`) is named `arm`.
+    // `arm.sc` (or a legacy `arm.sketcraft`) is named `arm`.
     let stem = match decoded.rsplit_once('.') {
         Some((stem, ext)) if !stem.is_empty() && sketcraft_engine::io::is_design_ext(ext) => stem,
         _ => decoded.as_str(),

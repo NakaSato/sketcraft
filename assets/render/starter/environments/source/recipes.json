@@ -1,5 +1,5 @@
 {
-  "schema": "solidcraft.render-environment-recipes/1",
+  "schema": "sketcraft.render-environment-recipes/1",
   "version": "1.0.0",
   "resolution": [
     1024,
@@ -8,7 +8,7 @@
   "authoring": {
     "method": "original_analytic_procedural",
     "license": "MIT OR Apache-2.0",
-    "author": "SolidCraft contributors, authored for Judith’s personal rendering fork",
+    "author": "SketCraft contributors, authored for Judith’s personal rendering fork",
     "date": "2026-10-21",
     "randomness": "none; seed 0 records a deterministic analytic construction",
     "radiance_units": "authored_relative_units",

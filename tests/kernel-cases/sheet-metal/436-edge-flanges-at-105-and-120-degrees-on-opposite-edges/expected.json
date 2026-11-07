@@ -1,7 +1,7 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#436",
-  "tangency-labs/solidcraft#447"
+  "NakaSato/sketcraft#436",
+  "NakaSato/sketcraft#447"
  ],
  "what": "one edge flange feature with its own angle and height on each of two opposite edges: 105 degrees and 30 mm, 120 degrees and 25 mm",
  "source": "analytic",

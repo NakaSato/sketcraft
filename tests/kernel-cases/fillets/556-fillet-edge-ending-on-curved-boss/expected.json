@@ -1,7 +1,7 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#556",
-  "tangency-labs/solidcraft#646"
+  "NakaSato/sketcraft#556",
+  "NakaSato/sketcraft#646"
  ],
  "what": "an R0.5 round on a single straight bottom edge of a box whose end runs out against a cylindrical boss wall",
  "source": "analytic",

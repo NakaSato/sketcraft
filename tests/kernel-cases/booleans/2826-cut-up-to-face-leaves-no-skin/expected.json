@@ -1,7 +1,7 @@
 {
   "sources": [
-    "tangency-labs/solidcraft#2826",
-    "tangency-labs/solidcraft#2827"
+    "NakaSato/sketcraft#2826",
+    "NakaSato/sketcraft#2827"
   ],
   "what": "a cut that ends exactly in a face of its target (the plate's top face) must open the hole, not leave a zero-thickness skin over it",
   "source": "analytic",

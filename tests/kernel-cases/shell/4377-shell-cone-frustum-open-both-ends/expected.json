@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#4377"
+  "NakaSato/sketcraft#4377"
  ],
  "what": "a cone frustum (r 10 at the bottom, 20 at the top, 38.1 high) shelled 0.125 with both its ends removed, leaving a conical tube: truck refused it ('a corner whose faces don't meet the same way after the move')",
  "source": "analytic",

@@ -35,7 +35,7 @@ impl NativeMenu {
             Ok(())
         };
         application.append(&PredefinedMenuItem::about(
-            Some("About SolidCraft"),
+            Some("About SketCraft"),
             Some(AboutMetadata { name: Some("SketCraft".into()), version: Some(env!("CARGO_PKG_VERSION").into()), ..Default::default() }),
         ))?;
         application.append(&PredefinedMenuItem::separator())?;
@@ -109,7 +109,7 @@ impl NativeMenu {
             ("messages", "Messages\u{2026}"),
             ("report", "Report an Issue\u{2026}"),
             ("crashes", "Crash Reports\u{2026}"),
-            ("install_cli", "Install solidcraft-cli command"),
+            ("install_cli", "Install sketcraft-cli command"),
         ] {
             let item = MenuItem::new(app.tr_label(label), true, None);
             help.append(&item)?;

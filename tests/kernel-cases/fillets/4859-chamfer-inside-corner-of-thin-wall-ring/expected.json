@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#4859"
+  "NakaSato/sketcraft#4859"
  ],
  "what": "an inside (concave) vertical corner of a 25x15 ring with a 2 mm wall, 10 high, chamfered 2 mm: truck refused it ('2 mm is too large for this chamfer: the result changes 108 mm3')",
  "source": "analytic",

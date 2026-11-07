@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#3914"
+  "NakaSato/sketcraft#3914"
  ],
  "what": "Create Sketch on the top face of a block with a modelled thread and rounded corners, then a boss from it",
  "source": "analytic",

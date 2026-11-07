@@ -2797,7 +2797,7 @@ mod tests {
             &mut h,
             json!({"commands": [
                 {"command": "solid.box", "params": {"length": 10, "width": 10, "height": 10}},
-                {"command": "doc.open", "params": {"path": "elsewhere.solidcraft"}},
+                {"command": "doc.open", "params": {"path": "elsewhere.sketcraft"}},
             ]}),
         );
         assert_eq!(v["ok"], false, "{v}");
@@ -2870,15 +2870,15 @@ mod tests {
         let mut s = Session::default();
         s.execute("solid.box", &json!({"length": 10, "width": 10, "height": 10})).unwrap();
         for d in [&root, &out] {
-            std::fs::write(d.join("part.solidcraft"), sketcraft_engine::io::write_design(&s.doc)).unwrap();
+            std::fs::write(d.join("part.sketcraft"), sketcraft_engine::io::write_design(&s.doc)).unwrap();
         }
         s.execute("file.export", &json!({"path": out.join("part.step").to_string_lossy()})).unwrap();
         let load = |command: &str, d: &std::path::Path, file: &str| json!({"command": command, "params": {"path": d.join(file).to_string_lossy()}, "allow_paths": [root.to_string_lossy()]});
-        for (command, file) in [("doc.open", "part.solidcraft"), ("file.insert_step", "part.step")] {
+        for (command, file) in [("doc.open", "part.sketcraft"), ("file.insert_step", "part.step")] {
             let (v, _) = h.call_queued("engine.execute", load(command, &out, file));
             assert!(v["ok"] == false && v.to_string().contains("outside the folders this agent may use"), "{command}: {v}");
         }
-        let (v, _) = h.call_queued("engine.execute", load("doc.open", &root, "part.solidcraft"));
+        let (v, _) = h.call_queued("engine.execute", load("doc.open", &root, "part.sketcraft"));
         assert_eq!(v["ok"], true, "{v}");
         let (v, _) = h.call_queued("engine.execute", json!({"command": "doc.open", "params": {"path": "x"}, "allow_paths": "/"}));
         assert!(v["error"].as_str().is_some_and(|e| e.contains("allow_paths")), "{v}");

@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#4149"
+  "NakaSato/sketcraft#4149"
  ],
  "what": "a modelled M10x1.5 internal thread, full length of the bore below a counterbore, in a cylinder with its rim rounded (stack overflow)",
  "source": "analytic",

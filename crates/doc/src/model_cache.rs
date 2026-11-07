@@ -2,7 +2,7 @@
 //! opens without evaluating its timeline again (docs/design-container.md, "Model cache").
 //!
 //! The records are JSON; the kernel bodies they hold are a separate list ([`SavedModel::bodies`]),
-//! which the file stores in SolidCraft's exact native B-rep encoding. A body that several states
+//! which the file stores in SketCraft's exact native B-rep encoding. A body that several states
 //! hold (one that later features pass through unchanged) is recorded once, as are its face names
 //! and the solved sketches the states share. Face names are kept as worked out, not as the
 //! history they were worked out from: a model taken from a file names every face as the model

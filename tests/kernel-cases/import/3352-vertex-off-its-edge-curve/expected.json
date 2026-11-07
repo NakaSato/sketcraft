@@ -1,7 +1,7 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#3351",
-  "tangency-labs/solidcraft#3352"
+  "NakaSato/sketcraft#3351",
+  "NakaSato/sketcraft#3352"
  ],
  "what": "a 300 mm square surface whose corner vertex sits 0.19 mm off the end of its edge's curve (the file declares 0.01 mm accuracy): the face must be kept, the vertex snapped onto the curve",
  "source": "analytic",

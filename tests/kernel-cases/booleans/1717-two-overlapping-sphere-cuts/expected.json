@@ -1,7 +1,7 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#1717",
-  "tangency-labs/solidcraft#2158"
+  "NakaSato/sketcraft#1717",
+  "NakaSato/sketcraft#2158"
  ],
  "what": "a second sphere cut overlapping an earlier sphere cut on a box edge: 'no result'",
  "source": "analytic",

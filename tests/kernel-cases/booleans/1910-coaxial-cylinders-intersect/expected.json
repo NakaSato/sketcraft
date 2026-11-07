@@ -1,7 +1,7 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#1910",
-  "tangency-labs/solidcraft#1865"
+  "NakaSato/sketcraft#1910",
+  "NakaSato/sketcraft#1865"
  ],
  "what": "intersection of two cylinders of one radius on one axis (z 0..30 and 22..46) whose round sides lie in each other over the shared 8 mm",
  "source": "analytic",

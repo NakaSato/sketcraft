@@ -1,15 +1,15 @@
 # Vendored third-party crates
 
-Copies of third-party crates that SolidCraft builds with local fixes, wired in with
+Copies of third-party crates that SketCraft builds with local fixes, wired in with
 `[patch.crates-io]` in the workspace `Cargo.toml`. They keep their own licence; changed lines
-are marked `SolidCraft:` in the source.
+are marked `SketCraft:` in the source.
 
 ## egui-wgpu 0.37.0 (MIT OR Apache-2.0, Emil Ernerfeldt and contributors)
 
 Original package sources from https://github.com/emilk/egui/tree/0.37.0/crates/egui-wgpu,
 with both original licence texts retained. No images or bundled documentation are copied.
 
-SolidCraft changes:
+SketCraft changes:
 - `src/setup.rs`, `src/lib.rs`: let a named adapter selector defer to the normal wgpu
   request when the requested card is unavailable or incompatible with the window surface.
 - `src/lib.rs`: use 1x MSAA on the selected OpenGL adapter before creating pipelines,
@@ -86,7 +86,7 @@ and test targets are dropped (their sources are not vendored); the new gesture m
 tests stay in `src/platform_impl/linux/wayland/seat/pointer/pointer_gesture.rs`
 (`cargo test -p winit --lib -- pointer_gesture`).
 
-SolidCraft changes:
+SketCraft changes:
 - `src/platform_impl/linux/wayland/seat/pointer/pointer_gesture.rs` (new): bind
   `zwp_pointer_gestures_v1` (versions 1..=3) when the compositor has it, create one pinch
   gesture object per pointer and destroy it before the pointer is released, and turn

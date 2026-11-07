@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#4829"
+  "NakaSato/sketcraft#4829"
  ],
  "what": "a cylinder r10 x 40 with its top edge filleted r2, cut 14 mm down from its flat top face (the R8 disc, bounded by the fillet's edge): ~30 s, then 'boolean Cut: no result'",
  "source": "analytic",

@@ -44,5 +44,5 @@ changelog entry.
 
 - On Wayland, implement `WindowEvent::PinchGesture` and `WindowEvent::RotationGesture`,
   delivered through the `zwp_pointer_gestures_v1` protocol when the compositor implements it.
-  SolidCraft: backport of the gesture part of rust-windowing/winit#4338 (winit 0.31 only
+  SketCraft: backport of the gesture part of rust-windowing/winit#4338 (winit 0.31 only
   upstream), so a trackpad pinch reaches the application on Linux.

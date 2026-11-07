@@ -1,5 +1,5 @@
 //! `cargo xtask kernel-cases [--ladder] --export DIR`: the kernel rig as a corpus for solidcore's
-//! own rig. Each case's process writes its entry (`solidcraft-cli kernel-cases --export`,
+//! own rig. Each case's process writes its entry (`sketcraft-cli kernel-cases --export`,
 //! `DIR/<area>/<case>.json`: the kernel operations that made its result, their operand records,
 //! the fix set, its expected values and the rig's result). This writes what that leaves out:
 //! an entry for each case whose process left none (a hang or a crash, so no trace), each ladder
@@ -20,8 +20,8 @@ use crate::root;
 fn reason_kind(why: &str) -> &'static str {
     if why.starts_with("SketCraft has no command") {
         "SketCraft has no command for it yet"
-    } else if why.starts_with("no kernel operation ran before the failure") || why.starts_with("the failure is SolidCraft's") {
-        "refused or failed in SolidCraft, not in a kernel operation"
+    } else if why.starts_with("no kernel operation ran before the failure") || why.starts_with("the failure is SketCraft's") {
+        "refused or failed in SketCraft, not in a kernel operation"
     } else if why.contains("is no kernel operation's output nor an operand") {
         "a final body built or changed by SketCraft (its own geometry or a change to the kernel's record)"
     } else if why.starts_with("no kernel operation made a body") || why.starts_with("the case ends with no body") {
@@ -191,7 +191,7 @@ mod tests {
     #[test]
     fn every_reason_the_export_gives_has_its_kind() {
         for (why, kind) in [
-            ("the failure is SolidCraft's, not a kernel operation's: x", "refused or failed in SolidCraft"),
+            ("the failure is SketCraft's, not a kernel operation's: x", "refused or failed in SketCraft"),
             ("body \"Body1\" is no kernel operation's output nor an operand: SketCraft built it", "a final body built or changed"),
             ("the rig's run hang: no result", "the rig's run hung"),
         ] {

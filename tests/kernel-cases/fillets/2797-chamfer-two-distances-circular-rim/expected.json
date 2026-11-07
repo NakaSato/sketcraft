@@ -1,8 +1,8 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#2797",
-  "tangency-labs/solidcraft#3300",
-  "tangency-labs/solidcraft#2893"
+  "NakaSato/sketcraft#2797",
+  "NakaSato/sketcraft#3300",
+  "NakaSato/sketcraft#2893"
  ],
  "what": "a Two Distances chamfer (1 mm on the top face, 0.5 mm down the wall) on the circular rim between a plane and a cylinder",
  "source": "analytic",

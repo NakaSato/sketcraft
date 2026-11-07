@@ -1,6 +1,6 @@
 {
   "order": 140,
-  "provenance": "Original SolidCraft mapping of Tokyo Night (MIT palette)",
+  "provenance": "Original SketCraft mapping of Tokyo Night (MIT palette)",
   "base": "dark",
   "colors": {
     "accent": "#7aa2f7",
@@ -190,7 +190,7 @@
     "viewport_top": "#151722",
     "warning": "#e0af68"
   },
-  "format": "solidcraft-theme/1",
+  "format": "sketcraft-theme/1",
   "name": "Tokyo Night",
   "icon_palette": {
     "ink": "#16161e",

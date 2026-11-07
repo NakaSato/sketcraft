@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#2719"
+  "NakaSato/sketcraft#2719"
  ],
  "what": "a 1 mm chamfer round a bottom loop whose corners are R1 rounds: each corner cone closes to a point on the bottom face",
  "source": "analytic",

@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#4305"
+  "NakaSato/sketcraft#4305"
  ],
  "what": "a 0.6 x 1 groove swept as a cut round the wall of a rounded-rectangle pocket (lines and r5 arcs, at mid height): the sweep didn't follow the path",
  "source": "analytic",

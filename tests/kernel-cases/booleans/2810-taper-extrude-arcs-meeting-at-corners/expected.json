@@ -1,7 +1,7 @@
 {
   "sources": [
-    "tangency-labs/solidcraft#2810",
-    "tangency-labs/solidcraft#2813"
+    "NakaSato/sketcraft#2810",
+    "NakaSato/sketcraft#2813"
   ],
   "what": "a tapered extrude of a loop of arcs on three circles meeting at sharp corners (a circle with a lobe on each side); the walls must meet at the corners",
   "source": "analytic",

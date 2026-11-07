@@ -1,6 +1,6 @@
 {
   "order": 80,
-  "provenance": "Original SolidCraft theme",
+  "provenance": "Original SketCraft theme",
   "base": "light",
   "colors": {
     "accent": "#555599",
@@ -190,7 +190,7 @@
     "viewport_top": "#ffffff",
     "warning": "#997722"
   },
-  "format": "solidcraft-theme/1",
+  "format": "sketcraft-theme/1",
   "name": "Platinum 9",
   "radii": {
     "radius_sm": 0,

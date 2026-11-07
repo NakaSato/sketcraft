@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#4313"
+  "NakaSato/sketcraft#4313"
  ],
  "what": "nine identical rings (r 10..20, 5 thick) in a 3x3 grid 38 apart, each overlapping its edge neighbours, joined in one combine: ~90 s then 'boolean Union: no result' (one pair already failed)",
  "source": "analytic",

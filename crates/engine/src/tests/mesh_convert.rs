@@ -418,7 +418,7 @@ fn the_first_save_as_changes_the_file_name_once() {
     };
     let before = [send(&mut s), send(&mut s)];
     // What Save As does to the session: the design now has a path.
-    s.path = Some("/designs/box.solidcraft".into());
+    s.path = Some("/designs/box.sketcraft".into());
     let after = [send(&mut s), send(&mut s), send(&mut s)];
     crate::slicers::set_chosen_programs(&[]);
     let (before, after) = (before.map(Result::unwrap), after.map(Result::unwrap));

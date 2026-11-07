@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#566"
+  "NakaSato/sketcraft#566"
  ],
  "what": "a 8x5 bar swept along a line-arc-line path (quarter circle r30 between two 30 mm legs), shelled 0.5 mm open at its start",
  "source": "analytic",

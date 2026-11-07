@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#1279"
+  "NakaSato/sketcraft#1279"
  ],
  "what": "a corner piece (square column minus a quarter disc r1.5, 0.0003 off the axis) cut out of a part with a blind r1.6 hole on the same axis: the tool's r1.5 face sits 0.1 mm inside the hole wall; 'no result'",
  "source": "analytic",

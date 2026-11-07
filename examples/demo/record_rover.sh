@@ -3,13 +3,13 @@
 # timeline in the app on X display DISPLAY (1920x1080, started with --control PORT) to
 # OUTDIR/rover-build.mp4 (H.264) and .gif, accelerated PLAYBACK_RATE times (default 15) with the idle
 # stretches cut (trim_idle.py).
-# SOLIDCRAFT_DEMO_GIF_WIDTH and SOLIDCRAFT_DEMO_GIF_FPS size the GIF (default 800 px, 10 fps).
+# SKETCRAFT_DEMO_GIF_WIDTH and SKETCRAFT_DEMO_GIF_FPS size the GIF (default 800 px, 10 fps).
 set -e
 DISP=${1:-:0}; PORT=${2:-7878}; DESIGN=$3; OUT=$(cd "${4:-.}" && pwd); RATE=${5:-15}
 HERE=$(cd "$(dirname "$0")" && pwd)
-NAME=${SOLIDCRAFT_DEMO_NAME:-rover-build}
-GIF_WIDTH=${SOLIDCRAFT_DEMO_GIF_WIDTH:-800}
-GIF_FPS=${SOLIDCRAFT_DEMO_GIF_FPS:-10}
+NAME=${SKETCRAFT_DEMO_NAME:-rover-build}
+GIF_WIDTH=${SKETCRAFT_DEMO_GIF_WIDTH:-800}
+GIF_FPS=${SKETCRAFT_DEMO_GIF_FPS:-10}
 ffmpeg -loglevel info -nostats -y -f x11grab -draw_mouse 0 -video_size 1920x1080 -framerate 30 -i "$DISP" \
   -c:v libx264 -preset veryfast -crf 16 -pix_fmt yuv420p "$OUT/raw.mp4" 2> "$OUT/ffmpeg.log" &
 FF=$!

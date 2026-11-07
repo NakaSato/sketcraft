@@ -1,7 +1,7 @@
 {
   "sources": [
-    "tangency-labs/solidcraft#3604",
-    "tangency-labs/solidcraft#3613"
+    "NakaSato/sketcraft#3604",
+    "NakaSato/sketcraft#3613"
   ],
   "what": "cut of a box by a swept G2 corner-removal tool along a projected edge chain (left-rear corner; the symmetric front-left chain works)",
   "source": "analytic",

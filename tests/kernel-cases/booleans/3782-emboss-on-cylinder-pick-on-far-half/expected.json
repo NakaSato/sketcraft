@@ -1,7 +1,7 @@
 {
   "sources": [
-    "tangency-labs/solidcraft#3782",
-    "tangency-labs/solidcraft#3425"
+    "NakaSato/sketcraft#3782",
+    "NakaSato/sketcraft#3425"
   ],
   "what": "emboss on a cylinder with the face pick on the half of the wall opposite the sketch",
   "source": "analytic",

@@ -26,7 +26,7 @@ pub static COMMANDS: &[CommandSpec] = &[
         .contract(&READ_CONTRACT)
         .output(output_schema_for::<MetadataResult>)
         .params(
-            "→ metadata: the design's metadata object as saved (other tools' keys too); properties: each of SolidCraft's design \
+            "→ metadata: the design's metadata object as saved (other tools' keys too); properties: each of SketCraft's design \
              properties (project, part number, revision…), its text or null (absent, or not text)",
         ),
     CommandSpec::new("document.metadata.set", "Change Design Properties", crate::checked!("document.metadata.set", set))
@@ -35,7 +35,7 @@ pub static COMMANDS: &[CommandSpec] = &[
         .contract(&SET_CONTRACT)
         .output(output_schema_for::<MetadataSetResult>)
         .params(
-            "key and value, or values: {key: value, …} (all or nothing, one undo step). SolidCraft's keys, the ones document.metadata's \
+            "key and value, or values: {key: value, …} (all or nothing, one undo step). SketCraft's keys, the ones document.metadata's \
              properties lists, take text (\"\" or null removes); another tool's data goes under its reverse-DNS key such as \
              com.example.tool (an object; null removes) → metadata, changed: [keys]",
         ),
@@ -221,7 +221,7 @@ mod tests {
         run(&mut s, "document.metadata.set", json!({"key": "project", "value": "ACME enclosures"}));
         let mut expected = foreign.clone();
         expected["project"] = json!("ACME enclosures");
-        for (file, format) in [("edited.json", "json"), ("edited.solidcraft", "container")] {
+        for (file, format) in [("edited.json", "json"), ("edited.sketcraft", "container")] {
             let path = dir.join(file);
             run(&mut s, "file.save_as", json!({"path": path, "format": format}));
             let mut reopened = Session::default();
@@ -245,7 +245,7 @@ mod tests {
     #[test]
     fn exports_carry_the_properties_and_never_other_tools_keys() {
         // `file.export` hands the design's properties to the writers; the mapping itself is
-        // tested in solidcraft-io.
+        // tested in sketcraft-io.
         let dir = scratch("export");
         let mut s = Session::default();
         run(&mut s, "solid.box", json!({"length": 10, "width": 10, "height": 10}));
@@ -267,7 +267,7 @@ mod tests {
         assert!(step.contains("('Jane Doe'),('ACME')"), "{}", &step[..400]);
         let iges = String::from_utf8(text(&mut s, "part.igs")).unwrap();
         assert!(iges.contains("8HJane Doe") && iges.contains("4HACME"), "{}", &iges[..600]);
-        // 3MF model metadata is checked where it is written (solidcraft-io); here: it exports.
+        // 3MF model metadata is checked where it is written (sketcraft-io); here: it exports.
         assert!(!text(&mut s, "part.3mf").is_empty());
         for out in [step.as_bytes(), iges.as_bytes()] {
             let found = |needle: &str| out.windows(needle.len()).any(|w| w == needle.as_bytes());
@@ -352,7 +352,7 @@ mod tests {
         }
         assert_eq!(properties.as_object().map(Map::len), Some(keys.len()), "{properties}");
         let refused = s.execute("document.metadata.set", &json!({"key": "colour", "value": "red"})).unwrap_err().to_string();
-        assert!(refused.contains("`colour` is not a design property: SolidCraft's are project, part_number,"), "{refused}");
+        assert!(refused.contains("`colour` is not a design property: SketCraft's are project, part_number,"), "{refused}");
     }
 
     #[test]

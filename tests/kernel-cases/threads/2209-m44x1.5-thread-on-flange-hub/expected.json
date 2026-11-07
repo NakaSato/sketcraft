@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#2209"
+  "NakaSato/sketcraft#2209"
  ],
  "what": "a full-diameter M44x1.5 modelled thread on the hub of a flange, which once failed to rebuild a closed shell",
  "source": "analytic",

@@ -1,6 +1,6 @@
 {
   "order": 150,
-  "provenance": "Original SolidCraft mapping of Solarized (MIT palette)",
+  "provenance": "Original SketCraft mapping of Solarized (MIT palette)",
   "base": "light",
   "colors": {
     "accent": "#268bd2",
@@ -190,7 +190,7 @@
     "viewport_top": "#fdf6e3",
     "warning": "#b58900"
   },
-  "format": "solidcraft-theme/1",
+  "format": "sketcraft-theme/1",
   "name": "Solarized Light",
   "icon_palette": {
     "ink": "#151515",

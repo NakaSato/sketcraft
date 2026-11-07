@@ -1,5 +1,5 @@
 {
-  "schema": "solidcraft-physical-bindings/1",
+  "schema": "sketcraft-physical-bindings/1",
   "version": "1.0.0",
   "inputs": {
     "catalog": {
@@ -9,7 +9,7 @@
     },
     "surfaces": {
       "path": "assets/render/starter/materials/manifest.json",
-      "sha256": "3e509042c0deaebf2332eee4040cc3cca77be89ec27ae12894e876cf69febe89",
+      "sha256": "1096e65202e2378bd471fce6cbae922b33e8c25eb5c7671173c3180a26181618",
       "count": 48
     }
   },

@@ -91,7 +91,7 @@ fn file_grid_has_only_between_row_gaps_and_recovery_actions_fit_narrow_widths() 
             crate::ui_kit::file_view::RecoveryMessage {
                 title: "Recovered",
                 before_filename: " ",
-                filename: "enclosure.solidcraft",
+                filename: "enclosure.sketcraft",
                 after_filename: " · just now",
             },
             "Recover",

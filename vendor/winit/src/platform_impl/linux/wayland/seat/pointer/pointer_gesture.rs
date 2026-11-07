@@ -1,6 +1,6 @@
 //! Touchpad pinch and rotation gestures from `zwp_pointer_gestures_v1`.
 //!
-//! SolidCraft: whole file. The compositor reports these gestures only to clients that
+//! SketCraft: whole file. The compositor reports these gestures only to clients that
 //! bind the protocol and only while the pointer is over one of their surfaces, so
 //! without this a trackpad pinch produces no input at all on Wayland. One gesture
 //! object carries both the scale and the rotation of the pinch, feeding

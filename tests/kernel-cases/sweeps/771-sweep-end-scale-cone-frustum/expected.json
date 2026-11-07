@@ -1,7 +1,7 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#771",
-  "tangency-labs/solidcraft#1269"
+  "NakaSato/sketcraft#771",
+  "NakaSato/sketcraft#1269"
  ],
  "what": "a circle of radius 5 swept 30 mm along a straight path with end scale 2",
  "source": "analytic",

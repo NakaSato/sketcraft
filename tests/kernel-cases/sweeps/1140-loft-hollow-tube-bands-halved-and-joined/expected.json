@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#1140"
+  "NakaSato/sketcraft#1140"
  ],
  "what": "two hollow lofted tube bands (outer r 30, bore r 18 on R100, 5 sections each, 45 degrees each), each cut in half through its axis plane z = 0 and the halves joined into one body (\"no result\" after ten minutes of fallbacks)",
  "source": "analytic",

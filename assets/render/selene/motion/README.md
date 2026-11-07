@@ -1,6 +1,6 @@
 # SELENE mechanism acceptance
 
-This directory records the source-level acceptance contract for **`SELENE-showcase.solidcraft`**. The source is now pinned and its persisted assembly records have been inspected. The checklist binds exact source IDs and parameters; it makes no native runtime claim from that container inspection.
+This directory records the source-level acceptance contract for **`SELENE-showcase.sketcraft`**. The source is now pinned and its persisted assembly records have been inspected. The checklist binds exact source IDs and parameters; it makes no native runtime claim from that container inspection.
 
 [The source lock](../source-lock.json) selects the unchanged file supplied by SychPL, matching the author's public commit byte for byte. [SOURCE.md](../SOURCE.md) records that evidence. The functional derivative has a separate mechanism contract in [MECHANISMS.md](../MECHANISMS.md) and an executable native validator in [validate_native.py](../tools/validate_native.py).
 
@@ -10,7 +10,7 @@ Each item in [mechanism-acceptance.json](mechanism-acceptance.json) separates:
 
 1. **Documentation evidence:** a published project description or author demonstration, linked through the source lock's references.
 2. **Native evidence:** exact identities, geometry, parentage, limits and mechanism relationships inspected in the admitted file.
-3. **Runtime evidence:** results produced by a recorded SolidCraft revision from explicit inputs and an approved starting pose.
+3. **Runtime evidence:** results produced by a recorded SketCraft revision from explicit inputs and an approved starting pose.
 
 Native evidence is `inspected_container_only`; source runtime evidence remains `not_executed` in this checklist. The bindings are tied to source SHA-256 `1b0df486f30da157db27a33e0b5ed67f13d527d4dfdc6c334717a1df4e5b8677`. Reading the native container confirms records, references and stored values. It does not evaluate geometry, solve a joint, drive a study or certify a derivative.
 
@@ -33,7 +33,7 @@ Native evidence is `inspected_container_only`; source runtime evidence remains `
 | MCA-011 | Motion analysis and interference | What was sampled, which pairs were checked, and were results truncated? |
 | MCA-012 | Flexible-hose visibility | Which rigid hose approximations or sketches were hidden, and how will their treatment be disclosed? |
 
-The detailed checks cite the [mechanism reference](https://github.com/tangency-labs/solidcraft/blob/463cea0615a22be2f7d6c30512211f9eda97ff28/skills/solidcraft-mechanisms/reference.md), the [author's combined showcase](https://github.com/tangency-labs/solidcraft/pull/1540#issuecomment-6205857321), [motion export](https://github.com/tangency-labs/solidcraft/pull/1680), and [motion analysis](https://github.com/tangency-labs/solidcraft/pull/1712).
+The detailed checks cite the [mechanism reference](https://github.com/NakaSato/sketcraft/blob/463cea0615a22be2f7d6c30512211f9eda97ff28/skills/sketcraft-mechanisms/reference.md), the [author's combined showcase](https://github.com/NakaSato/sketcraft/pull/1540#issuecomment-6205857321), [motion export](https://github.com/NakaSato/sketcraft/pull/1680), and [motion analysis](https://github.com/NakaSato/sketcraft/pull/1712).
 
 ## Source bindings and deliberate derivative changes
 
@@ -104,7 +104,7 @@ A full turn yields **1.5 mm** axial travel. Source joint `49` is cylindrical abo
 
 ## Runtime evidence to record
 
-Each executed acceptance case should retain the native-file SHA-256, SolidCraft code revision, exact command inputs, initial pose, selected joint IDs and axes, effective link values, solver tolerances, resolved poses and any stop or collision reports. The functional validator writes actual MCP request/response JSONL, hashes its inputs before and after, resets primary drivers before each case, and records numeric comparisons without saving its in-memory test poses to the master.
+Each executed acceptance case should retain the native-file SHA-256, SketCraft code revision, exact command inputs, initial pose, selected joint IDs and axes, effective link values, solver tolerances, resolved poses and any stop or collision reports. The functional validator writes actual MCP request/response JSONL, hashes its inputs before and after, resets primary drivers before each case, and records numeric comparisons without saving its in-memory test poses to the master.
 
 A published numerical residual is evidence of that demonstration only. The author's reported arm residual is not a guaranteed precision threshold for arbitrary poses. Select a useful tolerance for the actual model and solver, and report it with the result.
 

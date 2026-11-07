@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#4286"
+  "NakaSato/sketcraft#4286"
  ],
  "what": "a body split by a plane, its two pieces joined back, flush on the split faces (the report's part was an imported vendor connector; synthetic: a block with a bore and a boss, both cut by the plane): the join never finished",
  "source": "analytic",

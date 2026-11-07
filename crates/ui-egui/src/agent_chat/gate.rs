@@ -255,7 +255,7 @@ mod tests {
 
     #[test]
     fn files_and_replacing_the_design_ask_first() {
-        assert!(matches!(exec("file.save", json!({"path": "/tmp/a.solidcraft"})), Verdict::Ask(a) if a.contains("/tmp/a.solidcraft")));
+        assert!(matches!(exec("file.save", json!({"path": "/tmp/a.sketcraft"})), Verdict::Ask(a) if a.contains("/tmp/a.sketcraft")));
         assert!(matches!(exec("file.new", json!({})), Verdict::Ask(_)));
         assert!(matches!(exec("doc.open", json!({"path": "x.step"})), Verdict::Ask(_)));
         assert!(matches!(exec("file.export", json!({"path": "x.stl"})), Verdict::Ask(_)));
@@ -364,9 +364,9 @@ mod tests {
 
     #[test]
     fn the_mcp_servers_own_pictures_need_no_question() {
-        let scratch = json!({"path": "/tmp/solidcraft-mcp-41-a3/shot-1.png", "allow_paths": ["/tmp/solidcraft-mcp-41-a3"]});
+        let scratch = json!({"path": "/tmp/sketcraft-mcp-41-a3/shot-1.png", "allow_paths": ["/tmp/sketcraft-mcp-41-a3"]});
         assert_eq!(request("ui.screenshot", &scratch, 0), Verdict::Run { change: false });
-        let elsewhere = json!({"path": "/home/u/Desktop/shot.png", "allow_paths": ["/tmp/solidcraft-mcp-41-a3", "/home/u/Desktop"]});
+        let elsewhere = json!({"path": "/home/u/Desktop/shot.png", "allow_paths": ["/tmp/sketcraft-mcp-41-a3", "/home/u/Desktop"]});
         assert!(matches!(request("ui.screenshot", &elsewhere, 0), Verdict::Ask(_)));
         assert_eq!(request("ui.render", &json!({"width": 400}), 0), Verdict::Run { change: false });
     }

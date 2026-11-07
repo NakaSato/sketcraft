@@ -1,5 +1,5 @@
 {
-  "format": "solidcraft-authored-appearance-pack/1",
+  "format": "sketcraft-authored-appearance-pack/1",
   "metadata": {
     "schema_version": "1.0.0",
     "language": "en",
@@ -8,15 +8,15 @@
     "recipe_count": 48,
     "authoring_date": "2026-10-21",
     "license": "MIT OR Apache-2.0",
-    "author": "SolidCraft contributors",
+    "author": "SketCraft contributors",
     "provenance": {
       "id": "ORIGINAL-2026-10-SELENE-APPEARANCE-PACK",
-      "origin": "Original clean-room descriptions, numeric preview choices and analytic swatch geometry authored for SolidCraft.",
+      "origin": "Original clean-room descriptions, numeric preview choices and analytic swatch geometry authored for SketCraft.",
       "external_assets_bundled": false,
       "commercial_materials_or_code_copied": false,
       "measured_material_dataset": false
     },
-    "document_kind": "Authoring manifest; not a solidcraft-library/1 file and not an executable command script.",
+    "document_kind": "Authoring manifest; not a sketcraft-library/1 file and not an executable command script.",
     "runtime_contract": {
       "command": "appearance.assign",
       "parameter_source": "items[].baseline_projection.runtime_parameters",
@@ -49,7 +49,7 @@
       "ior": "The shared dielectric_ior value 1.5 is an unmeasured preview control. It affects the nonmetal fraction reflection only and does not enable refraction.",
       "advanced_values": "Advanced numeric controls are original illustrative geometry or appearance inputs. They do not define engineering, manufacturing or mission requirements.",
       "unknown_optics": "Spectral constants, optical thicknesses and scattering data remain unspecified where listed under unknown_optical_inputs.",
-      "units": "Procedural geometry uses millimetres; angles use radians; SolidCraft geometry is Z-up.",
+      "units": "Procedural geometry uses millimetres; angles use radians; SketCraft geometry is Z-up.",
       "capability_references": "CAP IDs refer to docs/render-materials/capabilities.json. They describe target requirements, not proof that a runtime implements them.",
       "physical_material_separation": "No density, modulus, conductivity, friction, thermal emissivity, electrical performance, sealing or flight-readiness data is assigned.",
       "lunar_surfaces": "Lunar dust targets are granular deposits or particulate geometry in vacuum, never terrestrial airborne fog.",

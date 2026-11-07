@@ -978,7 +978,7 @@ mod tests {
         let bin = root.join(".local/bin");
         std::fs::create_dir_all(&bin).unwrap();
         for (name, script) in [
-            ("sketcraft-test-agent", "#!/usr/bin/env solidcraft-test-runtime\n"),
+            ("sketcraft-test-agent", "#!/usr/bin/env sketcraft-test-runtime\n"),
             ("sketcraft-test-runtime", "#!/bin/sh\nif [ \"$2\" = \"--version\" ]; then printf 'test-agent 1.2.3\\n'; else cat; fi\n"),
         ] {
             let path = bin.join(name);

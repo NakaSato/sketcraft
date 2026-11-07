@@ -1,9 +1,9 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#2369",
-  "tangency-labs/solidcraft#2688",
-  "tangency-labs/solidcraft#2853",
-  "tangency-labs/solidcraft#1018"
+  "NakaSato/sketcraft#2369",
+  "NakaSato/sketcraft#2688",
+  "NakaSato/sketcraft#2853",
+  "NakaSato/sketcraft#1018"
  ],
  "what": "a modelled thread on a hole that isn't the thread's size: refused with the size to use, never a silent change of the hole",
  "source": "analytic",

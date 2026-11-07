@@ -1,5 +1,5 @@
 {
-  "format": "solidcraft/16",
+  "format": "sketcraft/16",
   "name": "enclosure-pi",
   "units": "mm",
   "params": [

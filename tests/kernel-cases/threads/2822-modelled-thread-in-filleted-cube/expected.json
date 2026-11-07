@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#2822"
+  "NakaSato/sketcraft#2822"
  ],
  "what": "a modelled M3 thread in a hole through a block whose vertical edges are rounded (the fillets showed as black lines after the thread)",
  "source": "analytic",

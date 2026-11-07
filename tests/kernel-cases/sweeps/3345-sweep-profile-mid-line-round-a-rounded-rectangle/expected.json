@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#3345"
+  "NakaSato/sketcraft#3345"
  ],
  "what": "a 4 x 3 profile drawn at the middle of the bottom line of a closed 60 x 40 rounded-rectangle path (corner radius 8) and swept round the whole path (walls offset, fillets turned the wrong way)",
  "source": "analytic",

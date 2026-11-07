@@ -13,14 +13,14 @@ pub fn run(root: &Path) -> Result<(), String> {
     for size in [16, 24, 32, 48, 64, 128, 256, 512] {
         let png = stage.join(format!("{size}.png"));
         draw(&png, size)?;
-        exports.push((png, format!("linux/exports/hicolor/{size}x{size}/apps/io.tangencylabs.solidcraft.png")));
+        exports.push((png, format!("linux/exports/hicolor/{size}x{size}/apps/io.tangencylabs.sketcraft.png")));
     }
     let installer = stage.join("sketcraft.ico");
     draw(&installer, 256)?;
-    exports.push((installer, "windows/exports/solidcraft.ico".into()));
+    exports.push((installer, "windows/exports/sketcraft.ico".into()));
     let executable = stage.join("sketcraft-executable.ico");
     std::fs::write(&executable, windows_ico::encode().map_err(|e| e.to_string())?).map_err(|e| e.to_string())?;
-    exports.push((executable, "windows/exports/solidcraft-executable.ico".into()));
+    exports.push((executable, "windows/exports/sketcraft-executable.ico".into()));
 
     // Finish generation before replacing any canonical exports.
     for (source, relative) in exports {

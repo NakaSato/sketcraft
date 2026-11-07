@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#1280"
+  "NakaSato/sketcraft#1280"
  ],
  "what": "a 5 mm hole drilled square to the face of a 45 degree flange: the drill cap's certificate refused it by 1e-11 mm",
  "source": "analytic",

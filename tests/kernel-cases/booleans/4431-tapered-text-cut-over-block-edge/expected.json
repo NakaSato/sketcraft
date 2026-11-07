@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#4431"
+  "NakaSato/sketcraft#4431"
  ],
  "what": "a line of text (22 letters, 7.81 mm high) on a block's top face, running over the block's edge, cut 1 mm deep with a -5 deg taper: 145 s in truck (the untapered cut takes 1 s)",
  "source": "invariants",

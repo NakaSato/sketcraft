@@ -151,7 +151,7 @@ fn a_gltf_node_tree_comes_in_as_components_with_instances() {
     run(&mut s, "edit.undo", json!({}));
 
     // Saved and opened again, it is the same (nothing new is saved for glTF).
-    let design = dir.join("robot.solidcraft").to_string_lossy().to_string();
+    let design = dir.join("robot.sketcraft").to_string_lossy().to_string();
     run(&mut s, "file.save_as", json!({"path": design}));
     let mut again = Session::default();
     run(&mut again, "doc.open", json!({"path": design}));

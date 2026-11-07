@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#851"
+  "NakaSato/sketcraft#851"
  ],
  "what": "the knife edge where #851's concave R21 wall runs out tangent into the back face, rounded R2: the ball that fits 2 from both faces, 13 back from the tip",
  "source": "analytic",

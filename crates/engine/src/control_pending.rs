@@ -154,7 +154,7 @@ mod tests {
         for (m, p) in [
             ("engine.execute", json!({"command": "file.export", "params": {"path": "/tmp/a.step"}})),
             ("engine.execute", json!({"command": "file.save", "params": {}})),
-            ("engine.execute", json!({"command": "file.save_as", "params": {"path": "/tmp/a.solidcraft"}})),
+            ("engine.execute", json!({"command": "file.save_as", "params": {"path": "/tmp/a.sketcraft"}})),
             ("engine.execute", json!({"command": "file.save_mesh", "params": {"path": "/tmp/a.stl"}})),
             ("engine.execute", json!({"command": "sketch.export_dxf", "params": {"path": "/tmp/a.dxf"}})),
             ("ui.render", json!({"path": "/tmp/a.png"})),

@@ -21,7 +21,7 @@ cargo test -p sketcraft-io mutate::                      # its main user: crates
 - Add it to `[dev-dependencies]` only. `cargo run -p xtask -- layers` fails otherwise.
 - Keep it dependency-free, deterministic and stable-Rust only. A failing case must be reproducible from its seed.
 - Changing `mutations` changes every user's cases. Keep it deterministic and bounded (`MAX_TRUNCATIONS` keeps large files at about 1000 truncations).
-- A new reader of untrusted bytes in any crate should get a `survives(mutations(...))` test. See `skills/solidcraft-crash-safety/SKILL.md`.
+- A new reader of untrusted bytes in any crate should get a `survives(mutations(...))` test. See `skills/sketcraft-crash-safety/SKILL.md`.
 - `survives` uses `panic!` on purpose (it carries `#[allow(clippy::panic)]`). Elsewhere the crate root denies `unwrap`, `expect` and `panic!`.
 
 ## Gotchas

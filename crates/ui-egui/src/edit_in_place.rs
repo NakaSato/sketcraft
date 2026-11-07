@@ -259,7 +259,7 @@ fn prepare(app: &mut SolveApp, component: u64, path: Option<Vec<u64>>, ask: bool
         return Err(app.tr_label("ui.relink_not_linked").to_string());
     };
     if !ask {
-        // A network location not allowed yet, a missing file or one open in another SolidCraft
+        // A network location not allowed yet, a missing file or one open in another SketCraft
         // would ask or stop the open: as a command, that is its answer.
         if link["found"] != true {
             return Err(format!("{part}: {}", link["reason"].as_str().or(link["host"].as_str()).unwrap_or("not found")));

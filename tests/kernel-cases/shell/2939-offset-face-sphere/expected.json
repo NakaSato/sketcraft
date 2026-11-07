@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#2939"
+  "NakaSato/sketcraft#2939"
  ],
  "what": "Offset Face on a sphere's round face",
  "source": "analytic",

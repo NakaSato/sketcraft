@@ -1,4 +1,4 @@
-//! Read-only access to the skill documents shipped with SolidCraft.
+//! Read-only access to the skill documents shipped with SketCraft.
 
 use serde_json::{Map, Value};
 
@@ -12,23 +12,23 @@ const SKILLS: &[Skill] = &[
     Skill {
         name: "sketcraft-checking",
         files: &[
-            ("SKILL.md", include_str!("../../../skills/solidcraft-checking/SKILL.md")),
-            ("reference/porting.md", include_str!("../../../skills/solidcraft-checking/reference/porting.md")),
+            ("SKILL.md", include_str!("../../../skills/sketcraft-checking/SKILL.md")),
+            ("reference/porting.md", include_str!("../../../skills/sketcraft-checking/reference/porting.md")),
         ],
     },
-    Skill { name: "sketcraft-editing", files: &[("SKILL.md", include_str!("../../../skills/solidcraft-editing/SKILL.md"))] },
+    Skill { name: "sketcraft-editing", files: &[("SKILL.md", include_str!("../../../skills/sketcraft-editing/SKILL.md"))] },
     Skill {
         name: "sketcraft-mechanisms",
         files: &[
-            ("SKILL.md", include_str!("../../../skills/solidcraft-mechanisms/SKILL.md")),
-            ("reference.md", include_str!("../../../skills/solidcraft-mechanisms/reference.md")),
+            ("SKILL.md", include_str!("../../../skills/sketcraft-mechanisms/SKILL.md")),
+            ("reference.md", include_str!("../../../skills/sketcraft-mechanisms/reference.md")),
         ],
     },
     Skill {
         name: "sketcraft-modeling",
         files: &[
-            ("SKILL.md", include_str!("../../../skills/solidcraft-modeling/SKILL.md")),
-            ("reference.md", include_str!("../../../skills/solidcraft-modeling/reference.md")),
+            ("SKILL.md", include_str!("../../../skills/sketcraft-modeling/SKILL.md")),
+            ("reference.md", include_str!("../../../skills/sketcraft-modeling/reference.md")),
         ],
     },
 ];

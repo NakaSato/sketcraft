@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#1669"
+  "NakaSato/sketcraft#1669"
  ],
  "what": "a closed hollow box (60 x 60 x 40, 2.5 mm walls) with a window cut in one end wall and a loft joined into it, both mirrored about the middle plane x = 30 onto the far wall (\"Union: no result\" on the mirror only)",
  "source": "analytic",

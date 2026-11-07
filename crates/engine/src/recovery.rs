@@ -50,16 +50,16 @@ pub fn default_dir() -> Option<PathBuf> {
     Some(dir)
 }
 
-/// SolidCraft's per-user data folder (the recovery folder's parent unless
-/// `SKETCRAFT_RECOVERY_DIR` moves that): `%LOCALAPPDATA%\SolidCraft`,
-/// `~/Library/Application Support/SolidCraft`, or `$XDG_DATA_HOME/solidcraft`
-/// (`~/.local/share/solidcraft`).
+/// SketCraft's per-user data folder (the recovery folder's parent unless
+/// `SKETCRAFT_RECOVERY_DIR` moves that): `%LOCALAPPDATA%\SketCraft`,
+/// `~/Library/Application Support/SketCraft`, or `$XDG_DATA_HOME/sketcraft`
+/// (`~/.local/share/sketcraft`).
 pub fn data_dir() -> Option<PathBuf> {
     let env = |k: &str| std::env::var_os(k).filter(|d| !d.is_empty()).map(PathBuf::from);
     if cfg!(windows) {
         Some(env("LOCALAPPDATA")?.join("SketCraft"))
     } else if cfg!(target_os = "macos") {
-        Some(env("HOME")?.join("Library/Application Support/SolidCraft"))
+        Some(env("HOME")?.join("Library/Application Support/SketCraft"))
     } else {
         Some(env("XDG_DATA_HOME").or_else(|| env("HOME").map(|h| h.join(".local/share")))?.join("sketcraft"))
     }
@@ -114,7 +114,7 @@ fn read_entry(path: &Path) -> Option<Entry> {
     serde_json::from_slice(&bytes).ok()
 }
 
-/// An entry's design: `<id>.sc`, or `<id>.solidcraft` / `<id>.solvecraft` for an autosave an
+/// An entry's design: `<id>.sc`, or `<id>.sketcraft` / `<id>.solvecraft` for an autosave an
 /// earlier release wrote (compatibility shim, docs/compatibility.md).
 fn design_file(dir: &Path, id: &str) -> PathBuf {
     sketcraft_io::DESIGN_EXTS.iter().map(|ext| file(dir, id, ext)).find(|p| p.is_file()).unwrap_or_else(|| file(dir, id, sketcraft_io::DESIGN_EXT))
@@ -464,7 +464,7 @@ mod tests {
     #[test]
     fn autosave_from_a_legacy_folder_is_listed_and_loads() {
         // Autosaves written by earlier releases: `.solvecraft` (before the rename) and
-        // `.solidcraft` (before designs were saved as `.sc`).
+        // `.sketcraft` (before designs were saved as `.sc`).
         for ext in sketcraft_io::LEGACY_DESIGN_EXTS {
             let d = std::env::temp_dir().join(format!("sketcraft-recovery-legacy-{ext}-{}", std::process::id()));
             let _ = fs::remove_dir_all(&d);
@@ -492,7 +492,7 @@ mod tests {
         s.execute("solid.box", &json!({"length": 10, "width": 10, "height": 10})).unwrap();
         assert!(a.save(&s).unwrap());
         assert!(d.join(format!("{}.sc", a.id)).is_file());
-        assert!(!d.join(format!("{}.solidcraft", a.id)).exists());
+        assert!(!d.join(format!("{}.sketcraft", a.id)).exists());
         a.discard();
         let _ = fs::remove_dir_all(&d);
     }
@@ -500,9 +500,9 @@ mod tests {
     #[test]
     fn recovery_dirs_and_their_legacy_names() {
         let (dir, legacy) = super::dirs_under(Path::new("/data"), false);
-        assert_eq!((dir.as_path(), legacy.as_path()), (Path::new("/data/solidcraft/recovery"), Path::new("/data/solvecraft/recovery")));
+        assert_eq!((dir.as_path(), legacy.as_path()), (Path::new("/data/sketcraft/recovery"), Path::new("/data/solvecraft/recovery")));
         let (dir, legacy) = super::dirs_under(Path::new("/data"), true);
-        assert_eq!((dir.as_path(), legacy.as_path()), (Path::new("/data/SolidCraft/recovery"), Path::new("/data/SolveCraft/recovery")));
+        assert_eq!((dir.as_path(), legacy.as_path()), (Path::new("/data/SketCraft/recovery"), Path::new("/data/SolveCraft/recovery")));
     }
 
     use super::*;
@@ -603,7 +603,7 @@ mod tests {
     fn discarding_refuses_what_is_not_a_recovery_entry() {
         let d = dir("discard");
         fs::create_dir_all(&d).unwrap();
-        let part = d.join("part.solidcraft");
+        let part = d.join("part.sketcraft");
         fs::write(&part, sketcraft_io::write_design(&Document::default())).unwrap();
         let mut s = Session::default();
         let discard = |s: &mut Session, id: &str| s.execute("doc.recovery_discard", &json!({"dir": d.to_string_lossy(), "id": id}));
@@ -637,7 +637,7 @@ mod tests {
         let r = t.execute("doc.recover", &json!({"dir": d.to_string_lossy(), "id": id, "discard": true})).unwrap();
         assert_eq!(r["features"], 1, "{r}");
         assert!(orphans(&d).is_empty() && !file(&d, &id, "json").exists() && !file(&d, &id, sketcraft_io::DESIGN_EXT).exists());
-        let part = d.join("part.solidcraft");
+        let part = d.join("part.sketcraft");
         fs::write(&part, sketcraft_io::write_design(&Document::default())).unwrap();
         assert!(t.execute("doc.recover", &json!({"dir": d.to_string_lossy(), "id": "part", "discard": true})).is_err());
         assert!(part.exists());
@@ -699,7 +699,7 @@ mod tests {
     fn recovery_metadata_id_must_match_its_filename() {
         let d = dir("metadata-id");
         fs::create_dir_all(&d).unwrap();
-        let wrong = Entry { id: "other".into(), path: Some("/unrelated-design.solidcraft".into()), name: "wrong".into(), saved_at: 1, features: 0 };
+        let wrong = Entry { id: "other".into(), path: Some("/unrelated-design.sketcraft".into()), name: "wrong".into(), saved_at: 1, features: 0 };
         fs::write(file(&d, "actual", "json"), serde_json::to_vec(&wrong).unwrap()).unwrap();
         for id in ["actual", "other"] {
             fs::write(file(&d, id, sketcraft_io::DESIGN_EXT), sketcraft_io::write_design(&Document::default())).unwrap();
@@ -736,24 +736,24 @@ mod tests {
         begin_reopen(&d, &[]);
         assert!(!d.join(REOPEN_MARKER).exists(), "nothing to reopen writes no marker");
 
-        let paths = vec!["/d/one.solidcraft".to_string(), "/d/two.solidcraft".to_string()];
+        let paths = vec!["/d/one.sketcraft".to_string(), "/d/two.sketcraft".to_string()];
         begin_reopen(&d, &paths);
         assert_eq!(stuck_reopen(&d), paths);
         // The first design opens; the session dies on the second.
-        reopen_finished(&d, "/d/one.solidcraft");
-        assert_eq!(stuck_reopen(&d), vec!["/d/two.solidcraft".to_string()]);
+        reopen_finished(&d, "/d/one.sketcraft");
+        assert_eq!(stuck_reopen(&d), vec!["/d/two.sketcraft".to_string()]);
         // The skip clears the marker so the launch after it reopens normally.
         clear_reopen(&d);
         assert!(stuck_reopen(&d).is_empty());
         // A healthy session: every design finishes and the marker goes with the last one.
         begin_reopen(&d, &paths);
-        reopen_finished(&d, "/d/one.solidcraft");
-        reopen_finished(&d, "/d/two.solidcraft");
+        reopen_finished(&d, "/d/one.sketcraft");
+        reopen_finished(&d, "/d/two.sketcraft");
         assert!(stuck_reopen(&d).is_empty() && !d.join(REOPEN_MARKER).exists());
         // A damaged marker is ignored, not fatal.
         fs::write(d.join(REOPEN_MARKER), b"not json").unwrap();
         assert!(stuck_reopen(&d).is_empty());
-        reopen_finished(&d, "/d/one.solidcraft");
+        reopen_finished(&d, "/d/one.sketcraft");
         fs::remove_dir_all(&d).unwrap();
     }
 }

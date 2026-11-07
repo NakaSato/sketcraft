@@ -1,6 +1,6 @@
 {
   "order": 155,
-  "provenance": "Original SolidCraft mapping of Solarized (MIT palette)",
+  "provenance": "Original SketCraft mapping of Solarized (MIT palette)",
   "base": "dark",
   "borders": {},
   "colors": {
@@ -162,7 +162,7 @@
     "viewport_top": "#002b36",
     "warning": "#b58900"
   },
-  "format": "solidcraft-theme/1",
+  "format": "sketcraft-theme/1",
   "icon_palette": {
     "constraint": [
       "#fee0dc",

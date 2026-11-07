@@ -1,6 +1,6 @@
 {
   "sources": [
-    "tangency-labs/solidcraft#3816"
+    "NakaSato/sketcraft#3816"
   ],
   "what": "circular pattern of a body about an axis {origin,dir} that does not pass through the world origin",
   "source": "analytic",

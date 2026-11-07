@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#5324"
+  "NakaSato/sketcraft#5324"
  ],
  "what": "a 4x4 square, standing on the middle of the bottom edge of a closed 60x40 rectangle path, swept round the whole path (drawn from a corner): truck's solid was 59% too small and offset, with no error",
  "source": "analytic",

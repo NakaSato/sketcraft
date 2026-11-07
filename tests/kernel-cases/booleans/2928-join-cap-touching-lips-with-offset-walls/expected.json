@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#2928"
+  "NakaSato/sketcraft#2928"
  ],
  "what": "two half-annulus lips (r 4..5, from z=2 to 20) joined onto a stadium-ring base (z 0..2, r 3..5 arcs, centres 20 apart) with their cylinder walls 0.0001 mm off the base's: the lip cap touches the base top, leaving a 0.0001 mm crescent overhang. Layout is a hand-built variant of the PR's public reproduction",
  "source": "analytic",

@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#844"
+  "NakaSato/sketcraft#844"
  ],
  "what": "two swept walls (12 mm thick, 60 mm high) along concentric half circles of radius 50 and 58 turned 90 degrees apart, overlapping in thickness by 4 mm over a quarter turn and sharing the planes z = 0 and z = 60 (join gave an error, minutes, or an open body)",
  "source": "analytic",

@@ -1,7 +1,7 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#1092",
-  "tangency-labs/solidcraft#1314"
+  "NakaSato/sketcraft#1092",
+  "NakaSato/sketcraft#1314"
  ],
  "what": "a U channel modelled with its bend radii (R2 inside, R4 outside), a 6 mm hole in one wall and a label engraved 0.2 deep in its web, converted at the bends' outer arcs",
  "source": "analytic",

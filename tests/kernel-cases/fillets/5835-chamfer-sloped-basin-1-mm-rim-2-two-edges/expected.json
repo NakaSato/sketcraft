@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#5835"
+  "NakaSato/sketcraft#5835"
  ],
  "what": "the front and right top rim edges of a sloped basin with a 1 mm front rim chamfered 2: the front chamfer's leg runs off the rim over the slab's front face (a cliff), so they build as if the top went on, mitred at the rim's corner, and are cut by the front face",
  "source": "analytic",

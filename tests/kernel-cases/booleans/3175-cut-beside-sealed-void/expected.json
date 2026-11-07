@@ -1,6 +1,6 @@
 {
   "sources": [
-    "tangency-labs/solidcraft#3175"
+    "NakaSato/sketcraft#3175"
   ],
   "what": "a cut over the bottom edge of a revolved cylinder that holds a sealed spherical void on its axis: the body must not come out empty or refused",
   "source": "analytic",

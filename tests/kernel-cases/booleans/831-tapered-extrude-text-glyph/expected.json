@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#831"
+  "NakaSato/sketcraft#831"
  ],
  "what": "tapered extrude of a text glyph (Bezier outline): refused with a misleading 'mixing lines and arcs' error",
  "source": "analytic",

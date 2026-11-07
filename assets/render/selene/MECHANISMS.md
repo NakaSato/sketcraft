@@ -1,6 +1,6 @@
 # SELENE mechanism design and verification contract
 
-The improved native source already contains assembly structure, solar-actuator loops, wheel links and a tour. The functional derivative builds on those mechanisms through SolidCraft commands. This document distinguishes inspected source facts from reconstruction targets and the numeric checks needed to accept the result. It does not certify an unexecuted generator or replace native validation evidence.
+The improved native source already contains assembly structure, solar-actuator loops, wheel links and a tour. The functional derivative builds on those mechanisms through SketCraft commands. This document distinguishes inspected source facts from reconstruction targets and the numeric checks needed to accept the result. It does not certify an unexecuted generator or replace native validation evidence.
 
 ## Source assembly
 
@@ -84,7 +84,7 @@ stroke(θ) = length(T(θ) − R) − length(T(0) − R)
 
 Here **R** is the fixed root pin. The source port hinge is at `(0, −140, 158)`, the root at `(x, −91, 134)`, and the tip at `(x, −180.40678269379407, 169.70686616300375)`, with `x = −62` or `+62`. Positive port tilt rotates about +X. At **20 degrees**, the expected stroke is approximately **−2.8662098186 mm**. The starboard wing has mirrored geometry and a negative drive angle. Verify all four sliders, not only one.
 
-The [SolidCraft mechanism reference](https://github.com/tangency-labs/solidcraft/blob/ac1768e08b83ed33212459951f5b50aa7a57cddc/skills/solidcraft-mechanisms/reference.md) documents this closed-loop pattern, `flip: true` for co-directed frames and comparison with independent length calculations. Do not key the root pins, sliders or wing pins in a study; they are followers.
+The [SketCraft mechanism reference](https://github.com/NakaSato/sketcraft/blob/ac1768e08b83ed33212459951f5b50aa7a57cddc/skills/sketcraft-mechanisms/reference.md) documents this closed-loop pattern, `flip: true` for co-directed frames and comparison with independent length calculations. Do not key the root pins, sliders or wing pins in a study; they are followers.
 
 ### Suspension dampers
 
@@ -111,8 +111,8 @@ The pinned authoring executor is the official v0.18.2 CLI described in [SOURCE.m
 
 ```sh
 PYTHONDONTWRITEBYTECODE=1 python3 assets/render/selene/tools/validate_native.py \
-  --cli /path/to/solidcraft-cli \
-  --model assets/render/selene/models/SELENE-functional.solidcraft \
+  --cli /path/to/sketcraft-cli \
+  --model assets/render/selene/models/SELENE-functional.sketcraft \
   --out target/selene/validation-final \
   --interference-pairs assets/render/selene/motion/interference-pairs.json
 ```

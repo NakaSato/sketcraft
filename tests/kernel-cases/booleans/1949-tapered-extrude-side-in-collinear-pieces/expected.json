@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#1949"
+  "NakaSato/sketcraft#1949"
  ],
  "what": "with a taper too, a side drawn in two collinear pieces is one face",
  "source": "analytic",

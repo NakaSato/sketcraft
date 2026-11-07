@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#3368"
+  "NakaSato/sketcraft#3368"
  ],
  "what": "two finely faceted bodies (1000-sided prisms, flat faces only): a faceted stud cut out of a faceted disc, then a faceted cap joined on top touching in a plane; both booleans must finish in bounded time with the exact result",
  "source": "analytic",

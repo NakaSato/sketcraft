@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#3311"
+  "NakaSato/sketcraft#3311"
  ],
  "what": "a second modelled thread on the same body (the first thread faceted every other hole), over each hole's full length",
  "source": "analytic",

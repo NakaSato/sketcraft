@@ -1,7 +1,7 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#2152",
-  "tangency-labs/solidcraft#11609"
+  "NakaSato/sketcraft#2152",
+  "NakaSato/sketcraft#11609"
  ],
  "what": "a modelled M3x0.2 thread in a 3 mm hole, the hole as wide as the thread: the bore is narrowed to the thread's minor diameter and the thread cut into it",
  "source": "analytic",

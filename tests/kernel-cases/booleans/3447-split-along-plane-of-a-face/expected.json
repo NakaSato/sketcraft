@@ -1,7 +1,7 @@
 {
   "sources": [
-    "tangency-labs/solidcraft#3447",
-    "tangency-labs/solidcraft#2979"
+    "NakaSato/sketcraft#3447",
+    "NakaSato/sketcraft#2979"
   ],
   "what": "split body where the splitting plane contains an end face (with a boss on it and an R1 fillet on the face's edge)",
   "source": "analytic",

@@ -1,7 +1,7 @@
 {
   "sources": [
-    "tangency-labs/solidcraft#3633",
-    "tangency-labs/solidcraft#3682"
+    "NakaSato/sketcraft#3633",
+    "NakaSato/sketcraft#3682"
   ],
   "what": "a sphere r=10 intersected with a square pyramid whose apex is the sphere's centre and whose sides lie in the planes of the sphere primitive's patch edges",
   "source": "analytic",

@@ -1,7 +1,7 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#4365",
-  "tangency-labs/solidcraft#4222"
+  "NakaSato/sketcraft#4365",
+  "NakaSato/sketcraft#4222"
  ],
  "what": "the top outline of a 60x40 r10 rounded block filleted r2 along its tangent chain, where a boss (r10, 10 high) standing over a corner of the outline interrupts it: refused ('a vertex of the edge chain where other faces meet')",
  "source": "invariants",

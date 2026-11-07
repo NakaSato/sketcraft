@@ -1,7 +1,7 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#201",
-  "tangency-labs/solidcraft#3371"
+  "NakaSato/sketcraft#201",
+  "NakaSato/sketcraft#3371"
  ],
  "what": "a loft from a circle of radius 5 to a circle of radius 10, 20 mm above, guided by one straight rail through (5,0,0) and (10,0,20)",
  "source": "analytic",

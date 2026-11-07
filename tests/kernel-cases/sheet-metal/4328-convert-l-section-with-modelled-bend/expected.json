@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#4328"
+  "NakaSato/sketcraft#4328"
  ],
  "what": "an L section 2 mm thick with its bend modelled round (inner r2, outer r4), converted to sheet metal with the bend picked: refused ('the face across the bend can't be a face of the sheet: curved faces in a converted sheet')",
  "source": "analytic",

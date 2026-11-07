@@ -1014,7 +1014,7 @@ fn sphere_booleans() {
 
 #[test]
 fn similar_spheres_meet() {
-    // bherbruck/solidcraft#232: the contact test compared every pair of nearby triangles of the
+    // NakaSato/sketcraft#232: the contact test compared every pair of nearby triangles of the
     // two fine sphere meshes and gave up past its work limit, so their join was refused.
     let a = sphere(Vec3::ZERO, 10.0).unwrap();
     for (x, meet) in [(12.0, true), (4.0, true), (20.0, true), (20.5, false)] {

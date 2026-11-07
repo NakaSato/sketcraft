@@ -32,9 +32,9 @@ fn strict_keeps_todays_errors() {
         ("component.insert_design", json!({"path": 5})),
         ("component.insert_design", json!({"path": null})),
         ("component.insert_design", json!({"path": "x".repeat(4096)})),
-        ("component.insert_design", json!({"path": "plate.solidcraft", "translate": [1, 2]})),
-        ("component.insert_design", json!({"path": "plate.solidcraft", "translate": null})),
-        ("component.insert_design", json!({"path": "plate.solidcraft", "translate": [1e9, 0, 0]})),
+        ("component.insert_design", json!({"path": "plate.sketcraft", "translate": [1, 2]})),
+        ("component.insert_design", json!({"path": "plate.sketcraft", "translate": null})),
+        ("component.insert_design", json!({"path": "plate.sketcraft", "translate": [1e9, 0, 0]})),
         ("component.update_links", json!({"component": 0, "components": [0]})),
         ("component.update_links", json!({"component": true})),
         ("component.update_links", json!({"component": null})),
@@ -43,13 +43,13 @@ fn strict_keeps_todays_errors() {
         ("component.update_links", json!({"components": [true]})),
         ("component.update_links", json!({"component": "Nope"})),
         ("component.relink", json!({})),
-        ("component.relink", json!({"component": null, "path": "plate.solidcraft"})),
-        ("component.relink", json!({"component": [1], "path": "plate.solidcraft"})),
+        ("component.relink", json!({"component": null, "path": "plate.sketcraft"})),
+        ("component.relink", json!({"component": [1], "path": "plate.sketcraft"})),
         ("component.break_link", json!({})),
         ("component.break_link", json!({"component": [1]})),
         ("component.extract", json!({})),
         ("component.extract", json!({"component": 0})),
-        ("component.extract", json!({"component": true, "path": "plate.solidcraft"})),
+        ("component.extract", json!({"component": true, "path": "plate.sketcraft"})),
         ("component.copies", json!({})),
         ("component.copies", json!({"component": false})),
         ("component.replace_with_link", json!({})),
@@ -84,12 +84,12 @@ fn the_schemas_take_what_the_handlers_read() {
     takes(
         input_schema_for::<InsertDesignParams>(),
         &[
-            (json!({"path": "plate.solidcraft"}), true),
-            (json!({"path": "plate.solidcraft", "name": "P", "parent": "Arm", "translate": [1, 2, 3], "reuse": true}), true),
-            (json!({"path": "plate.solidcraft", "parent": 4, "translate": {"x": 1, "y": 2, "z": 3}}), true),
+            (json!({"path": "plate.sketcraft"}), true),
+            (json!({"path": "plate.sketcraft", "name": "P", "parent": "Arm", "translate": [1, 2, 3], "reuse": true}), true),
+            (json!({"path": "plate.sketcraft", "parent": 4, "translate": {"x": 1, "y": 2, "z": 3}}), true),
             (json!({}), false),
-            (json!({"path": "plate.solidcraft", "parent": true}), false),
-            (json!({"path": "plate.solidcraft", "translate": [1, 2]}), false),
+            (json!({"path": "plate.sketcraft", "parent": true}), false),
+            (json!({"path": "plate.sketcraft", "translate": [1, 2]}), false),
         ],
     );
     takes(
@@ -106,22 +106,22 @@ fn the_schemas_take_what_the_handlers_read() {
     takes(
         input_schema_for::<RelinkParams>(),
         &[
-            (json!({"component": "Plate", "path": "b.solidcraft"}), true),
+            (json!({"component": "Plate", "path": "b.sketcraft"}), true),
             (json!({"component": "Plate"}), false),
-            (json!({"path": "b.solidcraft"}), false),
+            (json!({"path": "b.sketcraft"}), false),
         ],
     );
     takes(input_schema_for::<BreakLinkParams>(), &[(json!({"component": 2}), true), (json!({}), false), (json!({"component": null}), false)]);
     takes(
         input_schema_for::<ExtractParams>(),
-        &[(json!({"component": "Plate", "path": "plate.solidcraft"}), true), (json!({"component": "Plate"}), false), (json!({"path": "p"}), false)],
+        &[(json!({"component": "Plate", "path": "plate.sketcraft"}), true), (json!({"component": "Plate"}), false), (json!({"path": "p"}), false)],
     );
     takes(input_schema_for::<CopiesParams>(), &[(json!({"component": 2}), true), (json!({}), false)]);
     takes(
         input_schema_for::<ReplaceWithLinkParams>(),
         &[
             (json!({"component": "Copy", "with": "Plate"}), true),
-            (json!({"components": ["A", 2], "path": "plate.solidcraft"}), true),
+            (json!({"components": ["A", 2], "path": "plate.sketcraft"}), true),
             (json!({"with": "Plate"}), false),
             (json!({"component": "Copy"}), false),
             (json!({"component": "Copy", "with": true}), false),
@@ -134,13 +134,13 @@ fn the_schemas_take_what_the_handlers_read() {
 #[test]
 fn the_check_names_what_is_wrong_with_a_key() {
     let issues = |id: &str, p: Value| crate::schema::issues(id, &p).into_iter().map(|i| i.message).collect::<Vec<_>>();
-    assert_eq!(issues("component.insert_design", json!({"path": "p.solidcraft", "translate": [1]})), ["`translate` must be [x, y, z] in mm"]);
-    assert_eq!(issues("component.insert_design", json!({"path": "p.solidcraft", "parent": true})), ["`parent` must be a component id or name"]);
+    assert_eq!(issues("component.insert_design", json!({"path": "p.sketcraft", "translate": [1]})), ["`translate` must be [x, y, z] in mm"]);
+    assert_eq!(issues("component.insert_design", json!({"path": "p.sketcraft", "parent": true})), ["`parent` must be a component id or name"]);
     assert_eq!(issues("component.update_links", json!({"component": 1, "components": [1]})), ["give `component` or `components`, not both"]);
     assert_eq!(issues("component.update_links", json!({"components": [true]})), ["`component` must be a component id or name"]);
     assert_eq!(issues("component.replace_with_link", json!({"component": 1})), Vec::<String>::new());
     assert_eq!(issues("component.replace_with_link", json!({"component": 1, "path": 3})), ["`with` or `path` is required"]);
-    assert_eq!(issues("component.relink", json!({"component": 1, "path": "b.solidcraft", "paths": 1})).len(), 1);
+    assert_eq!(issues("component.relink", json!({"component": 1, "path": "b.sketcraft", "paths": 1})).len(), 1);
 }
 
 fn folder(name: &str) -> PathBuf {
@@ -169,7 +169,7 @@ fn matches(schema: schemars::Schema, id: &str, reply: &Value) {
 #[test]
 fn link_replies_match_the_output_schema() {
     let dir = folder("links");
-    let (a, b, c) = (dir.join("a.solidcraft"), dir.join("b.solidcraft"), dir.join("c.solidcraft"));
+    let (a, b, c) = (dir.join("a.sketcraft"), dir.join("b.sketcraft"), dir.join("c.sketcraft"));
     for (file, height) in [(&a, 10), (&b, 20), (&c, 30)] {
         save_box(file, height);
     }
@@ -223,7 +223,7 @@ fn link_replies_match_the_output_schema() {
     // Links the network or a device refuses are not looked for, and say why.
     let (feature, component) =
         (s.doc.links[&third["component"].as_u64().unwrap_or_default()].feature, third["component"].as_u64().unwrap_or_default());
-    for (link, host) in [(r"\\evil.example\share\c.solidcraft", true), (r"\\.\COM1", false)] {
+    for (link, host) in [(r"\\evil.example\share\c.sketcraft", true), (r"\\.\COM1", false)] {
         s.doc_mut().links.insert(component, DesignLink { path: link.to_string(), feature, ..Default::default() });
         let listed = s.execute("component.links", &json!({})).unwrap_or_else(|e| panic!("{e}"));
         let entry = listed["links"].as_array().and_then(|l| l.iter().find(|e| e["component"] == third["component"])).cloned().unwrap_or_default();
@@ -246,7 +246,7 @@ fn extract_copies_and_replace_replies_match_the_output_schema() {
     run("solid.box", json!({"length": 40, "width": 30, "height": 12, "body_name": "PlateBody"}));
     run("component.activate", json!({"component": 0}));
     let copy = run("component.paste_new", json!({"component": plate, "occurrence": occurrence, "translate": [0, 80, 0]}));
-    let file = dir.join("plate.solidcraft");
+    let file = dir.join("plate.sketcraft");
     let extracted = run("component.extract", json!({"component": "Plate", "path": file}));
     assert_eq!(extracted["bodies"], json!(["PlateBody"]), "{extracted}");
     assert_eq!(extracted["copies"].as_array().map(Vec::len), Some(1), "{extracted}");

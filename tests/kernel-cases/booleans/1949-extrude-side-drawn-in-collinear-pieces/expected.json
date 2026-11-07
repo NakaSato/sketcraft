@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#1949"
+  "NakaSato/sketcraft#1949"
  ],
  "what": "a profile side drawn as two collinear lines extrudes into one flat face, not two with an edge between them",
  "source": "analytic",

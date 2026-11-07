@@ -1,4 +1,4 @@
-//! File formats. Designs use JSON or versioned containers (`.sc`; `.solidcraft` and `.solvecraft` still open); the authoritative
+//! File formats. Designs use JSON or versioned containers (`.sc`; `.sketcraft` and `.solvecraft` still open); the authoritative
 //! document rebuilds on load and optional display caches remain provisional. Bodies export
 //! as STL (binary or ASCII), OBJ, STEP and 3MF, and assemblies as URDF ([`urdf()`]); STEP, IGES,
 //! FreeCAD and Rhino files import as a base feature (see [`step_import_feature`]), 3MF and
@@ -66,9 +66,9 @@ pub const DESIGN_EXT: &str = "sc";
 /// The design extensions of earlier releases, newest first. Compatibility shim
 /// (docs/compatibility.md): such files still open everywhere a design opens, and Save keeps
 /// writing an opened file under its own name; new designs are saved as [`DESIGN_EXT`].
-pub const LEGACY_DESIGN_EXTS: [&str; 3] = ["sketcraft", "solidcraft", "solvecraft"];
+pub const LEGACY_DESIGN_EXTS: [&str; 2] = ["sketcraft", "solvecraft"];
 /// Every extension a design file may have, current first.
-pub const DESIGN_EXTS: [&str; 4] = [DESIGN_EXT, LEGACY_DESIGN_EXTS[0], LEGACY_DESIGN_EXTS[1], LEGACY_DESIGN_EXTS[2]];
+pub const DESIGN_EXTS: [&str; 3] = [DESIGN_EXT, LEGACY_DESIGN_EXTS[0], LEGACY_DESIGN_EXTS[1]];
 
 /// Is this extension (without the dot) one a design file may have (`sc` or a legacy one), any case?
 pub fn is_design_ext(ext: &str) -> bool {
@@ -1252,7 +1252,7 @@ mod tests {
         };
         let x = model_xml(export_with_metadata(&m.state(), &[], Format::ThreeMf, "t", &meta).unwrap());
         for want in [
-            "<metadata name=\"Application\">SolidCraft</metadata>\n <metadata name=\"Title\">ACME &lt;enclosures&gt;</metadata>",
+            "<metadata name=\"Application\">SketCraft</metadata>\n <metadata name=\"Title\">ACME &lt;enclosures&gt;</metadata>",
             "<metadata name=\"Designer\">Jane O&apos;Brien</metadata>",
             "<metadata name=\"Description\">Vented Gehäuse\nfor a Pi</metadata>",
             "<metadata name=\"LicenseTerms\">CC-BY-4.0</metadata>",
@@ -1324,10 +1324,10 @@ mod tests {
         assert!(Format::from_name("a.dwg").is_err());
         // Compatibility shim: the legacy design extensions are still designs.
         assert_eq!(Format::from_name("old.solvecraft").unwrap(), Format::Design);
-        assert_eq!(Format::from_name("older.solidcraft").unwrap(), Format::Design);
+        assert_eq!(Format::from_name("older.sketcraft").unwrap(), Format::Design);
         assert_eq!(Format::from_name("new.sc").unwrap(), Format::Design);
         assert_eq!(Format::from_name("NEW.SC").unwrap(), Format::Design);
-        assert!(is_design_path("/d/old.SOLVECRAFT") && is_design_path("older.solidcraft") && is_design_path("new.sc") && !is_design_path("a.step"));
+        assert!(is_design_path("/d/old.SOLVECRAFT") && is_design_path("older.sketcraft") && is_design_path("new.sc") && !is_design_path("a.step"));
         assert_eq!(DESIGN_EXT, "sc");
         assert_eq!(DESIGN_EXTS, ["sc", "sketcraft", "solvecraft"], "new extension first, then every older one");
         assert!(read_stl(&[0u8; 10]).is_err());
@@ -1591,7 +1591,7 @@ mod tests {
                 assert!(exact.contains(&attr(l, k).to_bits()), "{l}");
             }
         }
-        // Any 3MF reader opens it: SolidCraft's own ignores the tags and gets a closed mesh.
+        // Any 3MF reader opens it: SketCraft's own ignores the tags and gets a closed mesh.
         let f = mesh_import_feature(&bytes, "tagged.3mf").unwrap();
         let mut d2 = Document::new("m");
         let id = d2.add_feature(f.kind, Some(&f.name)).unwrap();

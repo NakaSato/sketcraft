@@ -1,8 +1,8 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#2193",
-  "tangency-labs/solidcraft#2263",
-  "tangency-labs/solidcraft#4153"
+  "NakaSato/sketcraft#2193",
+  "NakaSato/sketcraft#2263",
+  "NakaSato/sketcraft#4153"
  ],
  "what": "a modelled M33x3.5 thread, a size the thread menu lacked (designation typed by hand), on a 33 mm shaft (4 turns)",
  "source": "analytic",

@@ -20,7 +20,7 @@ library v2; capability checks must use the actual executing build.
    the render catalog is not evidence that this object has been created or assigned.
 
 `exports/native-cards.json` is a bundle of individually valid card objects plus
-projection metadata. It is not `solidcraft-library/1`, `solidcraft-library/2`, or
+projection metadata. It is not `sketcraft-library/1`, `sketcraft-library/2`, or
 an application command script. Do not pass its whole envelope as a single card.
 
 ## Supported current commands
@@ -109,7 +109,7 @@ vacuum, gravity or thermal behavior on the Moon.
 
 ## Future library v2 export
 
-The integrated runtime's `solidcraft_io::catalog` owns library serialization.
+The integrated runtime's `sketcraft_io::catalog` owns library serialization.
 It computes entry revisions from its compact serde representation of provenance
 and definition. Do not calculate an assumed equivalent Python hash or hand-write
 a catalog revision: cross-language float spelling and omitted fields can differ.

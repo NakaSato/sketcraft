@@ -1,7 +1,7 @@
 {
   "order": 40,
-  "provenance": "Original SolidCraft mapping of Gruvbox (MIT palette)",
-  "format": "solidcraft-theme/1",
+  "provenance": "Original SketCraft mapping of Gruvbox (MIT palette)",
+  "format": "sketcraft-theme/1",
   "name": "Gruvbox Light",
   "base": "light",
   "colors": {

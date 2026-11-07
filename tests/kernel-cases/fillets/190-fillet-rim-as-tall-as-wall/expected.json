@@ -1,7 +1,7 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#190",
-  "tangency-labs/solidcraft#318"
+  "NakaSato/sketcraft#190",
+  "NakaSato/sketcraft#318"
  ],
  "what": "an R2 round of the top edge of a disc 2 mm high (the round is as tall as the wall, so it meets the bottom face)",
  "source": "analytic",

@@ -1,14 +1,12 @@
 # SketCraft
 
-![SketCraft editor screenshot](assets/screenshots/ketchup.jpg)
-
 [![Try SketCraft in your browser](https://img.shields.io/badge/Try_SketCraft_in_your_browser-d63b32?style=for-the-badge)](https://ketchup3d.github.io/app/play/)
 [![Download the latest release](https://img.shields.io/badge/Download-555555?style=for-the-badge)](https://github.com/Ketchup3D/app/releases/latest)
 
 SketCraft is a SketchUp-style 3D modeler written in Rust. The same editor runs as a native
 Windows, macOS or Linux application and in a desktop browser through WebAssembly.
 
-It is built on a fork of SolidCraft, a parametric CAD workspace, so SketchUp's way of working
+It is built on a fork of SketCraft, a parametric CAD workspace, so SketchUp's way of working
 sits on top of a real solid-modeling core:
 
 - **SketchUp first.** The app opens on the **SketchUp** ribbon tab, which holds SketchUp's Large
@@ -22,7 +20,7 @@ sits on top of a real solid-modeling core:
   Assemble, Sheet Metal and Weldments (hidden at first; show them from the ribbon's **+** or
   Settings › Layout › Toolbar tabs): constrained sketches, a feature timeline, assemblies and
   joints, analysis tools and a Render workspace.
-- **Files.** Designs are saved as `.sc`, and older `.sketcraft`, `.solidcraft` and `.solvecraft`
+- **Files.** Designs are saved as `.sc`, and older `.sketcraft` and `.solvecraft`
   files still open. Import and export cover STEP, IGES, STL, 3MF, OBJ, glTF, DXF and SVG, plus
   SketchUp `.skp`, Rhino `.3dm`, FreeCAD, point clouds (`.ply`, `.xyz`, `.pts`) and URDF,
   depending on the format's direction.
@@ -79,8 +77,7 @@ trunk serve
 
 Open <http://127.0.0.1:8080>. Work is saved in the browser for that origin, so keep the same
 address and port to get it back. Trunk generates the JavaScript that loads the WebAssembly
-program; no Node.js or backend is needed. `Trunk.toml` proxies `/api/` and `/auth/` to an
-account server on `localhost:8081`, which the modeler does not need.
+program; no Node.js or backend is needed.
 
 ## Build for distribution
 
@@ -96,11 +93,11 @@ executable, not an installer or a signed bundle.
 Browser:
 
 ```sh
-trunk build --release --locked
+trunk build --release --locked --public-url ./
 ```
 
 Serve `dist/` from any static web server, over HTTPS for WebGPU (localhost also works).
-`public_url = "./"` lets it be served from a subdirectory.
+`--public-url ./` lets it be served from a subdirectory.
 
 ## Test and check
 
@@ -114,7 +111,7 @@ cargo xtask known-failing              # tests/KNOWN_FAILING_TESTS against the a
 ```
 
 A failing test ships with its fix or gets a line in `tests/KNOWN_FAILING_TESTS`.
-`SOLIDCRAFT_TEST_JOBS=N` limits how many test commands run at once. UI scenario tests are JSON
+`SKETCRAFT_TEST_JOBS=N` limits how many test commands run at once. UI scenario tests are JSON
 files in `crates/ui-egui/tests/scenarios/`; see [`crates/ui-egui/CLAUDE.md`](crates/ui-egui/CLAUDE.md).
 
 Browser shortcut handling can be tested without building the app:
@@ -142,7 +139,7 @@ L0 geom → L1 sketch, kernel, render → L2 doc → L3 io → L4 engine → L5 
   `apps/sketcraft-cli` (headless CLI and MCP server). `xtask`: repository tooling.
 - `vendor/`: patched `egui-wgpu` and `winit`, outside the workspace.
 - `skills/*/SKILL.md`: short contributor guides (commands, tests, UI, file formats,
-  preferences, performance). They still say "SolidCraft".
+  preferences, performance).
 
 Project rules (persisted settings, modal button order, inspector tables, English-only UI
 text, the release workflow) are in [`AGENTS.md`](AGENTS.md).

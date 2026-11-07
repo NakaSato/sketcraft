@@ -1,7 +1,7 @@
 {
   "sources": [
-    "tangency-labs/solidcraft#2580",
-    "tangency-labs/solidcraft#2579"
+    "NakaSato/sketcraft#2580",
+    "NakaSato/sketcraft#2579"
   ],
   "what": "a 16 mm box cut out round a small (r 1.8) hole of a 3 m long, 2 mm plate keeps the hole in both faces",
   "source": "analytic",

@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#5193"
+  "NakaSato/sketcraft#5193"
  ],
  "what": "a turned pin (revolves with two grooves, a stepped bore with a drill point from one end, a stud with chamfered root and tip on the other) with two milled flats, exported to STEP and read back: truck's STEP lost two faces of the flats' neighbours and grew 0.075% (synthetic: the report's own pin, re-dimensioned)",
  "source": "analytic",

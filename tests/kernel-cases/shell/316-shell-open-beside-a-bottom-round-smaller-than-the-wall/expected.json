@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#316"
+  "NakaSato/sketcraft#316"
  ],
  "what": "a 40 x 30 x 10 box, its bottom outline rounded R1.5, shelled 2 mm open at the bottom: the round is smaller than the wall, so a 0.5 mm rim is left",
  "source": "analytic",

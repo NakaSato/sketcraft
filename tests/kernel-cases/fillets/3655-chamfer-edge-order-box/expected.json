@@ -1,7 +1,7 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#3655",
-  "tangency-labs/solidcraft#3660"
+  "NakaSato/sketcraft#3655",
+  "NakaSato/sketcraft#3660"
  ],
  "what": "a plain box with all 12 edges chamfered, the edges listed in an order that was refused",
  "source": "analytic",

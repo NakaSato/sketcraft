@@ -1,7 +1,7 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#3369",
-  "tangency-labs/solidcraft#3922"
+  "NakaSato/sketcraft#3369",
+  "NakaSato/sketcraft#3922"
  ],
  "what": "an R2 round on a straight edge whose ends sit on the tangent seam between a flat top and a rounded end",
  "source": "analytic",

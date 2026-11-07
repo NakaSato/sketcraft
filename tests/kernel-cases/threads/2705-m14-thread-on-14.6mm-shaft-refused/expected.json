@@ -1,8 +1,8 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#2705",
-  "tangency-labs/solidcraft#1018",
-  "tangency-labs/solidcraft#2853"
+  "NakaSato/sketcraft#2705",
+  "NakaSato/sketcraft#1018",
+  "NakaSato/sketcraft#2853"
  ],
  "what": "a modelled thread on a shaft that isn't the thread's size: refused with the size to use, never a silent change of the shaft",
  "source": "analytic",

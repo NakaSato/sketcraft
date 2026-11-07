@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#4101"
+  "NakaSato/sketcraft#4101"
  ],
  "what": "the four edges of a block end face chamfered where the block sides are 1 degree off square: exact volume of the plane-clipped prism (the corner edges of about 0.0001 mm are real geometry)",
  "source": "analytic",

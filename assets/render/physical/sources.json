@@ -1,5 +1,5 @@
 {
-  "schema": "solidcraft-physical-sources/1",
+  "schema": "sketcraft-physical-sources/1",
   "sources": [
     {
       "id": "sandmeyer-304",

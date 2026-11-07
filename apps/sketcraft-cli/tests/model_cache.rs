@@ -18,7 +18,7 @@ fn corpus() -> Vec<PathBuf> {
 }
 
 fn temp(name: &str) -> PathBuf {
-    std::env::temp_dir().join(format!("sketcraft-model-cache-{}-{name}.solidcraft", std::process::id()))
+    std::env::temp_dir().join(format!("sketcraft-model-cache-{}-{name}.sketcraft", std::process::id()))
 }
 
 fn open(path: &Path) -> Session {
@@ -202,7 +202,7 @@ fn check_thinned(name: &str, built: &Session, saved: &SavedModel) {
 /// say until it is evaluated.
 #[test]
 fn thinned_models_open_as_evaluated() {
-    let corpus = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/corpus/components-arm.solidcraft");
+    let corpus = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/corpus/components-arm.sketcraft");
     for sample in ["Sample Plate", "Plastic Enclosure", "components-arm"] {
         let built = match sketcraft_engine::sample::samples().into_iter().find(|s| s.name == sample) {
             Some(s) => {

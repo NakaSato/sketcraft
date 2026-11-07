@@ -1,4 +1,4 @@
-# SolidCraft UI icon specification
+# SketCraft UI icon specification
 
 This is the binding specification for new and revised icons. Use it with the
 actual SVG references in `design/references.toml`; `http://127.0.0.1:8770/guide`
@@ -197,13 +197,13 @@ whole set, especially final artwork, when adding one icon.
    smooth curves and tangent heads; correct occlusion; no accidental seams;
    reference-matched detail and optical footprint. Fix these before owner review.
 6. Run `cargo xtask icons` and
-   `cargo test --profile ci -p solidcraft-ui-egui --lib icon_svg::tests` in the
+   `cargo test --profile ci -p sketcraft-ui-egui --lib icon_svg::tests` in the
    background. Run normal repository gates before committing. Never claim visual
    quality from lint alone. Keep review evidence under ignored target/.
 7. Leave the icon Open. The owner uses the review page to finalise the exact
    artwork revision. Do not add acceptance hashes or copy another icon's hash.
 
-All artwork must be original SolidCraft work or an explicitly licensed resource
+All artwork must be original SketCraft work or an explicitly licensed resource
 with provenance. Commercial CAD artwork, screenshots and extracted assets are
 forbidden even as hidden references. This guide and the local finished set provide
 all required visual context for future agents.
@@ -211,5 +211,5 @@ all required visual context for future agents.
 Runtime discovery is also checked by `crates/ui-egui/tests/icon_audit.rs`. New menu
 surfaces must extend that Harness traversal. Regenerate the committed
 `design/requested_icons.txt` with `UPDATE_ICON_MANIFEST=1 cargo test -p
-solidcraft-ui-egui --test icon_audit`; review the sorted id/placeholder diff. The
+sketcraft-ui-egui --test icon_audit`; review the sorted id/placeholder diff. The
 review tool reads this fixture in addition to source scans, masters and aliases.

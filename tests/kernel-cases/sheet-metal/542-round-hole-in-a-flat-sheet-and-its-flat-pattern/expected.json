@@ -1,7 +1,7 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#542",
-  "tangency-labs/solidcraft#552"
+  "NakaSato/sketcraft#542",
+  "NakaSato/sketcraft#552"
  ],
  "what": "a 3.2 mm round hole cut through a 100 x 60 x 2.5 sheet, which the flat pattern must report as a circle",
  "source": "analytic",

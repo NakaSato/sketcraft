@@ -1,7 +1,7 @@
 {
   "sources": [
-    "tangency-labs/solidcraft#3303",
-    "tangency-labs/solidcraft#3309"
+    "NakaSato/sketcraft#3303",
+    "NakaSato/sketcraft#3309"
   ],
   "what": "cutting the complete circular top face of a widening conical frustum inward: the cylindrical tool touches the cone only at its rim",
   "source": "analytic",

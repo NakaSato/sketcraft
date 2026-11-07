@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#2038"
+  "NakaSato/sketcraft#2038"
  ],
  "what": "two modelled threads on one body, an internal one then an external one (the second was refused: no cylindrical face there to thread)",
  "source": "analytic",

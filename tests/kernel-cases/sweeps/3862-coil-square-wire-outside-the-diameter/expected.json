@@ -1,7 +1,7 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#3862",
-  "tangency-labs/solidcraft#3915"
+  "NakaSato/sketcraft#3862",
+  "NakaSato/sketcraft#3915"
  ],
  "what": "a clockwise 5-turn coil of 4 mm square wire placed outside a 40 mm diameter, pitch 8 (the section, position and direction parameters)",
  "source": "analytic",

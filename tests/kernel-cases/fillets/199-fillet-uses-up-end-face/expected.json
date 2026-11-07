@@ -1,7 +1,7 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#199",
-  "tangency-labs/solidcraft#317"
+  "NakaSato/sketcraft#199",
+  "NakaSato/sketcraft#317"
  ],
  "what": "an R3 round on the four vertical edges of a 14x6x10 box: the two rounds on each 6 mm end face meet exactly (the face is used up)",
  "source": "analytic",

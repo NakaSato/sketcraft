@@ -1,6 +1,6 @@
 {
   "order": 190,
-  "provenance": "Original SolidCraft mapping of Dracula (MIT palette)",
+  "provenance": "Original SketCraft mapping of Dracula (MIT palette)",
   "base": "dark",
   "colors": {
     "accent": "#bd93f9",
@@ -190,7 +190,7 @@
     "viewport_top": "#1d1e29",
     "warning": "#f1fa8c"
   },
-  "format": "solidcraft-theme/1",
+  "format": "sketcraft-theme/1",
   "name": "Nosferatu",
   "icon_palette": {
     "ink": "#21222c",

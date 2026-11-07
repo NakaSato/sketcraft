@@ -1,6 +1,6 @@
 {
   "sources": [
-    "tangency-labs/solidcraft#2528"
+    "NakaSato/sketcraft#2528"
   ],
   "what": "a rounded slot (a box with a half-cylinder on each end) joined with a cylinder that overlaps one end: the cylinder walls meet along vertical seams and intersection edges, where wedge-shaped mis-tessellated facets showed up",
   "source": "analytic",

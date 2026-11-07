@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#4092"
+  "NakaSato/sketcraft#4092"
  ],
  "what": "the same without the top flange: the join fails with 'boolean Union: no result'",
  "source": "analytic",

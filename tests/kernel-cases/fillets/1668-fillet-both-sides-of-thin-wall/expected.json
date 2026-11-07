@@ -1,7 +1,7 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#1668",
-  "tangency-labs/solidcraft#1720"
+  "NakaSato/sketcraft#1668",
+  "NakaSato/sketcraft#1720"
  ],
  "what": "an R5 round on an outer top edge and the matching inner (concave) edge of a 2 mm wall in one feature fits, as it does one after the other",
  "source": "analytic",

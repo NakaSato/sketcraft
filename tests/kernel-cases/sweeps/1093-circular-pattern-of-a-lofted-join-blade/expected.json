@@ -1,7 +1,7 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#1093",
-  "tangency-labs/solidcraft#1107"
+  "NakaSato/sketcraft#1093",
+  "NakaSato/sketcraft#1107"
  ],
  "what": "a tapered lofted blade (6 x 3 root embedded 2 mm into a disk, 3 x 1.5 tip) joined to a disk and patterned 9 times round the axis as joins (31 minutes with eight retries, or \"cavity ownership is ambiguous\")",
  "source": "analytic",

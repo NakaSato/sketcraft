@@ -1,7 +1,7 @@
 {
   "sources": [
-    "tangency-labs/solidcraft#2564",
-    "tangency-labs/solidcraft#1949"
+    "NakaSato/sketcraft#2564",
+    "NakaSato/sketcraft#1949"
   ],
   "what": "an extrude of an outline whose bottom side is drawn as two collinear pieces that wrap past the loop's first segment ((10,0)->(20,0) ... (0,0)->(10,0)): the bottom is one face",
   "source": "analytic",

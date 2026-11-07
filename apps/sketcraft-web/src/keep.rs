@@ -7,7 +7,7 @@
 //! hidden, so it is already current when the tab closes; the page then doesn't ask through the
 //! browser's "leave site?" box ([`asks_before_unload`]). A design that is saved, closed or
 //! discarded has its copy removed. The next visit offers the copies newer than their design's
-//! last save ([`fate`]) in SolidCraft's own window, answered with [`plan`].
+//! last save ([`fate`]) in SketCraft's own window, answered with [`plan`].
 //!
 //! An id is `<page>-<n>`: the page that wrote it (each page load has its own) and the design's
 //! number in that page. A page holds a browser lock named after it while it runs, so another tab

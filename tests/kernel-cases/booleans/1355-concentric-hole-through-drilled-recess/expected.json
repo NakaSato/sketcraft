@@ -1,7 +1,7 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#1355",
-  "tangency-labs/solidcraft#1736"
+  "NakaSato/sketcraft#1355",
+  "NakaSato/sketcraft#1736"
  ],
  "what": "a drilled O8.5 recess (118 deg drill point) in a plate, then a O4 hole through its centre: the second cut 'does not work'",
  "source": "analytic",

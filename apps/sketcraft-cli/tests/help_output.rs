@@ -51,7 +51,7 @@ const LISTED: &[&str] = &[
     "icon",
 ];
 
-/// The command names a text mentions after `solidcraft-cli `, each one only once.
+/// The command names a text mentions after `sketcraft-cli `, each one only once.
 fn mentioned(text: &str) -> Vec<&str> {
     let mut names: Vec<&str> = text.split("sketcraft-cli ").skip(1).filter_map(|rest| rest.split_whitespace().next()).collect();
     names.sort_unstable();
@@ -177,7 +177,7 @@ fn max_file_size_raises_the_limit_and_refuses_bad_sizes() {
     // (and refused for what it holds, which is no design).
     let dir = std::env::temp_dir().join(format!("sketcraft-cli-4086-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
-    let path = dir.join("big.solidcraft");
+    let path = dir.join("big.sketcraft");
     std::fs::File::create(&path).unwrap().set_len((256 << 20) + 1).unwrap();
     let path = path.to_string_lossy().to_string();
     let output = Command::new(env!("CARGO_BIN_EXE_sketcraft-cli")).args(["eval", &path]).output().unwrap();

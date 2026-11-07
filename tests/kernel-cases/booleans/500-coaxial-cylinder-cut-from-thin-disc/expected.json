@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#500"
+  "NakaSato/sketcraft#500"
  ],
  "what": "a radius 20 cylinder cut out of a coaxial radius 40 disc spanning x -1..1 lost about 2.6% of the volume",
  "source": "analytic",

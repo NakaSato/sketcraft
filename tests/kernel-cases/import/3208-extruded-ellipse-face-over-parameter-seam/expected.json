@@ -1,7 +1,7 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#3120",
-  "tangency-labs/solidcraft#3208"
+  "NakaSato/sketcraft#3120",
+  "NakaSato/sketcraft#3208"
  ],
  "what": "a prism over a circular segment whose curved side lies on a SURFACE_OF_LINEAR_EXTRUSION of an ELLIPSE (a = b = 10) and spans the ellipse's parameter origin (-60 to +60 degrees): the face must cover only the narrow segment side, not wrap the ellipse",
  "source": "analytic",

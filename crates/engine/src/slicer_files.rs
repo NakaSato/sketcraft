@@ -11,8 +11,8 @@ pub const KEEP: Duration = Duration::from_secs(7 * 24 * 3600);
 /// Most numbered copies (`name-2.3mf`, …) tried when the file is locked.
 const MAX_COPIES: u32 = 9;
 
-/// The per-user folder: `%LOCALAPPDATA%\SolidCraft\slicer`, `~/Library/Caches/SolidCraft/slicer`
-/// or `$XDG_CACHE_HOME/solidcraft/slicer` (`~/.cache/solidcraft/slicer`).
+/// The per-user folder: `%LOCALAPPDATA%\SketCraft\slicer`, `~/Library/Caches/SketCraft/slicer`
+/// or `$XDG_CACHE_HOME/sketcraft/slicer` (`~/.cache/sketcraft/slicer`).
 pub fn dir() -> Option<PathBuf> {
     // Tests never touch the user's real folder.
     if cfg!(test) {
@@ -118,10 +118,10 @@ mod tests {
 
     #[test]
     fn the_name_is_stable_per_design_and_bodies() {
-        let a = |names: &[&str]| stem("Bracket", Some("/d/bracket.solidcraft"), 1, &names.iter().map(|s| s.to_string()).collect::<Vec<_>>());
+        let a = |names: &[&str]| stem("Bracket", Some("/d/bracket.sketcraft"), 1, &names.iter().map(|s| s.to_string()).collect::<Vec<_>>());
         assert_eq!(a(&["Arm", "Base"]), a(&["Base", "Arm"]));
         assert_ne!(a(&["Arm", "Base"]), a(&["Arm"]));
-        assert_ne!(a(&["Arm"]), stem("Bracket", Some("/other/bracket.solidcraft"), 1, &["Arm".to_string()]));
+        assert_ne!(a(&["Arm"]), stem("Bracket", Some("/other/bracket.sketcraft"), 1, &["Arm".to_string()]));
         assert!(a(&["Arm"]).starts_with("Bracket-"));
         assert_eq!(stem("a/b:c", None, 1, &[]).split('-').next(), Some("a_b_c"));
         assert!(stem("", None, 1, &[]).starts_with("design-"));

@@ -665,7 +665,7 @@ mod tests {
         let at: Vec<Vec<f64>> = LIFTED.iter().chain(&LIFTED).map(|c| c.to_vec()).collect();
         assert_eq!(corners(&mut s), at, "{names:?}");
         // The copies keep their names and their places when the design is saved and opened again.
-        let design = path.with_file_name("Three.solidcraft");
+        let design = path.with_file_name("Three.sketcraft");
         run(&mut s, "file.save_as", json!({"path": design.to_string_lossy()}));
         let mut r = Session::default();
         run(&mut r, "doc.open", json!({"path": design.to_string_lossy()}));

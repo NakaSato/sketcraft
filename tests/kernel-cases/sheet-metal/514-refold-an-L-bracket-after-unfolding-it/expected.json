@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#514"
+  "NakaSato/sketcraft#514"
  ],
  "what": "an L bracket unfolded and refolded: the refold must give the folded part back",
  "source": "analytic",

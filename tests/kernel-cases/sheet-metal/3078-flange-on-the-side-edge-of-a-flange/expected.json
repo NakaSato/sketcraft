@@ -1,7 +1,7 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#3078",
-  "tangency-labs/solidcraft#3274"
+  "NakaSato/sketcraft#3078",
+  "NakaSato/sketcraft#3274"
  ],
  "what": "an edge flange on the side edge of an existing wall, meeting a flange on the base across the existing bend with a round corner relief (not supported yet: a flange on the side of another flange)",
  "source": "invariants",

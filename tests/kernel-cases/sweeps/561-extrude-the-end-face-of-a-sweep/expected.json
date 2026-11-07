@@ -1,7 +1,7 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#561",
-  "tangency-labs/solidcraft#677"
+  "NakaSato/sketcraft#561",
+  "NakaSato/sketcraft#677"
  ],
  "what": "the end cap of a mitred swept bar (8 x 5 section, 30 up then 40 across) extruded 6 mm further along the path",
  "source": "analytic",

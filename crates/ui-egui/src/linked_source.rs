@@ -279,8 +279,8 @@ mod tests {
     fn fixture(name: &str) -> (SolveApp, u64, u64, PathBuf, PathBuf) {
         let folder = std::env::temp_dir().join(format!("sketcraft-relink-ui-{name}-{}", std::process::id()));
         std::fs::create_dir_all(&folder).unwrap();
-        let source = folder.join("source.solidcraft");
-        let moved = folder.join("moved.solidcraft");
+        let source = folder.join("source.sketcraft");
+        let moved = folder.join("moved.sketcraft");
         let mut part = Session::default();
         part.execute("solid.box", &json!({"length": 10, "width": 20, "height": 30})).unwrap();
         part.execute("file.save", &json!({"path": source})).unwrap();
@@ -320,7 +320,7 @@ mod tests {
         assert!(Arc::ptr_eq(&before, &app.session.doc), "choosing is not an edit");
         crate::file_picker::tick(&mut app, &egui::Context::default());
         assert!(!app.file_picker_busy());
-        assert!(app.session.doc.links[&component].path.ends_with("moved.solidcraft"));
+        assert!(app.session.doc.links[&component].path.ends_with("moved.sketcraft"));
         assert_eq!(app.session.doc.occurrences, occurrences);
         assert!(app.status.as_ref().is_some_and(|(s, _, error)| s.contains("all instances") && !error));
         app.run("edit.undo", json!({})).unwrap();
@@ -338,7 +338,7 @@ mod tests {
         crate::file_picker::tick(&mut app, &egui::Context::default());
         assert_eq!(serde_json::to_value(&*app.session.doc).unwrap(), before);
         assert_eq!(app.session.undo.len(), undo);
-        answer(&mut app, Some(folder.join("missing.solidcraft").to_string_lossy().into_owned()));
+        answer(&mut app, Some(folder.join("missing.sketcraft").to_string_lossy().into_owned()));
         start(&mut app, component);
         crate::file_picker::tick(&mut app, &egui::Context::default());
         assert_eq!(serde_json::to_value(&*app.session.doc).unwrap(), before);
@@ -367,7 +367,7 @@ mod tests {
         app.start("component.relink");
         assert!(app.file_picker_busy());
         crate::file_picker::tick(&mut app, &egui::Context::default());
-        assert!(app.session.doc.links[&component].path.ends_with("moved.solidcraft"));
+        assert!(app.session.doc.links[&component].path.ends_with("moved.sketcraft"));
         let _ = std::fs::remove_dir_all(folder);
     }
 
@@ -434,7 +434,7 @@ mod tests {
         app.run("component.activate", json!({"component": 0})).unwrap();
         let copy = app.run("component.paste_new", json!({"component": component, "occurrence": occurrence, "translate": [50, 0, 0]})).unwrap();
         let (copy, copy_occurrence) = (copy["component"].as_u64().unwrap(), copy["occurrence"].as_u64().unwrap());
-        let chosen = folder.join("bracket.solidcraft").to_string_lossy().into_owned();
+        let chosen = folder.join("bracket.sketcraft").to_string_lossy().into_owned();
         app.services.pick_save = Some(Box::new(move |_, _| {
             let result = Some(chosen.clone());
             Box::pin(async move { result })
@@ -458,7 +458,7 @@ mod tests {
     fn changed_linked_designs_update_the_assembly_when_its_tab_returns() {
         let folder = std::env::temp_dir().join(format!("sketcraft-changed-link-ui-{}", std::process::id()));
         std::fs::create_dir_all(&folder).unwrap();
-        let file = folder.join("plate.solidcraft");
+        let file = folder.join("plate.sketcraft");
         let mut part = Session::default();
         part.execute("solid.box", &json!({"length": 10, "width": 20, "height": 30})).unwrap();
         part.execute("file.save", &json!({"path": file})).unwrap();
@@ -529,13 +529,13 @@ mod tests {
         let folder = std::env::temp_dir().join(format!("sketcraft-two-links-{name}-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&folder);
         std::fs::create_dir_all(&folder).unwrap();
-        let (plate, cube) = (folder.join("plate.solidcraft"), folder.join("cube.solidcraft"));
+        let (plate, cube) = (folder.join("plate.sketcraft"), folder.join("cube.sketcraft"));
         save_part(&plate, [10.0, 20.0, 30.0], false);
         save_part(&cube, [10.0, 10.0, 10.0], false);
         let mut app = SolveApp::new(Session::default(), Default::default());
         app.run("component.insert_design", json!({"path": plate})).unwrap();
         app.run("component.insert_design", json!({"path": cube, "translate": [100, 0, 0]})).unwrap();
-        app.run("file.save", json!({"path": folder.join("case.solidcraft")})).unwrap();
+        app.run("file.save", json!({"path": folder.join("case.sketcraft")})).unwrap();
         crate::documents::open_tab(&mut app, Session::default()).unwrap();
         crate::documents::switch(&mut app, 0);
         (app, folder, plate, cube)
@@ -655,7 +655,7 @@ mod tests {
         drop(app);
         let mut app = SolveApp::new(Session::default(), Default::default());
         let mut opened = Session::default();
-        opened.execute("doc.open", &json!({"path": folder.join("case.solidcraft")})).unwrap();
+        opened.execute("doc.open", &json!({"path": folder.join("case.sketcraft")})).unwrap();
         crate::documents::adopt(&mut app, opened);
         assert_eq!(app.docs.count(), 1);
         save_part(&plate, [10.0, 20.0, 30.0], true);
@@ -672,7 +672,7 @@ mod tests {
     fn a_design_changed_while_the_assembly_was_closed_is_read_when_it_opens() {
         let (app, folder, plate, _) = two_links("closed");
         drop(app);
-        let case = folder.join("case.solidcraft");
+        let case = folder.join("case.sketcraft");
         let open = |in_tab: bool| {
             let mut app = SolveApp::new(Session::default(), Default::default());
             if in_tab {
@@ -706,7 +706,7 @@ mod tests {
         let mut app = SolveApp::new(unsaved, Default::default());
         crate::documents::open_tab(&mut app, Session::default()).unwrap();
         let mut opened = Session::default();
-        opened.execute("doc.open", &json!({"path": folder.join("case.solidcraft")})).unwrap();
+        opened.execute("doc.open", &json!({"path": folder.join("case.sketcraft")})).unwrap();
         crate::documents::open_tab(&mut app, opened).unwrap();
         settle(&mut app);
         crate::documents::switch(&mut app, 1);
@@ -717,7 +717,7 @@ mod tests {
         assert!(app.file_load.idle());
         crate::documents::answer_prompt(&mut app, crate::documents::Answer::Cancel);
         settle(&mut app);
-        assert!(app.session.path.as_deref().is_some_and(|p| p.ends_with("case.solidcraft")));
+        assert!(app.session.path.as_deref().is_some_and(|p| p.ends_with("case.sketcraft")));
         assert!((volume(&app) - 7250.0).abs() < 1e-6, "{}", volume(&app));
         let _ = std::fs::remove_dir_all(folder);
     }
@@ -729,7 +729,7 @@ mod tests {
         std::fs::remove_file(&plate).unwrap();
         let mut app = SolveApp::new(Session::default(), Default::default());
         let mut opened = Session::default();
-        opened.execute("doc.open", &json!({"path": folder.join("case.solidcraft")})).unwrap();
+        opened.execute("doc.open", &json!({"path": folder.join("case.sketcraft")})).unwrap();
         crate::documents::adopt(&mut app, opened);
         crate::documents::open_tab(&mut app, Session::default()).unwrap();
         crate::documents::switch(&mut app, 0);

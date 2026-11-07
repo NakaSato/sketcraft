@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#9"
+  "NakaSato/sketcraft#9"
  ],
  "what": "three r5 rounds at a box corner with the curvature (g2) corner at its default setback 1.5 r: the corner patch meets the rounds and faces G2 clear of the vertices where the seams turn",
  "source": "invariants",

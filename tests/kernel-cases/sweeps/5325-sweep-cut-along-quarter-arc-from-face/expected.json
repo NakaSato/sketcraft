@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#5325"
+  "NakaSato/sketcraft#5325"
  ],
  "what": "a sweep cut of a circle r5 on a 50x50x45 block's bottom face along a quarter arc r20 that leaves the face square to it and bends into the block: truck closed the entry hole with a disc and left a void shell behind it",
  "source": "analytic",

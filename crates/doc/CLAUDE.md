@@ -49,18 +49,17 @@ Tests are unit tests only (`src/tests.rs`, `src/*_tests.rs`). There is no `tests
 - No egui/UI and no file I/O outside tests: readers, writers and `safe_write` live in `crates/io`.
   No `unsafe`. The crate root denies `unwrap`/`expect`/`panic!`.
 - Design files are hostile input: caps, finite checks, refuse bad shapes before typed decode.
-  See `skills/solidcraft-crash-safety/SKILL.md`.
+  See `skills/sketcraft-crash-safety/SKILL.md`.
 - Changing what a design saves: add ONE file in `src/format/pending/<what-it-is>.rs` (lowercase,
   dashes, `//!` note, optional `pub fn step(v: &mut Value)`). Never edit `FORMAT`, `JSON_STEPS`,
   another change's file or a `v<N>/` folder. Read `src/format/pending/README.md` and
-  `skills/solidcraft-file-formats/SKILL.md`. Drawings: `src/drawing/format/pending/`.
+  `skills/sketcraft-file-formats/SKILL.md`. Drawings: `src/drawing/format/pending/`.
 - Keep model-specific state (tags, entity assignments) in the document, not in prefs (AGENTS.md).
 - Must build for wasm32. Use `web_time` for time.
 
 ## Gotchas
 
 - Designs are tagged `"format": "sketcraft/N"`; the legacy `solvecraft/N` tag is still read.
-  The skills and READMEs still say `solidcraft/N`.
 - `build.rs` asserts `v<N>/` folders are contiguous from 23 and that change file names use only
   lowercase letters, digits and dashes. A bad name fails the build.
 - The skills mention `scripts/fold-format-pending.sh` and `docs/design-container.md`; neither is

@@ -1,6 +1,6 @@
 {
   "sources": [
-    "tangency-labs/solidcraft#1263"
+    "NakaSato/sketcraft#1263"
   ],
   "what": "a plate with a concave quarter-round wall that meets the back face tangentially at a knife-edge tip (a box and a box less a cylinder, united): its display tessellation used to fail with 'boundary does not lie on the surface' before anything was filleted",
   "source": "analytic",

@@ -1,5 +1,5 @@
 {
-  "format": "solidcraft/15",
+  "format": "sketcraft/15",
   "name": "pi-case",
   "units": "mm",
   "params": [

@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#5041"
+  "NakaSato/sketcraft#5041"
  ],
  "what": "a countersunk O6.4 hole (O13.7, 90 deg) through a plate 0.15 mm from a wall standing on it: the countersink tool reached ~0.7 mm above the entry face and notched the wall",
  "source": "analytic",

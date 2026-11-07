@@ -91,7 +91,7 @@ fn symmetric_boundary_drags_edit_included_angle_and_cancel_is_lossless() {
         assert!((volume(&h) - expected_volume(90.0)).abs() < 0.1, "{handle}: {} angle {}", volume(&h), angle(&h));
         let bounds = h.app.session.world_state().unwrap().body("Main").unwrap().mesh().bounds();
         assert!((bounds.max.z - 15.0 / 2.0f64.sqrt()).abs() < 0.03 && (bounds.min.z + 15.0 / 2.0f64.sqrt()).abs() < 0.03);
-        let path = h.dir.join("symmetric.solidcraft");
+        let path = h.dir.join("symmetric.sketcraft");
         h.app.run("file.save", json!({"path":path})).unwrap();
         h.app.run("doc.open", json!({"path":path})).unwrap();
         assert_eq!(angle(&h), "90 deg");
@@ -299,7 +299,7 @@ fn legacy_reversed_axis_symmetric_interval_is_shown_and_preserved_exactly() {
     for feature in saved["features"].as_array_mut().unwrap() {
         feature.as_object_mut().unwrap().remove("convention");
     }
-    let path = h.dir.join("legacy-revolve.solidcraft");
+    let path = h.dir.join("legacy-revolve.sketcraft");
     std::fs::write(&path, serde_json::to_vec(&saved).unwrap()).unwrap();
     h.app.run("doc.open", json!({"path":path})).unwrap();
     let FeatureKind::Revolve { convention, .. } = &h.app.session.doc.find_feature("Turn").unwrap().kind else { panic!("revolve") };
@@ -358,7 +358,7 @@ fn canonical_symmetric_ring_preview_drag_and_reopen_match_material() {
         assert_eq!(angle(&h), "60 deg");
         assert_eq!(h.app.session.doc.find_feature("Turn").unwrap().param_names, names);
         assert!((volume(&h) - 60.0 * std::f64::consts::FRAC_PI_3).abs() < 0.03);
-        let path = h.dir.join("canonical-revolve.solidcraft");
+        let path = h.dir.join("canonical-revolve.sketcraft");
         h.app.run("file.save", json!({"path":path})).unwrap();
         h.app.run("doc.open", json!({"path":path})).unwrap();
         open(&mut h);
@@ -393,7 +393,7 @@ fn reversed_axis_to_object_canvas_sweep_and_preview_follow_the_quarter_target() 
     h.step(&json!({"widget":"OK"})).unwrap();
     assert_eq!(serde_json::to_value(&h.app.session.doc.find_feature("Turn").unwrap().kind).unwrap(), original);
     assert_eq!(h.app.session.doc.find_feature("Turn").unwrap().param_names, names);
-    let path = h.dir.join("reversed-to-object.solidcraft");
+    let path = h.dir.join("reversed-to-object.sketcraft");
     h.app.run("file.save", json!({"path":path})).unwrap();
     h.app.run("doc.open", json!({"path":path})).unwrap();
     open(&mut h);

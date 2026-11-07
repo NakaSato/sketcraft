@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#2055"
+  "NakaSato/sketcraft#2055"
  ],
  "what": "a countersunk hole at two sketch points at once, in a design with several bodies: 'there is no body to cut or intersect' (one point works)",
  "source": "analytic",

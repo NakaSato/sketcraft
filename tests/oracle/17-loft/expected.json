@@ -22,7 +22,7 @@
     ]
   },
   "faces": 6,
-  "note": "a difference of definition with the FreeCAD (OpenCASCADE) loft, which runs each side to the quarter at uniform angle (arc length): that correspondence has no exact rational B-spline form, and SolidCraft keeps its surfaces exact; OpenCASCADE's volume is 35125.50 mm^3 (0.13% more). The reference.stl is OpenCASCADE's, so the surface comparison is left out",
+  "note": "a difference of definition with the FreeCAD (OpenCASCADE) loft, which runs each side to the quarter at uniform angle (arc length): that correspondence has no exact rational B-spline form, and SketCraft keeps its surfaces exact; OpenCASCADE's volume is 35125.50 mm^3 (0.13% more). The reference.stl is OpenCASCADE's, so the surface comparison is left out",
   "compare": [
     "body_count",
     "volume_mm3",

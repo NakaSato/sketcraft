@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#2667"
+  "NakaSato/sketcraft#2667"
  ],
  "what": "the same half disc revolved 270 degrees (mutation survivor: full_circle test of the sweep angle)",
  "source": "analytic",

@@ -1,7 +1,7 @@
 {
   "sources": [
-    "tangency-labs/solidcraft#3327",
-    "tangency-labs/solidcraft#2963"
+    "NakaSato/sketcraft#3327",
+    "NakaSato/sketcraft#2963"
   ],
   "what": "a cut whose end face lies exactly in a side wall of its target (a window notch): the cut must open the wall, with no skin left in it",
   "source": "analytic",

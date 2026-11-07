@@ -1,6 +1,6 @@
 {
   "sources": [
-    "tangency-labs/solidcraft#2755"
+    "NakaSato/sketcraft#2755"
   ],
   "what": "the mirror copy of a primitive cut changes only the seed's targets, not a body the seed was told to leave alone",
   "source": "analytic",

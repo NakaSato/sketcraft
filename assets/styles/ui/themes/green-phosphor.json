@@ -1,6 +1,6 @@
 {
   "order": 100,
-  "provenance": "Original SolidCraft theme",
+  "provenance": "Original SketCraft theme",
   "base": "dark",
   "colors": {
     "accent": "#4dff79",
@@ -190,7 +190,7 @@
     "viewport_top": "#010703",
     "warning": "#d1ffad"
   },
-  "format": "solidcraft-theme/1",
+  "format": "sketcraft-theme/1",
   "name": "Green Phosphor",
   "radii": {
     "radius_sm": 0,

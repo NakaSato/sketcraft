@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#1984"
+  "NakaSato/sketcraft#1984"
  ],
  "what": "the overlap of a pin 0.00056 mm off the axis of a bore of its own radius (r=3, 9.65 long): a thin crescent. The report's STEP round trip is left out; this is the geometry",
  "source": "analytic",

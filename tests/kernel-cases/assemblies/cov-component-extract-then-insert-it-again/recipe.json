@@ -72,7 +72,7 @@
    "command": "component.extract",
    "params": {
     "component": "Arm",
-    "path": "$OUT/arm.solidcraft"
+    "path": "$OUT/arm.sketcraft"
    }
   },
   {
@@ -84,7 +84,7 @@
   {
    "command": "component.insert_design",
    "params": {
-    "path": "$OUT/arm.solidcraft",
+    "path": "$OUT/arm.sketcraft",
     "name": "Arm copy",
     "translate": [
      0,

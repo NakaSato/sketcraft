@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#1494"
+  "NakaSato/sketcraft#1494"
  ],
  "what": "a 47.5x45x30 box with a cylinder r7.5 joined on its side whose axis lies in the plane of the box's front face (y=0), shelled 1 mm open at the bottom",
  "source": "analytic",

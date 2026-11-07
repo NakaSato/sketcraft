@@ -1,7 +1,7 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#3088",
-  "tangency-labs/solidcraft#3758"
+  "NakaSato/sketcraft#3088",
+  "NakaSato/sketcraft#3758"
  ],
  "what": "a 4-turn square coil (4 mm wire, pitch 9, outer diameter 30.8, section inside) joined round a cylinder of radius 15 and height 40, its ends flush with the cylinder end faces (hang of several minutes, crash report)",
  "source": "analytic",

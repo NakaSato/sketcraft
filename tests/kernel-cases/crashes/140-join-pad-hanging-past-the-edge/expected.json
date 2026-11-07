@@ -1,6 +1,6 @@
 {
   "sources": [
-    "tangency-labs/solidcraft#140"
+    "NakaSato/sketcraft#140"
   ],
   "what": "a join whose tool face lies flat on the target but only half backed by it (the pad hangs 10 mm past the edge) must not add material",
   "source": "analytic",

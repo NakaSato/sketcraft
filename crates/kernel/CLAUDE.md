@@ -39,14 +39,13 @@ NATIVE_BREP_BLESS=1 cargo test -p sketcraft-kernel box_and_fillet_have_stable_wi
 - No `solidcore` type in the public API. Callers see this crate's types, `solidcore-record` records and a few smlib re-exports (`Stop`, `hold_a_kernel`, `smlib_trace`).
 - Run third-party kernel code under `guard`. It turns a panic into `KernelError::Internal`. `par.rs` already wraps each item.
 - Kernel threads need `KERNEL_STACK`. Use `kernel_thread` or the helpers in `par.rs`, not a plain `std::thread::spawn`.
-- STEP and IGES files are hostile. Cap sizes, counts and nesting. Turn what cannot be read into a warning when the rest of the file is still usable. See `skills/solidcraft-crash-safety/SKILL.md`.
+- STEP and IGES files are hostile. Cap sizes, counts and nesting. Turn what cannot be read into a warning when the rest of the file is still usable. See `skills/sketcraft-crash-safety/SKILL.md`.
 - Model decisions use exact geometry. `cargo run -p xtask -- mesh-decisions` checks this crate against `xtask/mesh-decisions.txt`, which only shrinks.
 - `rayon` is desktop-only. Code must still build for wasm32.
-- Put a regression test in its area's existing test file. Prefer exact, hand-derived volumes and areas. See `skills/solidcraft-tests/SKILL.md`.
+- Put a regression test in its area's existing test file. Prefer exact, hand-derived volumes and areas. See `skills/sketcraft-tests/SKILL.md`.
 - Never change this crate to depend on `doc`, `io`, `engine` or anything higher.
 
 ## Gotchas
 
 - `KernelError::TooLarge` reads "not supported yet". The UI shows it like an unfinished feature.
 - `src/step_in/p21.rs` is a separate Part 21 parser from the one in `crates/step`.
-- Test hints in comments still say `solidcraft-kernel`. The package is `sketcraft-kernel`.

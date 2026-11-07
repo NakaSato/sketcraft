@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#4708"
+  "NakaSato/sketcraft#4708"
  ],
  "what": "a slot revolve-cut through the wall of a shelled cup (r 22.5, 2 mm walls) over 30 deg: the revolve cut (and the same cut as a combine) did nothing (synthetic: the report's cup also had a chamfer and a fillet)",
  "source": "analytic",

@@ -1,7 +1,7 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#659",
-  "tangency-labs/solidcraft#692"
+  "NakaSato/sketcraft#659",
+  "NakaSato/sketcraft#692"
  ],
  "what": "a 20 x 12 ellipse cut through a 100 x 60 x 2.5 sheet: it became 0.001 mm chords, one face each",
  "source": "analytic",

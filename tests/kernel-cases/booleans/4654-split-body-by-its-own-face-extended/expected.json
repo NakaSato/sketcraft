@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#4654"
+  "NakaSato/sketcraft#4654"
  ],
  "what": "Split Body of an L-shaped body with one of its own faces as the tool (the column's side x = 15, its surface extended through the base): truck panicked ('split body: Option::unwrap() on None')",
  "source": "analytic",

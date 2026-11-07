@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#4055"
+  "NakaSato/sketcraft#4055"
  ],
  "what": "a 3 mm chamfer on the bottom long edge of a bar joined on top of a pin, where the chamfer is wider than the 2 mm gap between that edge and the pin",
  "source": "analytic",

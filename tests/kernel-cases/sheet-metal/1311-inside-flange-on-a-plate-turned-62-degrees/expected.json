@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#1311"
+  "NakaSato/sketcraft#1311"
  ],
  "what": "a 100 x 60 plate turned 62 degrees about the origin with a 90 degree inside flange on one edge: the trimmed corner falls on the sew grid and the flange failed to close",
  "source": "analytic",

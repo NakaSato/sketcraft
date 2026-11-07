@@ -37,89 +37,89 @@ fn probe(os: &str, release: bool, env: &[(&str, &str)], exe: &str, files: &[&str
 
 #[test]
 fn install_kinds_are_told_apart() {
-    let home = "/home/me/Apps/solidcraft";
+    let home = "/home/me/Apps/sketcraft";
     assert_eq!(probe("linux", false, &[("APPIMAGE", "/x.AppImage")], home, &[]), InstallKind::Dev, "dev builds never check");
-    assert_eq!(probe("linux", true, &[("FLATPAK_ID", APP_ID)], "/app/bin/solidcraft", &[]), InstallKind::Flatpak(APP_ID.into()));
+    assert_eq!(probe("linux", true, &[("FLATPAK_ID", APP_ID)], "/app/bin/sketcraft", &[]), InstallKind::Flatpak(APP_ID.into()));
     let snap = |rev: &str| {
         probe(
             "linux",
             true,
-            &[("SNAP", "/snap/solidcraft/12"), ("SNAP_NAME", "sketcraft"), ("SNAP_REVISION", rev)],
-            "/snap/solidcraft/12/usr/bin/solidcraft",
+            &[("SNAP", "/snap/sketcraft/12"), ("SNAP_NAME", "sketcraft"), ("SNAP_REVISION", rev)],
+            "/snap/sketcraft/12/usr/bin/sketcraft",
             &[],
         )
     };
     assert_eq!(snap("12"), InstallKind::Snap { store: true });
     assert_eq!(snap("x3"), InstallKind::Snap { store: false }, "installed from a file with --dangerous");
     assert_eq!(
-        probe("linux", true, &[("APPIMAGE", "/home/me/SolidCraft.AppImage")], "/tmp/.mount_SolidXYZ/usr/bin/solidcraft", &[]),
-        InstallKind::AppImage("/home/me/SolidCraft.AppImage".into())
+        probe("linux", true, &[("APPIMAGE", "/home/me/SketCraft.AppImage")], "/tmp/.mount_SolidXYZ/usr/bin/sketcraft", &[]),
+        InstallKind::AppImage("/home/me/SketCraft.AppImage".into())
     );
     // An empty variable doesn't count.
-    assert_eq!(probe("linux", true, &[("APPIMAGE", "")], "/opt/sc/bin/solidcraft", &[]), InstallKind::LinuxTarball);
-    assert_eq!(probe("linux", true, &[], "/usr/bin/solidcraft", &["/var/lib/dpkg/info/solidcraft.list", "/var/lib/rpm"]), InstallKind::Deb);
-    assert_eq!(probe("linux", true, &[], "/usr/bin/solidcraft", &["/var/lib/rpm"]), InstallKind::Rpm);
-    assert_eq!(probe("linux", true, &[], "/usr/bin/solidcraft", &["/usr/lib/sysimage/rpm"]), InstallKind::Rpm);
-    assert_eq!(probe("linux", true, &[], "/usr/bin/solidcraft", &[]), InstallKind::Other);
+    assert_eq!(probe("linux", true, &[("APPIMAGE", "")], "/opt/sc/bin/sketcraft", &[]), InstallKind::LinuxTarball);
+    assert_eq!(probe("linux", true, &[], "/usr/bin/sketcraft", &["/var/lib/dpkg/info/sketcraft.list", "/var/lib/rpm"]), InstallKind::Deb);
+    assert_eq!(probe("linux", true, &[], "/usr/bin/sketcraft", &["/var/lib/rpm"]), InstallKind::Rpm);
+    assert_eq!(probe("linux", true, &[], "/usr/bin/sketcraft", &["/usr/lib/sysimage/rpm"]), InstallKind::Rpm);
+    assert_eq!(probe("linux", true, &[], "/usr/bin/sketcraft", &[]), InstallKind::Other);
     assert_eq!(probe("linux", true, &[], home, &[]), InstallKind::LinuxTarball);
 
     let pf = [("ProgramFiles", "C:\\Program Files"), ("ProgramFiles(x86)", "C:\\Program Files (x86)")];
-    assert_eq!(probe("windows", true, &pf, "C:\\Program Files\\SolidCraft\\solidcraft.exe", &[]), InstallKind::WindowsMsi);
-    assert_eq!(probe("windows", true, &pf, "c:\\program files\\SolidCraft\\solidcraft.exe", &[]), InstallKind::WindowsMsi, "case-insensitive");
+    assert_eq!(probe("windows", true, &pf, "C:\\Program Files\\SketCraft\\sketcraft.exe", &[]), InstallKind::WindowsMsi);
+    assert_eq!(probe("windows", true, &pf, "c:\\program files\\SketCraft\\sketcraft.exe", &[]), InstallKind::WindowsMsi, "case-insensitive");
     // "C:\Program Files Extra" is not under "C:\Program Files".
-    assert_eq!(probe("windows", true, &pf, "C:\\Program Files Extra\\solidcraft.exe", &[]), InstallKind::WindowsExe);
-    let portable = "C:\\Users\\me\\solidcraft-0.10.0-windows-x64-portable\\solidcraft.exe";
-    let cli = "C:\\Users\\me\\solidcraft-0.10.0-windows-x64-portable\\solidcraft-cli.exe";
+    assert_eq!(probe("windows", true, &pf, "C:\\Program Files Extra\\sketcraft.exe", &[]), InstallKind::WindowsExe);
+    let portable = "C:\\Users\\me\\sketcraft-0.10.0-windows-x64-portable\\sketcraft.exe";
+    let cli = "C:\\Users\\me\\sketcraft-0.10.0-windows-x64-portable\\sketcraft-cli.exe";
     // Path::parent splits on `\` only on Windows; this test describes the layout either way.
     if cfg!(windows) {
         assert_eq!(probe("windows", true, &pf, portable, &[cli]), InstallKind::WindowsPortable);
     }
-    assert_eq!(probe("windows", true, &pf, "C:\\Users\\me\\Downloads\\SolidCraft-0.10.0-windows-x64.exe", &[]), InstallKind::WindowsExe);
+    assert_eq!(probe("windows", true, &pf, "C:\\Users\\me\\Downloads\\SketCraft-0.10.0-windows-x64.exe", &[]), InstallKind::WindowsExe);
 
     assert_eq!(
-        probe("macos", true, &[], "/Applications/SolidCraft.app/Contents/MacOS/solidcraft", &[]),
-        InstallKind::MacApp("/Applications/SolidCraft.app".into())
+        probe("macos", true, &[], "/Applications/SketCraft.app/Contents/MacOS/sketcraft", &[]),
+        InstallKind::MacApp("/Applications/SketCraft.app".into())
     );
-    assert_eq!(probe("macos", true, &[], "/usr/local/bin/solidcraft", &[]), InstallKind::Other);
-    assert_eq!(probe("macos", false, &[], "/Applications/SolidCraft.app/Contents/MacOS/solidcraft", &[]), InstallKind::Dev);
-    assert_eq!(probe("freebsd", true, &[], "/usr/local/bin/solidcraft", &[]), InstallKind::Other);
+    assert_eq!(probe("macos", true, &[], "/usr/local/bin/sketcraft", &[]), InstallKind::Other);
+    assert_eq!(probe("macos", false, &[], "/Applications/SketCraft.app/Contents/MacOS/sketcraft", &[]), InstallKind::Dev);
+    assert_eq!(probe("freebsd", true, &[], "/usr/local/bin/sketcraft", &[]), InstallKind::Other);
     assert!(!InstallKind::Dev.checks() && !InstallKind::Web.checks() && InstallKind::Snap { store: true }.checks());
     assert!(!InstallKind::Flatpak(APP_ID.into()).checks(), "the Flatpak has no network permission; Flatpak updates it");
 }
 
 #[test]
 fn portable_windows_layout_is_recognised() {
-    let exe = PathBuf::from("/portable/solidcraft.exe");
+    let exe = PathBuf::from("/portable/sketcraft.exe");
     let get = |k: &str| (k == "ProgramFiles").then(|| "C:\\Program Files".to_string());
-    let exists = |p: &Path| p == Path::new("/portable/solidcraft-cli.exe");
+    let exists = |p: &Path| p == Path::new("/portable/sketcraft-cli.exe");
     assert_eq!(
         detect(&Probe { os: "windows", release_build: true, env: &get, exe: Some(exe), exists: &exists, msi_dir: None }),
         InstallKind::WindowsPortable
     );
 }
 
-/// #1870: the installer's wizard can put SketCraft anywhere, and it puts solidcraft-cli.exe
+/// #1870: the installer's wizard can put SketCraft anywhere, and it puts sketcraft-cli.exe
 /// beside it as the portable zip does. The folder it recorded is what tells its copy apart.
 #[test]
 fn an_msi_install_outside_program_files_is_recognised() {
-    let exe = PathBuf::from(r"D:\Program Files\SolidCraft\solidcraft.exe");
+    let exe = PathBuf::from(r"D:\Program Files\SketCraft\sketcraft.exe");
     let get = |k: &str| match k {
         "ProgramFiles" | "ProgramW6432" => Some(r"C:\Program Files".to_string()),
         "ProgramFiles(x86)" => Some(r"C:\Program Files (x86)".to_string()),
         _ => None,
     };
-    // solidcraft-cli.exe is beside it.
+    // sketcraft-cli.exe is beside it.
     let exists = |_: &Path| true;
     let kind = |msi_dir: Option<&str>| {
         detect(&Probe { os: "windows", release_build: true, env: &get, exe: Some(exe.clone()), exists: &exists, msi_dir: msi_dir.map(PathBuf::from) })
     };
     // The installer records [INSTALLFOLDER], which ends in a backslash; Windows paths ignore case.
-    assert_eq!(kind(Some(r"D:\Program Files\SolidCraft\")), InstallKind::WindowsMsi);
-    assert_eq!(kind(Some(r"d:\program files\solidcraft")), InstallKind::WindowsMsi);
+    assert_eq!(kind(Some(r"D:\Program Files\SketCraft\")), InstallKind::WindowsMsi);
+    assert_eq!(kind(Some(r"d:\program files\sketcraft")), InstallKind::WindowsMsi);
     // No installer copy here: the portable zip, as before.
     assert_eq!(kind(None), InstallKind::WindowsPortable);
     assert_eq!(kind(Some("")), InstallKind::WindowsPortable);
-    assert_eq!(kind(Some(r"D:\Program Files\SolidCraft2\")), InstallKind::WindowsPortable, "a folder whose name only starts the same");
+    assert_eq!(kind(Some(r"D:\Program Files\SketCraft2\")), InstallKind::WindowsPortable, "a folder whose name only starts the same");
 }
 
 /// The assets of v0.10.0, as published.
@@ -148,11 +148,11 @@ fn release() -> Release {
     ];
     let assets: Vec<Value> = names
         .iter()
-        .map(|n| json!({"name": n, "size": 10, "browser_download_url": format!("https://github.com/bherbruck/solidcraft/releases/download/v0.10.0/{n}")}))
+        .map(|n| json!({"name": n, "size": 10, "browser_download_url": format!("https://github.com/NakaSato/sketcraft/releases/download/v0.10.0/{n}")}))
         .collect();
     let body = json!({
         "tag_name": "v0.10.0", "name": "SketCraft v0.10.0", "body": "**What's new**\n\n- Surface tools.",
-        "html_url": "https://github.com/bherbruck/solidcraft/releases/tag/v0.10.0", "draft": false, "prerelease": false, "assets": assets,
+        "html_url": "https://github.com/NakaSato/sketcraft/releases/tag/v0.10.0", "draft": false, "prerelease": false, "assets": assets,
     });
     Release::parse(body.to_string().as_bytes()).unwrap()
 }
@@ -178,23 +178,23 @@ fn each_installation_gets_its_own_file() {
     // Download: the file, or the page when there is none or a package manager updates it.
     assert_eq!(
         r.download_url(&InstallKind::WindowsMsi, "x86_64"),
-        "https://github.com/bherbruck/solidcraft/releases/download/v0.10.0/solidcraft-windows-x64.msi"
+        "https://github.com/NakaSato/sketcraft/releases/download/v0.10.0/sketcraft-windows-x64.msi"
     );
-    assert_eq!(r.download_url(&InstallKind::Other, "x86_64"), "https://github.com/bherbruck/solidcraft/releases/tag/v0.10.0");
+    assert_eq!(r.download_url(&InstallKind::Other, "x86_64"), "https://github.com/NakaSato/sketcraft/releases/tag/v0.10.0");
     assert_eq!(r.download_url(&InstallKind::Flatpak(APP_ID.into()), "x86_64"), r.page);
     assert_eq!(r.download_url(&InstallKind::Snap { store: true }, "x86_64"), r.page);
     assert_eq!(
         r.download_url(&InstallKind::Snap { store: false }, "x86_64"),
-        "https://github.com/bherbruck/solidcraft/releases/download/v0.10.0/solidcraft-linux-x86_64.snap"
+        "https://github.com/NakaSato/sketcraft/releases/download/v0.10.0/sketcraft-linux-x86_64.snap"
     );
     assert_eq!(
         InstallKind::Snap { store: false }.update_command(Some("sketcraft-linux-x86_64.snap")).as_deref(),
-        Some("sudo snap install --dangerous ./solidcraft-linux-x86_64.snap")
+        Some("sudo snap install --dangerous ./sketcraft-linux-x86_64.snap")
     );
-    assert_eq!(InstallKind::Flatpak(APP_ID.into()).update_command(None).as_deref(), Some("flatpak update io.tangencylabs.solidcraft"));
+    assert_eq!(InstallKind::Flatpak(APP_ID.into()).update_command(None).as_deref(), Some("flatpak update io.tangencylabs.sketcraft"));
     assert_eq!(
         InstallKind::Deb.update_command(Some("sketcraft-linux-x86_64.deb")).as_deref(),
-        Some("sudo apt install ./solidcraft-linux-x86_64.deb")
+        Some("sudo apt install ./sketcraft-linux-x86_64.deb")
     );
     assert_eq!(InstallKind::WindowsMsi.update_command(None), None);
 }
@@ -212,7 +212,7 @@ fn release_answers_are_checked() {
     let r = Release::parse(
         json!({"tag_name": "v1.0.0", "html_url": "https://evil.example/x", "assets": [
             {"name": "sketcraft-windows-x64.msi", "browser_download_url": "https://evil.example/a.msi"},
-            {"name": "sketcraft-windows-x86.msi", "browser_download_url": "https://github.com/bherbruck/solidcraft/releases/download/v1.0.0/solidcraft-windows-x86.msi"},
+            {"name": "sketcraft-windows-x86.msi", "browser_download_url": "https://github.com/NakaSato/sketcraft/releases/download/v1.0.0/sketcraft-windows-x86.msi"},
         ]})
         .to_string()
         .as_bytes(),
@@ -307,7 +307,7 @@ fn next_release_feed(dir: &Path) -> (PathBuf, String) {
         "tag_name": format!("v{v}"),
         "name": format!("SketCraft {v}"),
         "body": "## What's new\n\n- Faster rebuilds.",
-        "html_url": format!("https://github.com/bherbruck/solidcraft/releases/tag/v{v}"),
+        "html_url": format!("https://github.com/NakaSato/sketcraft/releases/tag/v{v}"),
         "assets": []
     });
     std::fs::write(&path, body.to_string()).unwrap();
@@ -367,7 +367,7 @@ fn help_menu_checks_with_automatic_checks_off_and_offers_installation() {
     h.app.preferences.update.skipped = format!("v{version}");
     h.app.preferences.update.remind_after = unix_now() + REMIND_DELAY_S;
     h.app.updater.feed = Some(feed);
-    h.app.updater.kind = Some(InstallKind::MacApp("/Applications/SolidCraft.app".into()));
+    h.app.updater.kind = Some(InstallKind::MacApp("/Applications/SketCraft.app".into()));
     h.app.updater.managed = Some(None);
     h.app.services.http_get = Some(Arc::new(|_| panic!("the check must use the test feed")));
     h.app.services.http_download = Some(Arc::new(|_, _, _| panic!("offering an update must not install it")));
@@ -585,7 +585,7 @@ fn the_memo_survives_with_the_preferences() {
 
 #[test]
 fn release_notes_read_as_markdown() {
-    let md = "## What's new\n\n**Why 0.10:** a minor\nbump.\n\n- **Surface tools.** Revolve and `solidcraft-cli mcp`\n  continued ([#925](https://x/925)).\n  - nested\n* Fix by @a in https://github.com/bherbruck/solidcraft/pull/1064\n\nSee https://example.com/x.";
+    let md = "## What's new\n\n**Why 0.10:** a minor\nbump.\n\n- **Surface tools.** Revolve and `sketcraft-cli mcp`\n  continued ([#925](https://x/925)).\n  - nested\n* Fix by @a in https://github.com/NakaSato/sketcraft/pull/1064\n\nSee https://example.com/x.";
     let b = parse_markdown(md);
     assert_eq!(b.first(), Some(&Block::Heading(vec![Span::Text("What's new".into())])));
     assert_eq!(b.get(1), Some(&Block::Paragraph(vec![Span::Strong("Why 0.10:".into()), Span::Text(" a minor bump.".into())])));
@@ -610,7 +610,7 @@ fn release_notes_read_as_markdown() {
             0,
             vec![
                 Span::Text("Fix by @a in ".into()),
-                Span::Link { text: "#1064".into(), url: Some("https://github.com/bherbruck/solidcraft/pull/1064".into()) }
+                Span::Link { text: "#1064".into(), url: Some("https://github.com/NakaSato/sketcraft/pull/1064".into()) }
             ]
         ))
     );
@@ -626,10 +626,10 @@ fn release_notes_read_as_markdown() {
 /// addresses are kept (a relative or other link shows as text that opens nothing).
 #[test]
 fn release_note_links_keep_their_web_targets() {
-    let spans = inline("[guide](https://docs.solidcraft.io/guide) and [file](file:///etc/passwd) and [rel](../x)");
+    let spans = inline("[guide](https://docs.sketcraft.io/guide) and [file](file:///etc/passwd) and [rel](../x)");
     let links: Vec<(String, Option<String>)> =
         spans.into_iter().filter_map(|s| if let Span::Link { text, url } = s { Some((text, url)) } else { None }).collect();
-    assert_eq!(links, vec![("guide".into(), Some("https://docs.solidcraft.io/guide".into())), ("file".into(), None), ("rel".into(), None)]);
+    assert_eq!(links, vec![("guide".into(), Some("https://docs.sketcraft.io/guide".into())), ("file".into(), None), ("rel".into(), None)]);
 }
 
 #[test]
@@ -638,46 +638,46 @@ fn releases_under_either_owner_are_accepted() {
         let base = format!("https://github.com/{owner}/releases");
         Release::parse(
             json!({"tag_name": "v1.0.0", "html_url": format!("{base}/tag/v1.0.0"), "assets": [
-                {"name": "sketcraft-windows-x64.msi", "browser_download_url": format!("{base}/download/v1.0.0/solidcraft-windows-x64.msi")},
+                {"name": "sketcraft-windows-x64.msi", "browser_download_url": format!("{base}/download/v1.0.0/sketcraft-windows-x64.msi")},
             ]})
             .to_string()
             .as_bytes(),
         )
         .unwrap()
     };
-    for owner in ["bherbruck/solidcraft", "tangency-labs/solidcraft"] {
+    for owner in ["NakaSato/sketcraft", "NakaSato/sketcraft"] {
         let r = parse(owner);
         assert_eq!(r.page, format!("https://github.com/{owner}/releases/tag/v1.0.0"));
         assert_eq!(r.assets.len(), 1, "{owner}");
     }
     // Any other owner, repository, host or scheme is dropped.
-    for owner in ["evil/solidcraft", "tangency-labs/solidcraft-evil", "tangency-labs.evil/solidcraft", "bherbruck/other"] {
+    for owner in ["evil/sketcraft", "NakaSato/sketcraft-evil", "tangency-labs.evil/sketcraft", "bherbruck/other"] {
         let r = parse(owner);
         assert_eq!(r.page, RELEASES_PAGE, "{owner}");
         assert!(r.assets.is_empty(), "{owner}");
     }
-    assert!(!is_release_url("http://github.com/tangency-labs/solidcraft/releases/x"));
-    assert!(!is_release_url("https://github.com.evil.example/tangency-labs/solidcraft/releases/x"));
-    assert!(!is_release_url("https://github.com/tangency-labs/solidcraft/issues/1"));
+    assert!(!is_release_url("http://github.com/NakaSato/sketcraft/releases/x"));
+    assert!(!is_release_url("https://github.com.evil.example/NakaSato/sketcraft/releases/x"));
+    assert!(!is_release_url("https://github.com/NakaSato/sketcraft/issues/1"));
 }
 
 #[test]
 fn the_version_links_to_its_release_notes() {
     // A release build opens the page of its own release; stable, candidate and nightly tags all exist.
     for v in ["0.17.0", "0.21.0-rc.2", "0.20.0-nightly.20261023.69.1"] {
-        assert_eq!(release_notes_url(v, true), format!("https://github.com/tangency-labs/solidcraft/releases/tag/v{v}"));
+        assert_eq!(release_notes_url(v, true), format!("https://github.com/NakaSato/sketcraft/releases/tag/v{v}"));
     }
     // A development build has no release of its own: the release history, which is what the issue asks for.
-    assert_eq!(release_notes_url("0.17.0", false), "https://github.com/tangency-labs/solidcraft/releases");
+    assert_eq!(release_notes_url("0.17.0", false), "https://github.com/NakaSato/sketcraft/releases");
     // Anything that is not a version never ends up in a URL.
-    assert_eq!(release_notes_url("0.1/../../x", true), "https://github.com/tangency-labs/solidcraft/releases");
+    assert_eq!(release_notes_url("0.1/../../x", true), "https://github.com/NakaSato/sketcraft/releases");
 }
 
 #[test]
 fn unavailable_preferences_show_disabled_update_controls_and_real_values() {
     use egui::accesskit::{Role, Toggled};
     let _language = crate::i18n::scope("en");
-    for kind in [InstallKind::Dev, InstallKind::Web, InstallKind::Flatpak("io.solidcraft.SolidCraft".into())] {
+    for kind in [InstallKind::Dev, InstallKind::Web, InstallKind::Flatpak("io.sketcraft.SketCraft".into())] {
         for checked in [false, true] {
             let mut h = crate::scenario::Harness::new();
             h.app.home.open = false;
@@ -787,18 +787,18 @@ fn the_variable_names_the_manager() {
     let kind = InstallKind::LinuxTarball;
     let with = |value: &'static str| {
         let env = move |k: &str| (k == MANAGED_ENV).then(|| value.to_string());
-        managed_by("linux", &env, Some(Path::new("/opt/sc/solidcraft")), &kind, &nothing)
+        managed_by("linux", &env, Some(Path::new("/opt/sc/sketcraft")), &kind, &nothing)
     };
     assert_eq!(with("ArtCraft Launcher").as_deref(), Some("ArtCraft Launcher"));
     assert_eq!(with("  Other \u{7}Manager\n").as_deref(), Some("Other Manager"), "padding and control characters are dropped");
     assert_eq!(with("   "), None, "an empty value is not a manager");
     assert_eq!(with(&"x".repeat(500).leak()[..]).map(|n| n.len()), Some(64), "a long name is cut");
-    assert_eq!(managed_by("linux", &no_env, Some(Path::new("/opt/sc/solidcraft")), &kind, &nothing), None);
+    assert_eq!(managed_by("linux", &no_env, Some(Path::new("/opt/sc/sketcraft")), &kind, &nothing), None);
 }
 
 #[test]
 fn the_launchers_record_marks_the_install_it_made() {
-    let exe = Path::new("/home/me/Apps/SolidCraft.AppImage");
+    let exe = Path::new("/home/me/Apps/SketCraft.AppImage");
     let appimage = InstallKind::AppImage(exe.to_path_buf());
     let env = |k: &str| (k == "HOME").then(|| "/home/me".to_string());
     let seen = std::cell::RefCell::new(Vec::new());
@@ -810,18 +810,18 @@ fn the_launchers_record_marks_the_install_it_made() {
         }
     };
     // The AppImage the launcher recorded; the running executable is inside its mount.
-    let run = |path: &str| managed_by("linux", &env, Some(Path::new("/tmp/.mount_SolidXYZ/usr/bin/solidcraft")), &appimage, &read(record(path)));
-    assert_eq!(run("/home/me/Apps/SolidCraft.AppImage").as_deref(), Some("ArtCraft Launcher"));
+    let run = |path: &str| managed_by("linux", &env, Some(Path::new("/tmp/.mount_SolidXYZ/usr/bin/sketcraft")), &appimage, &read(record(path)));
+    assert_eq!(run("/home/me/Apps/SketCraft.AppImage").as_deref(), Some("ArtCraft Launcher"));
     assert_eq!(seen.borrow().as_slice(), [PathBuf::from("/home/me/.local/share/artcraft-launcher/installed.json")]);
     // Another copy, a prefix that is not a folder of ours, the root and a relative path are not ours.
     assert_eq!(run("/home/me/Apps/Other.AppImage"), None);
-    assert_eq!(run("/home/me/Apps/SolidCraft.AppImage.old"), None);
+    assert_eq!(run("/home/me/Apps/SketCraft.AppImage.old"), None);
     assert_eq!(run("/"), None);
-    assert_eq!(run("Apps/SolidCraft.AppImage"), None);
-    // No record, a damaged one, one without SolidCraft, and a record file of any other shape.
+    assert_eq!(run("Apps/SketCraft.AppImage"), None);
+    // No record, a damaged one, one without SketCraft, and a record file of any other shape.
     let one = |bytes: &'static [u8]| managed_by("linux", &env, Some(exe), &appimage, &|_: &Path| Some(bytes.to_vec()));
     assert_eq!(one(b"{not json"), None);
-    assert_eq!(one(br#"{"apps": {"photocraft": {"path": "/home/me/Apps/SolidCraft.AppImage"}}}"#), None);
+    assert_eq!(one(br#"{"apps": {"photocraft": {"path": "/home/me/Apps/SketCraft.AppImage"}}}"#), None);
     assert_eq!(one(br#"{"apps": {"sketcraft": {"path": 7}}}"#), None);
     assert_eq!(one(b"[]"), None);
     assert_eq!(managed_by("linux", &env, Some(exe), &appimage, &|_: &Path| None), None);
@@ -840,33 +840,33 @@ fn the_record_matches_folders_bundles_and_windows_paths() {
     let nothing_else = |bytes: Vec<u8>| move |_: &Path| Some(bytes.clone());
     // An unpacked tarball: the record names the folder, and the launcher's own HOME is no help,
     // so the record is found beside the `apps` folder the app runs from.
-    let exe = Path::new("/home/me/.local/share/artcraft-launcher/apps/solidcraft/bin/solidcraft");
+    let exe = Path::new("/home/me/.local/share/artcraft-launcher/apps/sketcraft/bin/sketcraft");
     let read = |p: &Path| {
         (p == Path::new("/home/me/.local/share/artcraft-launcher/installed.json"))
-            .then(|| record("/home/me/.local/share/artcraft-launcher/apps/solidcraft"))
+            .then(|| record("/home/me/.local/share/artcraft-launcher/apps/sketcraft"))
     };
-    let home = |k: &str| (k == "HOME").then(|| "/home/me/.local/share/artcraft-launcher/apps/solidcraft/home".to_string());
+    let home = |k: &str| (k == "HOME").then(|| "/home/me/.local/share/artcraft-launcher/apps/sketcraft/home".to_string());
     assert_eq!(managed_by("linux", &home, Some(exe), &InstallKind::LinuxTarball, &read).as_deref(), Some("ArtCraft Launcher"));
     // macOS: the bundle.
-    let bundle = PathBuf::from("/Applications/SolidCraft.app");
+    let bundle = PathBuf::from("/Applications/SketCraft.app");
     let mac = InstallKind::MacApp(bundle.clone());
-    let exe = Path::new("/Applications/SolidCraft.app/Contents/MacOS/solidcraft");
+    let exe = Path::new("/Applications/SketCraft.app/Contents/MacOS/sketcraft");
     let home = |k: &str| (k == "HOME").then(|| "/Users/me".to_string());
     let read = |p: &Path| {
         assert_eq!(p, Path::new("/Users/me/Library/Application Support/ArtCraft Launcher/installed.json"));
-        Some(record("/Applications/SolidCraft.app"))
+        Some(record("/Applications/SketCraft.app"))
     };
     assert_eq!(managed_by("macos", &home, Some(exe), &mac, &read).as_deref(), Some("ArtCraft Launcher"));
     // Windows: case and the verbatim prefix don't matter, and the record is under LOCALAPPDATA.
     let local = |k: &str| (k == "LOCALAPPDATA").then(|| r"C:\Users\me\AppData\Local".to_string());
-    let exe = Path::new(r"C:\Users\me\AppData\Local\Programs\SolidCraft\solidcraft.exe");
-    let read = nothing_else(record(r"\\?\c:\users\me\appdata\local\programs\solidcraft\SOLIDCRAFT.EXE"));
+    let exe = Path::new(r"C:\Users\me\AppData\Local\Programs\SketCraft\sketcraft.exe");
+    let read = nothing_else(record(r"\\?\c:\users\me\appdata\local\programs\sketcraft\SKETCRAFT.EXE"));
     assert_eq!(managed_by("windows", &local, Some(exe), &InstallKind::WindowsExe, &read).as_deref(), Some("ArtCraft Launcher"));
-    let read = nothing_else(record(r"C:\Users\me\AppData\Local\Programs\SolidCraft2"));
+    let read = nothing_else(record(r"C:\Users\me\AppData\Local\Programs\SketCraft2"));
     assert_eq!(managed_by("windows", &local, Some(exe), &InstallKind::WindowsExe, &read), None, "a folder whose name only starts the same");
     // Linux paths are case-sensitive.
     let read = nothing_else(record("/OPT/SC"));
-    assert_eq!(managed_by("linux", &no_env, Some(Path::new("/opt/sc/solidcraft")), &InstallKind::LinuxTarball, &read), None);
+    assert_eq!(managed_by("linux", &no_env, Some(Path::new("/opt/sc/sketcraft")), &InstallKind::LinuxTarball, &read), None);
 }
 
 /// A harness with a newer release found and the Update window open, on an AppImage that a
@@ -879,7 +879,7 @@ fn open_update_window(managed: Option<&str>) -> (crate::scenario::Harness, Scrat
     let download: install::HttpDownload = Arc::new(|_, _, _| Err(FetchError::Failed("offline".into())));
     h.app.services.http_get = Some(get);
     h.app.services.http_download = Some(download);
-    h.app.updater.kind = Some(InstallKind::AppImage("/home/me/SolidCraft.AppImage".into()));
+    h.app.updater.kind = Some(InstallKind::AppImage("/home/me/SketCraft.AppImage".into()));
     h.app.updater.managed = Some(managed.map(str::to_string));
     h.app.updater.feed = Some(feed);
     h.frame();
@@ -907,7 +907,7 @@ fn a_managed_install_points_to_its_manager_instead_of_updating_itself() {
 #[test]
 fn an_unmanaged_install_updates_itself_as_before() {
     let (mut h, _dir) = open_update_window(None);
-    assert_eq!(install_method(&mut h.app), Some(install::Method::AppImage("/home/me/SolidCraft.AppImage".into())));
+    assert_eq!(install_method(&mut h.app), Some(install::Method::AppImage("/home/me/SketCraft.AppImage".into())));
     assert!(h.widget("Update now").is_some());
     assert!(h.widget("Download").is_some());
     assert!(h.widget("Update available: update SketCraft in ArtCraft Launcher").is_none());
@@ -950,8 +950,8 @@ fn install_selection_refreshes_the_button_and_progress_before_completion() {
     h.app.services.http_get = Some(Arc::new(move |url| {
         if url == LATEST_API {
             return Ok(json!({"tag_name":"v999.1.0", "assets":[
-                {"name": name, "browser_download_url":format!("https://github.com/tangency-labs/solidcraft/releases/download/v999.1.0/{name}")},
-                {"name": install::SUMS, "browser_download_url":"https://github.com/tangency-labs/solidcraft/releases/download/v999.1.0/SHA256SUMS.txt"}
+                {"name": name, "browser_download_url":format!("https://github.com/NakaSato/sketcraft/releases/download/v999.1.0/{name}")},
+                {"name": install::SUMS, "browser_download_url":"https://github.com/NakaSato/sketcraft/releases/download/v999.1.0/SHA256SUMS.txt"}
             ]}).to_string().into_bytes());
         }
         Ok(format!("{}  {name}\n", "a".repeat(64)).into_bytes())
@@ -996,8 +996,8 @@ fn cancel_download_leaves_downloading_immediately() {
     h.app.services.http_get = Some(Arc::new(move |url| {
         if url == LATEST_API {
             return Ok(json!({"tag_name":"v999.1.0", "assets":[
-                {"name": name, "browser_download_url":format!("https://github.com/tangency-labs/solidcraft/releases/download/v999.1.0/{name}")},
-                {"name": install::SUMS, "browser_download_url":"https://github.com/tangency-labs/solidcraft/releases/download/v999.1.0/SHA256SUMS.txt"}
+                {"name": name, "browser_download_url":format!("https://github.com/NakaSato/sketcraft/releases/download/v999.1.0/{name}")},
+                {"name": install::SUMS, "browser_download_url":"https://github.com/NakaSato/sketcraft/releases/download/v999.1.0/SHA256SUMS.txt"}
             ]}).to_string().into_bytes());
         }
         // Stall checksum GET until the test ends so Cancel has to work before the body download.

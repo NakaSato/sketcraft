@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#3541"
+  "NakaSato/sketcraft#3541"
  ],
  "what": "a loft from a circle of radius 8 to a circle of radius 20, 30 mm below it (sections given small first, the small one drawn on a plane facing the same way): \"a horizontal narrowing is created\" instead of a cone",
  "source": "analytic",

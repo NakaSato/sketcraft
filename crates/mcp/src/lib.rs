@@ -24,7 +24,7 @@ use std::path::PathBuf;
 
 use sketcraft_engine::io::vfs::{self, PathScope};
 
-/// The folders `solidcraft-cli mcp` lets its agent read, write and delete in by default: the
+/// The folders `sketcraft-cli mcp` lets its agent read, write and delete in by default: the
 /// app's own recovery folder, this server's private scratch folder (screenshots), and each
 /// `allowed` folder (`--allow-path`). The open design's folder joins on every call when it is a
 /// safe one (`vfs::design_folder_refusal`; the server adds it), and stays for the rest of the run
@@ -53,7 +53,7 @@ pub fn agent_scope_with(recovery: Option<PathBuf>, allowed: impl IntoIterator<It
 static SCRATCH_DIR: std::sync::OnceLock<Option<PathBuf>> = std::sync::OnceLock::new();
 
 /// This server's own folder for screenshots it reads back and deletes (`screenshot` without a
-/// `path`): a new `<temp>/solidcraft-mcp-<pid>-<n>` made when the path scope is built, or on the
+/// `path`): a new `<temp>/sketcraft-mcp-<pid>-<n>` made when the path scope is built, or on the
 /// first screenshot without a scope. Never reuse an existing folder, which could be someone
 /// else's. It is private to the user on Unix. `<temp>` is spelled with long names (`vfs::temp_dir`),
 /// since the scope refuses short (8.3) ones.

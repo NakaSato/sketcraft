@@ -1,6 +1,6 @@
 {
   "sources": [
-    "tangency-labs/solidcraft#3378"
+    "NakaSato/sketcraft#3378"
   ],
   "what": "a circular pattern of a join whose two targets (rim and hub) were merged into one body by that join",
   "source": "analytic",

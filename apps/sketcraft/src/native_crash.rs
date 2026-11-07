@@ -277,7 +277,7 @@ mod tests {
         let reports = sketcraft_engine::crash::list(&dir);
         assert_eq!(reports.len(), 1, "{reports:?}");
         let r = sketcraft_engine::crash::read(&dir, &reports[0].id).unwrap();
-        assert!(r["message"].as_str().unwrap().contains("EXCEPTION_ACCESS_VIOLATION (0xC0000005) in solidcraft"), "{r}");
+        assert!(r["message"].as_str().unwrap().contains("EXCEPTION_ACCESS_VIOLATION (0xC0000005) in sketcraft"), "{r}");
         assert!(r["message"].as_str().unwrap().contains("during startup (device creation"), "{r}");
         assert!(r.get("minidump_path").is_some(), "{r}");
         let _ = std::fs::remove_dir_all(&dir);

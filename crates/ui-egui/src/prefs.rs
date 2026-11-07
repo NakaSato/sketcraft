@@ -804,7 +804,7 @@ fn same_orientation(a: Camera, b: Camera) -> bool {
 
 /// How the offer to stand a file up is made when its header names no program known to save Y up
 /// (Preferences: "For files from unknown programs", #7717). A file from SolidWorks is asked in the
-/// dialog (only the note when it already stands on Z, unless this is Ask); SolidCraft's own files
+/// dialog (only the note when it already stands on Z, unless this is Ask); SketCraft's own files
 /// are never offered.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
@@ -1295,7 +1295,7 @@ preference_settings! {
     /// Imported theme files (`theme_files`), kept here so they also work in the browser.
     #[serde(deserialize_with = "themes_that_read")]
     custom_themes: Vec<crate::theme_files::ThemeFile> = Vec::new();
-    /// Desktop: a `solidcraft-theme/1` file another tool writes, followed as the theme and
+    /// Desktop: a `sketcraft-theme/1` file another tool writes, followed as the theme and
     /// reloaded when it changes (#7573). Empty (the default): no file is followed.
     theme_follow: String = String::new(), PAGE_APPEARANCE;
     /// Per-theme overrides. Raw JSON retains entries from newer or hand-edited settings.
@@ -1576,7 +1576,7 @@ preference_settings! {
     /// Let AI agents connect: the localhost control channel (MCP) opens on the default port at
     /// start-up, unless `--control`/`SKETCRAFT_CONTROL_PORT` name one. Read at start-up.
     agent_control: bool = true, PAGE_ASSISTANT;
-    /// Add SolidCraft's MCP server to the AI apps installed on this computer at start-up
+    /// Add SketCraft's MCP server to the AI apps installed on this computer at start-up
     /// ([`crate::ai_connect`]); off takes the entries out again.
     connect_ai_apps: bool = true, PAGE_ASSISTANT;
     /// Agents the user added (the installed ones are found by themselves). API keys are never
@@ -1612,7 +1612,7 @@ preference_settings! {
     /// Custom instructions (#8220): text the agent chat adds to its system note when a session
     /// starts (`agent_chat::acp::system_note`). No page reset discards this user-authored text.
     agent_instructions: String = String::new();
-    /// Compact output for agents connected through the MCP server (`solidcraft-cli mcp`, docs/mcp.md):
+    /// Compact output for agents connected through the MCP server (`sketcraft-cli mcp`, docs/mcp.md):
     /// `inspect_design` summarises sketches and tool JSON is not pretty-printed. Off: as always.
     /// The server asks once per agent session (`mcp.options`), so a change applies to the next one.
     mcp_compact: bool = false, PAGE_ASSISTANT;

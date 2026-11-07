@@ -120,7 +120,7 @@ fn child() {
             assert_eq!(replay.doc.marker, None);
             let volume = replay.execute("inspect.measure", &json!({})).unwrap()["total"]["volume_mm3"].as_f64().unwrap();
             assert!((volume - 7200.0).abs() < 0.001);
-            let path = state.dir.join("prepared-source.solidcraft");
+            let path = state.dir.join("prepared-source.sketcraft");
             s.execute("file.save_as", &json!({"path":path})).unwrap();
             // A host can adopt an opened tab before any command has rebased its journal.
             state.journal.lock().unwrap().last_doc = 0;
@@ -531,7 +531,7 @@ fn a_journal_reads_back_its_base_commands_and_the_one_in_flight() {
         r#"{"base":"new"}"#,
         r#"{"run":"solid.box","params":{"length":1}}"#,
         r#"{"ok":true}"#,
-        r#"{"base":{"autosave":"/tmp/a.solidcraft"}}"#,
+        r#"{"base":{"autosave":"/tmp/a.sketcraft"}}"#,
         r#"{"run":"solid.fillet","params":{"radius":1}}"#,
         r#"{"ok":false,"error":"no edges"}"#,
         "not json",
@@ -542,7 +542,7 @@ fn a_journal_reads_back_its_base_commands_and_the_one_in_flight() {
     fs::write(&p, lines.join("\n")).unwrap();
     let j = read_journal(&p);
     assert_eq!(j.header["version"], "1.0");
-    assert_eq!(j.base, json!({"autosave": "/tmp/a.solidcraft"}));
+    assert_eq!(j.base, json!({"autosave": "/tmp/a.sketcraft"}));
     assert_eq!(j.replay, vec![json!({"command": "solid.shell", "params": {"thickness": 1}})], "failed commands change nothing");
     assert_eq!(j.recent.len(), 2);
     assert_eq!(j.recent[0]["error"], "no edges");
@@ -562,14 +562,14 @@ fn fake_report(dir: &Path, secs: u64, sig: u64, kind: &str) -> String {
     id
 }
 
-/// A report folder an earlier release wrote holds `design.solidcraft`: still found.
+/// A report folder an earlier release wrote holds `design.sketcraft`: still found.
 #[test]
 fn a_report_from_an_earlier_release_still_finds_its_design() {
     let d = fresh_dir("legacy-design");
     let id = fake_report(&d, 1_700_000_000, 7, "command_panic");
-    fs::write(d.join(&id).join("design.solidcraft"), sketcraft_io::write_design(&sketcraft_doc::Document::default())).unwrap();
+    fs::write(d.join(&id).join("design.sketcraft"), sketcraft_io::write_design(&sketcraft_doc::Document::default())).unwrap();
     let v = read(&d, &id).unwrap();
-    assert!(v["design_path"].as_str().unwrap().ends_with("design.solidcraft"), "{v}");
+    assert!(v["design_path"].as_str().unwrap().ends_with("design.sketcraft"), "{v}");
     let _ = fs::remove_dir_all(&d);
 }
 

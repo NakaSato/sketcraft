@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#2820"
+  "NakaSato/sketcraft#2820"
  ],
  "what": "a hollow pipe (outer diameter 10, wall 2) along a path of two lines joined by a tangent R20 quarter arc",
  "source": "analytic",

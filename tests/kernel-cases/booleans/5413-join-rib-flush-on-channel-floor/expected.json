@@ -1,7 +1,7 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#5413",
-  "tangency-labs/solidcraft#4877"
+  "NakaSato/sketcraft#5413",
+  "NakaSato/sketcraft#4877"
  ],
  "what": "a rib joined flush onto the floor of a channel (a box rounded r2.4 on all edges, its 45 wide cavity cut through its top and both ends), its ends buried in the side walls: truck's tool nudge kept both faces of the flush contact, a 0.077 um slit with 450 mm2 too much area",
  "source": "analytic",

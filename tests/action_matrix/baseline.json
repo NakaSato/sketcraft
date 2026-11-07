@@ -1,5 +1,5 @@
 {
- "about": "The action matrix's ratchet: design, entity, the actions tried on it (failing ones marked !). apps/solidcraft-cli/tests/action_matrix.rs, docs/action-matrix.md. Update with cargo xtask action-matrix --bless.",
+ "about": "The action matrix's ratchet: design, entity, the actions tried on it (failing ones marked !). apps/sketcraft-cli/tests/action_matrix.rs, docs/action-matrix.md. Update with cargo xtask action-matrix --bless.",
  "designs": {
   "corpus/components-arm": {
    "ArmBody (Arm:2)/F4:+x": "face.angle_plane !face.draft_neutral !face.extrude face.hole face.midplane face.offset_plane !face.press_pull face.shell face.sketch",

@@ -1,4 +1,4 @@
-//! SMLib B-reps out to SolidCraft's schema 4 B-rep (`sketcraft_geom::brep`, docs/native-brep.md),
+//! SMLib B-reps out to SketCraft's schema 4 B-rep (`sketcraft_geom::brep`, docs/native-brep.md),
 //! and the primitive solids beyond the box.
 //!
 //! The C API hands out SMLib's B-rep as flat arrays (`smlib_brep_export`, laid out like USD's

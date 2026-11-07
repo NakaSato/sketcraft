@@ -44,7 +44,7 @@ const STALE_AFTER: Duration = Duration::from_millis(150);
 const HELD_SETTLE_AFTER: Duration = Duration::from_millis(500);
 /// How far from rest (raw units, full deflection is 350) every axis of a held reading must be for
 /// it to settle. The dead zone is 20, but the last records of real releases reach 129 on one axis
-/// (tangency-labs/solidcraft#3523), so this sits well above it. A firmer push is a deliberate
+/// (NakaSato/sketcraft#3523), so this sits well above it. A firmer push is a deliberate
 /// hold and stays.
 const HELD_SETTLE_BAND: u16 = 150;
 /// Whether the 3Dconnexion driver (macOS) has the device: it then reports the cap, and reading
@@ -1305,14 +1305,14 @@ mod tests {
     }
 
     /// The logical axes a reading reaches. Logical Rz rolls the view and logical Ry turns it about
-    /// its vertical (`navigation::device_camera` in solidcraft-ui-egui, tested there).
+    /// its vertical (`navigation::device_camera` in sketcraft-ui-egui, tested there).
     fn rotation(mapping: DriverMapping, rotation: [i16; 3]) -> [f64; 3] {
         mapping.apply(Axes { translation: [0; 3], rotation }).rotation
     }
 
     #[test]
     fn each_axis_keeps_its_own_age_so_stale_motion_stops() {
-        // Report layouts are tested in solidcraft-space-mouse; here, what the reader keeps.
+        // Report layouts are tested in sketcraft-space-mouse; here, what the reader keeps.
         let now = Instant::now();
         let mut reading = Reading::new(now);
         let layout = Layout::default();
@@ -1614,7 +1614,7 @@ mod tests {
 
     #[test]
     fn a_held_reading_near_rest_settles_after_the_timeout() {
-        // The last records of seven releases from tangency-labs/solidcraft#3523: spacenavd sends
+        // The last records of seven releases from NakaSato/sketcraft#3523: spacenavd sends
         // nothing after them.
         let leftovers = [
             [15, -60, 13, 59, 34, 129],

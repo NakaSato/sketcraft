@@ -1,7 +1,7 @@
 {
   "sources": [
-    "tangency-labs/solidcraft#3526",
-    "tangency-labs/solidcraft#3888"
+    "NakaSato/sketcraft#3526",
+    "NakaSato/sketcraft#3888"
   ],
   "what": "intersect of a two-lump target (two spheres joined while apart) with a box holding the bottom half of each",
   "source": "analytic",

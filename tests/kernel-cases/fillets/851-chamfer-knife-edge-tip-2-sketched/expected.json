@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#851"
+  "NakaSato/sketcraft#851"
  ],
  "what": "the knife edge where #851's concave R21 wall runs out tangent into the back face, chamfered 2, the part drawn as one sketch and extruded (fillets/851's construction): the plane through the contacts of the ball of radius 2",
  "source": "analytic",

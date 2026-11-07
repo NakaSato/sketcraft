@@ -17,7 +17,7 @@ fn properties_leave_with_the_document_but_survive_a_failed_open() {
     app.menu.props = Some(("Prior body".into(), json!({"volume_mm3":42})));
     app.start("config.table");
     assert!(app.dialog.is_some());
-    assert!(app.run("doc.open", json!({"path":"__missing_properties_regression__.solidcraft"})).is_err());
+    assert!(app.run("doc.open", json!({"path":"__missing_properties_regression__.sketcraft"})).is_err());
     assert!(app.menu.props.is_some());
     assert!(app.dialog.is_some());
     app.run("file.new", json!({"name":"New design"})).unwrap();
@@ -48,15 +48,15 @@ fn act(app: &mut SolveApp, t: &Target, label: &str) {
 #[test]
 fn linked_component_opens_its_part_in_a_tab_and_reports_a_missing_source() {
     let mut h = crate::scenario::Harness::new();
-    let part = h.dir.join("part.solidcraft");
-    let assembly = h.dir.join("assembly.solidcraft");
+    let part = h.dir.join("part.sketcraft");
+    let assembly = h.dir.join("assembly.sketcraft");
     let mut source = Session::default();
     source.execute("solid.box", &json!({"length": 10, "width": 20, "height": 30})).unwrap();
     source.execute("file.save", &json!({"path": part})).unwrap();
     let inserted = h.app.run("component.insert_design", json!({"path": part})).unwrap();
     let component = inserted["component"].as_u64().unwrap();
     let occurrence = inserted["occurrence"].as_u64().unwrap();
-    let other_part = h.dir.join("other-part.solidcraft");
+    let other_part = h.dir.join("other-part.sketcraft");
     let mut other_source = Session::default();
     other_source.execute("solid.box", &json!({"length": 5, "width": 5, "height": 5})).unwrap();
     other_source.execute("file.save", &json!({"path": other_part})).unwrap();
@@ -2136,15 +2136,15 @@ fn insert_design_offers_the_other_open_designs_then_browse() {
     let menu_open = |app: &SolveApp| app.viewport.context_menu.is_some() && app.menu.target == Target::InsertDesign;
 
     // Alone: the picker, as before.
-    h.step(&json!({"choose_file": "none.solidcraft"})).unwrap();
+    h.step(&json!({"choose_file": "none.sketcraft"})).unwrap();
     h.app.start("component.insert_design");
     assert!(!menu_open(&h.app));
     h.frames(3);
     context_menu::close(&mut h.app);
 
     let dir = h.dir.clone();
-    crate::documents::open_tab(&mut h.app, open(&dir, "bracket.solidcraft", 10.0)).unwrap();
-    crate::documents::open_tab(&mut h.app, open(&dir, "plate.solidcraft", 20.0)).unwrap();
+    crate::documents::open_tab(&mut h.app, open(&dir, "bracket.sketcraft", 10.0)).unwrap();
+    crate::documents::open_tab(&mut h.app, open(&dir, "plate.sketcraft", 20.0)).unwrap();
     h.app.run("solid.box", json!({"length": 5, "width": 5, "height": 5, "corner": [40, 0, 0]})).unwrap();
     crate::documents::open_tab(&mut h.app, Session::default()).unwrap();
     h.app.run("solid.box", json!({"length": 5, "width": 5, "height": 5})).unwrap();
@@ -2161,7 +2161,7 @@ fn insert_design_offers_the_other_open_designs_then_browse() {
         rows,
         [
             ("Open designs", "", false),
-            (names[0].as_str(), "bracket.solidcraft", true),
+            (names[0].as_str(), "bracket.sketcraft", true),
             (names[1].as_str(), "Unsaved changes", true),
             (names[2].as_str(), "Not saved yet", false),
             ("", "", false),
@@ -2171,10 +2171,10 @@ fn insert_design_offers_the_other_open_designs_then_browse() {
     );
 
     act(&mut h.app, &Target::InsertDesign, &names[0]);
-    assert_eq!(linked(&h.app, "bracket.solidcraft"), 1);
+    assert_eq!(linked(&h.app, "bracket.sketcraft"), 1);
     assert!(h.app.status.as_ref().is_none_or(|(s, _, _)| !s.contains("unsaved")), "{:?}", h.app.status);
     act(&mut h.app, &Target::InsertDesign, &names[1]);
-    assert_eq!(linked(&h.app, "plate.solidcraft"), 1);
+    assert_eq!(linked(&h.app, "plate.sketcraft"), 1);
     assert!(
         h.app.status.as_ref().is_some_and(|(s, _, error)| !*error && s.contains("unsaved changes") && s.contains("Update Links")),
         "{:?}",
@@ -2182,19 +2182,19 @@ fn insert_design_offers_the_other_open_designs_then_browse() {
     );
 
     // Browse…: the picker, for any file on disk.
-    h.step(&json!({"choose_file": "bracket.solidcraft"})).unwrap();
+    h.step(&json!({"choose_file": "bracket.sketcraft"})).unwrap();
     act(&mut h.app, &Target::InsertDesign, "Browse…");
     h.frames(3);
-    assert_eq!(linked(&h.app, "bracket.solidcraft"), 2);
+    assert_eq!(linked(&h.app, "bracket.sketcraft"), 2);
 
     // The preference off: straight to the picker.
     h.app.preferences.insert_lists_open_designs = false;
     context_menu::close(&mut h.app);
-    h.step(&json!({"choose_file": "plate.solidcraft"})).unwrap();
+    h.step(&json!({"choose_file": "plate.sketcraft"})).unwrap();
     h.app.start("component.insert_design");
     assert!(!menu_open(&h.app));
     h.frames(3);
-    assert_eq!(linked(&h.app, "plate.solidcraft"), 2);
+    assert_eq!(linked(&h.app, "plate.sketcraft"), 2);
 }
 
 /// `ui.menu` opens a menu only on something the design has, as a right-click can (#10745).

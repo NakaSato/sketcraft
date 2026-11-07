@@ -180,7 +180,7 @@ fn home_page_renders_in_the_active_language() {
     for (lang, words, missing_recent) in cases {
         let mut h = Harness::new();
         h.app.preferences.language = lang.into();
-        let gone = h.dir.join("gone.solidcraft").to_string_lossy().into_owned();
+        let gone = h.dir.join("gone.sketcraft").to_string_lossy().into_owned();
         h.app.home.add_recent(&gone);
         let now = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_secs();
         h.app.home.opened_at.insert(gone, now - 2 * 3600);

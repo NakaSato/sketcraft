@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#793"
+  "NakaSato/sketcraft#793"
  ],
  "what": "a 6-turn coil (centre diameter 40, wire 2 mm, pitch 4) split by the plane z = 12.5 square to its axis (\"boolean Intersect: no result\")",
  "source": "analytic",

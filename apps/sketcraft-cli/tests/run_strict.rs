@@ -47,7 +47,7 @@ fn cli() -> Command {
 fn a_failing_feature_fails_the_run_and_writes_nothing() {
     let dir = Scratch::new();
     let script = dir.broken_script();
-    let (step, saved) = (dir.0.join("part.step"), dir.0.join("part.solidcraft"));
+    let (step, saved) = (dir.0.join("part.step"), dir.0.join("part.sketcraft"));
     for extra in [&[][..], &["--results"][..], &["--quiet"][..]] {
         let output = cli().arg("run").arg(&script).args(extra).arg("--out").arg(&step).arg("--save").arg(&saved).output().unwrap();
         assert_eq!(output.status.code(), Some(1), "{extra:?}");
@@ -61,7 +61,7 @@ fn a_failing_feature_fails_the_run_and_writes_nothing() {
 #[test]
 fn allow_errors_writes_anyway_and_a_saved_design_keeps_failing() {
     let dir = Scratch::new();
-    let (step, saved) = (dir.0.join("part.step"), dir.0.join("part.solidcraft"));
+    let (step, saved) = (dir.0.join("part.step"), dir.0.join("part.sketcraft"));
     let output = cli().arg("run").arg(dir.broken_script()).arg("--allow-errors").arg("--out").arg(&step).arg("--save").arg(&saved).output().unwrap();
     assert!(output.status.success(), "{}", String::from_utf8_lossy(&output.stderr));
     let measured: Value = serde_json::from_slice(&output.stdout).unwrap();

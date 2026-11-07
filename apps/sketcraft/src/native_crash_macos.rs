@@ -619,7 +619,7 @@ mod tests {
         let mut b = Buf::new();
         json(&mut b, f, frames, |at, _| {
             (at >= 0x1_0000_0000).then_some(Module {
-                path: b"/Applications/SolidCraft.app/Contents/MacOS/solidcraft",
+                path: b"/Applications/SketCraft.app/Contents/MacOS/sketcraft",
                 base: 0x1_0000_0000,
                 symbol: Some((b"_ZN4main17h0123456789abcdefE", 0x1_0000_1200)),
             })
@@ -635,7 +635,7 @@ mod tests {
         assert_eq!(v["name"], "segmentation fault");
         assert_eq!(v["detail"], "read of 0x0000000000000010 (SEGV_MAPERR)");
         assert_eq!(v["address"], "0x0000000100001234");
-        assert_eq!(v["module"], "/Applications/SolidCraft.app/Contents/MacOS/solidcraft");
+        assert_eq!(v["module"], "/Applications/SketCraft.app/Contents/MacOS/sketcraft");
         assert_eq!(v["offset"], "0x1234");
         assert_eq!(v["thread"], 4242);
         assert_eq!(v["thread_name"], "main");
@@ -839,7 +839,7 @@ mod tests {
         assert!(frames.len() >= 3, "{v}");
         assert!(frames.iter().any(|f| f.as_str().unwrap().contains("child")), "the walk reaches the test that crashed: {v}");
         let message = r["message"].as_str().unwrap();
-        assert!(message.contains("segmentation fault (SIGSEGV) in solidcraft"), "{r}");
+        assert!(message.contains("segmentation fault (SIGSEGV) in sketcraft"), "{r}");
         assert!(message.contains("during startup (device creation"), "{r}");
         assert_eq!(r["kind"], "unclean_exit");
         assert_eq!(r["native"]["signal"], "SIGSEGV");

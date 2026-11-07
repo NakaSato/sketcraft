@@ -10,7 +10,7 @@ Forty-eight original appearance recipes are prepared for the current opaque PBR 
 | `appearance-swatches.json` | Prepared command script with 48 labeled box swatches and one neutral support base. It uses the existing `file.new`, `solid.box` and `appearance.assign` command shapes. |
 | `appearance-pack.md` | Contract, use, limitations and recipe index. |
 
-The authoring step checked JSON structure, ID/name uniqueness, catalog and capability references, numeric admission bounds, exact runtime parameter keys, and every swatch assignment against the recipe authority. **No SolidCraft runtime was executed and no rendered image was visually reviewed during authoring.** The script is a prepared input whose execution and render admission must be verified on the selected build.
+The authoring step checked JSON structure, ID/name uniqueness, catalog and capability references, numeric admission bounds, exact runtime parameter keys, and every swatch assignment against the recipe authority. **No SketCraft runtime was executed and no rendered image was visually reviewed during authoring.** The script is a prepared input whose execution and render admission must be verified on the selected build.
 
 ## Runtime projection contract
 
@@ -39,7 +39,7 @@ The body name in this example is a placeholder, not a ready-to-run model binding
 
 Current bounds are metallic 0 to 1, perceptual roughness 0.045 to 1, relative dielectric IOR 1 to 3, and opacity exactly 1 for PBR. Colors are sRGB8 hex values decoded by the existing renderer. All values here are original illustrative authoring choices. The common IOR control of 1.5 is not a measured value; it controls reflection of the nonmetal fraction and does not enable transmission. The metal recipes use metallic 1 and the dielectric recipes use metallic 0; no mechanical or electrical properties follow from either choice.
 
-The pack JSON is **not** `solidcraft-library/1` and cannot be passed directly to `library.inspect` or `library.apply`. That scalar library format cannot preserve PBR. Use the prepared script, an explicit appearance overlay, or a native format-21 design. A future catalog importer needs its own versioned admission contract.
+The pack JSON is **not** `sketcraft-library/1` and cannot be passed directly to `library.inspect` or `library.apply`. That scalar library format cannot preserve PBR. Use the prepared script, an explicit appearance overlay, or a native format-21 design. A future catalog importer needs its own versioned admission contract.
 
 ## Prepared swatch script
 
@@ -51,8 +51,8 @@ Prepared commands for a built native CLI, run from the repository root:
 
 ```sh
 mkdir -p target/selene-render
-solidcraft-cli run assets/render/selene/materials/appearance-swatches.json --save target/selene-render/appearance-swatches.solidcraft --results --json-out target/selene-render/appearance-swatches-results.json
-solidcraft-cli render target/selene-render/appearance-swatches.solidcraft --out target/selene-render/appearance-swatches.png --width 768 --height 576
+sketcraft-cli run assets/render/selene/materials/appearance-swatches.json --save target/selene-render/appearance-swatches.sketcraft --results --json-out target/selene-render/appearance-swatches-results.json
+sketcraft-cli render target/selene-render/appearance-swatches.sketcraft --out target/selene-render/appearance-swatches.png --width 768 --height 576
 ```
 
 These commands have been prepared, not executed. The render CLI automatically fits a camera when none is supplied. Existing output is protected unless `--overwrite` is explicitly provided. Keep local render evidence under ignored `target/`; this pack does not bundle unreviewed preview exports.
@@ -60,7 +60,7 @@ These commands have been prepared, not executed. The render CLI automatically fi
 To style a pinned SELENE design, prepare a separate overlay containing only `appearance.assign` commands with verified target names, then run:
 
 ```sh
-solidcraft-cli run target/selene-render/verified-appearance-overlay.json --in path/to/pinned-selene.solidcraft --save target/selene-render/selene-styled.solidcraft --results
+sketcraft-cli run target/selene-render/verified-appearance-overlay.json --in path/to/pinned-selene.sketcraft --save target/selene-render/selene-styled.sketcraft --results
 ```
 
 Both input paths above are placeholders until the model and overlay are prepared. The overlay must contain no `file.new`, geometry edits, physical-material edits, joint edits or pose changes. Native save is the preservation path. `timeline.export_script` currently omits appearance overrides and refuses component/joint assemblies; it is not an appearance or articulated-model round-trip mechanism. A multi-command script stops at the first error and is not a whole-script transaction, so verify targets before applying it to the review copy.
@@ -142,10 +142,10 @@ All entries use opacity 1 and the illustrative IOR control 1.5. M is metallic fr
 - [Persistable PBR parameters](../../../../crates/doc/src/pbr_appearance.rs): appearance-owned optical values and sRGB decoding.
 - [Opaque product surface contract](../../../../docs/render-opaque-pbr.md): current consumers, limits, native preservation and unsupported functions.
 - [Original opaque studio example](../../../../examples/render-opaque-studio.json): existing `solid.box` and appearance command shapes used for this prepared script.
-- [CLI render workflow](../../../../apps/solidcraft-cli/src/render.rs) and [product-image jobs](../../../../docs/render-jobs.md): bounded PNG admission, preflight/start/wait/export and overwrite behavior.
+- [CLI render workflow](../../../../apps/sketcraft-cli/src/render.rs) and [product-image jobs](../../../../docs/render-jobs.md): bounded PNG admission, preflight/start/wait/export and overwrite behavior.
 - [Script executor](../../../../crates/engine/src/lib.rs) and [timeline export](../../../../crates/engine/src/cmd/script.rs): replay semantics and export omissions.
 - [Scalar catalog contract](../../../../crates/io/src/catalog.rs): version-1 scalar-only fields and PBR export refusal.
 
 ## Original provenance
 
-Author: SolidCraft contributors. License: MIT OR Apache-2.0. The two JSON files are original clean-room resource data and analytic command inputs. No commercial material library, copied shader, third-party artwork, restricted CAD extraction or generated image texture is bundled. Their exact attribution rows belong in the repository root `ATTRIBUTION.md`; Markdown documentation is exempt from the non-Markdown asset gate.
+Author: SketCraft contributors. License: MIT OR Apache-2.0. The two JSON files are original clean-room resource data and analytic command inputs. No commercial material library, copied shader, third-party artwork, restricted CAD extraction or generated image texture is bundled. Their exact attribution rows belong in the repository root `ATTRIBUTION.md`; Markdown documentation is exempt from the non-Markdown asset gate.

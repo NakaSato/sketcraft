@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#1395"
+  "NakaSato/sketcraft#1395"
  ],
  "what": "a long modelled external thread: M6 over a 24 mm shaft (24 turns), the kind that once ran out of depth in the boolean",
  "source": "analytic",

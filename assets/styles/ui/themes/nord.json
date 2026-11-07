@@ -1,6 +1,6 @@
 {
   "order": 160,
-  "provenance": "Original SolidCraft mapping of Nord (MIT palette)",
+  "provenance": "Original SketCraft mapping of Nord (MIT palette)",
   "base": "dark",
   "colors": {
     "accent": "#88c0d0",
@@ -190,7 +190,7 @@
     "viewport_top": "#242f40",
     "warning": "#ebcb8b"
   },
-  "format": "solidcraft-theme/1",
+  "format": "sketcraft-theme/1",
   "name": "Nord",
   "icon_palette": {
     "ink": "#242933",

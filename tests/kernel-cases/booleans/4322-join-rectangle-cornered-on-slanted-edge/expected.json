@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#4322"
+  "NakaSato/sketcraft#4322"
  ],
  "what": "a 6x7 rectangle with one corner exactly on the slanted top edge of a triangular prism, joined 10 mm up: 'profile loop is not closed' on 0.17",
  "source": "analytic",

@@ -1,7 +1,7 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#487",
-  "tangency-labs/solidcraft#490"
+  "NakaSato/sketcraft#487",
+  "NakaSato/sketcraft#490"
  ],
  "what": "a disc cut by the body made from two adjacent profiles revolved on the axis, around the disc flat end",
  "source": "analytic",

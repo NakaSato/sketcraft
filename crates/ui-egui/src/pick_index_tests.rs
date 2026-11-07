@@ -68,7 +68,7 @@ fn indexes_follow_the_model_state() {
     assert!(app.viewport.pick_index.len() <= 5);
 }
 
-/// Timing, not a check (`cargo test --release -p solidcraft-ui-egui --lib pick_timing -- --ignored
+/// Timing, not a check (`cargo test --release -p sketcraft-ui-egui --lib pick_timing -- --ignored
 /// --nocapture`; `SKETCRAFT_BENCH_MESH=part.stl` adds 25 placements of that mesh): picks over a
 /// grid of a 1400 × 900 view, scanning every triangle and edge versus through the indexes, on many
 /// curved bodies, on one body with many curved faces, and on eight layers of bodies seen from
@@ -157,7 +157,7 @@ fn pick_timing_on_curved_models() {
 
 /// Timing, not a check: mouse moves over a large sketch being edited, with no tool, with Trim and
 /// with Extend (`SKETCRAFT_BENCH_SKETCH=out/testdaten/hover-circles.json cargo test --release -p
-/// solidcraft-ui-egui --lib sketch_hover_timing -- --ignored --nocapture`; the scripts and how
+/// sketcraft-ui-egui --lib sketch_hover_timing -- --ignored --nocapture`; the scripts and how
 /// they are made are in `out/testdaten/README.md`). Each move is one whole UI frame, as the window
 /// runs it; the profile lookup under the cursor and the Trim piece are also timed on their own.
 #[test]

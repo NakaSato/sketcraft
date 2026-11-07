@@ -11,7 +11,7 @@ pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 pub const COMMIT: &str = env!("SKETCRAFT_COMMIT");
 pub const BUILD_DATE: &str = env!("SKETCRAFT_BUILD_DATE");
 /// The user and developer guide (docs/book, published by .github/workflows/pages.yml).
-pub const DOCS_URL: &str = "https://docs.solidcraft.io/";
+pub const DOCS_URL: &str = "https://docs.sketcraft.io/";
 const ATTRIBUTION: &str = include_str!("../../../ATTRIBUTION.md");
 use sketcraft_engine::licences::{LICENSE_APACHE, LICENSE_MIT, NOTICE, THIRD_PARTY};
 
@@ -81,13 +81,13 @@ pub fn run(app: &mut SolveApp, ctx: &egui::Context, item: &str) {
     }
 }
 
-/// Add SolidCraft's MCP server to the AI assistants installed here (`solidcraft-cli mcp setup`),
-/// with the `solidcraft-cli` beside this program. One line per client.
+/// Add SketCraft's MCP server to the AI assistants installed here (`sketcraft-cli mcp setup`),
+/// with the `sketcraft-cli` beside this program. One line per client.
 #[cfg(not(target_arch = "wasm32"))]
 fn connect_assistants() -> Vec<String> {
     use sketcraft_engine::agent_setup as setup;
     let Some(cli) = crate::agent_chat::find_cli() else {
-        return vec!["sketcraft-cli was not found next to SolidCraft; run `solidcraft-cli mcp setup` from a terminal.".into()];
+        return vec!["sketcraft-cli was not found next to SketCraft; run `sketcraft-cli mcp setup` from a terminal.".into()];
     };
     let cli = cli.canonicalize().unwrap_or(cli).to_string_lossy().trim_start_matches(r"\\?\").to_owned();
     match setup::setup(&[], &setup::Env::from_process(), &cli) {
@@ -135,14 +135,14 @@ pub fn show(app: &mut SolveApp, ctx: &egui::Context, anchor: egui::Pos2) {
                 crate::context_menu::menu_frame(ui, |ui| {
                     for (id, label, icon) in [
                         ("docs", "Documentation", "library"),
-                        ("about", "About SolidCraft", "help"),
+                        ("about", "About SketCraft", "help"),
                         ("updates", crate::i18n::tr("update.check_for_updates"), "update"),
                         ("shortcuts", "Keyboard Shortcuts", "list"),
                         ("messages", "Messages…", "list"),
                         ("report", "Report an Issue…", "bug_report"),
                         ("crashes", "Crash Reports…", "status_error"),
                         ("connect", "Connect AI assistants…", "settings"),
-                        ("install_cli", "Install solidcraft-cli command", "settings"),
+                        ("install_cli", "Install sketcraft-cli command", "settings"),
                     ]
                     .into_iter()
                     .filter(|(id, ..)| *id != "install_cli" || cfg!(target_os = "macos"))
@@ -181,7 +181,7 @@ fn about(app: &mut SolveApp, ctx: &egui::Context) {
     if !app.help.about {
         return;
     }
-    let (closed, action) = ui_kit::Window::new(egui::Id::unique("sc_about"), "help", crate::i18n::tr_label("About SolidCraft"))
+    let (closed, action) = ui_kit::Window::new(egui::Id::unique("sc_about"), "help", crate::i18n::tr_label("About SketCraft"))
         .cards(2.0)
         .actions("", "Close", None)
         .show(ctx, true, |ui| {

@@ -815,7 +815,7 @@ pub(crate) fn along_spread(cs: Vec<(usize, Vec3)>) -> Vec<usize> {
     // the centre is the mean of a tessellated boundary, and that depends on where the loop's
     // polyline starts, which can differ between processes. Comparing the keys with a tolerance
     // makes those pieces equal, so the stable sort keeps the order they arrived in and a name
-    // keeps its number across runs (solidcraft#569).
+    // keeps its number across runs (sketcraft#569).
     let tol = ext.x.max(ext.y).max(ext.z).max(1.0) * 1e-9;
     let bucket = |c: Vec3| {
         let k = key(c);
@@ -1287,7 +1287,7 @@ mod tests {
     /// Pieces lying almost level along the sort axis must keep the order they arrived in, whatever
     /// the low bits of their centres do. The centre is the mean of a tessellated boundary, so those
     /// bits depend on where the loop's polyline starts and can differ between processes — which is
-    /// how a name's number used to swap between runs (solidcraft#569).
+    /// how a name's number used to swap between runs (sketcraft#569).
     #[test]
     fn level_pieces_keep_their_input_order() {
         let piece = |dx: f64| vec![Vec3::new(10.0 + dx, 0.0, 0.0), Vec3::new(10.0 + dx, 0.0, 5.0)];

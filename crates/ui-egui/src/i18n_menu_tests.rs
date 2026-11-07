@@ -111,7 +111,7 @@ fn every_menu_label_is_in_the_english_catalog() {
     app.session
         .doc_mut()
         .links
-        .insert(component, sketcraft_engine::doc::DesignLink { path: "part.solidcraft".into(), feature: 0, ..Default::default() });
+        .insert(component, sketcraft_engine::doc::DesignLink { path: "part.sketcraft".into(), feature: 0, ..Default::default() });
     take(&app, &mut seen);
     assert!(seen.contains("Open Linked Design"));
 

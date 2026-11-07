@@ -833,7 +833,7 @@ fn unsupported_intent_is_rejected_and_export_preserves_existing_files() {
 #[test]
 fn open_close_and_host_replacement_cancel_work_and_reject_old_ids() {
     let (mut s, host) = session();
-    let path = std::env::temp_dir().join(format!("sketcraft-job-open-{}.solidcraft", std::process::id()));
+    let path = std::env::temp_dir().join(format!("sketcraft-job-open-{}.sketcraft", std::process::id()));
     s.execute("file.save", &json!({"path":path})).unwrap();
     let id = start(&mut s);
     let handle = s.render_job_handle(id).unwrap();

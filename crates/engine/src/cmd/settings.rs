@@ -44,12 +44,12 @@ pub static COMMANDS: &[CommandSpec] = &[
         .icon("export")
         .noundo()
         .doc_only()
-        .params("name, path?: file → profile (a `solidcraft-profile/1` document), written to `path` when given; never opens a dialog"),
+        .params("name, path?: file → profile (a `sketcraft-profile/1` document), written to `path` when given; never opens a dialog"),
     CommandSpec::new("settings.profile.import", "Import Settings Profile", import)
         .icon("import")
         .noundo()
         .doc_only()
-        .params("path: file | profile: `solidcraft-profile/1` document, name?: 1..64 characters → name; adds the profile without switching to it"),
+        .params("path: file | profile: `sketcraft-profile/1` document, name?: 1..64 characters → name; adds the profile without switching to it"),
 ];
 
 /// A profile name as given: trimmed, 1 to [`MAX_PROFILE_NAME`] characters, no control characters.
@@ -109,7 +109,7 @@ fn import(_s: &mut Session, p: &Value) -> Result<Value> {
     let (key, value) = match (path_param(cmd, p)?, p.get("profile")) {
         (Some(path), None) => ("path", json!(path)),
         (None, Some(profile)) if profile.is_object() => ("profile", profile.clone()),
-        _ => return Err(bad(cmd, "give either `path` or `profile` (a `solidcraft-profile/1` document)")),
+        _ => return Err(bad(cmd, "give either `path` or `profile` (a `sketcraft-profile/1` document)")),
     };
     out.insert(key.into(), value);
     if p.get("name").is_some_and(|name| !name.is_null()) {

@@ -1,8 +1,8 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#3417",
-  "tangency-labs/solidcraft#3421",
-  "tangency-labs/solidcraft#3280"
+  "NakaSato/sketcraft#3417",
+  "NakaSato/sketcraft#3421",
+  "NakaSato/sketcraft#3280"
  ],
  "what": "a 60 mm rhombus (120 and 60 degree corners) with a 90 degree flange on each of its four edges and a square corner relief 8 mm across at each corner: at this size the four reliefs stay apart and all are cut",
  "source": "analytic",

@@ -76,7 +76,7 @@ merges `assets/locales/*.json` with `assets/locales/pending/*.json`, compiles ic
 ## Rules
 
 - Act through commands (`app.run` / `app.start`); never change the design directly. New behaviour
-  is a `CommandSpec` in `crates/engine/src/cmd/` first: `skills/solidcraft-commands/SKILL.md`.
+  is a `CommandSpec` in `crates/engine/src/cmd/` first: `skills/sketcraft-commands/SKILL.md`.
 - Depend on lower crates through `sketcraft_engine` re-exports (`sketcraft_engine::doc`, `geom`, …);
   the only workspace crates in `[dependencies]` are `sketcraft-engine`, `sketcraft-gpu` and
   `sketcraft-space-mouse`.
@@ -88,16 +88,16 @@ merges `assets/locales/*.json` with `assets/locales/pending/*.json`, compiles ic
 - Camera input only through `navigation::handle`; `hand_rolled_camera_input_is_rejected` fails otherwise.
 - Every option, tool choice and expandable section persists across restarts (AGENTS.md). Put
   settings in `Prefs`, with defaults for new fields; use `ui_kit` sections with stable ids.
-  See `skills/solidcraft-preferences/SKILL.md`.
+  See `skills/sketcraft-preferences/SKILL.md`.
 - Text: English only (AGENTS.md). New strings go in a new `assets/locales/pending/<slug>.json`, read
   with `i18n::tr("ui.id")`. Toolbar commands need `cmd.<id>` and `help.<id>` and an entry in
-  `command_help::DOCUMENTED`. See `skills/solidcraft-ui-text/SKILL.md`.
+  `command_help::DOCUMENTED`. See `skills/sketcraft-ui-text/SKILL.md`.
 - Do not block the window thread: long work runs beside it (`save_job.rs`, `file_load.rs`).
-  See `skills/solidcraft-performance/SKILL.md`.
+  See `skills/sketcraft-performance/SKILL.md`.
 - Must build for wasm32. Guard native-only code with `cfg(not(target_arch = "wasm32"))` (e.g.
   `arboard`); use `web_time` for time.
-- A UI bug fix gets a scenario JSON or a `*_tests.rs` case: `skills/solidcraft-tests/SKILL.md`,
-  `skills/solidcraft-ui/SKILL.md`.
+- A UI bug fix gets a scenario JSON or a `*_tests.rs` case: `skills/sketcraft-tests/SKILL.md`,
+  `skills/sketcraft-ui/SKILL.md`.
 
 ## Gotchas
 
@@ -106,4 +106,3 @@ merges `assets/locales/*.json` with `assets/locales/pending/*.json`, compiles ic
 - `build.rs` reruns on scenario, locale and icon changes; a new scenario file needs no Rust edit.
 - The apps write prefs each frame (rate-limited), not this crate: desktop `PrefsWriter::store`
   in `apps/sketcraft/src/main.rs`, web in `apps/sketcraft-web/src/main.rs`.
-- Some doc comments and skills still say `solidcraft-*` or `apps/solidcraft`; use `sketcraft-*`.

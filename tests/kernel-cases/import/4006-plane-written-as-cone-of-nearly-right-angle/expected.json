@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#4006"
+  "NakaSato/sketcraft#4006"
  ],
  "what": "an annular plate r 4..10, 3 thick, whose top face is a CONICAL_SURFACE of semi-angle pi/2 - 7e-12 (a plane to within rounding, as the exporter wrote it): the face must be read, not refused as a 'bad cone', and the body stays closed",
  "source": "analytic",

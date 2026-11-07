@@ -15619,7 +15619,7 @@ fn advanced_glass_pointer_edit_keeps_saved_dispersion_film_and_independent_optic
         assert_eq!(h.app.session.doc.features, document.features);
         assert_eq!(h.app.session.doc.materials, document.materials);
         assert_eq!(h.app.session.doc.appearances, document.appearances);
-        let path = h.dir.join(format!("advanced-glass-{method:?}.solidcraft"));
+        let path = h.dir.join(format!("advanced-glass-{method:?}.sketcraft"));
         h.app.run("file.save", json!({"path":path})).unwrap();
         h.app.run("doc.open", json!({"path":path})).unwrap();
         assert_eq!(h.app.session.doc.render.setups["Studio"], expected, "actual native save/open retains the advanced stable assignment");
@@ -15727,7 +15727,7 @@ fn caustic_quality_survives_cpu_gpu_ui_save_load_and_changes_the_paused_live_req
         if method == ImageMethod::CpuRaytrace {
             assert_eq!(h.app.render_workspace.view.raytrace.caustics, Some(quality));
         }
-        let path = h.dir.join(format!("caustic-quality-{method:?}.solidcraft"));
+        let path = h.dir.join(format!("caustic-quality-{method:?}.sketcraft"));
         h.app.run("file.save", json!({"path":path})).unwrap();
         h.app.run("doc.open", json!({"path":path})).unwrap();
         assert_eq!(h.app.session.doc.render.setups["Studio"], expected);

@@ -1,7 +1,7 @@
 # Native resource admission and continuous validation
 
 This gate connects the authored resource checks to the **real public Rust APIs**
-in `solidcraft-render`. It is a development conformance tool, not a new application
+in `sketcraft-render`. It is a development conformance tool, not a new application
 importer, persistent texture format, renderer feature or GUI control. The fixed
 resource branch remains isolated from the renderer implementation checkpoint.
 
@@ -17,7 +17,7 @@ python -B assets/render/starter/tools/check_all.py
 The command checks the original catalog, prepared SELENE contracts, resource
 manifests, original Python regression tests and exact material/HDR reproduction.
 It then runs repository formatting, attribution and icon checks, all-target
-Clippy for `solidcraft-render`, its library tests, the new native checker tests
+Clippy for `sketcraft-render`, its library tests, the new native checker tests
 and full native resource admission. `--locked` preserves the Rust dependency
 resolution. No Rust dependency, application command or saved design is changed.
 
@@ -43,8 +43,8 @@ receipts/logs as workflow artifacts, not tracked assets. This targeted gate does
 The executable is an example target, outside the compiled application library:
 
 ```sh
-cargo test --locked --profile ci -p solidcraft-render --example validate_starter
-cargo run --locked --profile ci -p solidcraft-render --example validate_starter
+cargo test --locked --profile ci -p sketcraft-render --example validate_starter
+cargo run --locked --profile ci -p sketcraft-render --example validate_starter
 ```
 
 Its standard output is JSON evidence; progress and failures go to standard error.

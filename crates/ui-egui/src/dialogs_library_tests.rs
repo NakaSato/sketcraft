@@ -119,7 +119,7 @@ fn clicked_catalog(pbr: Option<sketcraft_engine::doc::pbr_appearance::PbrParamet
     assert_eq!(h.app.session.undo.len(), undo + 1);
     let revision = h.app.session.revision;
     h.step(&json!({"widget":"Export design library..."}))?;
-    let exported = h.dir.join("my-library.solidcraft-library.json");
+    let exported = h.dir.join("my-library.sketcraft-library.json");
     let catalog = Catalog::read(&exported.to_string_lossy())?;
     assert_eq!(catalog.entries.len(), 1);
     assert_eq!(catalog.entries[0].definition.name(), "Warm oak colour");

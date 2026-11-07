@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#477"
+  "NakaSato/sketcraft#477"
  ],
  "what": "the three edges at a 20 mm cube's corner rounded R20 with fit reduce: reduced to the largest that fits, just under 20",
  "source": "analytic",

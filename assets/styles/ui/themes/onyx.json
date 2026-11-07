@@ -1,7 +1,7 @@
 {
   "order": 260,
-  "provenance": "Original SolidCraft stone-grey palette and semantic icon-role mapping",
-  "format": "solidcraft-theme/1",
+  "provenance": "Original SketCraft stone-grey palette and semantic icon-role mapping",
+  "format": "sketcraft-theme/1",
   "name": "Onyx",
   "base": "dark",
   "colors": {

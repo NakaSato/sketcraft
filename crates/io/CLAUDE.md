@@ -30,10 +30,10 @@ cargo test -p sketcraft-io --release -- --ignored        # manual IO and save ti
 
 ## Rules
 
-- Every byte read from a file is hostile. Check sizes against `limits`, cap counts and nesting, and return `IoError`, never panic. A new reader gets a case in `src/mutate.rs`. See `skills/solidcraft-crash-safety/SKILL.md`.
+- Every byte read from a file is hostile. Check sizes against `limits`, cap counts and nesting, and return `IoError`, never panic. A new reader gets a case in `src/mutate.rs`. See `skills/sketcraft-crash-safety/SKILL.md`.
 - Write files through `safe_write` (`write_atomic`).
 - Read and write through `vfs` so the browser build works. Native-only code needs `#[cfg(not(target_arch = "wasm32"))]`.
-- A change to what a design saves goes in a pending format file in `crates/doc`, not here: `skills/solidcraft-file-formats/SKILL.md`.
+- A change to what a design saves goes in a pending format file in `crates/doc`, not here: `skills/sketcraft-file-formats/SKILL.md`.
 - Keep older designs opening. Extensions in `LEGACY_DESIGN_EXTS` must keep working.
 - A new format gets a row in `src/formats.rs`, so the UI and hosts pick it up.
 - Imports become a new component named after the file (handled by the engine's `file.*` commands).
@@ -45,4 +45,3 @@ cargo test -p sketcraft-io --release -- --ignored        # manual IO and save ti
 - `build.rs` also needs git. A source tarball gets `unknown` too.
 - SKP import works only on desktop. On wasm, `sketcraft_skp::import_skp` returns an error.
 - `skp_in.rs` groups faces by their parent group name and skips hidden faces. It returns an error when a file has no visible faces.
-- The `lib.rs` doc comment mentions `.solidcraft` files, but `LEGACY_DESIGN_EXTS` is `["sketcraft", "solvecraft"]`.

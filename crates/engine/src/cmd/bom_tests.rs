@@ -106,7 +106,7 @@ fn part_properties_survive_save_and_open_and_undo_in_one_step() {
     let r = run(&mut s, "component.metadata.set", json!({"component": "Pin", "revision": "C"}));
     assert_eq!(r["changed"], json!([]));
     assert_eq!(s.undo.len(), undo + 1);
-    for (file, format) in [("bom.json", "json"), ("bom.solidcraft", "container")] {
+    for (file, format) in [("bom.json", "json"), ("bom.sketcraft", "container")] {
         let path = dir.join(file);
         run(&mut s, "file.save_as", json!({"path": path, "format": format}));
         let mut back = Session::default();
@@ -125,7 +125,7 @@ fn part_properties_survive_save_and_open_and_undo_in_one_step() {
 #[test]
 fn inserted_design_carries_its_part_properties_into_the_bom() {
     let dir = scratch("insert-design");
-    let source = dir.join("plate.solidcraft");
+    let source = dir.join("plate.sketcraft");
     let metadata = json!({
         "part_number": "PL-6624", "description": "Mounting plate", "revision": "B",
         "author": "Example author", "license": "CC0-1.0", "com.example.catalog": {"stock": 12}
@@ -156,7 +156,7 @@ fn inserted_design_carries_its_part_properties_into_the_bom() {
         run(&mut s, "edit.redo", json!({}));
         assert_eq!(run(&mut s, "component.metadata", json!({"component": component}))["metadata"], metadata);
 
-        for (file, format) in [("assembly.json", "json"), ("assembly.solidcraft", "container")] {
+        for (file, format) in [("assembly.json", "json"), ("assembly.sketcraft", "container")] {
             let path = dir.join(file);
             run(&mut s, "file.save_as", json!({"path": path, "format": format}));
             let mut back = Session::default();
@@ -266,7 +266,7 @@ fn a_components_refusals_speak_of_part_properties() {
     let bogus = refusal(&mut s, json!({"component": "Pin", "values": {"bogus": "x"}}));
     assert!(
         bogus.ends_with(
-            "`bogus` is not a part property: SolidCraft's are project, part_number, revision, author, organization, description, \
+            "`bogus` is not a part property: SketCraft's are project, part_number, revision, author, organization, description, \
              license, bom_type; another tool's data goes under a reverse-DNS key such as `com.example.tool`"
         ),
         "{bogus}"
@@ -663,7 +663,7 @@ fn a_bom_type_is_one_undo_step_survives_save_and_open_and_evaluates_nothing() {
     assert_eq!(r["changed"], json!(["bom_type"]));
     assert_eq!(s.undo.len(), undo + 1);
     assert_eq!(s.evaluations, 0, "a part property changes no geometry");
-    for (file, format) in [("machine.json", "json"), ("machine.solidcraft", "container")] {
+    for (file, format) in [("machine.json", "json"), ("machine.sketcraft", "container")] {
         let path = dir.join(file);
         run(&mut s, "file.save_as", json!({"path": path, "format": format}));
         let mut back = Session::default();

@@ -11,7 +11,7 @@ fn commands() -> Vec<(String, serde_json::Value)> {
 fn acceptance_preserves_file_history_and_prepared_world_without_evaluation() {
     let mut session = Session::default();
     session.execute("solid.box", &json!({"length":1,"width":1,"height":1})).unwrap();
-    session.path = Some("working.solidcraft".into());
+    session.path = Some("working.sketcraft".into());
     let saved = session.saved.clone();
     let checkpoint = session.checkpoint();
     let history = session.undo.len();
@@ -21,7 +21,7 @@ fn acceptance_preserves_file_history_and_prepared_world_without_evaluation() {
     let before = session.evaluations;
     session.accept_commands(prepared).unwrap();
     assert_eq!(session.evaluations, before);
-    assert_eq!(session.path.as_deref(), Some("working.solidcraft"));
+    assert_eq!(session.path.as_deref(), Some("working.sketcraft"));
     assert!(Arc::ptr_eq(&saved, &session.saved));
     assert_eq!(session.undo.len(), history + 1);
     assert!(Arc::ptr_eq(&world, &session.world_state().unwrap()));

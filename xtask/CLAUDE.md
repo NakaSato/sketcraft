@@ -45,9 +45,7 @@ cargo test -p xtask                                      # xtask's own unit test
 
 ## Gotchas
 
-- The root CLAUDE.md and `skills/solidcraft-tests` say `SOLIDCRAFT_TEST_JOBS`. The code reads `SKETCRAFT_TEST_JOBS`.
 - `skills` (and so `ci`) expects a router table of `skills/<name>/SKILL.md` rows in AGENTS.md, under 5000 characters. The current AGENTS.md has no such table and is longer, so this check fails.
 - The nextest runner uses the `local-ci` profile from `.config/nextest.toml`. That file is not in this tree.
-- Usage text and some messages still say `solidcraft-cli` and `solidcraft-*`. The packages are `sketcraft-*`. `layers::short_name` strips the `sketcraft-` prefix.
 - `wasm` checks only crates in a numbered layer, plus `sketcraft-web`. Standalone crates such as `skp` are checked through the crates that use them.
-- The tree has no `rustfmt.toml`, but most code uses lines far wider than rustfmt's default of 100. Check before running `cargo fmt` or the `ci` fmt step.
+- `rustfmt.toml` sets `max_width = 150`. `cargo fmt --check` still reports some files that were never formatted with it; check before running `cargo fmt` or the `ci` fmt step.

@@ -1,7 +1,7 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#396",
-  "tangency-labs/solidcraft#577"
+  "NakaSato/sketcraft#396",
+  "NakaSato/sketcraft#577"
  ],
  "what": "a conical loft standing on a box top face, joined to the box (one body reported, two touching shells in the result)",
  "source": "analytic",

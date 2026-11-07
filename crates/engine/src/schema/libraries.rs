@@ -11,7 +11,7 @@ use sketcraft_io::catalog::{Catalog, FORMAT, Provenance, V1_FORMAT};
 #[derive(Debug, Deserialize, JsonSchema)]
 #[serde(deny_unknown_fields)]
 pub struct LibraryInspectParams {
-    /// The library file (`solidcraft-library/1` or `/2` JSON, at most 4 MiB).
+    /// The library file (`sketcraft-library/1` or `/2` JSON, at most 4 MiB).
     pub path: String,
 }
 
@@ -36,7 +36,7 @@ pub struct LibraryExportParams {
     /// Replace the file if it exists. Without it, an existing file is refused and left as it is.
     #[serde(default)]
     pub overwrite: bool,
-    /// The file format. `solidcraft-library/1` refuses a design whose looks or materials have
+    /// The file format. `sketcraft-library/1` refuses a design whose looks or materials have
     /// PBR or physical cards, before writing anything.
     #[serde(default = "default_format")]
     #[schemars(schema_with = "format_schema")]

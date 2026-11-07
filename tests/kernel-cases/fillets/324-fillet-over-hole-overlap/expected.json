@@ -1,7 +1,7 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#324",
-  "tangency-labs/solidcraft#1885"
+  "NakaSato/sketcraft#324",
+  "NakaSato/sketcraft#1885"
  ],
  "what": "a 4 mm fillet on a top edge whose round overlaps the rim of a through hole (the hole breaks into the round)",
  "source": "analytic",

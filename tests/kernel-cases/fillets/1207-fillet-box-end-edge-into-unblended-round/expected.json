@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#1207"
+  "NakaSato/sketcraft#1207"
  ],
  "what": "an edge that runs on tangentially into a round's end arc, its tangent chain rounded with it: the r1 round follows the end face's outline over the r3 round and down the back edge",
  "source": "analytic",

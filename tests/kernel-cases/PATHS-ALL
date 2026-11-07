@@ -50,7 +50,7 @@ crates/engine/src/cmd/features.rs
 crates/engine/src/cmd/mod.rs
 # The rig itself: the grader, the runner, the selection and this gate's workflow.
 .github/workflows/kernel-rig.yml
-apps/solidcraft-cli/src/kernel_cases.rs
+apps/sketcraft-cli/src/kernel_cases.rs
 scripts/ci/kernel_rig_plan.py
 xtask/src/kernel_cases.rs
 xtask/src/kernel_ladder.rs

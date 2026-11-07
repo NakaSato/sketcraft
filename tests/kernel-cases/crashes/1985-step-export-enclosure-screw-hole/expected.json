@@ -1,7 +1,7 @@
 {
   "sources": [
-    "tangency-labs/solidcraft#1985",
-    "tangency-labs/solidcraft#2243"
+    "NakaSato/sketcraft#1985",
+    "NakaSato/sketcraft#2243"
   ],
   "what": "a small enclosure (rounded box, inner cut, corner gusset with a screw hole, two standoffs, USB cut-out) whose STEP export never finished (the export meshes its own file back)",
   "source": "analytic",

@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#1269"
+  "NakaSato/sketcraft#1269"
  ],
  "what": "a circle of radius 5 on XY swept with orientation parallel along a path rising 20 mm while leaning 20 mm in x (the profile does not turn: a sheared cylinder)",
  "source": "analytic",

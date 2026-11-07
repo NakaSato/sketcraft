@@ -50,7 +50,7 @@ fn assert_link_properties(s: &mut Session, component: u64, material: &str, mass:
 #[test]
 fn linked_design_properties_keep_material_and_appearance_after_insert_and_reload() {
     let dir = folder("properties-insert");
-    let file = dir.join("source.solidcraft");
+    let file = dir.join("source.sketcraft");
     properties_part(&file, "Steel", None, [12, 34, 56]);
     let mut s = Session::default();
     // The assembly already owns this body name; properties must follow the new name.
@@ -58,7 +58,7 @@ fn linked_design_properties_keep_material_and_appearance_after_insert_and_reload
     let c = run(&mut s, "component.insert_design", json!({"path": file}))["component"].as_u64().unwrap();
     assert_link_properties(&mut s, c, "Steel", 7.85, [12, 34, 56]);
     assert_eq!(s.doc.body_material("Cube"), "Default");
-    let assembly = dir.join("assembly.solidcraft");
+    let assembly = dir.join("assembly.sketcraft");
     run(&mut s, "file.save", json!({"path": assembly}));
     let mut cold = Session::default();
     run(&mut cold, "doc.open", json!({"path": assembly}));
@@ -72,7 +72,7 @@ fn linked_design_properties_keep_material_and_appearance_after_insert_and_reload
 #[test]
 fn linked_design_properties_follow_source_only_edits_and_keep_local_overrides() {
     let dir = folder("properties-update");
-    let file = dir.join("source.solidcraft");
+    let file = dir.join("source.sketcraft");
     let mut part = properties_part(&file, "Steel", None, [12, 34, 56]);
     let mut s = Session::default();
     let c = run(&mut s, "component.insert_design", json!({"path": file}))["component"].as_u64().unwrap();
@@ -97,7 +97,7 @@ fn linked_design_properties_follow_source_only_edits_and_keep_local_overrides() 
 #[test]
 fn linked_design_properties_do_not_replace_conflicting_custom_materials() {
     let dir = folder("properties-custom");
-    let file = dir.join("source.solidcraft");
+    let file = dir.join("source.sketcraft");
     properties_part(&file, "Custom alloy", Some(4.2), [12, 34, 56]);
     let mut s = Session::default();
     s.doc_mut().user_materials.push(sketcraft_doc::UserMaterial {
@@ -119,7 +119,7 @@ fn linked_design_properties_do_not_replace_conflicting_custom_materials() {
 #[test]
 fn linked_design_properties_keep_distinct_names_for_equal_material_properties() {
     let dir = folder("properties-equal-density");
-    let file = dir.join("source.solidcraft");
+    let file = dir.join("source.sketcraft");
     properties_part(&file, "Source alloy", Some(4.2), [12, 34, 56]);
     let mut s = Session::default();
     s.doc_mut().user_materials.push(sketcraft_doc::UserMaterial {
@@ -142,7 +142,7 @@ fn linked_design_properties_keep_distinct_names_for_equal_material_properties() 
 #[test]
 fn reused_design_insertion_is_free_even_before_a_link_exists() {
     let dir = folder("reuse-grounding");
-    let file = dir.join("part.solidcraft");
+    let file = dir.join("part.sketcraft");
     part(&file, 30);
     let mut s = Session::default();
     for count in 1..=2 {
@@ -248,7 +248,7 @@ fn reused_design_insertion_ignores_existing_moves_and_uses_the_destination_paren
 #[test]
 fn linked_design_properties_update_density_without_geometry_and_keep_edited_cards() {
     let dir = folder("properties-density");
-    let file = dir.join("source.solidcraft");
+    let file = dir.join("source.sketcraft");
     let mut part = properties_part(&file, "Custom alloy", Some(4.2), [12, 34, 56]);
     let mut s = Session::default();
     let c = run(&mut s, "component.insert_design", json!({"path": file}))["component"].as_u64().unwrap();
@@ -268,7 +268,7 @@ fn linked_design_properties_update_density_without_geometry_and_keep_edited_card
     run(&mut part, "file.save", json!({}));
     run(&mut s, "component.update_links", json!({}));
     assert_link_properties(&mut s, c, &name, 6.0, [12, 34, 56]);
-    let assembly = dir.join("assembly.solidcraft");
+    let assembly = dir.join("assembly.sketcraft");
     run(&mut s, "file.save", json!({"path": assembly}));
     let mut cold = Session::default();
     run(&mut cold, "doc.open", json!({"path": assembly}));
@@ -281,7 +281,7 @@ fn linked_design_properties_keep_opaque_pbr_and_face_color_after_reload() {
     use solidcore_record::Vec3;
     use sketcraft_doc::appearance::{FaceLook, Look};
     let dir = folder("properties-optics");
-    let file = dir.join("source.solidcraft");
+    let file = dir.join("source.sketcraft");
     let mut part = properties_part(&file, "Steel", None, [12, 34, 56]);
     let mut look = Look::custom([12, 34, 56], 1.0);
     look.pbr = Some(sketcraft_doc::pbr_appearance::PbrParameters::new(0.8, 0.23, 1.5).unwrap());
@@ -311,7 +311,7 @@ fn linked_design_properties_keep_opaque_pbr_and_face_color_after_reload() {
         assert!((face_look.opacity - 0.65).abs() < 1e-6);
     };
     check(&s);
-    let assembly = dir.join("assembly.solidcraft");
+    let assembly = dir.join("assembly.sketcraft");
     run(&mut s, "file.save", json!({"path": assembly}));
     let mut cold = Session::default();
     run(&mut cold, "doc.open", json!({"path": assembly}));
@@ -324,7 +324,7 @@ fn linked_face_overrides_update_independently_and_preserve_local_edits_and_remov
     use solidcore_record::Vec3;
     use sketcraft_doc::appearance::{FaceLook, Look};
     let dir = folder("properties-faces");
-    let file = dir.join("source.solidcraft");
+    let file = dir.join("source.sketcraft");
     let mut part = properties_part(&file, "Steel", None, [12, 34, 56]);
     let top = Vec3::new(5.0, 5.0, 10.0);
     let side = Vec3::new(10.0, 5.0, 5.0);
@@ -362,7 +362,7 @@ fn linked_face_overrides_update_independently_and_preserve_local_edits_and_remov
     let mut local = s.doc.appearances.faces[0].clone();
     local.look = Look::custom([200, 180, 30], 1.0);
     s.doc_mut().appearances.faces.push(local);
-    let assembly = dir.join("assembly.solidcraft");
+    let assembly = dir.join("assembly.sketcraft");
     run(&mut s, "file.save", json!({"path": assembly}));
     let mut cold = Session::default();
     run(&mut cold, "doc.open", json!({"path": assembly}));
@@ -386,7 +386,7 @@ fn linked_face_overrides_update_independently_and_preserve_local_edits_and_remov
 #[test]
 fn linked_properties_update_every_component_and_session_sharing_a_cached_source() {
     let dir = folder("properties-shared-read");
-    let file = dir.join("source.solidcraft");
+    let file = dir.join("source.sketcraft");
     let mut part = properties_part(&file, "Source alloy", Some(4.2), [12, 34, 56]);
     let mut s = Session::default();
     let a = run(&mut s, "component.insert_design", json!({"path": file}))["component"].as_u64().unwrap();
@@ -411,7 +411,7 @@ fn linked_properties_update_every_component_and_session_sharing_a_cached_source(
 fn linked_face_removal_without_a_body_look_does_not_reveal_baked_source_paint() {
     use sketcraft_doc::appearance::{FaceLook, Look};
     let dir = folder("properties-unpainted-body");
-    let file = dir.join("source.solidcraft");
+    let file = dir.join("source.sketcraft");
     let mut part = properties_part(&file, "Steel", None, [12, 34, 56]);
     part.doc_mut().appearances.bodies.clear();
     part.doc_mut().appearances.faces.push(FaceLook {
@@ -440,7 +440,7 @@ fn linked_face_removal_without_a_body_look_does_not_reveal_baked_source_paint() 
 fn unchanged_linked_face_overrides_do_not_reorder_assignments_or_report_updates() {
     use sketcraft_doc::appearance::{FaceLook, Look};
     let dir = folder("properties-face-cache");
-    let file = dir.join("source.solidcraft");
+    let file = dir.join("source.sketcraft");
     let mut part = properties_part(&file, "Steel", None, [12, 34, 56]);
     part.doc_mut().appearances.faces.push(FaceLook {
         body: "Cube".into(),
@@ -468,16 +468,16 @@ fn unchanged_linked_face_overrides_do_not_reorder_assignments_or_report_updates(
 #[test]
 fn linked_design_properties_survive_save_as_and_relink_with_undo() {
     let dir = folder("properties-relink");
-    let first = dir.join("first.solidcraft");
-    let second = dir.join("second.solidcraft");
+    let first = dir.join("first.sketcraft");
+    let second = dir.join("second.sketcraft");
     properties_part(&first, "Steel", None, [12, 34, 56]);
     properties_part(&second, "Aluminum", None, [80, 90, 100]);
     let mut s = Session::default();
     let c = run(&mut s, "component.insert_design", json!({"path": first}))["component"].as_u64().unwrap();
     let baseline = s.doc.links[&c].inherited.clone();
-    let assembly = dir.join("assembly.solidcraft");
+    let assembly = dir.join("assembly.sketcraft");
     run(&mut s, "file.save", json!({"path": assembly}));
-    let saved_as = dir.join("saved-as.solidcraft");
+    let saved_as = dir.join("saved-as.sketcraft");
     run(&mut s, "file.save", json!({"path": saved_as}));
     let mut cold = Session::default();
     run(&mut cold, "doc.open", json!({"path": saved_as}));
@@ -494,7 +494,7 @@ fn linked_design_properties_survive_save_as_and_relink_with_undo() {
 #[test]
 fn linked_design_properties_repair_old_links_without_overwriting_assignments() {
     let dir = folder("properties-legacy");
-    let file = dir.join("source.solidcraft");
+    let file = dir.join("source.sketcraft");
     properties_part(&file, "Steel", None, [12, 34, 56]);
     let mut s = Session::default();
     let c = run(&mut s, "component.insert_design", json!({"path": file}))["component"].as_u64().unwrap();
@@ -514,9 +514,9 @@ fn linked_design_properties_repair_old_links_without_overwriting_assignments() {
 #[test]
 fn relink_repairs_a_moved_source_for_every_instance_in_one_undo_step() {
     let dir = folder("moved");
-    let old = dir.join("old.solidcraft");
-    let moved = dir.join("moved.solidcraft");
-    let assembly = dir.join("assembly.solidcraft");
+    let old = dir.join("old.sketcraft");
+    let moved = dir.join("moved.sketcraft");
+    let assembly = dir.join("assembly.sketcraft");
     part(&old, 30);
     let mut s = Session::default();
     run(&mut s, "file.save", json!({"path": assembly}));
@@ -532,8 +532,8 @@ fn relink_repairs_a_moved_source_for_every_instance_in_one_undo_step() {
     std::fs::rename(&old, &moved).unwrap();
     part(&moved, 45);
     let result = run(&mut s, "component.relink", json!({"component": component, "path": moved}));
-    assert_eq!(result["previous_path"], "old.solidcraft");
-    assert_eq!(result["path"], "moved.solidcraft");
+    assert_eq!(result["previous_path"], "old.sketcraft");
+    assert_eq!(result["path"], "moved.sketcraft");
     assert_eq!(result["geometry_changed"], true);
     assert_eq!(result["warnings"], json!([]));
     assert_eq!(s.doc.occurrences, occurrences);
@@ -552,7 +552,7 @@ fn relink_repairs_a_moved_source_for_every_instance_in_one_undo_step() {
     run(&mut s, "file.save", json!({}));
     let mut reopened = Session::default();
     run(&mut reopened, "doc.open", json!({"path": assembly}));
-    assert_eq!(run(&mut reopened, "component.links", json!({}))["links"][0]["path"], "moved.solidcraft");
+    assert_eq!(run(&mut reopened, "component.links", json!({}))["links"][0]["path"], "moved.sketcraft");
     assert_eq!(run(&mut reopened, "component.links", json!({}))["links"][0]["found"], true);
     assert!((volume(&mut reopened) - 18000.0).abs() < 1e-5);
     let _ = std::fs::remove_dir_all(dir);
@@ -561,10 +561,10 @@ fn relink_repairs_a_moved_source_for_every_instance_in_one_undo_step() {
 #[test]
 fn relink_rejects_bad_sources_and_targets_without_touching_the_design_or_undo() {
     let dir = folder("failures");
-    let source = dir.join("source.solidcraft");
-    let assembly = dir.join("assembly.solidcraft");
-    let empty = dir.join("empty.solidcraft");
-    let corrupt = dir.join("corrupt.solidcraft");
+    let source = dir.join("source.sketcraft");
+    let assembly = dir.join("assembly.sketcraft");
+    let empty = dir.join("empty.sketcraft");
+    let corrupt = dir.join("corrupt.sketcraft");
     part(&source, 30);
     let mut s = Session::default();
     let component = run(&mut s, "component.insert_design", json!({"path": source}))["component"].as_u64().unwrap();
@@ -581,7 +581,7 @@ fn relink_rejects_bad_sources_and_targets_without_touching_the_design_or_undo() 
         json!({"component": "unknown", "path": source}),
         json!({"component": component, "path": "   "}),
         json!({"component": component, "path": false}),
-        json!({"component": component, "path": dir.join("missing.solidcraft")}),
+        json!({"component": component, "path": dir.join("missing.sketcraft")}),
         json!({"component": component, "path": dir.join("source.step")}),
         json!({"component": component, "path": empty}),
         json!({"component": component, "path": corrupt}),
@@ -616,8 +616,8 @@ fn relink_takes_a_json_design_as_insert_design_does() {
 #[test]
 fn relink_keeps_joint_definitions_and_reports_solver_diagnostics() {
     let dir = folder("joints");
-    let original = dir.join("original.solidcraft");
-    let replacement = dir.join("replacement.solidcraft");
+    let original = dir.join("original.sketcraft");
+    let replacement = dir.join("replacement.sketcraft");
     part(&original, 30);
     part(&replacement, 45);
     let mut s = Session::default();
@@ -633,7 +633,7 @@ fn relink_keeps_joint_definitions_and_reports_solver_diagnostics() {
         json!({"name": "Seat", "type": "rigid", "a": {"occurrence": 0, "point": [0,0,0]}, "b": {"occurrence": occurrence, "point": [0,0,0]}}),
     );
     let joints = s.doc.assembly.joints.clone();
-    let identical = dir.join("identical.solidcraft");
+    let identical = dir.join("identical.sketcraft");
     std::fs::copy(&original, &identical).unwrap();
     let result = run(&mut s, "component.relink", json!({"component": component, "path": identical}));
     assert_eq!(result["geometry_changed"], false, "renaming a source is not a geometry change");

@@ -1,8 +1,8 @@
 {
-  "schema": "solidcraft-native-selene-showcase/1",
+  "schema": "sketcraft-native-selene-showcase/1",
   "title": "SELENE — full-detail native studio render",
   "source": {
-    "path": "assets/render/selene/models/SELENE-functional.solidcraft",
+    "path": "assets/render/selene/models/SELENE-functional.sketcraft",
     "sha256": "3bd2bfa1c6336394c4a4208d30b52c80d06658a3bd7ea57cc93b774411d1bd68",
     "functional_master_commit": "cf8e651022deee528b26c303fde58bf3eb8a22a5",
     "original_author": "0xlillith",

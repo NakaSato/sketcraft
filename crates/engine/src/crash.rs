@@ -2,7 +2,7 @@
 //! filling the disk (docs/crash-reports.md).
 //!
 //! - **Panics** are caught by a hook. One inside a command becomes a report with the design as
-//!   it was before the command and the command itself, so `solidcraft-cli run replay.json --in
+//!   it was before the command and the command itself, so `sketcraft-cli run replay.json --in
 //!   design.sc` reproduces it. Panics the third-party kernel raises (and
 //!   `sketcraft_kernel::guard` turns into errors) are reported the same way, marked recovered.
 //! - **Crashes no hook sees** (an abort, a stack overflow, a segfault, the process being killed)
@@ -26,7 +26,7 @@
 //!   into the unclean exit's report.
 //!
 //! Reports are folders `crashes/<time>-<signature>/` holding `report.json`, and when known
-//! `design.sc` (`design.solidcraft` in reports from earlier releases), `replay.json` and `minidump.dmp`. Nothing is ever sent anywhere.
+//! `design.sc` (`design.sketcraft` in reports from earlier releases), `replay.json` and `minidump.dmp`. Nothing is ever sent anywhere.
 
 use std::backtrace::Backtrace;
 use std::cell::{Cell, RefCell};
@@ -1227,7 +1227,7 @@ pub fn read(dir: &Path, id: &str) -> std::result::Result<Value, String> {
     let folder = dir.join(id);
     let mut v = read_report_file(&folder.join("report.json")).ok_or_else(|| format!("no crash report `{id}`"))?;
     v["path"] = json!(folder.to_string_lossy());
-    // Reports from earlier releases hold `design.solidcraft`.
+    // Reports from earlier releases hold `design.sketcraft`.
     if let Some(design) = sketcraft_io::DESIGN_EXTS.iter().map(|ext| folder.join(format!("design.{ext}"))).find(|p| p.is_file()) {
         v["design_path"] = json!(design.to_string_lossy());
     }

@@ -1,7 +1,7 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#851",
-  "tangency-labs/solidcraft#854"
+  "NakaSato/sketcraft#851",
+  "NakaSato/sketcraft#854"
  ],
  "what": "on #851's knife-edge part (tessellation/1263): the top front edge R2, then the front-left upright R2 with its tangent chain: up the first round's end arc and along the left top edge",
  "source": "analytic",

@@ -1,7 +1,7 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#1113",
-  "tangency-labs/solidcraft#851"
+  "NakaSato/sketcraft#1113",
+  "NakaSato/sketcraft#851"
  ],
  "what": "the top edge of #851's concave R21 wall chamfered 10, the wall's full height: its leg down the wall ends on the wall's bottom edge, using the wall up, and it builds",
  "source": "analytic",

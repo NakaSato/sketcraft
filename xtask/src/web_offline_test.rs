@@ -1,10 +1,10 @@
 //! `cargo xtask web-offline-test [--site DIR]`: prove that the web app works offline and updates.
 //!
 //! Serves six release builds, a site without the app and a development build at
-//! `/solidcraft/app/` (as on GitHub Pages, with its 10-minute HTTP caching) from a local server
+//! `/sketcraft/app/` (as on GitHub Pages, with its 10-minute HTTP caching) from a local server
 //! that can also act offline, flaky, hung or mid-deployment, or hold chosen responses until the
 //! test lets them go (nothing here depends on how fast the network or the machine is), plus another copy of the app at
-//! `/solidcraft/elsewhere/` on the same origin, and drives headless Chrome through the DevTools
+//! `/sketcraft/elsewhere/` on the same origin, and drives headless Chrome through the DevTools
 //! protocol through these steps (twenty-two page launches, which failures are numbered by):
 //!
 //! 1. online, build v1: the page loads, the service worker takes over and keeps every file;
@@ -66,9 +66,9 @@ use serde_json::{Value, json};
 
 use crate::web_offline;
 
-const PREFIX: &str = "/solidcraft/app/";
+const PREFIX: &str = "/sketcraft/app/";
 /// Another copy of the app on the same origin.
-const ELSEWHERE: &str = "/solidcraft/elsewhere/";
+const ELSEWHERE: &str = "/sketcraft/elsewhere/";
 /// How long one launch may take (a real build compiles ~30 MB of wasm). Generous: the CI
 /// runners that take fork pull requests run several jobs per machine under gVisor, where one
 /// launch has taken over 90 s.
@@ -83,9 +83,9 @@ const CONNECTIONS_PER_SERVER: usize = 6;
 
 /// Exercise the real browser build's command bridge, using the same Chrome harness as the offline test.
 pub fn run_api(site: &str) -> Result<(), String> {
-    let site = std::fs::canonicalize(site).map_err(|e| format!("{site}: {e}; build apps/solidcraft-web with trunk first"))?;
+    let site = std::fs::canonicalize(site).map_err(|e| format!("{site}: {e}; build apps/sketcraft-web with trunk first"))?;
     if !site.join("index.html").is_file() {
-        return Err(format!("{}: index.html missing; build apps/solidcraft-web with trunk first", site.display()));
+        return Err(format!("{}: index.html missing; build apps/sketcraft-web with trunk first", site.display()));
     }
     let chrome = find_chrome().ok_or("web-api-test: Chrome not found (set CHROME to its executable)")?;
     let work = TempDir::new()?;
@@ -101,7 +101,7 @@ pub fn run_api(site: &str) -> Result<(), String> {
     cdp.call("Emulation.setFocusEmulationEnabled", json!({"enabled": true}))?;
     // Use the app's normal backend selection, including WebGPU where available.
     cdp.call("Page.navigate", json!({"url": format!("http://127.0.0.1:{}{PREFIX}", server.port)}))?;
-    wait_for(&mut cdp, "!!window.solidcraft && !document.getElementById('sketcraft_loading')", "the browser API is ready", |v| v == true)?;
+    wait_for(&mut cdp, "!!window.sketcraft && !document.getElementById('sketcraft_loading')", "the browser API is ready", |v| v == true)?;
     let result = cdp.eval(API_TEST)?;
     let path = downloads.join("Untitled-view.dxf");
     let started = Instant::now();
@@ -142,7 +142,7 @@ const KEYS_TEST: &str = r#"(async () => {
 })()"#;
 
 const API_TEST: &str = r#"(async () => {
-    const app = window.solidcraft;
+    const app = window.sketcraft;
     const check = (condition, message) => { if (!condition) throw new Error(message); };
     const rejects = async (call, message) => {
         try { await call(); } catch (error) {
@@ -399,7 +399,7 @@ pub fn run(root: &Path, site: Option<&str>, required: bool) -> Result<(), String
     // Every page was remembered long ago.
     let age = "caches.keys().then((ks) => Promise.all(ks.map(async (k) => {
       const c = await caches.open(k);
-      if (k.startsWith('solidcraft-app-pages ')) for (const r of await c.keys()) {
+      if (k.startsWith('sketcraft-app-pages ')) for (const r of await c.keys()) {
         const page = await (await c.match(r)).json();
         await c.put(r, new Response(JSON.stringify({ ...page, at: 0 })));
       }
@@ -518,7 +518,7 @@ pub fn run(root: &Path, site: Option<&str>, required: bool) -> Result<(), String
 /// What a launch shows: the page, which build it is, whether it started, the worker's caches.
 const STATE_JS: &str = "(async () => {
   const scope = new URL('.', location.href).href;
-  const prefix = 'solidcraft-app ' + new URL(scope).pathname + ' ';
+  const prefix = 'sketcraft-app ' + new URL(scope).pathname + ' ';
   const caches_ = {}, kept = {}, retired = [], complete = [];
   // Each cache is read with `caches.match`, never opened: opening a cache that a worker has just
   // deleted makes it again (empty), and nothing would delete it after that.
@@ -596,9 +596,9 @@ fn mark(html: &str, build: &str) -> Result<String, String> {
 
 /// The service worker registration from the web app's index.html (so the stand-in uses it).
 fn registration_script(root: &Path) -> Result<String, String> {
-    let path = root.join("apps/solidcraft-web/index.html");
+    let path = root.join("apps/sketcraft-web/index.html");
     let html = std::fs::read_to_string(&path).map_err(|e| format!("{}: {e}", path.display()))?;
-    let at = html.find("serviceWorker").ok_or("apps/solidcraft-web/index.html doesn't register the service worker")?;
+    let at = html.find("serviceWorker").ok_or("apps/sketcraft-web/index.html doesn't register the service worker")?;
     let start = html.get(..at).and_then(|h| h.rfind("<script>")).ok_or("index.html: no <script> around the registration")?;
     let end = html.get(at..).and_then(|h| h.find("</script>")).map(|e| at + e + "</script>".len()).ok_or("index.html: unclosed <script>")?;
     html.get(start..end).map(str::to_string).ok_or_else(|| "index.html: bad registration script".into())

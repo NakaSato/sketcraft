@@ -6,22 +6,22 @@
 # x11grab and libass.
 # PLAYBACK_RATE defaults to 1; label accelerated previews with their rate when publishing. Idle stretches
 # (nothing on screen changes) are cut by trim_idle.py.
-# SOLIDCRAFT_DEMO_NAME overrides the filename stem; PAUSE scales UI pauses, CAPTION is the
+# SKETCRAFT_DEMO_NAME overrides the filename stem; PAUSE scales UI pauses, CAPTION is the
 # minimum real-time caption duration, and HOLD keeps the live completed model on screen.
-# For a readable 4x preview use SOLIDCRAFT_DEMO_CAPTION=4 and SOLIDCRAFT_DEMO_HOLD=8.
-# SOLIDCRAFT_DEMO_GIF_WIDTH and SOLIDCRAFT_DEMO_GIF_FPS size the README GIF (default 800 px, 10 fps).
-# The README demo: SOLIDCRAFT_DEMO_NAME=demo SOLIDCRAFT_DEMO_PAUSE=0.4 SOLIDCRAFT_DEMO_CAPTION=9
-#   SOLIDCRAFT_DEMO_HOLD=10 record_ui.sh :74 7974 OUT pi 9
+# For a readable 4x preview use SKETCRAFT_DEMO_CAPTION=4 and SKETCRAFT_DEMO_HOLD=8.
+# SKETCRAFT_DEMO_GIF_WIDTH and SKETCRAFT_DEMO_GIF_FPS size the README GIF (default 800 px, 10 fps).
+# The README demo: SKETCRAFT_DEMO_NAME=demo SKETCRAFT_DEMO_PAUSE=0.4 SKETCRAFT_DEMO_CAPTION=9
+#   SKETCRAFT_DEMO_HOLD=10 record_ui.sh :74 7974 OUT pi 9
 set -e
 DISP=${1:-:0}; PORT=${2:-7878}; OUT=$(cd "${3:-.}" && pwd); STORY=${4:-pi}; RATE=${5:-1}
 HERE=$(cd "$(dirname "$0")" && pwd)
-CLI=${SOLIDCRAFT_CLI:-solidcraft-cli}
-NAME=${SOLIDCRAFT_DEMO_NAME:-enclosure-demo-$STORY}
-PAUSE=${SOLIDCRAFT_DEMO_PAUSE:-0.55}
-CAPTION=${SOLIDCRAFT_DEMO_CAPTION:-1.4}
-HOLD=${SOLIDCRAFT_DEMO_HOLD:-1}
-GIF_WIDTH=${SOLIDCRAFT_DEMO_GIF_WIDTH:-800}
-GIF_FPS=${SOLIDCRAFT_DEMO_GIF_FPS:-10}
+CLI=${SKETCRAFT_CLI:-sketcraft-cli}
+NAME=${SKETCRAFT_DEMO_NAME:-enclosure-demo-$STORY}
+PAUSE=${SKETCRAFT_DEMO_PAUSE:-0.55}
+CAPTION=${SKETCRAFT_DEMO_CAPTION:-1.4}
+HOLD=${SKETCRAFT_DEMO_HOLD:-1}
+GIF_WIDTH=${SKETCRAFT_DEMO_GIF_WIDTH:-800}
+GIF_FPS=${SKETCRAFT_DEMO_GIF_FPS:-10}
 python3 -c 'import math,sys; r=float(sys.argv[1]); assert math.isfinite(r) and 0<r<=16' "$RATE"
 # Frame the actual app at capture resolution before the first recorded blank viewport.
 python3 - "$HERE" "$PORT" <<'PY'

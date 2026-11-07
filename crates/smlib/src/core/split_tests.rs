@@ -255,7 +255,7 @@ fn the_body_stays_as_it_was() {
     assert!(rel(volume(&b, 1e-8).unwrap(), 1000.0) < 1e-12);
 }
 
-/// A one-face sheet on a B-spline surface (as SolidCraft's extrude of a sketch spline makes it:
+/// A one-face sheet on a B-spline surface (as SketCraft's extrude of a sketch spline makes it:
 /// the cubic through (0, 0), (13, -8), (27, 8), (40, 0) in x and z, straight along y over
 /// [0, 40]) cut by four plane strips standing on the square [12, 28]^2: the strips meet the
 /// face inside its bounds, so the face's surface is intersected through its face's trimmed

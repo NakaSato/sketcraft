@@ -134,14 +134,14 @@ pub struct ScreenDescriptor {
     pub pixels_per_point: f32,
 }
 
-/// SolidCraft: optional ownership of a complete frame, outside the primitive loop.
+/// SketCraft: optional ownership of a complete frame, outside the primitive loop.
 /// Returning false keeps the ordinary pass. No effect resources exist by default.
 pub trait FrameCompositor: Send + Sync {
-    /// SolidCraft: select the native viewport before any effect preparation/painting.
+    /// SketCraft: select the native viewport before any effect preparation/painting.
     fn begin_viewport(&self, _viewport: u64) {}
-    /// SolidCraft: actual acquired target geometry, before callback preparation.
+    /// SketCraft: actual acquired target geometry, before callback preparation.
     fn screen(&self, _screen: &ScreenDescriptor, _resources: &mut CallbackResources) {}
-    /// SolidCraft: release target-dependent state on zero size or a lost device.
+    /// SketCraft: release target-dependent state on zero size or a lost device.
     fn suspend(&self) {}
     fn render(
         &self,
@@ -289,14 +289,14 @@ pub struct Renderer {
 
     /// The last `update_buffers` could not upload this frame's meshes (the GPU refused a
     /// staging buffer: device lost or out of memory), so `render` draws nothing this frame
-    /// instead of panicking (SolidCraft #1469).
+    /// instead of panicking (SketCraft #1469).
     skip_frame: bool,
 
     /// Storage for resources shared with all invocations of [`CallbackTrait`]'s methods.
     ///
     /// See also [`CallbackTrait`].
     pub callback_resources: CallbackResources,
-    /// SolidCraft: installed lazily by an enabled effect; the ordinary loop is unchanged.
+    /// SketCraft: installed lazily by an enabled effect; the ordinary loop is unchanged.
     pub frame_compositor: Option<std::sync::Arc<dyn FrameCompositor>>,
 }
 
@@ -549,7 +549,7 @@ impl Renderer {
         self.render_with_mesh_offset(render_pass, paint_jobs, screen_descriptor, 0);
     }
 
-    /// SolidCraft: continue an uploaded frame in another render pass. `mesh_offset`
+    /// SketCraft: continue an uploaded frame in another render pass. `mesh_offset`
     /// counts every preceding mesh, including meshes with an empty clip rectangle.
     /// Callbacks consume no mesh buffer slice. The caller preserves primitive order.
     pub fn render_with_mesh_offset(

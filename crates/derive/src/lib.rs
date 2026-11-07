@@ -30,7 +30,7 @@
 //!   face it is on).
 //!
 //! Conditions and labels are worked out before the walk starts. The generated code names
-//! `crate::walk`, so the derive is for `solidcraft-doc`.
+//! `crate::walk`, so the derive is for `sketcraft-doc`.
 
 #![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic, clippy::unimplemented, clippy::todo, clippy::unreachable)]
 

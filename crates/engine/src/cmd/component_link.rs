@@ -938,8 +938,8 @@ mod tests {
             let dir = std::env::temp_dir().join(format!("sketcraft-link-save-as-{}-{on_copy}", std::process::id()));
             std::fs::create_dir_all(dir.join("parts")).unwrap();
             std::fs::create_dir_all(dir.join("asm/sub/deeper")).unwrap();
-            let part = dir.join("parts/plate.solidcraft");
-            let case = dir.join("asm/case.solidcraft");
+            let part = dir.join("parts/plate.sketcraft");
+            let case = dir.join("asm/case.sketcraft");
             save_box(&part, 30.0);
             let mut s = Session::default();
             run(&mut s, "component.insert_design", json!({"path": part}));
@@ -952,11 +952,11 @@ mod tests {
             run(&mut s, "edit.undo", json!({}));
             let before = s.doc.clone();
             let undo_before = s.undo.last().unwrap().doc.clone();
-            let missing = dir.join("missing/case.solidcraft");
+            let missing = dir.join("missing/case.sketcraft");
             assert!(s.execute("file.save_as", &json!({"path": missing})).is_err());
             assert_eq!(s.path.as_deref(), case.to_str());
             for folder in ["asm/sub", "asm/sub/deeper"] {
-                let path = dir.join(folder).join("case.solidcraft");
+                let path = dir.join(folder).join("case.sketcraft");
                 if on_copy {
                     let mut copy = s.scratch();
                     run(&mut copy, "file.save_as", json!({"path": path}));
@@ -980,7 +980,7 @@ mod tests {
             for format in ["json", "container"] {
                 run(&mut s, "file.save", json!({"format": format}));
                 let disk = sketcraft_io::read_design(&std::fs::read(&path).unwrap()).unwrap();
-                assert_eq!(disk.links.values().next().unwrap().path, "../../../parts/plate.solidcraft");
+                assert_eq!(disk.links.values().next().unwrap().path, "../../../parts/plate.sketcraft");
                 run(&mut s, "doc.open", json!({"path": path}));
                 assert!(!s.is_dirty());
                 assert_eq!(run(&mut s, "component.links", json!({}))["links"][0]["found"], true);
@@ -997,11 +997,11 @@ mod tests {
         let dir = std::env::temp_dir().join(format!("sketcraft-link-recovery-{}", std::process::id()));
         std::fs::create_dir_all(dir.join("parts")).unwrap();
         std::fs::create_dir_all(dir.join("asm/sub")).unwrap();
-        let part = dir.join("parts/plate.solidcraft");
+        let part = dir.join("parts/plate.sketcraft");
         save_box(&part, 30.0);
         let mut s = Session::default();
         run(&mut s, "component.insert_design", json!({"path": part}));
-        run(&mut s, "file.save", json!({"path": dir.join("asm/case.solidcraft")}));
+        run(&mut s, "file.save", json!({"path": dir.join("asm/case.sketcraft")}));
         run(&mut s, "solid.box", json!({"length": 5, "width": 5, "height": 5, "corner": [60, 0, 0]}));
         let recovery = dir.join("recovery");
         let mut autosaver = crate::recovery::Autosaver::new(&recovery, std::time::Duration::ZERO).unwrap();
@@ -1009,12 +1009,12 @@ mod tests {
         drop(autosaver);
         let entry = crate::recovery::orphans(&recovery).pop().unwrap();
         // Older autosaves hold paths relative to the design, not the recovery folder.
-        std::fs::write(recovery.join(format!("{}.solidcraft", entry.id)), sketcraft_io::write_design(&s.design())).unwrap();
+        std::fs::write(recovery.join(format!("{}.sketcraft", entry.id)), sketcraft_io::write_design(&s.design())).unwrap();
         let mut recovered = Session::default();
         run(&mut recovered, "doc.recover", json!({"dir": recovery, "id": entry.id}));
         assert_eq!(run(&mut recovered, "component.links", json!({}))["links"][0]["found"], true);
         run(&mut recovered, "solid.box", json!({"length": 5, "width": 5, "height": 5, "corner": [80, 0, 0]}));
-        run(&mut recovered, "file.save_as", json!({"path": dir.join("asm/sub/case.solidcraft")}));
+        run(&mut recovered, "file.save_as", json!({"path": dir.join("asm/sub/case.sketcraft")}));
         run(&mut recovered, "edit.undo", json!({}));
         assert_eq!(run(&mut recovered, "component.links", json!({}))["links"][0]["found"], true);
         let _ = std::fs::remove_dir_all(&dir);
@@ -1025,8 +1025,8 @@ mod tests {
         let dir = std::env::temp_dir().join(format!("sketcraft-link-reopen-{}", std::process::id()));
         std::fs::create_dir_all(dir.join("parts")).unwrap();
         std::fs::create_dir_all(dir.join("asm")).unwrap();
-        let part = dir.join("parts").join("plate.solidcraft");
-        let case = dir.join("asm").join("case.solidcraft");
+        let part = dir.join("parts").join("plate.sketcraft");
+        let case = dir.join("asm").join("case.sketcraft");
         save_box(&part, 30.0);
         // Given an assembly holding the part, saved in a folder beside the part's.
         let mut a = Session::default();
@@ -1038,7 +1038,7 @@ mod tests {
         let mut b = Session::default();
         run(&mut b, "doc.open", json!({"path": case}));
         let links = run(&mut b, "component.links", json!({}));
-        assert_eq!(links["links"][0]["path"], "../parts/plate.solidcraft", "{links}");
+        assert_eq!(links["links"][0]["path"], "../parts/plate.sketcraft", "{links}");
         assert_eq!(links["links"][0]["found"], true, "{links}");
         assert!((volume(&mut b) - 6000.0).abs() < 1e-6);
         // An unchanged part leaves the assembly as it is; an edited one comes in on update.
@@ -1063,7 +1063,7 @@ mod tests {
     fn update_links_reads_again_only_the_designs_that_changed() {
         let dir = std::env::temp_dir().join(format!("sketcraft-link-reads-{}", std::process::id()));
         std::fs::create_dir_all(&dir).unwrap();
-        let (plate, block) = (dir.join("plate.solidcraft"), dir.join("block.solidcraft"));
+        let (plate, block) = (dir.join("plate.sketcraft"), dir.join("block.sketcraft"));
         save_box(&plate, 30.0);
         save_box(&block, 10.0);
         let mut a = Session::default();
@@ -1136,7 +1136,7 @@ mod tests {
     fn update_links_given_a_list_reads_them_in_one_step_past_a_design_it_cannot_read() {
         let dir = std::env::temp_dir().join(format!("sketcraft-link-list-{}", std::process::id()));
         std::fs::create_dir_all(&dir).unwrap();
-        let (plate, block) = (dir.join("plate.solidcraft"), dir.join("block.solidcraft"));
+        let (plate, block) = (dir.join("plate.sketcraft"), dir.join("block.sketcraft"));
         save_box(&plate, 30.0);
         save_box(&block, 10.0);
         let mut a = Session::default();
@@ -1177,10 +1177,10 @@ mod tests {
     #[test]
     fn inserting_a_missing_file_or_bad_parameters_changes_nothing() {
         let mut s = Session::default();
-        let missing = std::env::temp_dir().join(format!("sketcraft-no-such-part-{}.solidcraft", std::process::id()));
+        let missing = std::env::temp_dir().join(format!("sketcraft-no-such-part-{}.sketcraft", std::process::id()));
         assert!(s.execute("component.insert_design", &json!({"path": missing})).is_err());
         assert!(s.execute("component.insert_design", &json!({})).is_err());
-        assert!(s.execute("component.insert_design", &json!({"path": "x.solidcraft", "translate": [1, "a", 2]})).is_err());
+        assert!(s.execute("component.insert_design", &json!({"path": "x.sketcraft", "translate": [1, "a", 2]})).is_err());
         assert!(s.doc.components.is_empty() && s.doc.links.is_empty() && s.doc.features.is_empty());
     }
 
@@ -1235,7 +1235,7 @@ mod tests {
     fn joints_on_a_linked_part_follow_its_faces_through_update_links() {
         let dir = std::env::temp_dir().join(format!("sketcraft-link-names-{}", std::process::id()));
         std::fs::create_dir_all(&dir).unwrap();
-        let path = dir.join("plate.solidcraft");
+        let path = dir.join("plate.sketcraft");
         let hx = |part: &mut Session, x: &str| {
             run(part, "parameters.change", json!({"name": "hx", "expression": x}));
         };
@@ -1280,7 +1280,7 @@ mod tests {
     fn a_joint_whose_linked_face_is_gone_is_reported_not_moved() {
         let dir = std::env::temp_dir().join(format!("sketcraft-link-gone-{}", std::process::id()));
         std::fs::create_dir_all(&dir).unwrap();
-        let path = dir.join("plate.solidcraft");
+        let path = dir.join("plate.sketcraft");
         let mut part = plate(&path);
         let mut s = pinned(&path, false);
         hole(&mut part, -10.0, "Hole0");
@@ -1304,7 +1304,7 @@ mod tests {
         use crate::cmd::joints::face_tests::{ARM_EDITS, ARM_FORMS, arm_pairs, arm_part, arm_size, arms_apart, joint_arms};
         let dir = std::env::temp_dir().join(format!("sketcraft-link-arms-{}", std::process::id()));
         std::fs::create_dir_all(&dir).unwrap();
-        let path = dir.join("arm.solidcraft");
+        let path = dir.join("arm.sketcraft");
         let mut apart = Vec::new();
         for form in ARM_FORMS {
             let mut part = Session::default();
@@ -1334,7 +1334,7 @@ mod tests {
     fn update_links_warns_about_joints_on_faces_named_by_their_place() {
         let dir = std::env::temp_dir().join(format!("sketcraft-link-numbered-{}", std::process::id()));
         std::fs::create_dir_all(&dir).unwrap();
-        let path = dir.join("plate.solidcraft");
+        let path = dir.join("plate.sketcraft");
         let mut part = plate(&path);
         let mut s = pinned(&path, true);
         let feature = s.doc.links.values().next().unwrap().feature;
@@ -1359,21 +1359,21 @@ mod tests {
         let dir = std::env::temp_dir().join(format!("sketcraft-link-network-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&dir);
         std::fs::create_dir_all(dir.join("parts")).unwrap();
-        let part = dir.join("parts").join("plate.solidcraft");
+        let part = dir.join("parts").join("plate.sketcraft");
         save_box(&part, 30.0);
-        let case = dir.join("case.solidcraft");
+        let case = dir.join("case.sketcraft");
         let mut a = Session::default();
         let comp = run(&mut a, "component.insert_design", json!({"path": part}))["component"].as_u64().unwrap();
         run(&mut a, "file.save", json!({"path": case}));
         let feature = a.doc.links[&comp].feature;
         // On Unix these names are plain files beside the design, so a check that was skipped would
         // find them: the refusal below comes from the text alone.
-        let crafted = [r"\\evil.example\share\plate.solidcraft", "//evil.example/share/plate.solidcraft", r"\\?\UNC\evil.example\share\p.solidcraft"];
+        let crafted = [r"\\evil.example\share\plate.sketcraft", "//evil.example/share/plate.sketcraft", r"\\?\UNC\evil.example\share\p.sketcraft"];
         if cfg!(unix) {
             std::fs::copy(&part, dir.join(crafted[0])).unwrap();
         }
-        let devices = [r"\\.\pipe\plate.solidcraft", r"\\.\COM1", "parts/NUL.solidcraft", "parts/com1.solidcraft", r"parts\CON.part.solidcraft"];
-        std::fs::copy(&part, dir.join("parts").join("NUL.solidcraft")).unwrap();
+        let devices = [r"\\.\pipe\plate.sketcraft", r"\\.\COM1", "parts/NUL.sketcraft", "parts/com1.sketcraft", r"parts\CON.part.sketcraft"];
+        std::fs::copy(&part, dir.join("parts").join("NUL.sketcraft")).unwrap();
         let before = volume(&mut a);
         for link in crafted.iter().chain(&devices) {
             a.doc_mut().links.insert(comp, DesignLink { path: link.to_string(), feature, ..Default::default() });
@@ -1403,14 +1403,14 @@ mod tests {
             assert!(run(&mut a, "component.links", json!({}))["links"][0]["found"].is_null(), "allowed for that action only");
         }
         // A local link, relative or absolute, is found and read as before.
-        for local in ["parts/plate.solidcraft".to_string(), part.to_string_lossy().to_string()] {
+        for local in ["parts/plate.sketcraft".to_string(), part.to_string_lossy().to_string()] {
             a.doc_mut().links.insert(comp, DesignLink { path: local.clone(), feature, ..Default::default() });
             assert_eq!(run(&mut a, "component.links", json!({}))["links"][0]["found"], true, "{local}");
             assert_eq!(run(&mut a, "component.update_links", json!({}))["unchanged"], json!(["plate"]), "{local}");
         }
         // Relink to a network path (programmatic: no prompt) is refused before the disk is asked.
         let calls = sketcraft_io::vfs::file_calls();
-        let err = a.execute("component.relink", &json!({"component": comp, "path": r"\\evil.example\share\x.solidcraft"})).unwrap_err().to_string();
+        let err = a.execute("component.relink", &json!({"component": comp, "path": r"\\evil.example\share\x.sketcraft"})).unwrap_err().to_string();
         assert!(err.contains("network location"), "{err}");
         assert_eq!(sketcraft_io::vfs::file_calls(), calls);
         let _ = std::fs::remove_dir_all(&dir);

@@ -614,7 +614,7 @@ mod tests {
         assert_eq!((&r["ok"], &r["result"]["completed"]), (&json!(true), &json!(2)), "{r}");
         assert!(frames <= most, "{frames} frames (at most {most})");
         // A batch the app refuses is answered at once, without a show.
-        let (r, frames) = h.call_queued("engine.batch", json!({"commands": [{"command": "doc.open", "params": {"path": "x.solidcraft"}}]}));
+        let (r, frames) = h.call_queued("engine.batch", json!({"commands": [{"command": "doc.open", "params": {"path": "x.sketcraft"}}]}));
         assert!(r["error"].as_str().is_some_and(|e| e.starts_with("engine.batch unavailable")), "{r}");
         assert!(frames <= 3, "{frames}");
     }

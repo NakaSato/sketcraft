@@ -1,7 +1,7 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#2570",
-  "tangency-labs/solidcraft#3670"
+  "NakaSato/sketcraft#2570",
+  "NakaSato/sketcraft#3670"
  ],
  "what": "a loft between a circle and a 20-edge comb outline (not star-shaped from its centroid: the teeth turn the vertex directions back on themselves), 40 mm apart (the circle was wound about ten times, the app froze)",
  "source": "invariants",

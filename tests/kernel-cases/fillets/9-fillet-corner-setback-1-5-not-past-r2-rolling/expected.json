@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#9"
+  "NakaSato/sketcraft#9"
  ],
  "what": "three r2 rounds at a box corner, rolling-ball corner, set back 1.5: not past where the rounds meet (r): refused",
  "source": "invariants",

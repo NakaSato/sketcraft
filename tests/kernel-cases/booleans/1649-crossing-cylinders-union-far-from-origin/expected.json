@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#1649"
+  "NakaSato/sketcraft#1649"
  ],
  "what": "union of two crossing cylinders, both moved (1000,-700,300) mm: volume lost with position",
  "source": "analytic",

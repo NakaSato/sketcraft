@@ -920,13 +920,13 @@ mod tests {
         let dir = folder("basic");
         let (mut s, plate, other) = assembly();
         run(&mut s, "timeline.group", json!({"name":"Internal joints", "joints":["PinHold"]}));
-        run(&mut s, "file.save", json!({"path": dir.join("asm.solidcraft")}));
+        run(&mut s, "file.save", json!({"path": dir.join("asm.sketcraft")}));
         let (vol, cen) = (volumes(&s), centroids(&s));
         let other_features: Vec<u64> = s.doc.features.iter().filter(|f| f.component == other).map(|f| f.id).collect();
-        let file = dir.join("parts").join("plate.solidcraft");
+        let file = dir.join("parts").join("plate.sketcraft");
         std::fs::create_dir_all(file.parent().unwrap()).unwrap();
         let out = run(&mut s, "component.extract", json!({"component": "Plate", "path": file}));
-        assert_eq!(out["path"], "parts/plate.solidcraft", "{out}");
+        assert_eq!(out["path"], "parts/plate.sketcraft", "{out}");
         assert_eq!(out["copies"], json!([]), "{out}");
 
         // This design: Plate holds one linked Import feature, its subcomponent and joint are gone
@@ -981,7 +981,7 @@ mod tests {
     fn extract_refuses_what_it_cannot_move_and_changes_nothing() {
         let dir = folder("refuse");
         let (mut s, plate, other) = assembly();
-        let file = dir.join("plate.solidcraft");
+        let file = dir.join("plate.sketcraft");
         let refuse = |s: &mut Session, p: Value, why: &str| {
             let before = serde_json::to_value(&*s.doc).unwrap();
             let err = s.execute("component.extract", &p).unwrap_err().to_string();
@@ -1038,7 +1038,7 @@ mod tests {
             json!({"name": "Stack", "type": "rigid", "a": {"occurrence": plate_occ, "face": top}, "b": {"occurrence": other_occ, "face": bottom}}),
         );
         let cen = centroids(&s);
-        let out = run(&mut s, "component.extract", json!({"component": "Plate", "path": dir.join("plate.solidcraft")}));
+        let out = run(&mut s, "component.extract", json!({"component": "Plate", "path": dir.join("plate.sketcraft")}));
         assert_eq!(out["warnings"], json!([]), "{out}");
         assert_eq!(out["notices"], json!([]), "{out}");
         let joint = run(&mut s, "joint.inspect", json!({"joint": "Stack"}));
@@ -1068,13 +1068,13 @@ mod tests {
         run(&mut s, "solid.extrude", json!({"distance": 3, "operation": "join"}));
         run(&mut s, "component.activate", json!({"component": 0}));
         let vol = volumes(&s);
-        let out = run(&mut s, "component.extract", json!({"component": "cylinder", "path": dir.join("cylinder.solidcraft")}));
+        let out = run(&mut s, "component.extract", json!({"component": "cylinder", "path": dir.join("cylinder.sketcraft")}));
         assert_eq!(out["bodies"], json!(["Body2"]), "{out}");
         let linked = volumes(&s);
         assert_eq!(linked.keys().collect::<Vec<_>>(), ["Body1", "Body2", "Body2 (2)"]);
         assert!((linked["Body2"] + linked["Body2 (2)"] - vol["Body2"]).abs() < 100, "{linked:?} {vol:?}");
         let mut part = Session::default();
-        run(&mut part, "doc.open", json!({"path": dir.join("cylinder.solidcraft")}));
+        run(&mut part, "doc.open", json!({"path": dir.join("cylinder.sketcraft")}));
         assert!(part.model.results.iter().all(|r| r.error.is_none()));
         assert_eq!(volumes(&part).get("Body2"), vol.get("Body2"));
         // A new body in the extracted design is numbered on from there
@@ -1087,7 +1087,7 @@ mod tests {
     fn an_extracted_component_with_a_body_changed_from_outside_is_refused() {
         let dir = folder("outside");
         let (mut s, _, _) = assembly();
-        let file = dir.join("plate.solidcraft");
+        let file = dir.join("plate.sketcraft");
         // A cut owned by the design root that takes a piece out of Plate's body
         run(&mut s, "solid.cylinder", json!({"radius": 3, "height": 50, "base": [110, 10, -5], "operation": "cut", "targets": ["PlateBody"]}));
         let before = serde_json::to_value(&*s.doc).unwrap();
@@ -1110,7 +1110,7 @@ mod tests {
         run(&mut s, "solid.box", json!({"length": 5, "width": 5, "height": 5, "corner": [-30, 0, 0], "body_name": "Stays"}));
         run(&mut s, "component.move_bodies", json!({"bodies": ["Block"], "component": plate}));
         let vol = volumes(&s);
-        let file = dir.join("plate.solidcraft");
+        let file = dir.join("plate.sketcraft");
         let out = run(&mut s, "component.extract", json!({"component": "Plate", "path": file}));
         assert_eq!(out["bodies"], json!(["Block", "Own"]), "{out}");
         assert_eq!(volumes(&s), vol);
@@ -1138,7 +1138,7 @@ mod tests {
         );
         run(&mut s, "component.move_bodies", json!({"bodies": ["B"], "component": plate}));
         let before = serde_json::to_value(&*s.doc).unwrap();
-        let file = dir.join("plate.solidcraft");
+        let file = dir.join("plate.sketcraft");
         let err = s.execute("component.extract", &json!({"component": "Plate", "path": file})).unwrap_err().to_string();
         assert!(err.contains("BothCut"), "{err}");
         assert_eq!(serde_json::to_value(&*s.doc).unwrap(), before);
@@ -1181,7 +1181,7 @@ mod tests {
         run(&mut s, "component.activate", json!({"component": 0}));
         // Nothing is grounded, so OnCopy floats until PinHold, the first joint, goes with Plate's
         // history: then the copy holds still and Other is placed on it
-        let out = run(&mut s, "component.extract", json!({"component": "Plate", "path": dir.join("plate.solidcraft")}));
+        let out = run(&mut s, "component.extract", json!({"component": "Plate", "path": dir.join("plate.sketcraft")}));
         assert_eq!(out["copies"], json!([{"component": copy, "name": s.doc.components.iter().find(|c| c.id == copy).unwrap().name}]), "{out}");
         assert!(out["warnings"].to_string().contains("the joints now place Other"), "{out}");
         assert_eq!(run(&mut s, "component.copies", json!({"component": plate}))["copies"], out["copies"]);
@@ -1211,7 +1211,7 @@ mod tests {
         let dir = folder("from-file");
         let (mut s, plate, _) = assembly();
         let plate_occ = s.doc.occurrence_of(plate).map(|o| o.id).unwrap();
-        let file = dir.join("plate.solidcraft");
+        let file = dir.join("plate.sketcraft");
         // The design file made elsewhere: the same plate, Pin and all
         {
             let mut other = s.scratch();

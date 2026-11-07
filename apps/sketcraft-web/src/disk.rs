@@ -149,7 +149,7 @@ pub fn accept_list(extensions: &[&str]) -> String {
 
 /// The `accept` of a file input for `extensions` on this device (`apple_touch`: an iPhone or
 /// iPad). The picker there offers only files of a type the system knows from the list and greys
-/// out the rest, `.solidcraft` designs among them, since no system type has that extension
+/// out the rest, `.sketcraft` designs among them, since no system type has that extension
 /// (#6977). So it offers every file there, and the opener checks what it gets.
 pub fn input_accept(extensions: &[&str], apple_touch: bool) -> String {
     if apple_touch { String::new() } else { accept_list(extensions) }
@@ -600,15 +600,15 @@ mod tests {
 
     #[test]
     fn a_disk_path_round_trips_its_handle_id_and_name() {
-        let p = path("18f-2a", "Bracket v2.solidcraft");
-        assert_eq!(p, "/disk/18f-2a/Bracket v2.solidcraft");
-        assert_eq!(parse(&p), Some(("18f-2a", "Bracket v2.solidcraft")));
+        let p = path("18f-2a", "Bracket v2.sketcraft");
+        assert_eq!(p, "/disk/18f-2a/Bracket v2.sketcraft");
+        assert_eq!(parse(&p), Some(("18f-2a", "Bracket v2.sketcraft")));
     }
 
     #[test]
     fn only_disk_paths_parse() {
         for not in [
-            "/opfs/a.solidcraft",
+            "/opfs/a.sketcraft",
             "/downloads/a.step",
             "/upload/a.step",
             "/disk/",
@@ -616,7 +616,7 @@ mod tests {
             "/disk/id/",
             "/disk//a",
             "/disk/id/x/y",
-            "a.solidcraft",
+            "a.sketcraft",
         ] {
             assert_eq!(parse(not), None, "{not}");
         }
@@ -627,18 +627,18 @@ mod tests {
     #[test]
     fn writes_to_opfs_paths_still_go_to_opfs() {
         for p in
-            ["/opfs/Bracket.solidcraft", "/opfs/Bracket (2).solidcraft", "/opfs/recovery.solidcraft", "/opfs/recovery.json", "/opfs/old.solvecraft"]
+            ["/opfs/Bracket.sketcraft", "/opfs/Bracket (2).sketcraft", "/opfs/recovery.sketcraft", "/opfs/recovery.json", "/opfs/old.solvecraft"]
         {
             assert_eq!(route(p), WriteTo::Opfs, "{p}");
         }
         // A design opened from OPFS saves to its own path; only a Save As can pick the disk.
         assert_eq!(save_target(false, true), SaveTarget::Browser);
-        assert_eq!(route(&format!("{OPFS_PREFIX}Bracket.solidcraft")), WriteTo::Opfs);
-        assert_eq!(route("/disk/18f-2a/Bracket.solidcraft"), WriteTo::Disk);
+        assert_eq!(route(&format!("{OPFS_PREFIX}Bracket.sketcraft")), WriteTo::Opfs);
+        assert_eq!(route("/disk/18f-2a/Bracket.sketcraft"), WriteTo::Disk);
         assert_eq!(route("/downloads/part.step"), WriteTo::Download);
         assert_eq!(route("/upload/part.step"), WriteTo::Memory);
         // The temporary folder (a screenshot without a path, #7192) stays in memory.
-        assert_eq!(route(&format!("{}/solidcraft-shot.png", sketcraft_engine::io::vfs::BROWSER_TEMP)), WriteTo::Memory);
+        assert_eq!(route(&format!("{}/sketcraft-shot.png", sketcraft_engine::io::vfs::BROWSER_TEMP)), WriteTo::Memory);
     }
 
     #[test]
@@ -699,7 +699,7 @@ mod tests {
         assert_eq!(upload_limit(&["dxf"]), None);
     }
 
-    /// An iPhone or iPad greys out a `.solidcraft` design the `accept` list names, as it knows no
+    /// An iPhone or iPad greys out a `.sketcraft` design the `accept` list names, as it knows no
     /// type for that extension, so its inputs offer every file; other devices keep the list (#6977).
     #[test]
     fn file_inputs_on_an_iphone_or_ipad_offer_every_file() {
@@ -716,7 +716,7 @@ mod tests {
         assert!(!apple_touch("", 0), "hostile input is just not an iPhone");
         let designs = ["sketcraft", "json", "step"];
         assert_eq!(input_accept(&designs, true), "");
-        assert_eq!(input_accept(&designs, false), ".solidcraft,.json,.step");
+        assert_eq!(input_accept(&designs, false), ".sketcraft,.json,.step");
     }
 
     #[test]
@@ -725,7 +725,7 @@ mod tests {
         assert_eq!(save_type("Plate.JSON").2, ".json");
         assert_eq!(save_type("Plate").2, ".sc");
         // A design opened under an older extension keeps it.
-        assert_eq!(save_type("Plate.solidcraft").2, ".solidcraft");
+        assert_eq!(save_type("Plate.sketcraft").2, ".sketcraft");
     }
 
     #[test]

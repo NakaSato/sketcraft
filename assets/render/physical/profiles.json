@@ -1,5 +1,5 @@
 {
-  "schema": "solidcraft-physical-reference-profiles/1",
+  "schema": "sketcraft-physical-reference-profiles/1",
   "version": "1.0.0",
   "runtime_assignment": false,
   "profiles": [

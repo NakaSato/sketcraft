@@ -1,6 +1,6 @@
 //! The model cache: a design's evaluated timeline (every feature's result and the state after
 //! it, [`SavedModel`]), saved with it so opening need not evaluate it again. Bodies use
-//! SolidCraft's exact native B-rep encoding (a mesh body, its own triangles); the key ties the
+//! SketCraft's exact native B-rep encoding (a mesh body, its own triangles); the key ties the
 //! cache to the exact document, and to the source, platform and geometry kernel that computed it
 //! (docs/design-container.md).
 use super::*;

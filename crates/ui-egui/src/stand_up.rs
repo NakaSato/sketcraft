@@ -1,5 +1,5 @@
 //! Standing up a Y-up file (#3). Many CAD programs save parts with Y up, so a STEP or IGES file
-//! from them opens lying on its back in a Z-up design. After such a file opens, SolidCraft
+//! from them opens lying on its back in a Z-up design. After such a file opens, SketCraft
 //! offers to stand it up: a quarter turn about X (Y → Z) of the component the file came in as
 //! (#1386), so an assembly's parts and instances turn together, in one step that can be undone.
 //! Preferences › Design › "Offer to stand up Y-up files" turns the offer off; with Y up as the
@@ -12,7 +12,7 @@
 //! any other program is often upright already, so by default it gets a small note over the view
 //! ("Did this part open the wrong way up?"), which goes by itself after `NOTE_SECONDS` and never
 //! blocks input, and only when its bodies seem to lie on their back; Preferences › Design ›
-//! "For files from unknown programs" picks the dialog (always, as before) or no offer instead. SolidCraft's own files are never offered.
+//! "For files from unknown programs" picks the dialog (always, as before) or no offer instead. SketCraft's own files are never offered.
 //! Either says "assembly" when the file brought more than one body or a component tree. The
 //! context menu's "Turn Up Axis" fixes it any time.
 
@@ -156,7 +156,7 @@ pub fn offer(app: &mut SolveApp, path: &str, before: &[String], result: Option<&
         return;
     }
     let text = |k: &str| result.and_then(|r| r.get(k)).and_then(serde_json::Value::as_str);
-    // SolidCraft's own STEP exports already use Z up.
+    // SketCraft's own STEP exports already use Z up.
     if text("system") == Some("SketCraft") || text("exporter_up") == Some("z") {
         return;
     }

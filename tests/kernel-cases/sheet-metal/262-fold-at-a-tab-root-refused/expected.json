@@ -1,7 +1,7 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#262",
-  "tangency-labs/solidcraft#277"
+  "NakaSato/sketcraft#262",
+  "NakaSato/sketcraft#277"
  ],
  "what": "a fold exactly at a tab's root, where the bend zone (+-BA/2) would reach the blank's outline beside the tab, needs a bend relief",
  "source": "invariants",

@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#4558"
+  "NakaSato/sketcraft#4558"
  ],
  "what": "a 10 mm join on a block's top face whose sketch is then edited out past the block on every side (60 x 50 on a 40 x 30 top): truck refused the rebuilt join ('join cannot preserve the original faces') and dropped it",
  "source": "analytic",

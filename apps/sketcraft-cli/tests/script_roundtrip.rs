@@ -101,9 +101,9 @@ fn a_design_naming_a_sketch_and_its_extrude_alike_replays_from_its_script() {
         );
     };
     let script = dir.join("mini.json");
-    let saved = dir.join("mini.solidcraft");
+    let saved = dir.join("mini.sketcraft");
     let exported = dir.join("rt.json");
-    let replayed = dir.join("rt.solidcraft");
+    let replayed = dir.join("rt.sketcraft");
     let again = dir.join("rt2.json");
     let commands = json!({"commands": [
         {"command": "sketch.create", "params": {"plane": "XY", "name": "Block"}},

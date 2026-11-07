@@ -1,7 +1,7 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#1668",
-  "tangency-labs/solidcraft#1080"
+  "NakaSato/sketcraft#1668",
+  "NakaSato/sketcraft#1080"
  ],
  "what": "R7 rounds of the outer top edge and the inside edge of a 2 mm wall in one fillet: the inside round holds the material the outer one runs over, so the wall stays closed",
  "source": "analytic",

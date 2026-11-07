@@ -1,7 +1,7 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#3736",
-  "tangency-labs/solidcraft#2607"
+  "NakaSato/sketcraft#3736",
+  "NakaSato/sketcraft#2607"
  ],
  "what": "a profile on the XZ plane revolved about the world Y axis, which does not lie in the sketch plane",
  "source": "invariants",

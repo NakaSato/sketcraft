@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#3868"
+  "NakaSato/sketcraft#3868"
  ],
  "what": "a chamfer of an inside (concave) edge fills the corner and adds material, one on the outside edge removes it",
  "source": "analytic",

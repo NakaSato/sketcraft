@@ -1,5 +1,5 @@
 {
- "about": "What each action matrix design costs on a CI runner, in seconds (secs: the whole design, load: before its first action), for cutting the nightly shards (apps/solidcraft-cli/tests/action_matrix.rs, plan). Written with the baseline by cargo xtask action-matrix --bless --from DIR.",
+ "about": "What each action matrix design costs on a CI runner, in seconds (secs: the whole design, load: before its first action), for cutting the nightly shards (apps/sketcraft-cli/tests/action_matrix.rs, plan). Written with the baseline by cargo xtask action-matrix --bless --from DIR.",
  "designs": {
   "corpus/components-arm": {"secs": 58.8, "load": 0.5},
   "corpus/issue-489-stacked-join": {"secs": 3.5, "load": 0.0},

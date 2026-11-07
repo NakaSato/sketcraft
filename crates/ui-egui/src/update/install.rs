@@ -11,8 +11,8 @@
 //! - AppImage: the new AppImage is written next to the old one and renamed over it (atomic on
 //!   one file system; the running copy keeps its old inode), then SketCraft offers a restart.
 //! - Windows installer: the `.msi` is started with `msiexec /i … /passive` as SketCraft exits.
-//! - Windows portable `.zip` / standalone `.exe`: the running `solidcraft.exe` is renamed to
-//!   `solidcraft.exe.old` (Windows allows renaming a running executable), the new one takes its
+//! - Windows portable `.zip` / standalone `.exe`: the running `sketcraft.exe` is renamed to
+//!   `sketcraft.exe.old` (Windows allows renaming a running executable), the new one takes its
 //!   name, and SketCraft offers a restart; the `.old` file is deleted at the next start.
 //! - macOS: the `.dmg` is verified and opened; the user drags the app to Applications. The
 //!   bundle is never replaced in place from the background.
@@ -130,7 +130,7 @@ pub fn relaunch_after(installer: &Path, args: &[String], exe: &Path) -> (PathBuf
 pub fn verify_signature(sums: &[u8], signature: &str, key: &str, tag: &str) -> Result<(), String> {
     let key = minisign_verify::PublicKey::from_base64(key.trim()).map_err(|e| format!("update signing key: {e}"))?;
     let sig = minisign_verify::Signature::decode(signature).map_err(|e| format!("{SUMS_SIG}: {e}"))?;
-    key.verify(sums, &sig, false).map_err(|e| format!("{SUMS} isn't signed by SolidCraft's release key: {e}"))?;
+    key.verify(sums, &sig, false).map_err(|e| format!("{SUMS} isn't signed by SketCraft's release key: {e}"))?;
     // The comment is covered by the signature: an older release's signed list can't stand in.
     let comment = sig.trusted_comment();
     if !comment.split_whitespace().any(|w| w == tag) {
@@ -275,7 +275,7 @@ pub fn run(
 }
 
 /// Where an AppImage called `path` goes once it holds `version`: if its name is a release name
-/// (`solidcraft-<version>-linux-<arch>.AppImage`, or the old `solvecraft-` one), the new release's name
+/// (`sketcraft-<version>-linux-<arch>.AppImage`, or the old `solvecraft-` one), the new release's name
 /// in the same folder; any other name (renamed by the user, or without a version) is kept.
 pub fn release_named(path: &Path, version: &str, arch: &str) -> PathBuf {
     let name = path.file_name().map(|n| n.to_string_lossy().to_ascii_lowercase()).unwrap_or_default();
@@ -395,7 +395,7 @@ fn make_executable(_: &Path) -> Result<(), String> {
     Ok(())
 }
 
-/// At start: delete the executable a previous update moved aside (`solidcraft.exe.old`).
+/// At start: delete the executable a previous update moved aside (`sketcraft.exe.old`).
 pub fn clean_up_after_update(exe: Option<&Path>) {
     for file in [exe.map(Path::to_path_buf), exe.and_then(|e| e.parent()).map(|d| d.join("sketcraft-cli.exe"))].into_iter().flatten() {
         if let Ok(old) = sibling(&file, ".old")

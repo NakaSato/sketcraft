@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#1008"
+  "NakaSato/sketcraft#1008"
  ],
  "what": "an R10 round on the four inside floor edges and three of the four inside vertical corners of an open tray, so one corner keeps a sharp vertical edge where two floor rounds meet (rebuilt from the report's edge picks: the original design is not in the report)",
  "source": "analytic",

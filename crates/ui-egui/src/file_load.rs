@@ -1512,8 +1512,8 @@ mod tests {
             let mut part = Session::default();
             part.execute("solid.box", &json!({"length": 10, "width": 10, "height": 10})).unwrap();
             Arc::make_mut(&mut part.doc).name = name.into();
-            part.path = Some(format!("{name}.solidcraft"));
-            completed_open(app, Request::new(&format!("{name}.solidcraft"), Kind::Open), part);
+            part.path = Some(format!("{name}.sketcraft"));
+            completed_open(app, Request::new(&format!("{name}.sketcraft"), Kind::Open), part);
             tick(app, &ctx);
             app.status.clone().map(|s| (s.0, s.2)).unwrap_or_default()
         };
@@ -1527,10 +1527,10 @@ mod tests {
         // No tab left (and no blank design to take): the open says so, and names nothing it did not open
         while app.docs.count() < crate::documents::MAX_OPEN {
             let mut saved = Session::default();
-            saved.path = Some(format!("tab{}.solidcraft", app.docs.count()));
+            saved.path = Some(format!("tab{}.sketcraft", app.docs.count()));
             crate::documents::open_tab(&mut app, saved).unwrap();
         }
-        let mut request = Request::new("full.solidcraft", Kind::Open);
+        let mut request = Request::new("full.sketcraft", Kind::Open);
         let (tx, reply) = std::sync::mpsc::channel();
         request.reply = Some(tx);
         completed_open(&mut app, request, Session::default());
@@ -1554,14 +1554,14 @@ mod tests {
     fn repeated_queued_opens_reply_once_and_keep_one_session() {
         let mut app = SolveApp::new(Session::default(), Default::default());
         let mut session = Session::default();
-        session.path = Some("queued.solidcraft".into());
-        let mut first = Request::new("queued.solidcraft", Kind::Open);
+        session.path = Some("queued.sketcraft".into());
+        let mut first = Request::new("queued.sketcraft", Kind::Open);
         let (tx, first_reply) = std::sync::mpsc::channel();
         first.reply = Some(tx);
         completed_open(&mut app, first, session);
         let mut replies = vec![first_reply];
         for _ in 0..3 {
-            let mut request = Request::new("queued.solidcraft", Kind::Open);
+            let mut request = Request::new("queued.sketcraft", Kind::Open);
             let (tx, rx) = std::sync::mpsc::channel();
             request.reply = Some(tx);
             replies.push(rx);
@@ -1589,15 +1589,15 @@ mod tests {
     #[test]
     fn finished_open_reuses_existing_dirty_tab_and_scope_still_applies() {
         let mut app = SolveApp::new(Session::default(), Default::default());
-        app.session.path = Some("existing.solidcraft".into());
+        app.session.path = Some("existing.sketcraft".into());
         app.session.execute("solid.box", &json!({"length": 2, "width": 3, "height": 4})).unwrap();
         let dirty = app.session.doc.clone();
         let undo = app.session.undo.len();
         let camera = app.cam;
         crate::documents::new_tab(&mut app);
         let mut loaded = Session::default();
-        loaded.path = Some("existing.solidcraft".into());
-        let mut request = Request::new("existing.solidcraft", Kind::Open);
+        loaded.path = Some("existing.sketcraft".into());
+        let mut request = Request::new("existing.sketcraft", Kind::Open);
         let (tx, rx) = std::sync::mpsc::channel();
         request.reply = Some(tx);
         completed_open(&mut app, request, loaded);
@@ -1610,7 +1610,7 @@ mod tests {
         assert_eq!(app.cam, camera);
         assert!(app.session.is_dirty());
 
-        let mut denied = Request::new("existing.solidcraft", Kind::Open);
+        let mut denied = Request::new("existing.sketcraft", Kind::Open);
         denied.scope = Some(Default::default());
         let (tx, rx) = std::sync::mpsc::channel();
         denied.reply = Some(tx);
@@ -1621,11 +1621,11 @@ mod tests {
         assert!(Arc::ptr_eq(&dirty, &app.session.doc));
         // ui.file dispatch carries its scope on the calling thread; preserve it in the queue.
         sketcraft_engine::io::vfs::scoped(Some(Default::default()), || {
-            begin(&mut app, "existing.solidcraft", false);
+            begin(&mut app, "existing.sketcraft", false);
         });
         assert!(app.status.as_ref().is_some_and(|s| s.2 && s.0.contains("outside the folders")));
-        assert!(!reuse_open(&mut app, &Request::new("existing.solidcraft", Kind::Insert)));
-        assert!(!reuse_open(&mut app, &Request::new("existing.solidcraft", Kind::Recover { id: "test".into(), dir: None })));
+        assert!(!reuse_open(&mut app, &Request::new("existing.sketcraft", Kind::Insert)));
+        assert!(!reuse_open(&mut app, &Request::new("existing.sketcraft", Kind::Recover { id: "test".into(), dir: None })));
     }
 
     #[test]
@@ -1773,7 +1773,7 @@ mod tests {
             let (preview_tx, preview_rx) = std::sync::mpsc::channel();
             preview_tx.send(egui::ColorImage::new([2, 2], vec![egui::Color32::RED; 4])).unwrap();
             app.file_load.running = Some(Running {
-                request: Request::new("old.solidcraft", if insert { Kind::Insert } else { Kind::Open }),
+                request: Request::new("old.sketcraft", if insert { Kind::Insert } else { Kind::Open }),
                 base,
                 base_revision: app.session.revision,
                 before: Vec::new(),
@@ -1931,7 +1931,7 @@ mod tests {
         let mut app = SolveApp::new(Session::default(), Default::default());
         let bodies = |app: &SolveApp| app.session.world_state().unwrap().bodies.len();
         assert!(staged_kind(&Request::new(&path, Kind::Insert)) && staged_kind(&Request::new(&path, Kind::Open)));
-        assert!(!staged_kind(&Request::new("part.igs", Kind::Insert)) && !staged_kind(&Request::new("part.solidcraft", Kind::Insert)));
+        assert!(!staged_kind(&Request::new("part.igs", Kind::Insert)) && !staged_kind(&Request::new("part.sketcraft", Kind::Insert)));
         app.file_load.queued.push_back(Request::new(&path, Kind::Insert));
         start_staged(&mut app);
         tick(&mut app, &ctx);

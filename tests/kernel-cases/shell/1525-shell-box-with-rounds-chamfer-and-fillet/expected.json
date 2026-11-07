@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#1525"
+  "NakaSato/sketcraft#1525"
  ],
  "what": "a 50x50x30 box with r10 vertical rounds, a 5 mm chamfer round the base and a 4 mm fillet where the chamfer meets the wall, shelled 2 mm open at the top",
  "source": "analytic",

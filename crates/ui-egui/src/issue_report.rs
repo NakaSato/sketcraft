@@ -21,7 +21,7 @@ const MAX_BODY: usize = 24_000;
 // context.
 const MAX_REPORT: usize = 3 * 4 * MAX_ANSWER + MAX_BODY + 1000;
 const MAX_IMAGE_PIXELS: usize = 16_000_000;
-const ISSUE_URL: &str = "https://github.com/tangency-labs/solidcraft/issues/new";
+const ISSUE_URL: &str = "https://github.com/NakaSato/sketcraft/issues/new";
 /// GitHub answers a longer link with `414 URI Too Long` (from about 8,200 characters).
 const MAX_URL: usize = 6000;
 /// Someone who isn't signed in is sent to sign in with the link to return to, encoded once more;
@@ -556,7 +556,7 @@ pub fn crash_draft(report: &serde_json::Value) -> Draft {
     let field = |o: Option<&serde_json::Value>, k: &str| o.and_then(|o| o.get(k)).and_then(serde_json::Value::as_str).unwrap_or("?").to_string();
     let system = report.get("system");
     let mut body = format!(
-        "## What happened\n{what}{}.{detection}\n\nMessage: {}\nLocation: {}\nThread: {}\nRecorded {} time(s), first recorded {}\n\n## Backtrace\n{}\n## Command\n{}\n## Recent commands\n{}\n\n## Reproduction\nCrash report `{}` on the reporter's computer holds {}. Replay it with `solidcraft-cli crashes replay {}`.\nOnly attach the design if it can be shared publicly.\n\n## Environment\n{}\n",
+        "## What happened\n{what}{}.{detection}\n\nMessage: {}\nLocation: {}\nThread: {}\nRecorded {} time(s), first recorded {}\n\n## Backtrace\n{}\n## Command\n{}\n## Recent commands\n{}\n\n## Reproduction\nCrash report `{}` on the reporter's computer holds {}. Replay it with `sketcraft-cli crashes replay {}`.\nOnly attach the design if it can be shared publicly.\n\n## Environment\n{}\n",
         command.map(|c| format!(" while running `{c}`")).unwrap_or_default(),
         limited(&s("message"), 2000),
         s("location"),

@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#702"
+  "NakaSato/sketcraft#702"
  ],
  "what": "a 200 x 100 plate whose bottom-left 100 x 60 is cut away, and a 90 degree 40 mm inside flange picked on what is left of the bottom edge (x 100..200)",
  "source": "analytic",

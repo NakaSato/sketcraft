@@ -315,7 +315,7 @@
    "type": "hole"
   }
  ],
- "format": "solidcraft/17",
+ "format": "sketcraft/17",
  "name": "neighbour_top_blind",
  "next_id": 6,
  "params": [],

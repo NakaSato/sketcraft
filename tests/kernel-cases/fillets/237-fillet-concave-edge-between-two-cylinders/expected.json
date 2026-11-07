@@ -1,7 +1,7 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#237",
-  "tangency-labs/solidcraft#238"
+  "NakaSato/sketcraft#237",
+  "NakaSato/sketcraft#238"
  ],
  "what": "an R6 round on the vertical edge where two cylinder walls meet (the concave corner of two merged discs), the two walls meeting at an angle",
  "source": "analytic",

@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#634"
+  "NakaSato/sketcraft#634"
  ],
  "what": "a 160 x 30 bar with a 20 x 30 leg past its top edge at the left end, and a 90 degree 15 mm inside flange on the bar's top edge (x 20..160), unfolded: the flange's trim cut the leg away",
  "source": "analytic",

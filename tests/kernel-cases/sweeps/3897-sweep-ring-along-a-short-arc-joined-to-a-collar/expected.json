@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#3897"
+  "NakaSato/sketcraft#3897"
  ],
  "what": "a ring profile (radii 79.815 and 78.285) swept along a 22.5 degree arc of radius 94.815 whose start is at the ring centre, joined to a ring-shaped collar under the profile (froze at \"Computing\")",
  "source": "analytic",

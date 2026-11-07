@@ -1,8 +1,8 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#529",
-  "tangency-labs/solidcraft#430",
-  "tangency-labs/solidcraft#964"
+  "NakaSato/sketcraft#529",
+  "NakaSato/sketcraft#430",
+  "NakaSato/sketcraft#964"
  ],
  "what": "a 200 x 300 panel with a hundred 4.4 x 20 slots and four 90 degree folds (one per side tab): the flat geometry ran out of its processing budget above 77 slots",
  "source": "analytic",

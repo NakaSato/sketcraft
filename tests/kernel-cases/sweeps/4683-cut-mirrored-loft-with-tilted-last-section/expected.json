@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#4683"
+  "NakaSato/sketcraft#4683"
  ],
  "what": "a box cut from a 6-section loft (spline crown and a flat bottom at z = -1) whose last section lies on a plane tilted 2 deg off its neighbours', mirrored into one body; the box crosses the tilted end and reaches below the bottom face: truck's result shell was missing a face ('no result')",
  "source": "analytic",

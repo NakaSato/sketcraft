@@ -1013,7 +1013,7 @@ mod tests {
         h.app.run("sheet.flange", json!({"name":"Sheet", "body_name":"Sheet"})).unwrap();
         assert_eq!(h.app.ui.tab, "SHEET METAL");
         assert!(visible_tabs(&h.app).contains(&"SHEET METAL"));
-        let path = h.dir.join("sheet.solidcraft");
+        let path = h.dir.join("sheet.sketcraft");
         h.app.run("file.save", json!({"path":path})).unwrap();
         h.app.ui.tab = "INSPECT".into();
         h.app.run("doc.open", json!({"path":path})).unwrap();
@@ -1183,7 +1183,7 @@ mod tests {
         assert!(!visible_tabs(&h.app).contains(&"SHEET METAL"));
         assert!(crate::scenario::handle_at("tab:SHEET METAL").is_none());
         assert_eq!(h.app.preferences.hidden_toolbar_tabs, ["SHEET METAL"], "features do not change the saved choice");
-        let path = h.dir.join("hidden-sheet.solidcraft");
+        let path = h.dir.join("hidden-sheet.sketcraft");
         h.app.run("file.save", json!({"path":path})).unwrap();
         other.run("doc.open", json!({"path":path})).unwrap();
         assert!(!visible_tabs(&other).contains(&"SHEET METAL"), "opening a sheet design respects the saved hiding choice");
@@ -1461,12 +1461,12 @@ mod tests {
         let specs = sketcraft_engine::command_specs();
         assert!(layout("ASSEMBLE", "COMPONENTS", &specs).unwrap().0.iter().any(|c| c.id == "component.insert_design"));
         let mut h = crate::scenario::Harness::new();
-        let part = h.dir.join("part1.solidcraft");
+        let part = h.dir.join("part1.sketcraft");
         let mut s = sketcraft_engine::Session::default();
         s.execute("solid.box", &json!({"length": 10, "width": 20, "height": 30})).unwrap();
         s.execute("file.save", &json!({"path": part})).unwrap();
         s.execute("file.export", &json!({"path": h.dir.join("part2.step")})).unwrap();
-        h.step(&json!({"choose_file": "part1.solidcraft"})).unwrap();
+        h.step(&json!({"choose_file": "part1.sketcraft"})).unwrap();
         h.step(&json!({"start": "component.insert_design"})).unwrap();
         h.frames(3);
         let links = h.app.session.execute("component.links", &json!({})).unwrap();

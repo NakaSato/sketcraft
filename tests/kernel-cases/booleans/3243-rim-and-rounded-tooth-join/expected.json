@@ -1,6 +1,6 @@
 {
   "sources": [
-    "tangency-labs/solidcraft#3243"
+    "NakaSato/sketcraft#3243"
   ],
   "what": "a join of a cylindrical rim (r 15.27..16.65, to z=5) and a rounded tooth trimmed to the same two cylinders that overlaps it by 0.01 mm in Z",
   "source": "analytic",

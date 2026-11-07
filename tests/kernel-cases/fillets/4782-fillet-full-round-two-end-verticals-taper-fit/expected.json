@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#4782"
+  "NakaSato/sketcraft#4782"
  ],
  "what": "both vertical edges of a 20 mm wide box end rounded r10, half the width: the rounds meet tangent and use up the end face (a full round), fit taper",
  "source": "analytic",

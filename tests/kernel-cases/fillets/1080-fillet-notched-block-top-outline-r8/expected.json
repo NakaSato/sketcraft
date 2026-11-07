@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#1080"
+  "NakaSato/sketcraft#1080"
  ],
  "what": "a 40 x 30 x 10 block with a 5 x 5 x 3 notch at a bottom corner, its top outline rounded R8: the round runs past the 7 mm wall over the notch into the notch and is cut by it",
  "source": "analytic",

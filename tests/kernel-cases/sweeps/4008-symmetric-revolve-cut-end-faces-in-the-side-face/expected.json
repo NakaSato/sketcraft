@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#4008"
+  "NakaSato/sketcraft#4008"
  ],
  "what": "a 7 x 21 rectangle 2.6 mm from a block vertical edge revolved as a symmetric 180 degree cut about that edge: both end faces of the tool lie in the block left face (refused as \"could not be computed reliably\")",
  "source": "analytic",

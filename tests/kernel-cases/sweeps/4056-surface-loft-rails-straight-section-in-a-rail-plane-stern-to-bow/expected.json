@@ -1,7 +1,7 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#4056",
-  "tangency-labs/solidcraft#4080"
+  "NakaSato/sketcraft#4056",
+  "NakaSato/sketcraft#4080"
  ],
  "what": "a surface loft between a vertical line on XZ (bow) and a slanted line in the plane x = 100 (stern), stern to bow, guided by a keel rail lying in the bow sketch plane and a sheer rail at z = 20 (refused: \"a guide rail crosses section 2's plane\")",
  "source": "analytic",

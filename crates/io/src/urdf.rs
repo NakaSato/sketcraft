@@ -7,7 +7,7 @@
 //! Every constant is taken from world transforms at the current state, so `Flip` never appears:
 //! with the child on B its link frame is `L = T_A · F_a · M(q)`; with the child on A it is
 //! `L = T_A · F_a` and the parent-side joint frame `L · M(q)`, the chain inverted (reversed, axes
-//! negated, so each URDF value still equals SolidCraft's).
+//! negated, so each URDF value still equals SketCraft's).
 
 use sketcraft_geom::prelude::*;
 use std::collections::{BTreeMap, BTreeSet, HashSet, VecDeque};
@@ -708,7 +708,7 @@ fn write_xml(model: &UrdfModel, name: &str, options: &UrdfOptions) -> String {
     let effort = options.effort.filter(|x| x.is_finite() && *x > 0.0).unwrap_or(DEFAULT_EFFORT);
     let velocity = options.velocity.filter(|x| x.is_finite() && *x > 0.0).unwrap_or(DEFAULT_VELOCITY);
     let prefix = attr(&options.mesh_prefix);
-    let mut s = String::from("<?xml version=\"1.0\"?>\n<!-- Exported by SolidCraft; units: m, kg, rad -->\n");
+    let mut s = String::from("<?xml version=\"1.0\"?>\n<!-- Exported by SketCraft; units: m, kg, rad -->\n");
     s += &format!("<robot name=\"{}\">\n", attr(name));
     for l in &model.links {
         s += &format!("  <link name=\"{}\">\n", attr(&l.name));

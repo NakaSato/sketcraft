@@ -45,13 +45,12 @@ cargo test --release -p sketcraft-sketch --lib rounds_and_tangents_without_the_s
 - May depend on `sketcraft-geom` only (plus `solidcore-record`). Not on the kernel, doc or UI.
 - No egui, no `unsafe`. The crate root denies `unwrap`/`expect`/`panic!`.
 - Sketch input is hostile: respect the `MAX_*` caps, check finite coordinates within `MAX_COORD`.
-  See `skills/solidcraft-crash-safety/SKILL.md`.
+  See `skills/sketcraft-crash-safety/SKILL.md`.
 - Must build for wasm32 (`cargo xtask wasm`). The `solver-profiling` feature has no clocks on wasm.
 - The solver is a clean-room implementation. Do not copy another solver's code.
-- Measure before claiming a solver speed-up: `skills/solidcraft-performance/SKILL.md`.
+- Measure before claiming a solver speed-up: `skills/sketcraft-performance/SKILL.md`.
 
 ## Gotchas
 
 - `SKETCRAFT_FONT_DIRS` adds font folders to the installed-font lookup. Apps can set a file
   check with `set_font_file_check`.
-- Doc comments in examples still say `solidcraft-sketch`; the package is `sketcraft-sketch`.

@@ -1,6 +1,6 @@
 {
   "sources": [
-    "tangency-labs/solidcraft#3460"
+    "NakaSato/sketcraft#3460"
   ],
   "what": "Combine cut (keep tools) of an enclosure by its lid whose insert is flush with the inner walls and carries four small half-moon tabs that cross them; the cut must not return the target unchanged",
   "source": "analytic",

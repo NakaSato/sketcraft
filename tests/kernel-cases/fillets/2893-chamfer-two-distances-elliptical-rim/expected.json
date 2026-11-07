@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#2893"
+  "NakaSato/sketcraft#2893"
  ],
  "what": "a cylinder r5 tilted 26.6 deg from Z cut flat at z = 10, its elliptical rim chamfered 1 and 2: one closed valid solid",
  "source": "invariants",

@@ -1,7 +1,7 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#1765",
-  "tangency-labs/solidcraft#1858"
+  "NakaSato/sketcraft#1765",
+  "NakaSato/sketcraft#1858"
  ],
  "what": "two 1.5 mm circular cuts overlapping an earlier 0.75 mm pocket (timeline roll-back, insert, redefine): the cut came out empty",
  "source": "analytic",

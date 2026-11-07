@@ -1,12 +1,12 @@
 {
   "light-0": {
-    "format": "solidcraft-theme/1",
+    "format": "sketcraft-theme/1",
     "name": "Options light 0",
     "base": "light",
     "options": []
   },
   "light-1": {
-    "format": "solidcraft-theme/1",
+    "format": "sketcraft-theme/1",
     "name": "Options light 1",
     "base": "light",
     "options": [
@@ -18,7 +18,7 @@
     ]
   },
   "light-3": {
-    "format": "solidcraft-theme/1",
+    "format": "sketcraft-theme/1",
     "name": "Options light 3",
     "base": "light",
     "options": [
@@ -67,7 +67,7 @@
     ]
   },
   "light-6": {
-    "format": "solidcraft-theme/1",
+    "format": "sketcraft-theme/1",
     "name": "Options light 6",
     "base": "light",
     "options": [
@@ -144,7 +144,7 @@
     ]
   },
   "light-12": {
-    "format": "solidcraft-theme/1",
+    "format": "sketcraft-theme/1",
     "name": "Options light 12",
     "base": "light",
     "options": [
@@ -328,13 +328,13 @@
     ]
   },
   "dark-0": {
-    "format": "solidcraft-theme/1",
+    "format": "sketcraft-theme/1",
     "name": "Options dark 0",
     "base": "dark",
     "options": []
   },
   "dark-1": {
-    "format": "solidcraft-theme/1",
+    "format": "sketcraft-theme/1",
     "name": "Options dark 1",
     "base": "dark",
     "options": [
@@ -346,7 +346,7 @@
     ]
   },
   "dark-3": {
-    "format": "solidcraft-theme/1",
+    "format": "sketcraft-theme/1",
     "name": "Options dark 3",
     "base": "dark",
     "options": [
@@ -395,7 +395,7 @@
     ]
   },
   "dark-6": {
-    "format": "solidcraft-theme/1",
+    "format": "sketcraft-theme/1",
     "name": "Options dark 6",
     "base": "dark",
     "options": [
@@ -472,7 +472,7 @@
     ]
   },
   "dark-12": {
-    "format": "solidcraft-theme/1",
+    "format": "sketcraft-theme/1",
     "name": "Options dark 12",
     "base": "dark",
     "options": [

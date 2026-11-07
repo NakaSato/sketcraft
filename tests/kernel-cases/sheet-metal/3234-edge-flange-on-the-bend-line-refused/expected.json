@@ -1,7 +1,7 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#3234",
-  "tangency-labs/solidcraft#3273"
+  "NakaSato/sketcraft#3234",
+  "NakaSato/sketcraft#3273"
  ],
  "what": "a second edge flange picked on the bend line of an existing flange made a doubled flange with a gap and two shells in one body",
  "source": "invariants",

@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#4847"
+  "NakaSato/sketcraft#4847"
  ],
  "what": "a dome (a quarter disc r20 revolved) shelled 2 mm from its flat base, then the base ring (r 18..20) face-extruded 10 mm back into the dome as a join: ~120 s, then 'boolean Union: no result'",
  "source": "analytic",

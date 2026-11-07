@@ -802,7 +802,7 @@ fn saved_box_design(path: &std::path::Path, height: f64) {
 fn a_linked_design_brings_its_bodies_in_and_follows_edits_to_the_part_file() {
     let dir = std::env::temp_dir().join(format!("sketcraft-linked-design-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
-    let part = dir.join("plate.solidcraft");
+    let part = dir.join("plate.sketcraft");
     // Given a part saved in its own design: a 10 x 20 x 30 plate.
     saved_box_design(&part, 30.0);
     // When an assembly inserts it as a linked component, the plate's body is in the assembly.
@@ -828,7 +828,7 @@ fn a_linked_design_brings_its_bodies_in_and_follows_edits_to_the_part_file() {
 fn a_cut_or_join_from_the_top_level_into_a_linked_part_is_refused() {
     let dir = std::env::temp_dir().join(format!("sketcraft-linked-cut-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
-    let part = dir.join("plate.solidcraft");
+    let part = dir.join("plate.sketcraft");
     saved_box_design(&part, 30.0);
     let mut s = Session::default();
     run(&mut s, INSERT_DESIGN, json!({"path": part, "translate": [50, 0, 0]}));

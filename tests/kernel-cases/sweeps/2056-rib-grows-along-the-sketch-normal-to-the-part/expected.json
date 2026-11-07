@@ -1,7 +1,7 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#2056",
-  "tangency-labs/solidcraft#2057"
+  "NakaSato/sketcraft#2056",
+  "NakaSato/sketcraft#2057"
  ],
  "what": "a rib drawn on a plane 20 mm in front of a block (parallel to XZ, a 40 mm line along X) with direction normal, growing toward the block",
  "source": "analytic",

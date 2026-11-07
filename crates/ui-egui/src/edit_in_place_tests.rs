@@ -65,13 +65,13 @@ fn assembly(name: &str) -> Fixture {
     let folder = std::env::temp_dir().join(format!("sketcraft-edit-in-place-{name}-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&folder);
     std::fs::create_dir_all(&folder).unwrap();
-    let (plate_file, post_file) = (folder.join("plate.solidcraft"), folder.join("post.solidcraft"));
+    let (plate_file, post_file) = (folder.join("plate.sketcraft"), folder.join("post.sketcraft"));
     save_box(&plate_file, [10.0, 20.0, 30.0], false);
     save_box(&post_file, [10.0, 10.0, 10.0], false);
     let mut app = SolveApp::new(Session::default(), Default::default());
     let plate = app.run("component.insert_design", json!({"path": plate_file, "translate": [50, 0, 0]})).unwrap()["component"].as_u64().unwrap();
     app.run("component.insert_design", json!({"path": post_file, "translate": [-100, 0, 0]})).unwrap();
-    app.run("file.save", json!({"path": folder.join("case.solidcraft")})).unwrap();
+    app.run("file.save", json!({"path": folder.join("case.sketcraft")})).unwrap();
     assert!((volume(&app) - 7000.0).abs() < 1e-6);
     Fixture { app, folder, plate, plate_file, post_file }
 }
@@ -103,7 +103,7 @@ fn a_linked_component_is_edited_in_place_and_finish_editing_updates_the_assembly
     settle(&mut f.app);
     assert!(f.app.edit_in_place.active.is_none());
     assert_eq!(f.app.docs.count(), 1);
-    assert!(f.app.session.path.as_deref().is_some_and(|p| p.ends_with("case.solidcraft")));
+    assert!(f.app.session.path.as_deref().is_some_and(|p| p.ends_with("case.sketcraft")));
     assert!((volume(&f.app) - 8000.0).abs() < 1e-6, "{}", volume(&f.app));
 }
 
@@ -208,11 +208,11 @@ fn finishing_a_part_saved_to_another_file_keeps_the_edit_and_says_so() {
     let mut f = assembly("elsewhere");
     double_click_component(&mut f.app, json!({"component": f.plate}));
     settle(&mut f.app);
-    f.app.run("file.save", json!({"path": f.folder.join("copy.solidcraft")})).unwrap();
+    f.app.run("file.save", json!({"path": f.folder.join("copy.sketcraft")})).unwrap();
     finish(&mut f.app);
     settle(&mut f.app);
     assert!(f.app.edit_in_place.active.is_some(), "the assembly still links the part, not the copy");
-    assert!(f.app.session.path.as_deref().is_some_and(|p| p.ends_with("copy.solidcraft")));
+    assert!(f.app.session.path.as_deref().is_some_and(|p| p.ends_with("copy.sketcraft")));
     assert!(f.app.status.as_ref().is_some_and(|(s, _, error)| *error && s.contains("plate")), "{:?}", f.app.status);
 }
 
@@ -275,7 +275,7 @@ fn a_part_already_open_is_reused_and_stays_open() {
     finish(&mut f.app);
     settle(&mut f.app);
     assert_eq!(f.app.docs.count(), 2, "the tab was there before the edit, so it stays");
-    assert!(f.app.session.path.as_deref().is_some_and(|p| p.ends_with("case.solidcraft")));
+    assert!(f.app.session.path.as_deref().is_some_and(|p| p.ends_with("case.sketcraft")));
 }
 
 #[test]
@@ -774,8 +774,8 @@ fn a_queued_edit_is_checked_when_asked_for_and_waits_for_what_runs() {
     let mut f = assembly("queued-checks");
     f.app.agent_chat.set_state(crate::agent_chat::State::Busy);
     // What would fail at the turn's end fails now, where the agent sees it
-    let gone = f.folder.join("post.solidcraft");
-    std::fs::rename(&gone, f.folder.join("moved.solidcraft")).unwrap();
+    let gone = f.folder.join("post.sketcraft");
+    std::fs::rename(&gone, f.folder.join("moved.sketcraft")).unwrap();
     let post = f.app.session.doc.links.keys().copied().find(|c| *c != f.plate).unwrap();
     assert!(f.app.run("component.edit_in_place", json!({"component": post})).is_err());
     assert_eq!(f.app.run("component.edit_in_place", json!({"component": f.plate})).unwrap()["queued"], json!(true));

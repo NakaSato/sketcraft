@@ -3,13 +3,13 @@
   {
    "command": "component.insert_design",
    "params": {
-    "path": "$CASE/plate.solidcraft"
+    "path": "$CASE/plate.sketcraft"
    }
   },
   {
    "command": "component.insert_design",
    "params": {
-    "path": "$CASE/plate.solidcraft",
+    "path": "$CASE/plate.sketcraft",
     "reuse": true,
     "translate": [
      0,

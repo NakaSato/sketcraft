@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#4191"
+  "NakaSato/sketcraft#4191"
  ],
  "what": "a 20x20x10 block joined round the bottom of an O6 x 50 stud carrying a modelled M6 thread: 'boolean Union: no result' (the same block joined before threading worked)",
  "source": "analytic",

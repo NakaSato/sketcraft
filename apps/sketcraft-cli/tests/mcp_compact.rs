@@ -6,7 +6,7 @@ use std::process::{Command, Stdio};
 
 use serde_json::{Value, json};
 
-/// `inspect_design`'s input schema as `solidcraft-cli mcp` with `args` and `env` lists it, or
+/// `inspect_design`'s input schema as `sketcraft-cli mcp` with `args` and `env` lists it, or
 /// the server's stderr when it does not start.
 fn inspect_schema(args: &[&str], env: Option<&str>) -> Result<Value, String> {
     let mut cmd = Command::new(env!("CARGO_BIN_EXE_sketcraft-cli"));

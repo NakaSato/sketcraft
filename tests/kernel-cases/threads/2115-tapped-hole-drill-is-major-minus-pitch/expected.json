@@ -1,10 +1,10 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#3311",
-  "tangency-labs/solidcraft#2115",
-  "tangency-labs/solidcraft#2367",
-  "tangency-labs/solidcraft#2440",
-  "tangency-labs/solidcraft#2441"
+  "NakaSato/sketcraft#3311",
+  "NakaSato/sketcraft#2115",
+  "NakaSato/sketcraft#2367",
+  "NakaSato/sketcraft#2440",
+  "NakaSato/sketcraft#2441"
  ],
  "what": "tapped holes (Hole with a thread size, no diameter) are drilled at the tap drill, not at the major diameter",
  "source": "analytic",

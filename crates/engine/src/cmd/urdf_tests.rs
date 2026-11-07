@@ -77,7 +77,7 @@ fn close(a: &Mat, b: &Mat) -> bool {
     a.iter().flatten().zip(b.iter().flatten()).all(|(x, y)| (x - y).abs() < 1e-9)
 }
 
-/// Every placement's link, composed at the design's current joint values, sits where SolidCraft
+/// Every placement's link, composed at the design's current joint values, sits where SketCraft
 /// places it.
 fn assert_fk(m: &UrdfModel, s: &Session, what: &str) {
     let vals = joints::joint_values(&s.doc.assembly);

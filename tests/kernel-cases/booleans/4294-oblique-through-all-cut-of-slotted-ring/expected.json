@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#4294"
+  "NakaSato/sketcraft#4294"
  ],
  "what": "a symmetric through-all cut by a 45 deg wedge across the end of a slotted ring (r 22.5..40, a 3 mm slot, 75 mm long): truck left a stray planar sheet out to the sketch's boundary at x = -65, with no error",
  "source": "analytic",

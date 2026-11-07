@@ -1,7 +1,7 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#726",
-  "tangency-labs/solidcraft#1718"
+  "NakaSato/sketcraft#726",
+  "NakaSato/sketcraft#1718"
  ],
  "what": "the same flanged hub profile revolved 240 degrees: its planar faces (three annular sectors and two end faces) must come out whole",
  "source": "analytic",

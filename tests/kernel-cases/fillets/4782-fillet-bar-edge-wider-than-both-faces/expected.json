@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#4782"
+  "NakaSato/sketcraft#4782"
  ],
  "what": "the long top edge of a 5x5 bar rounded r10, wider than both faces it rounds",
  "source": "analytic",

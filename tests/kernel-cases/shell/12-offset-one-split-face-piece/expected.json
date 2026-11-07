@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#12"
+  "NakaSato/sketcraft#12"
  ],
  "what": "Offset Face on one piece of a split face moves only that piece, not the coplanar neighbour",
  "source": "analytic",

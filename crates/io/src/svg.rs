@@ -640,7 +640,7 @@ mod tests {
 
     /// The parser recurses over groups and reads numbers out of a document the user did not write,
     /// so none of these may panic: `catch_unwind` turns one into a failed test, the way
-    /// `hostile_files_never_panic` does for STEP (solidcraft#469).
+    /// `hostile_files_never_panic` does for STEP (sketcraft#469).
     #[test]
     fn hostile_svg_never_panics() {
         let good = r#"<svg xmlns="http://www.w3.org/2000/svg" width="100mm" height="50mm" viewBox="0 0 100 50">
@@ -759,7 +759,7 @@ mod tests {
     }
 
     /// A transform that scales a shape past the range of `f64` is refused with a clear error
-    /// instead of handing the sketch an infinite curve (solidcraft#5020).
+    /// instead of handing the sketch an infinite curve (sketcraft#5020).
     #[test]
     fn geometry_scaled_to_infinity_is_refused() {
         let doc = |body: &str| format!(r#"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100mm" height="100mm">{body}</svg>"#);

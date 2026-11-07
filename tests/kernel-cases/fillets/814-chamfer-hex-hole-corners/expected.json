@@ -1,7 +1,7 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#814",
-  "tangency-labs/solidcraft#1067"
+  "NakaSato/sketcraft#814",
+  "NakaSato/sketcraft#1067"
  ],
  "what": "a 2 mm chamfer on the six vertical corners of a hexagonal hole: one bevel each, not a notch",
  "source": "analytic",

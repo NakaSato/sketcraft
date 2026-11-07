@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#4598"
+  "NakaSato/sketcraft#4598"
  ],
  "what": "an O40 x 60 rod with a blind O8 cross bore from its side (x 10..25 at mid height), moved 100 mm, exported to STEP and read back: the body came in empty with no warning (truck's exported edges had 1399 control points)",
  "source": "analytic",

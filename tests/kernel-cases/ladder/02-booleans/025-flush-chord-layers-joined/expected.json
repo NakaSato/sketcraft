@@ -1,7 +1,7 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#5197",
-  "tangency-labs/solidcraft#3396"
+  "NakaSato/sketcraft#5197",
+  "NakaSato/sketcraft#3396"
  ],
  "what": "a join of flush layers: a disc r37 (z -1.2..0) carrying 15 of the 19 regions of a sketch of 18 chords (z -3.6..-1.2; four bands left out), on an annulus r35..37 (z -5.6..-3.6) joined to a disc of all the chord regions (z -8..-5.6): SMLib's result came back with 'loop encloses no (u, v) area' though both operands are valid",
  "source": "analytic",

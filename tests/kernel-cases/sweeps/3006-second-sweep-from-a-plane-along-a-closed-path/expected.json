@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#3006"
+  "NakaSato/sketcraft#3006"
  ],
  "what": "a circle of radius 3 on a plane at 0.5 of a closed circular path (R 30) swept round it, then a 5 x 5 square on a plane at 0.75 swept round the same path and joined (it did not follow the path)",
  "source": "analytic",

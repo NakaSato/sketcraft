@@ -437,7 +437,7 @@ mod tests {
         let saved = entries(&dir);
         // Cleanup is immediate, even when the next autosave is far away.
         app.autosave.as_mut().unwrap().interval = Duration::from_secs(3600);
-        app.run("file.save_as", json!({"path": dir.join("saved.solidcraft")})).unwrap();
+        app.run("file.save_as", json!({"path": dir.join("saved.sketcraft")})).unwrap();
         tick_and_wait(&mut app);
         assert_eq!(entries(&dir), saved[..2]);
         documents::close(&mut app, 0, false);

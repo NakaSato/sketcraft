@@ -1,7 +1,7 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#3358",
-  "tangency-labs/solidcraft#3359"
+  "NakaSato/sketcraft#3358",
+  "NakaSato/sketcraft#3359"
  ],
  "what": "a box of six trimmed planes whose composite trim curves have their 2nd and 4th pieces written end to start: every loop must still close",
  "method": "box 10 x 20 x 30 of six trimmed bilinear patches: V = 6000; A = 2(200+300+600) = 2200; 6 faces",

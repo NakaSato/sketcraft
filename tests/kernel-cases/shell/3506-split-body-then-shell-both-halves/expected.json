@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#3506"
+  "NakaSato/sketcraft#3506"
  ],
  "what": "a box split in two at z=10, then each half shelled 2 mm open on the mating face",
  "source": "analytic",

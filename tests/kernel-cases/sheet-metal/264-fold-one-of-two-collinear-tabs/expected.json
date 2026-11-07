@@ -1,7 +1,7 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#264",
-  "tangency-labs/solidcraft#279"
+  "NakaSato/sketcraft#264",
+  "NakaSato/sketcraft#279"
  ],
  "what": "a 100 x 40 blank with two 15 x 7 tabs on one line, one tab folded 90 degrees on a line that the other tab also lies on",
  "source": "analytic",

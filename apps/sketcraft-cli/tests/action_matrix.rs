@@ -87,7 +87,7 @@ fn designs() -> Vec<(String, PathBuf)> {
             out.push((format!("{prefix}/{stem}"), p));
         }
     };
-    add("corpus", root.join("apps/sketcraft-cli/tests/corpus"), "solidcraft");
+    add("corpus", root.join("apps/sketcraft-cli/tests/corpus"), "sketcraft");
     add("examples", root.join("examples"), "json");
     add("examples", root.join("examples/acceptance"), "json");
     add("regressions", root.join("examples/regressions"), "json");
@@ -1006,7 +1006,7 @@ fn write_baseline(results: &[Value]) {
     }
     // One entity per line, sorted: small diffs when a few actions change.
     let mut s = String::from(
-        "{\n \"about\": \"The action matrix's ratchet: design, entity, the actions tried on it (failing ones marked !). apps/solidcraft-cli/tests/action_matrix.rs, docs/action-matrix.md. Update with cargo xtask action-matrix --bless.\",\n \"designs\": {\n",
+        "{\n \"about\": \"The action matrix's ratchet: design, entity, the actions tried on it (failing ones marked !). apps/sketcraft-cli/tests/action_matrix.rs, docs/action-matrix.md. Update with cargo xtask action-matrix --bless.\",\n \"designs\": {\n",
     );
     let designs = m.len();
     for (i, (design, entities)) in m.into_iter().enumerate() {
@@ -1242,7 +1242,7 @@ fn write_costs(timings: &[Value]) {
         m.entry(d).or_insert((c.secs, c.load, 1));
     }
     let mut s = String::from(
-        "{\n \"about\": \"What each action matrix design costs on a CI runner, in seconds (secs: the whole design, load: before its first action), for cutting the nightly shards (apps/solidcraft-cli/tests/action_matrix.rs, plan). Written with the baseline by cargo xtask action-matrix --bless --from DIR.\",\n \"designs\": {\n",
+        "{\n \"about\": \"What each action matrix design costs on a CI runner, in seconds (secs: the whole design, load: before its first action), for cutting the nightly shards (apps/sketcraft-cli/tests/action_matrix.rs, plan). Written with the baseline by cargo xtask action-matrix --bless --from DIR.\",\n \"designs\": {\n",
     );
     let n = m.len();
     for (i, (d, (secs, load, pieces))) in m.into_iter().enumerate() {
@@ -1379,7 +1379,7 @@ fn a_hair_thin_hole_on_a_ledge_beside_a_loft_cut() {
 // through the 2.9 mm wall. A volume out of bounds is measured again finer before it refuses.
 #[test]
 fn a_small_hole_through_the_wall_of_a_plastic_rest() {
-    let mut s = load(&root().join("apps/sketcraft-cli/tests/corpus/modern-plastic.solidcraft")).unwrap();
+    let mut s = load(&root().join("apps/sketcraft-cli/tests/corpus/modern-plastic.sketcraft")).unwrap();
     let volume = |s: &Session| {
         s.model.state().bodies.iter().map(|b| b.body.mesh(&sketcraft_kernel::MeshTolerance::chord(0.002)).unwrap().measure().volume).sum::<f64>()
     };

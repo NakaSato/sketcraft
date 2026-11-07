@@ -1,7 +1,7 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#3850",
-  "tangency-labs/solidcraft#3741"
+  "NakaSato/sketcraft#3850",
+  "NakaSato/sketcraft#3741"
  ],
  "what": "the O10 through-all hole across the wall of the body from the cross-cut case (the report's failing step: 'lumps: cannot mesh a complete shell boundary')",
  "source": "analytic",

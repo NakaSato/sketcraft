@@ -357,7 +357,7 @@ mod tests {
         let nanos = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map(|d| d.as_nanos()).unwrap_or(0);
         let d = base.join(format!("save-bench-{}-{nanos}", std::process::id()));
         fs::create_dir_all(&d).unwrap();
-        let p = d.join("design.solidcraft");
+        let p = d.join("design.sketcraft");
         write_atomic(&p, &bytes, true).unwrap();
         let rounds: usize = std::env::var("SKETCRAFT_SAVE_BENCH_ROUNDS").ok().and_then(|n| n.parse().ok()).unwrap_or(11);
         let mut times = [Vec::new(), Vec::new()];
@@ -391,7 +391,7 @@ mod tests {
         for refused in [false, true] {
             LINKS_REFUSED.with(|r| r.set(refused));
             let d = fresh_dir(if refused { "bak-copied" } else { "bak-linked" });
-            let p = d.join("a.solidcraft");
+            let p = d.join("a.sketcraft");
             write_atomic(&p, b"one", true).unwrap();
             write_atomic(&p, b"two", true).unwrap();
             assert_eq!((fs::read(&p).unwrap(), fs::read(backup_path(&p)).unwrap()), (b"two".to_vec(), b"one".to_vec()), "refused {refused}");
@@ -417,9 +417,9 @@ mod tests {
     fn a_fresh_lock_from_another_app_holds_the_design_and_a_stale_or_own_one_does_not() {
         use crate::design_lock as lock;
         let d = dir("design-lock");
-        let design = d.join("Bracket.solidcraft");
+        let design = d.join("Bracket.sketcraft");
         std::fs::write(&design, b"one").unwrap();
-        assert_eq!(lock::lock_path(&design), d.join(".~Bracket.solidcraft.lock"));
+        assert_eq!(lock::lock_path(&design), d.join(".~Bracket.sketcraft.lock"));
         assert!(!crate::is_design_path(&lock::lock_path(&design).to_string_lossy()), "never listed as a design");
 
         let now = lock::now_secs();
@@ -452,7 +452,7 @@ mod tests {
         use crate::design_lock as lock;
         use std::os::unix::fs::symlink;
         let d = dir("design-lock-link");
-        let design = d.join("Bracket.solidcraft");
+        let design = d.join("Bracket.sketcraft");
         std::fs::write(&design, b"one").unwrap();
         let lock_file = lock::lock_path(&design);
         let now = lock::now_secs();
@@ -497,9 +497,9 @@ mod tests {
         assert!(stale_temps(&lock_file).is_empty());
 
         // The design's own link is still followed by a save.
-        let real = d.join("real.solidcraft");
+        let real = d.join("real.sketcraft");
         std::fs::write(&real, b"old").unwrap();
-        let linked = d.join("linked.solidcraft");
+        let linked = d.join("linked.sketcraft");
         symlink(&real, &linked).unwrap();
         write_atomic(&linked, b"new", false).unwrap();
         assert_eq!(std::fs::read(&real).unwrap(), b"new");
@@ -515,7 +515,7 @@ mod tests {
         use crate::design_lock as lock;
         use std::os::unix::fs::symlink;
         let d = dir("design-lock-special");
-        let design = d.join("Bracket.solidcraft");
+        let design = d.join("Bracket.sketcraft");
         let lock_file = lock::lock_path(&design);
         let read_soon = |design: &Path| {
             let (tx, rx) = std::sync::mpsc::channel();
@@ -591,7 +591,7 @@ mod tests {
     #[test]
     fn a_share_that_refuses_the_full_flush_gets_a_plain_one() {
         let d = dir("flush");
-        let p = d.join("a.solidcraft");
+        let p = d.join("a.sketcraft");
         fs::write(&p, b"saved").unwrap();
         let f = fs::File::open(&p).unwrap();
         let refused = |_: &fs::File| Err(std::io::Error::from_raw_os_error(45));
@@ -611,7 +611,7 @@ mod tests {
     #[test]
     fn replaces_and_keeps_a_backup() {
         let d = dir("bak");
-        let p = d.join("a.solidcraft");
+        let p = d.join("a.sketcraft");
         write_atomic(&p, b"one", true).unwrap();
         assert!(!backup_path(&p).exists(), "nothing to back up the first time");
         write_atomic(&p, b"two", true).unwrap();
@@ -627,7 +627,7 @@ mod tests {
     #[test]
     fn a_save_stopped_part_way_keeps_the_old_file() {
         let d = dir("stop");
-        let p = d.join("a.solidcraft");
+        let p = d.join("a.sketcraft");
         write_atomic(&p, b"old", true).unwrap();
         for stop in [Step::TempWritten, Step::BackupWritten, Step::Replaced] {
             write_steps(&p, b"new content", true, Some(stop)).unwrap();
@@ -648,7 +648,7 @@ mod tests {
     #[test]
     fn a_failed_write_leaves_the_target() {
         let d = dir("fail");
-        let p = d.join("missing-dir").join("a.solidcraft");
+        let p = d.join("missing-dir").join("a.sketcraft");
         assert!(write_atomic(&p, b"x", true).is_err());
         assert!(!p.exists());
         let _ = fs::remove_dir_all(&d);
@@ -669,8 +669,8 @@ mod tests {
             let d = dir("link");
             fs::create_dir_all(d.join("cloud")).unwrap();
             fs::create_dir_all(d.join("work")).unwrap();
-            let target = d.join("cloud").join("a.solidcraft");
-            let link = d.join("work").join("a.solidcraft");
+            let target = d.join("cloud").join("a.sketcraft");
+            let link = d.join("work").join("a.sketcraft");
             write_atomic(&target, b"one", false).unwrap();
             symlink(&target, &link).unwrap();
             write_atomic(&link, b"two", true).unwrap();
@@ -687,9 +687,9 @@ mod tests {
             let d = dir("chain");
             fs::create_dir_all(d.join("real")).unwrap();
             fs::create_dir_all(d.join("mid")).unwrap();
-            let target = d.join("real").join("a.solidcraft");
+            let target = d.join("real").join("a.sketcraft");
             write_atomic(&target, b"one", false).unwrap();
-            symlink("../real/a.solidcraft", d.join("mid").join("b")).unwrap();
+            symlink("../real/a.sketcraft", d.join("mid").join("b")).unwrap();
             symlink("mid/b", d.join("c")).unwrap();
             write_atomic(&d.join("c"), b"two", false).unwrap();
             assert_eq!(fs::read(&target).unwrap(), b"two");
@@ -701,8 +701,8 @@ mod tests {
         #[test]
         fn a_dangling_link_is_filled_in_and_a_loop_is_an_error() {
             let d = dir("dangling");
-            let link = d.join("a.solidcraft");
-            let target = d.join("later.solidcraft");
+            let link = d.join("a.sketcraft");
+            let target = d.join("later.sketcraft");
             symlink(&target, &link).unwrap();
             write_atomic(&link, b"new", true).unwrap();
             assert_eq!(fs::read(&target).unwrap(), b"new");
@@ -722,7 +722,7 @@ mod tests {
         fn a_save_keeps_the_permissions() {
             let d = dir("mode");
             for want in [0o600, 0o640, 0o664, 0o444] {
-                let p = d.join(format!("a{want:o}.solidcraft"));
+                let p = d.join(format!("a{want:o}.sketcraft"));
                 write_atomic(&p, b"one", false).unwrap();
                 fs::set_permissions(&p, fs::Permissions::from_mode(want)).unwrap();
                 write_atomic(&p, b"two", true).unwrap();
@@ -743,7 +743,7 @@ mod tests {
             for refused in [false, true] {
                 LINKS_REFUSED.with(|r| r.set(refused));
                 let d = fresh_dir(if refused { "inode-copied" } else { "inode-linked" });
-                let p = d.join("a.solidcraft");
+                let p = d.join("a.sketcraft");
                 write_atomic(&p, b"one", true).unwrap();
                 fs::set_permissions(&p, fs::Permissions::from_mode(0o640)).unwrap();
                 let old = fs::metadata(&p).unwrap();
@@ -765,7 +765,7 @@ mod tests {
         #[test]
         fn a_save_through_a_link_keeps_the_targets_permissions() {
             let d = dir("linkmode");
-            let target = d.join("a.solidcraft");
+            let target = d.join("a.sketcraft");
             write_atomic(&target, b"one", false).unwrap();
             fs::set_permissions(&target, fs::Permissions::from_mode(0o600)).unwrap();
             symlink(&target, d.join("l")).unwrap();

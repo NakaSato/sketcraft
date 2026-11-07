@@ -44,7 +44,7 @@ files next to their module.
   enforces this.
 - No egui/wgpu/winit/rfd, no `unsafe` (`#![forbid(unsafe_code)]`).
 - The crate root denies `unwrap`, `expect`, `panic!`, `todo!`, `unreachable!`. Input is hostile:
-  check finiteness, cap sizes and loop counts. See `skills/solidcraft-crash-safety/SKILL.md`.
+  check finiteness, cap sizes and loop counts. See `skills/sketcraft-crash-safety/SKILL.md`.
 - Must build for `wasm32-unknown-unknown` (checked by `cargo xtask wasm`).
 - New `mod` lines go into the sorted list in `lib.rs`.
 
@@ -52,4 +52,3 @@ files next to their module.
 
 - Read environment variables through `env::var`, not `std::env`: it falls back to the legacy
   `SOLVECRAFT_` prefix.
-- Some doc comments still name the old package (`solidcraft-geom`). Use `sketcraft-geom` in commands.

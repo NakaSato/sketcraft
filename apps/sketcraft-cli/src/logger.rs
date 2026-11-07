@@ -1,13 +1,13 @@
 //! What the engine logs (`log::info!`, `log::debug!`: why a body has no display plan, why a save
 //! left its model cache out), written to stderr. Off unless asked for, so the CLI's output and
-//! the scripts reading it stay as they are: `--debug` shows SolidCraft's own debug messages (and
+//! the scripts reading it stay as they are: `--debug` shows SketCraft's own debug messages (and
 //! other crates' warnings, whose debug output is large), `RUST_LOG=error|warn|info|debug|trace`
 //! sets one level for every crate.
 
 use log::{LevelFilter, Log, Metadata, Record};
 
 struct Stderr {
-    /// The level for SolidCraft's crates.
+    /// The level for SketCraft's crates.
     ours: LevelFilter,
     /// The level for every other crate.
     others: LevelFilter,

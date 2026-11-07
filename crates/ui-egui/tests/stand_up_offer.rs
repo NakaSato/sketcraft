@@ -46,9 +46,9 @@ fn opened_boxes(size: [f64; 3], corners: &[[f64; 3]], programs: &str, prepare: i
         src.app.run("solid.box", json!({"length": length, "width": width, "height": height, "corner": corner, "operation": "new_body"})).unwrap();
     }
     src.app.run("file.export", json!({"path": path})).unwrap();
-    // Another program's file: SolidCraft's own exports already have Z up (#5150).
+    // Another program's file: SketCraft's own exports already have Z up (#5150).
     let text = std::fs::read_to_string(&path).unwrap();
-    std::fs::write(&path, text.replace("'SolidCraft','SolidCraft'", programs)).unwrap();
+    std::fs::write(&path, text.replace("'SketCraft','SketCraft'", programs)).unwrap();
     let mut h = Harness::new();
     prepare(&mut h);
     h.app.open_path(&path);
@@ -132,8 +132,8 @@ fn stand_it_up_from_a_solidworks_offer_turns_once_and_undo_restores() {
 }
 
 #[test]
-fn a_solidcraft_header_is_left_alone() {
-    let h = opened_from("'SolidCraft','SolidCraft'", |_| {});
+fn a_sketcraft_header_is_left_alone() {
+    let h = opened_from("'SketCraft','SketCraft'", |_| {});
     assert!(h.app.stand_up.is_none(), "no offer");
     assert!(!h.app.status_undo);
     assert!((height(&h) - 5.0).abs() < 1e-6, "not turned: {}", height(&h));

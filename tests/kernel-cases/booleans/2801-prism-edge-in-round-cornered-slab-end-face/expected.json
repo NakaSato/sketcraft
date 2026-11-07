@@ -1,6 +1,6 @@
 {
   "sources": [
-    "tangency-labs/solidcraft#2801"
+    "NakaSato/sketcraft#2801"
   ],
   "what": "a join of a triangular prism and a thin slab with rounded corners (r 4.9) that share their bottom plane, the prism's edge in that plane lying in the slab's end face",
   "source": "analytic",

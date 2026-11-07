@@ -1,7 +1,7 @@
 {
   "sources": [
-    "tangency-labs/solidcraft#3612",
-    "tangency-labs/solidcraft#3379"
+    "NakaSato/sketcraft#3612",
+    "NakaSato/sketcraft#3379"
   ],
   "what": "a spoke whose inner face x=12 is exactly tangent to the hub cylinder r=12 (line contact), joined to the rim, patterned 5 times around the hub's axis",
   "source": "analytic",

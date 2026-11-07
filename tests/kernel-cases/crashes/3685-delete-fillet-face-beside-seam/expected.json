@@ -1,7 +1,7 @@
 {
   "sources": [
-    "tangency-labs/solidcraft#1559",
-    "tangency-labs/solidcraft#3685"
+    "NakaSato/sketcraft#1559",
+    "NakaSato/sketcraft#3685"
   ],
   "what": "Delete Face on a fillet face next to a face whose edge a boolean/fillet rebuilt as an intersection curve: must never panic (truck: not implemented: intersection curve cannot connect by homotopy)",
   "source": "analytic",

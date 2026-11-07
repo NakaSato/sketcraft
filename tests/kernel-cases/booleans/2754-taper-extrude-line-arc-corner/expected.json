@@ -1,6 +1,6 @@
 {
   "sources": [
-    "tangency-labs/solidcraft#2754"
+    "NakaSato/sketcraft#2754"
   ],
   "what": "a tapered extrude of a profile in which an arc meets a line at a corner (a half disc)",
   "source": "analytic",

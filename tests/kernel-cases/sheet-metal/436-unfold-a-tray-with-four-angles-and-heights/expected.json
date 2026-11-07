@@ -1,8 +1,8 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#436",
-  "tangency-labs/solidcraft#447",
-  "tangency-labs/solidcraft#501"
+  "NakaSato/sketcraft#436",
+  "NakaSato/sketcraft#447",
+  "NakaSato/sketcraft#501"
  ],
  "what": "one edge flange feature whose four edges carry 75, 90, 105 and 120 degrees and heights 38.6, 38.6, 30 and 25, with corners between unequal angles closed, unfolded",
  "source": "analytic",

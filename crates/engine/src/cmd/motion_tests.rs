@@ -458,7 +458,7 @@ fn joint_pose_save_and_reopen_keep_definitions_at_new_angles() {
         std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos()
     ));
     std::fs::create_dir(&directory).unwrap();
-    let path = directory.join("part.solidcraft");
+    let path = directory.join("part.sketcraft");
     run(&mut s, "file.save", json!({"path":path,"cache":true,"preview":true}));
     let mut opened = Session::default();
     run(&mut opened, "doc.open", json!({"path":path}));

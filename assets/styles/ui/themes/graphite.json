@@ -1,6 +1,6 @@
 {
   "order": 180,
-  "provenance": "Original SolidCraft theme",
+  "provenance": "Original SketCraft theme",
   "base": "dark",
   "colors": {
     "accent": "#4aa3d8",
@@ -190,7 +190,7 @@
     "viewport_top": "#17191d",
     "warning": "#dbb879"
   },
-  "format": "solidcraft-theme/1",
+  "format": "sketcraft-theme/1",
   "name": "Graphite",
   "icon_palette": {
     "ink": "#1c1e21",

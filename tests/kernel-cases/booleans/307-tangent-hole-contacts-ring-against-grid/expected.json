@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#307"
+  "NakaSato/sketcraft#307"
  ],
  "what": "four pairs of through holes whose circles touch at exactly one point (ring holes at (+-25,0),(0,+-25) against grid holes at (+-15,0),(0,+-15)); the symmetric contacts must be treated alike and split no cylinder face",
  "source": "analytic",

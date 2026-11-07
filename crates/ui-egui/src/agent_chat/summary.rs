@@ -28,7 +28,7 @@ pub struct Units<'a> {
     pub decimals: u8,
 }
 
-/// The call in words, or `None` when it is not one of SolidCraft's tools or says too little.
+/// The call in words, or `None` when it is not one of SketCraft's tools or says too little.
 /// `title`: the call's title as the agent gave it; `input`: its arguments; `output`: what it
 /// returned (text); `done`: it completed (a finished save reads "Saved …", one still running
 /// or failed "Save …").
@@ -39,8 +39,8 @@ pub fn summary(title: &str, input: Option<&Value>, output: Option<&str>, done: b
     Some(clip(&text, MAX_SUMMARY))
 }
 
-/// SolidCraft's tool a title names: `mcp__<server>__<tool>` (an agent names MCP tools after their
-/// server, which for SolidCraft's has `solidcraft` in it), or the in-app client's own `measure`,
+/// SketCraft's tool a title names: `mcp__<server>__<tool>` (an agent names MCP tools after their
+/// server, which for SketCraft's has `sketcraft` in it), or the in-app client's own `measure`,
 /// `execute: solid.box`, `batch: …`.
 pub fn tool_name(title: &str) -> Option<&str> {
     let head = title.trim();
@@ -282,7 +282,7 @@ fn file_name(path: &str) -> Option<String> {
     Some(word(path.rsplit(['/', '\\']).find(|p| !p.is_empty()).unwrap_or(path)))
 }
 
-/// A path in a temporary folder (`/tmp`, `%TEMP%`, macOS `/var/folders`) or one of SolidCraft's
+/// A path in a temporary folder (`/tmp`, `%TEMP%`, macOS `/var/folders`) or one of SketCraft's
 /// own scratch folders.
 fn is_temp(path: &str) -> bool {
     let p = path.replace('\\', "/").to_ascii_lowercase();

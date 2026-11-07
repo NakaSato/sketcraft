@@ -46,7 +46,7 @@ pub mod colors {
 }
 
 /// The colours a headless scene is drawn in. [`Palette::DEFAULT`] is [`colors`], the light
-/// theme's look, which `solidcraft-cli snapshot`, MCP screenshots and thumbnails keep; the app
+/// theme's look, which `sketcraft-cli snapshot`, MCP screenshots and thumbnails keep; the app
 /// passes its theme's for `ui.render` and its CPU viewport, so they match the window. Only these
 /// defaults change: a body's appearance and a face's own look are the design's, drawn as they are.
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -1273,7 +1273,7 @@ mod tests {
     use super::*;
 
     /// Headless pictures show appearances as the viewport does: a body's colour and faces with
-    /// looks of their own (the picture itself: `solidcraft-gpu`'s capture tests).
+    /// looks of their own (the picture itself: `sketcraft-gpu`'s capture tests).
     #[test]
     fn snapshot_scene_carries_appearances() {
         let mut s = Session::default();
@@ -1335,7 +1335,7 @@ mod tests {
     }
 
     /// A section cuts the headless scene: the clip plane and the cap colour, and the outline
-    /// where the plane cuts each body (the picture: `solidcraft-gpu`'s capture tests).
+    /// where the plane cuts each body (the picture: `sketcraft-gpu`'s capture tests).
     #[test]
     fn the_section_cuts_the_scene() {
         let mut s = Session::default();
@@ -1448,7 +1448,7 @@ mod tests {
 
     /// A post standing on a plate, cut through: the post's cut is its own (blue) cap down to the
     /// plate, whichever body came first; the plate's top (the same plane as the post's bottom,
-    /// seen through the cut) does not show through it (the viewport: `solidcraft-gpu`'s depth tests).
+    /// seen through the cut) does not show through it (the viewport: `sketcraft-gpu`'s depth tests).
     #[test]
     fn cpu_picture_a_body_standing_on_another_keeps_its_own_cap() {
         let plate = ("solid.box", json!({"length": 80, "width": 50, "height": 10, "body_name": "Plate"}));

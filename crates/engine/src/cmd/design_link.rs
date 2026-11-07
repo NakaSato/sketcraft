@@ -79,24 +79,24 @@ mod tests {
     #[test]
     fn link_paths_are_kept_relative_to_the_design_and_follow_save_as() {
         let root = absolute(Path::new("projects"));
-        let part = root.join("parts").join("plate.solidcraft");
-        let design = root.join("assembly").join("case.solidcraft");
+        let part = root.join("parts").join("plate.sketcraft");
+        let design = root.join("assembly").join("case.sketcraft");
         let design = design.to_string_lossy().into_owned();
-        assert_eq!(stored(Some(&design), &part), "../parts/plate.solidcraft");
-        assert_eq!(resolve(Some(&design), "../parts/plate.solidcraft"), part);
+        assert_eq!(stored(Some(&design), &part), "../parts/plate.sketcraft");
+        assert_eq!(resolve(Some(&design), "../parts/plate.sketcraft"), part);
         // A design path given relative to the working folder works the same.
-        assert_eq!(stored(Some("case.solidcraft"), &absolute(Path::new("parts/plate.solidcraft"))), "parts/plate.solidcraft");
+        assert_eq!(stored(Some("case.sketcraft"), &absolute(Path::new("parts/plate.sketcraft"))), "parts/plate.sketcraft");
         // Before the design has a file the path is kept whole; saving it makes it relative.
         let unsaved = stored(None, &part);
         assert!(Path::new(&unsaved).is_absolute(), "{unsaved}");
         let mut doc = Document::default();
         doc.links.insert(7, DesignLink { path: unsaved, feature: 3, ..Default::default() });
         let moved = rebased(&doc, None, &design);
-        assert_eq!(moved.get(&7).map(|l| l.path.as_str()), Some("../parts/plate.solidcraft"));
-        let beside = root.join("parts").join("asm.solidcraft").to_string_lossy().into_owned();
+        assert_eq!(moved.get(&7).map(|l| l.path.as_str()), Some("../parts/plate.sketcraft"));
+        let beside = root.join("parts").join("asm.sketcraft").to_string_lossy().into_owned();
         assert_eq!(
             rebased(&Document { links: moved, ..Document::default() }, Some(&design), &beside).get(&7).map(|l| l.path.as_str()),
-            Some("plate.solidcraft")
+            Some("plate.sketcraft")
         );
     }
 }

@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#5353"
+  "NakaSato/sketcraft#5353"
  ],
  "what": "a second plain O9 through hole in a 14 mm base plate, nowhere near a blind drilled O4.2 hole in the tower above: truck refused it, pointing at the blind hole's 118 deg tip ('could not be computed reliably')",
  "source": "analytic",

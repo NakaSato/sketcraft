@@ -4,15 +4,15 @@ This report distinguishes evaluation of the complete saved rover, independent ch
 
 ## Native artifact and executors
 
-The saved derivative is [models/SELENE-functional.solidcraft](models/SELENE-functional.solidcraft), **439,883 bytes**, native format **`solidcraft/28`**. Its SHA-256 is:
+The saved derivative is [models/SELENE-functional.sketcraft](models/SELENE-functional.sketcraft), **439,883 bytes**, native format **`sketcraft/28`**. Its SHA-256 is:
 
 ```text
 3bd2bfa1c6336394c4a4208d30b52c80d06658a3bd7ea57cc93b774411d1bd68
 ```
 
-The unchanged source is `source/SELENE-showcase.solidcraft`, 314,452 bytes, SHA-256 `1b0df486f30da157db27a33e0b5ed67f13d527d4dfdc6c334717a1df4e5b8677`. It is byte-identical to SychPL's published improved showcase file; [SOURCE.md](SOURCE.md) pins its author commit and license evidence. Native evaluation of that source found 1,418 bodies and no feature errors or warnings. Its container has 3,378 history features, 47 components excluding root, 47 occurrences, 49 joints, nine motion links and one motion study.
+The unchanged source is `source/SELENE-showcase.sketcraft`, 314,452 bytes, SHA-256 `1b0df486f30da157db27a33e0b5ed67f13d527d4dfdc6c334717a1df4e5b8677`. It is byte-identical to SychPL's published improved showcase file; [SOURCE.md](SOURCE.md) pins its author commit and license evidence. Native evaluation of that source found 1,418 bodies and no feature errors or warnings. Its container has 3,378 history features, 47 components excluding root, 47 occurrences, 49 joints, nine motion links and one motion study.
 
-The authoring and final acceptance executor is the official SolidCraft v0.18.2 Linux CLI, SHA-256 `e50fe78292d569c36052b24f46f1732bc4e43d1ecdac6a64092aa1cee3b97086`. It writes `solidcraft/28`. The personal render branch's format-29 reader accepts that format. The native container is only read for inspection and selector construction; all CAD changes are made through SolidCraft commands.
+The authoring and final acceptance executor is the official SketCraft v0.18.2 Linux CLI, SHA-256 `e50fe78292d569c36052b24f46f1732bc4e43d1ecdac6a64092aa1cee3b97086`. It writes `sketcraft/28`. The personal render branch's format-29 reader accepts that format. The native container is only read for inspection and selector construction; all CAD changes are made through SketCraft commands.
 
 The personal fork at `10ada1b45a4eb285ce752ac72f9aaa968ff8b5c4` was also compiled successfully and used for bounded product-render checks. Its CLI SHA-256 is `2a5485f7c7832d29b6340988837316e247b94eeeb9d4f7333ee616cea38c6826`. This separately built executable is not substituted into the authoring checkpoint chain.
 

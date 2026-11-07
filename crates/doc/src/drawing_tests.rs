@@ -563,7 +563,7 @@ fn a_newer_builds_drawing_opens_and_keeps_what_it_cant_read() {
     // With nothing it can't read: the same drawing.
     let opened = Drawing::from_json(&file.to_string()).unwrap();
     assert_eq!(opened.sheets, d.sheets);
-    assert!(opened.newer_file.as_ref().unwrap().notice().starts_with("Saved by a newer SolidCraft"));
+    assert!(opened.newer_file.as_ref().unwrap().notice().starts_with("Saved by a newer SketCraft"));
     assert_eq!(serde_json::from_str::<Value>(&opened.to_json().unwrap()).unwrap()["format"], json!(newer));
     // A field and a second sheet it can't read stay out, named, and go back.
     file["views"] = json!([{"id": "a"}]);

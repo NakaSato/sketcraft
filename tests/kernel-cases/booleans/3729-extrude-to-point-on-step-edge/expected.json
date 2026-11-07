@@ -1,6 +1,6 @@
 {
   "sources": [
-    "tangency-labs/solidcraft#3729"
+    "NakaSato/sketcraft#3729"
   ],
   "what": "extrude `to` a point lying exactly on the top edge of a step: must end at the plane z=20 through the point",
   "source": "analytic",

@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#5306"
+  "NakaSato/sketcraft#5306"
  ],
  "what": "a 90 deg flange on the edge inside an open rectangular notch of a sheet-metal plate (100x60, notch 20 wide, 15 deep from the far edge): the flange was built on the plate's outer edge instead",
  "source": "analytic",

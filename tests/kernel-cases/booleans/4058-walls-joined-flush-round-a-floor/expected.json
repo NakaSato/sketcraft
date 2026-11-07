@@ -1,7 +1,7 @@
 {
   "sources": [
-    "tangency-labs/solidcraft#4058",
-    "tangency-labs/solidcraft#4059"
+    "NakaSato/sketcraft#4058",
+    "NakaSato/sketcraft#4059"
   ],
   "what": "a 10 mm ring (rounded corners) extruded 40 mm as a Join round a floor's outline: it touches the floor back to back on its flat sides and rounded corners",
   "source": "analytic",

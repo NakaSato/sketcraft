@@ -687,7 +687,7 @@ fn paste_new_of_an_import_with_one_label_on_all_solids_moves_the_copy_of_each_bo
 fn paste_new_of_a_design_linked_twice_moves_the_copy_of_each_body() {
     let dir = std::env::temp_dir().join(format!("sketcraft-paste-new-linked-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
-    let design = dir.join("Three.solidcraft");
+    let design = dir.join("Three.sketcraft");
     let mut part = Session::default();
     for (i, label) in ["Aa", "Bb", "Cc"].iter().enumerate() {
         let corner = [30.0 * i as f64, 0.0, 0.0];

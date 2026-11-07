@@ -25,18 +25,16 @@ cargo run -p sketcraft-cli -- mcp --headless                         # run the s
 
 ## Rules
 
-- Read `skills/solidcraft-agent-tools/SKILL.md` before changing a tool.
+- Read `skills/sketcraft-agent-tools/SKILL.md` before changing a tool.
 - Anything the user can do is an engine command. Add a command, not a new tool, unless the tool is about the session (open, save, screenshot, batch).
 - Tools never open dialogs.
 - Keep tool annotations (read-only, destructive) honest.
 - File access stays inside the path scope: recovery folder, scratch folder, `--allow-path` folders, and the open design's folder. Do not widen it casually. Paths are resolved before comparing, so `..` and links that leave the scope are refused.
 - Keep replies small. Do not return the unfiltered command catalogue or full topology dumps by default.
 - Request lines are capped by `sketcraft_engine::MAX_LINE`, shared with the control server.
-- The embedded skills are `skills/solidcraft-{checking,editing,mechanisms,modeling}`. When a command or parameter they describe changes, update them in the same change. A new bundled file goes into `src/skill_reference.rs` and into the test above.
-- Crash-safety rules apply (the crate root denies `unwrap` and friends): `skills/solidcraft-crash-safety/SKILL.md`.
+- The embedded skills are `skills/sketcraft-{checking,editing,mechanisms,modeling}`. When a command or parameter they describe changes, update them in the same change. A new bundled file goes into `src/skill_reference.rs` and into the test above.
+- Crash-safety rules apply (the crate root denies `unwrap` and friends): `skills/sketcraft-crash-safety/SKILL.md`.
 
 ## Gotchas
 
-- `skill_reference` serves the skills under `sketcraft-*` names, but their folders are `skills/solidcraft-*`.
 - Doc comments cite `docs/mcp.md` and `docs/control-protocol.md`. Neither is in this tree.
-- Comments still say `solidcraft-cli mcp`. The binary is `sketcraft-cli`.

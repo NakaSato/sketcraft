@@ -1,7 +1,7 @@
 {
   "sources": [
-    "tangency-labs/solidcraft#3665",
-    "tangency-labs/solidcraft#3666"
+    "NakaSato/sketcraft#3665",
+    "NakaSato/sketcraft#3666"
   ],
   "what": "a join extrude of a column standing on a channel's flat floor and lying along both its curved walls (column circle tangent to both walls)",
   "source": "analytic",

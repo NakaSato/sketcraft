@@ -1,6 +1,6 @@
 {
   "sources": [
-    "tangency-labs/solidcraft#3379"
+    "NakaSato/sketcraft#3379"
   ],
   "what": "a circular pattern (count 5) of a spoke thinner than the ring it joins (faces 0.5 mm inside the rim and hub faces)",
   "source": "analytic",

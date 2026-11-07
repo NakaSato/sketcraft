@@ -110,14 +110,14 @@ inventories and historical authoring batches do not belong in the repository. Ev
 
 ## Runtime menu audit
 
-`cargo test -p solidcraft-ui-egui --test icon_audit` drives the real UI through the
+`cargo test -p sketcraft-ui-egui --test icon_audit` drives the real UI through the
 headless scenario Harness and rejects placeholder requests and unexpected blank
 context-menu icons. It compares sorted requested ids with
 `design/requested_icons.txt` (`id<TAB>placeholder`, one per line). After deliberately
 changing menu coverage or assignments, regenerate and review its diff:
 
 ```sh
-UPDATE_ICON_MANIFEST=1 cargo test -p solidcraft-ui-egui --test icon_audit
+UPDATE_ICON_MANIFEST=1 cargo test -p sketcraft-ui-egui --test icon_audit
 ```
 
 The review page includes every manifest id, even ids used only in tables or helper

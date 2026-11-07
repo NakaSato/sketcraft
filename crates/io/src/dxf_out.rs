@@ -1113,7 +1113,7 @@ mod tests {
             let h = u64::from_str_radix(v, 16).unwrap();
             assert!(h == 0 || handles.binary_search(&h).is_ok(), "owner {v}");
         }
-        // SolidCraft's own reader still reads it.
+        // SketCraft's own reader still reads it.
         assert_eq!(read_dxf(&dxf).unwrap().len(), 2);
     }
 

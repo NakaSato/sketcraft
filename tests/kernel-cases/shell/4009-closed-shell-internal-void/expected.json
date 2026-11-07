@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#4009"
+  "NakaSato/sketcraft#4009"
  ],
  "what": "shell with no face removed: a closed hollow body with a sealed internal void",
  "source": "analytic",

@@ -33,7 +33,7 @@ const RECOVERY: &str = "recovery.sc";
 /// The autosaves earlier releases kept, newest first, one per entry of
 /// `sketcraft_engine::io::LEGACY_DESIGN_EXTS` (compatibility shim, docs/compatibility.md): the
 /// newest is recovered when there is no current one.
-const LEGACY_RECOVERY: [&str; 2] = ["recovery.solidcraft", "recovery.solvecraft"];
+const LEGACY_RECOVERY: [&str; 2] = ["recovery.sketcraft", "recovery.solvecraft"];
 const RECOVERY_META: &str = "recovery.json";
 
 /// What to do with a file brought in from the computer.

@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#4989"
+  "NakaSato/sketcraft#4989"
  ],
  "what": "the top edge of a face drafted 10 deg (the front of a 40x30x20 block, neutral plane at its base), chamfered 2 mm: refused ('the blend is larger than the neighbouring faces; the largest radius that fits is 0.071 mm')",
  "source": "analytic",

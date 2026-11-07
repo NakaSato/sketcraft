@@ -1,7 +1,7 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#2453",
-  "tangency-labs/solidcraft#2183"
+  "NakaSato/sketcraft#2453",
+  "NakaSato/sketcraft#2183"
  ],
  "what": "a rectangle that straddles the revolve axis (x from -5 to 15 about the sketch y axis)",
  "source": "invariants",

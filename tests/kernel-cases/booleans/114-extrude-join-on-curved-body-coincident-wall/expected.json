@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#114"
+  "NakaSato/sketcraft#114"
  ],
  "what": "extruding a profile onto a cylinder with zero taper: the new wall is the old wall continued (coincident cylindrical faces), join failed",
  "source": "analytic",

@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#3963"
+  "NakaSato/sketcraft#3963"
  ],
  "what": "a 20 mm square face bounded by one closed degree-1 B-spline edge whose only vertex sits at parameter 2e-7, just past the curve's start: the face must be kept, not dropped or crashed on",
  "source": "analytic",

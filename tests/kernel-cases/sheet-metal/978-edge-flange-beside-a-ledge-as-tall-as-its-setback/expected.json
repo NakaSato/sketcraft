@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#978"
+  "NakaSato/sketcraft#978"
  ],
  "what": "a 90 degree inside flange of radius 1 on an edge that has a ledge beside it exactly as tall as the flange's setback (3 mm): sew failed with a degenerate edge",
  "source": "analytic",

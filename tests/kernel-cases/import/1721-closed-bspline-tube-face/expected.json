@@ -1,7 +1,7 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#1721",
-  "tangency-labs/solidcraft#3880"
+  "NakaSato/sketcraft#1721",
+  "NakaSato/sketcraft#3880"
  ],
  "what": "a cylinder r=10 h=30 whose side is a closed (rational B-spline) tube face wrapping all the way round a closed non-periodic surface: it must mesh and measure as the full tube",
  "source": "analytic",

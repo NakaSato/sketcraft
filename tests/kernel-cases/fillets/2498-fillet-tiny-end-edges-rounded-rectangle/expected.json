@@ -1,7 +1,7 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#2498",
-  "tangency-labs/solidcraft#2506"
+  "NakaSato/sketcraft#2498",
+  "NakaSato/sketcraft#2506"
  ],
  "what": "an R2 round of the top loop of a 26.4x8.6x8.4 rounded rectangle whose end edges are only 0.02 mm long (corner radius 4.29)",
  "source": "analytic",

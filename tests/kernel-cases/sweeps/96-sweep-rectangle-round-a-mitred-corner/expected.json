@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#96"
+  "NakaSato/sketcraft#96"
  ],
  "what": "an 8 x 5 rectangle swept along a path of a 30 mm vertical line and a 40 mm horizontal line meeting at a sharp corner (walls mitred)",
  "source": "analytic",

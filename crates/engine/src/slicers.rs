@@ -1208,7 +1208,7 @@ mod tests {
         entry("terminal.desktop", "Name=Console Mesher\nExec=cm\nMimeType=model/stl;\nTerminal=true");
         entry("noclaim.desktop", "Name=Text Editor\nExec=edit %f\nMimeType=text/plain;application/vnd.ms-3mfdocumentation;");
         entry("hiddenprusa.desktop", "Name=PrusaSlicer Beta\nExec=prusa-beta\nNoDisplay=true");
-        entry("ours.desktop", "Name=SolidCraft\nExec=solidcraft %f\nMimeType=model/3mf;model/stl;");
+        entry("ours.desktop", "Name=SketCraft\nExec=sketcraft %f\nMimeType=model/3mf;model/stl;");
         entry("alias.desktop", "Name=Windows Mesher\nExec=wm\nMimeType=application/vnd.ms-3mfdocument;");
         let found = detect_in(&Env { data_dirs: vec![data], ..Env::default() });
         let listed: Vec<(&str, &str)> = found.iter().map(|f| (f.id.as_str(), f.name.as_str())).collect();

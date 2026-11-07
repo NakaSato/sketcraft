@@ -1,4 +1,4 @@
-//! Colour and shape themes as files (#2255): a `solidcraft-theme/1` JSON file names a base palette (the
+//! Colour and shape themes as files (#2255): a `sketcraft-theme/1` JSON file names a base palette (the
 //! built-in Dark or Light) and sets any of its [`Tokens`] by name, so a theme can be a handful of
 //! lines. Built-in themes (Gruvbox and others) are such files under `assets/styles/ui/themes/`;
 //! imported ones are kept in the preferences (`Prefs::custom_themes`), so they also work in the

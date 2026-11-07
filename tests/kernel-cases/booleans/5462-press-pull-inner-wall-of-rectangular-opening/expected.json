@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#5462"
+  "NakaSato/sketcraft#5462"
  ],
  "what": "an inner wall of a rectangular opening through a block face-extruded 1 mm back into the material as a cut (what Press Pull runs on a flat face): 'boolean Cut: no result'",
  "source": "analytic",

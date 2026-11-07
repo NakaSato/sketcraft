@@ -1,7 +1,7 @@
 {
   "sources": [
-    "tangency-labs/solidcraft#2712",
-    "tangency-labs/solidcraft#1813"
+    "NakaSato/sketcraft#2712",
+    "NakaSato/sketcraft#1813"
   ],
   "what": "a sphere whose centre lies on a box's top face, poking out of the box's side as a lens-shaped face thinner than the mesh tolerance; the face must still be meshed",
   "source": "analytic",

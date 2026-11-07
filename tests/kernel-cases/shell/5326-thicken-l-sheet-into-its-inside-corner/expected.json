@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#5326"
+  "NakaSato/sketcraft#5326"
  ],
  "what": "an open sheet of two planar walls at a right angle (30 and 20 mm, 20 deep) thickened 2 mm toward the inside of its corner: truck refused it ('thickening into an inside corner across a sharp edge'); the outside worked",
  "source": "analytic",

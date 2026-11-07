@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#1986"
+  "NakaSato/sketcraft#1986"
  ],
  "what": "a 3 mm chamfer on the outer top arc of a 120 degree annular sector joined to a lower inner sector (the joined outer wall must not limit the chamfer)",
  "source": "analytic",

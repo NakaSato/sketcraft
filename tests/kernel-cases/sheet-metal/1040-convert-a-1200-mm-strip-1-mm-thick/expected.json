@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#1040"
+  "NakaSato/sketcraft#1040"
  ],
  "what": "a 1200 x 100 x 1 strip (diagonal over 1000 times its thickness) converted to sheet metal: refused with no outline on that face",
  "source": "analytic",

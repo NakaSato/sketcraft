@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#466"
+  "NakaSato/sketcraft#466"
  ],
  "what": "a six-line profile revolved a full turn about its first line, with a cone ending in a point: the tip came out with dents every 120 degrees instead of a smooth cone (rebuilt as a pencil-like profile with a collinear frustum and tip; the original design is not in the report)",
  "source": "analytic",

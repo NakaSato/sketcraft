@@ -15,7 +15,7 @@ use sketcraft_mcp::{Headless, Server};
 static NEXT: AtomicUsize = AtomicUsize::new(0);
 
 /// Whether pictures can be drawn here; installs the renderer the CLI installs, so the MCP
-/// `screenshot` in this process draws as `solidcraft-cli mcp` does.
+/// `screenshot` in this process draws as `sketcraft-cli mcp` does.
 fn gpu() -> bool {
     match sketcraft_gpu::capture::shared() {
         Ok(c) => {
@@ -344,7 +344,7 @@ fn a_forced_cpu_snapshot_is_the_cpu_rasterizers_and_says_so() {
 
 /// `hardware` (and `software`) never fall to the CPU rasterizer: without such an adapter the
 /// snapshot fails, naming the policy, and writes nothing; with one it says it was drawn on the GPU.
-/// `auto` lands where `solidcraft-cli gpu` says it does.
+/// `auto` lands where `sketcraft-cli gpu` says it does.
 #[test]
 fn a_strict_policy_never_falls_to_the_cpu() {
     let dir = Scratch::new();

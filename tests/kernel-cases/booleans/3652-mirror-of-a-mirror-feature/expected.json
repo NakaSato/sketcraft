@@ -1,6 +1,6 @@
 {
   "sources": [
-    "tangency-labs/solidcraft#3652"
+    "NakaSato/sketcraft#3652"
   ],
   "what": "mirror a Mirror feature (the first mirror's hole) about a second plane: 'Mirror1 cannot be patterned or mirrored yet'",
   "source": "analytic",

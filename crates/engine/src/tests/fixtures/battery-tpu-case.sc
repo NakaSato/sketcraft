@@ -1,5 +1,5 @@
 {
-  "format": "solidcraft/18",
+  "format": "sketcraft/18",
   "name": "Battery TPU Case",
   "units": "mm",
   "params": [

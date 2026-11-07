@@ -689,7 +689,7 @@ fn box_fillet_cut_part() {
     let step = dir.join("part.step");
     run(&mut s, "file.export", json!({"path": step.to_string_lossy()}));
     assert!(std::fs::read_to_string(&step).unwrap().contains("ISO-10303-21"));
-    let design = dir.join("part.solidcraft");
+    let design = dir.join("part.sketcraft");
     run(&mut s, "file.save_as", json!({"path": design.to_string_lossy()}));
     let mut s2 = Session::default();
     run(&mut s2, "doc.open", json!({"path": design.to_string_lossy()}));
@@ -1166,7 +1166,7 @@ fn registry_is_consistent() {
     assert!(!find_command("sketch.line").unwrap().info(&s).enabled);
 }
 
-/// Only SolidCraft's own dotted ids name commands; other ids are unknown commands.
+/// Only SketCraft's own dotted ids name commands; other ids are unknown commands.
 #[test]
 fn only_own_ids_name_commands() {
     for old in ["Extrude", "SketchCreate", "FusionFilletEdgesCommand"] {
@@ -3654,7 +3654,7 @@ fn a_hole_made_with_a_hidden_body_replays_the_same() {
     // (1) Save and reopen.
     let dir = std::env::temp_dir().join(format!("sketcraft-hole-history-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
-    let file = dir.join("hole.solidcraft");
+    let file = dir.join("hole.sketcraft");
     let mut saved = build(5.0);
     run(&mut saved, "file.save_as", json!({"path": file.to_string_lossy()}));
     let mut reopened = Session::default();
@@ -3756,7 +3756,7 @@ fn imported_rgb_appearances_survive_edits_reopen_and_step_export() {
     let dir = std::env::temp_dir().join(format!("sketcraft-imported-rgb-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     let input = dir.join("rgb.step");
-    let saved = dir.join("edited.solidcraft");
+    let saved = dir.join("edited.sketcraft");
     let output = dir.join("edited.step");
     let mut source = Session::default();
     for (name, x, color) in [("Red", 0, "#ff0000"), ("Green", 40, "#00ff00"), ("Blue", 80, "#0000ff")] {
@@ -4091,13 +4091,13 @@ fn drawing_on_existing_points_connects_to_them() {
 fn computed_import_preserves_file_and_earlier_undo_history() {
     let mut s = Session::default();
     run(&mut s, "solid.box", json!({"length": 10, "width": 10, "height": 10}));
-    s.path = Some("existing.solidcraft".into());
+    s.path = Some("existing.sketcraft".into());
     s.mark_saved();
     let saved = s.doc.clone();
     let mut computed = s.scratch();
     run(&mut computed, "solid.box", json!({"length": 5, "width": 5, "height": 5, "corner": [30, 0, 0]}));
     s.accept_computed(computed);
-    assert_eq!(s.path.as_deref(), Some("existing.solidcraft"));
+    assert_eq!(s.path.as_deref(), Some("existing.sketcraft"));
     assert!(s.is_dirty());
     assert_eq!(s.model.state().bodies.len(), 2);
     run(&mut s, "edit.undo", json!({}));
@@ -4532,7 +4532,7 @@ fn renaming_an_imported_body_keeps_the_names_of_its_duplicates() {
     assert_eq!(names(&s), ["X", "Second", "Third"]);
     assert_eq!(x_of(&mut s, "Third"), Some(60.0));
     // The names survive a rebuild and a reopen of the saved design.
-    let design = p.with_file_name("Three.solidcraft");
+    let design = p.with_file_name("Three.sketcraft");
     run(&mut s, "file.save_as", json!({"path": design.to_string_lossy()}));
     let mut r = Session::default();
     run(&mut r, "doc.open", json!({"path": design.to_string_lossy()}));
@@ -4722,7 +4722,7 @@ fn a_design_saved_before_format_14_with_fewer_body_names_opens_and_names_every_b
     extrude["body_names"] = json!(["Ribs"]);
     let dir = std::env::temp_dir().join(format!("sketcraft-373-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
-    let design = dir.join("ribs.solidcraft");
+    let design = dir.join("ribs.sketcraft");
     std::fs::write(&design, legacy.to_string()).unwrap();
     let mut old = Session::default();
     run(&mut old, "doc.open", json!({"path": design.to_string_lossy()}));

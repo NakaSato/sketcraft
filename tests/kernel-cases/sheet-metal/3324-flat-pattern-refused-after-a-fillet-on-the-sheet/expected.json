@@ -1,8 +1,8 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#3324",
-  "tangency-labs/solidcraft#3325",
-  "tangency-labs/solidcraft#3418"
+  "NakaSato/sketcraft#3324",
+  "NakaSato/sketcraft#3325",
+  "NakaSato/sketcraft#3418"
  ],
  "what": "a fillet on a sheet metal corner changes the body but not its sheet model, so the flat pattern would be a sharp rectangle: it must refuse",
  "source": "invariants",

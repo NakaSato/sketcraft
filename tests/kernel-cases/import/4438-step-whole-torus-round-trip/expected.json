@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#4438"
+  "NakaSato/sketcraft#4438"
  ],
  "what": "a whole torus (R 15, r 5) exported to STEP and read back: truck wrote it as two faces on one shared loop with no seam edges (V-E+F = 2), which other readers took as a sphere-like shell of volume 0",
  "source": "analytic",

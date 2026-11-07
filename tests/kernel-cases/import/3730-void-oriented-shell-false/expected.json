@@ -1,7 +1,7 @@
 {
   "sources": [
-    "tangency-labs/solidcraft#3730",
-    "tangency-labs/solidcraft#3872"
+    "NakaSato/sketcraft#3730",
+    "NakaSato/sketcraft#3872"
   ],
   "what": "a block with a closed cavity written as BREP_WITH_VOIDS whose void shell (outward-facing faces) is turned by ORIENTED_CLOSED_SHELL .F.; the cavity must be taken out, not added",
   "source": "analytic",

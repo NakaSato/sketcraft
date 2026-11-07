@@ -1,6 +1,6 @@
 {
   "order": 200,
-  "provenance": "Original SolidCraft mapping of Catppuccin (MIT palette)",
+  "provenance": "Original SketCraft mapping of Catppuccin (MIT palette)",
   "base": "dark",
   "colors": {
     "accent": "#cba6f7",
@@ -190,7 +190,7 @@
     "viewport_top": "#11111b",
     "warning": "#f9e2af"
   },
-  "format": "solidcraft-theme/1",
+  "format": "sketcraft-theme/1",
   "name": "Catppuccin Mocha",
   "icon_palette": {
     "ink": "#181825",

@@ -64,7 +64,7 @@ impl Owner {
     }
 }
 
-/// One of SolidCraft's own keys.
+/// One of SketCraft's own keys.
 pub struct Key {
     pub name: &'static str,
     /// Where it may be set.
@@ -76,7 +76,7 @@ pub struct Key {
     check: fn(&str, Value) -> Result<Option<Value>>,
 }
 
-/// SolidCraft's own keys, in the order the Design Properties dialog shows them; a new key is one
+/// SketCraft's own keys, in the order the Design Properties dialog shows them; a new key is one
 /// row here. Every other unprefixed key is reserved for SketCraft too.
 pub static KEYS: &[Key] = &[
     Key { name: PROJECT, scope: Scope::Both, label: "ui.design_properties.project", check: text },
@@ -115,7 +115,7 @@ pub const MAX_TOTAL_BYTES: usize = 256 * 1024;
 #[serde(transparent)]
 pub struct Metadata(pub Map<String, Value>);
 
-/// SolidCraft's keys that may be set in `owner`'s metadata, in [`KEYS`]' order.
+/// SketCraft's keys that may be set in `owner`'s metadata, in [`KEYS`]' order.
 pub fn keys(owner: Owner) -> impl Iterator<Item = &'static Key> {
     KEYS.iter().filter(move |k| k.scope.covers(owner))
 }
@@ -126,7 +126,7 @@ pub fn key_list(owner: Owner) -> String {
     keys(owner).map(|k| k.name).chain(bom_type).collect::<Vec<_>>().join(", ")
 }
 
-/// One of SolidCraft's keys, by name.
+/// One of SketCraft's keys, by name.
 pub fn key(name: &str) -> Option<&'static Key> {
     KEYS.iter().find(|k| k.name == name)
 }
@@ -244,7 +244,7 @@ impl Metadata {
         self.text(LICENSE)
     }
     /// The component's bill of materials type: normal when the key is missing, or holds a word
-    /// this build doesn't know (a newer SolidCraft's type reads as normal and is kept as it is).
+    /// this build doesn't know (a newer SketCraft's type reads as normal and is kept as it is).
     pub fn bom_type(&self) -> BomType {
         self.text(BOM_TYPE).and_then(BomType::parse).unwrap_or_default()
     }
@@ -309,7 +309,7 @@ fn check(owner: Owner, key: &str, value: Value) -> Result<Option<Value>> {
     }
     let shown: String = key.chars().take(64).collect();
     Err(invalid(format!(
-        "`{shown}` is not a {}: SolidCraft's are {}; another tool's data goes under a reverse-DNS key such as `com.example.tool`",
+        "`{shown}` is not a {}: SketCraft's are {}; another tool's data goes under a reverse-DNS key such as `com.example.tool`",
         owner.names().0,
         key_list(owner)
     )))
@@ -447,13 +447,13 @@ mod tests {
         let refusal = |owner, key: &str| Metadata::default().set(owner, key, json!("x")).unwrap_err().to_string();
         assert_eq!(
             refusal(Design, "colour"),
-            "`colour` is not a design property: SolidCraft's are project, part_number, revision, author, organization, \
+            "`colour` is not a design property: SketCraft's are project, part_number, revision, author, organization, \
              description, license; another tool's data goes under a reverse-DNS key such as `com.example.tool`",
             "the design's wording is as it was"
         );
         assert_eq!(
             refusal(Component, "colour"),
-            "`colour` is not a part property: SolidCraft's are project, part_number, revision, author, organization, \
+            "`colour` is not a part property: SketCraft's are project, part_number, revision, author, organization, \
              description, license, bom_type; another tool's data goes under a reverse-DNS key such as `com.example.tool`"
         );
         for owner in [Design, Component] {

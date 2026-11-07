@@ -1,7 +1,7 @@
 {
   "sources": [
-    "tangency-labs/solidcraft#3456",
-    "tangency-labs/solidcraft#3497"
+    "NakaSato/sketcraft#3456",
+    "NakaSato/sketcraft#3497"
   ],
   "what": "a deep cut that removes everything above z=2 of a tapered body with nine through-bores, leaving the 2 mm drilled base",
   "source": "analytic",

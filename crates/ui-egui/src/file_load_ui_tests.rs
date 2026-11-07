@@ -67,7 +67,7 @@ fn large_design(dir: &std::path::Path, n: usize) -> String {
         s.execute("solid.cylinder", &json!({"radius": 6, "height": 20, "base": [x, y, 5], "operation": "join"})).unwrap();
         s.execute("solid.cylinder", &json!({"radius": 2, "height": 40, "base": [x + 9.0, y + 9.0, -5], "operation": "cut"})).unwrap();
     }
-    let path = dir.join("large.solidcraft").to_string_lossy().to_string();
+    let path = dir.join("large.sketcraft").to_string_lossy().to_string();
     s.execute("file.save", &json!({"path": path})).unwrap();
     path
 }
@@ -190,8 +190,8 @@ fn cancel_stops_the_open_and_keeps_the_current_design() {
 #[test]
 fn update_links_names_the_design_it_reads_while_the_window_draws() {
     let dir = scratch("links");
-    let part = dir.join("plate.solidcraft");
-    let case = dir.join("case.solidcraft");
+    let part = dir.join("plate.sketcraft");
+    let case = dir.join("case.sketcraft");
     // A plate with two holes (three features: the read can be held at the third), saved without
     // its model so reading it rebuilds the features.
     let save_part = |height: f64| {
@@ -385,9 +385,9 @@ fn a_file_load_is_checked_at_the_requests_own_level() {
 fn update_links_and_open_linked_design_ask_before_a_network_location() {
     use crate::network_prompt::{Answer, NetworkPrompt, Then, answer};
     let dir = scratch("network");
-    let part = dir.join("plate.solidcraft");
-    let case = dir.join("case.solidcraft");
-    let crafted = r"\\evil.example\share\plate.solidcraft";
+    let part = dir.join("plate.sketcraft");
+    let case = dir.join("case.sketcraft");
+    let crafted = r"\\evil.example\share\plate.sketcraft";
     let save_part = |height: f64| {
         let mut s = Session::default();
         s.execute("solid.box", &json!({"length": 10, "width": 10, "height": height})).unwrap();
@@ -557,9 +557,9 @@ fn a_control_import_passes_up_and_names_on() {
     let mut src = Session::default();
     src.execute("solid.box", &json!({"length": 10, "width": 40, "height": 5})).unwrap();
     src.execute("file.export", &json!({"path": path})).unwrap();
-    // Another program's file: SolidCraft's own exports are not offered (#5150).
+    // Another program's file: SketCraft's own exports are not offered (#5150).
     let text = std::fs::read_to_string(&path).unwrap();
-    std::fs::write(&path, text.replace("'SolidCraft','SolidCraft'", "'SolidCraft','Example CAD'")).unwrap();
+    std::fs::write(&path, text.replace("'SketCraft','SketCraft'", "'SketCraft','Example CAD'")).unwrap();
 
     // The reply, the part's height and whether the offer is up, for an import by this window.
     let import = |params: serde_json::Value| {
@@ -819,7 +819,7 @@ fn opening_a_large_design_never_stalls_the_window() {
     let (mut w, (ms, phase)) = open_timed(&step);
     assert!(ms < BUDGET_MS, "STEP import: a {ms:.0} ms frame while {phase}");
     assert!(w.app.session.world_state().unwrap().bodies.len() >= 200);
-    for (name, cache) in [("cached.solidcraft", true), ("plain.solidcraft", false)] {
+    for (name, cache) in [("cached.sketcraft", true), ("plain.sketcraft", false)] {
         let path = dir.join(name).to_string_lossy().to_string();
         w.app.session.execute("file.save_as", &json!({"path": path, "cache": cache})).unwrap();
         let (_, (ms, phase)) = open_timed(&path);

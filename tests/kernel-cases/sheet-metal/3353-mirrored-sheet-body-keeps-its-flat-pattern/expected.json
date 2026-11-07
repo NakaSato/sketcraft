@@ -1,7 +1,7 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#3353",
-  "tangency-labs/solidcraft#3354"
+  "NakaSato/sketcraft#3353",
+  "NakaSato/sketcraft#3354"
  ],
  "what": "a sheet metal body mirrored into a new body must still be sheet metal (flat pattern, bend table): it was a plain solid",
  "source": "analytic",

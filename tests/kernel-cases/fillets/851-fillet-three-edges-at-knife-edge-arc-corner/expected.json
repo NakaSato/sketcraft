@@ -1,10 +1,10 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#851",
-  "tangency-labs/solidcraft#854",
-  "tangency-labs/solidcraft#926",
-  "tangency-labs/solidcraft#935",
-  "tangency-labs/solidcraft#1294"
+  "NakaSato/sketcraft#851",
+  "NakaSato/sketcraft#854",
+  "NakaSato/sketcraft#926",
+  "NakaSato/sketcraft#935",
+  "NakaSato/sketcraft#1294"
  ],
  "what": "three edges meeting at the front corner of a plate with a concave arc wall that runs out in a knife-edge tip: top front edge, arc top edge and front upright, R2 together",
  "source": "analytic",

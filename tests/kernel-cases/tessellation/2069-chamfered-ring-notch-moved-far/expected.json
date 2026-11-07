@@ -1,6 +1,6 @@
 {
   "sources": [
-    "tangency-labs/solidcraft#2069"
+    "NakaSato/sketcraft#2069"
   ],
   "what": "a 210-degree ring with a chamfered outer edge, notched through its chamfer cone and then moved 1000 mm: where the notch meets the cone the mesh used to leave a crack, and the measured volume then grew with the distance from the origin",
   "source": "analytic",

@@ -1,4 +1,4 @@
-//! SolidCraft's mesher: each face of a schema 4 record ([`brep::Brep`]) triangulated in its own
+//! SketCraft's mesher: each face of a schema 4 record ([`brep::Brep`]) triangulated in its own
 //! parameters, with every edge sampled once so neighbouring faces share their boundary points
 //! exactly, handed over as a [`TessPlan`] for the CPU or GPU evaluator. A boundary node's
 //! parameters on each face come from that face's exact pcurve of the edge, at the node's curve

@@ -1,6 +1,6 @@
 {
   "sources": [
-    "tangency-labs/solidcraft#3027"
+    "NakaSato/sketcraft#3027"
   ],
   "what": "a pin (r4) seated line to line in a bore (r4, exactly coaxial) of a bush: the two cylinder walls coincide",
   "source": "analytic",

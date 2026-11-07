@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#2003"
+  "NakaSato/sketcraft#2003"
  ],
  "what": "mirror a feature with Join: the image meets its original along the mirror plane and the join was refused for its volume",
  "source": "analytic",

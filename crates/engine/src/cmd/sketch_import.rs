@@ -363,7 +363,7 @@ mod tests {
         }
     }
 
-    /// A degree-9 SPLINE (solidcraft#5269) with fewer control points than its degree needs still
+    /// A degree-9 SPLINE (sketcraft#5269) with fewer control points than its degree needs still
     /// comes in as one spline over all its points, which the sketch draws at the degree they allow.
     #[test]
     fn a_degree_nine_spline_with_few_control_points_comes_in_whole() {

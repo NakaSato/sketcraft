@@ -1,7 +1,7 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#726",
-  "tangency-labs/solidcraft#1687"
+  "NakaSato/sketcraft#726",
+  "NakaSato/sketcraft#1687"
  ],
  "what": "a flanged hub profile (six edges, none on the axis) revolved a full turn: the planar faces must come out whole, not as three patches",
  "source": "analytic",

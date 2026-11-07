@@ -194,7 +194,7 @@ pub fn tool_definitions_with(opts: Options) -> Vec<Value> {
                         "items": {"type": "object", "properties": {"command": {"type": "string"}, "params": {"type": "object"}}, "required": ["command"]},
                     },
                     "path": string("Instead of `commands`: a JSON file holding the steps, an array or {\"commands\": [...]} (as \
-                     `solidcraft-cli run` takes and `solidcraft-cli script` writes), read by this server within the folders the \
+                     `sketcraft-cli run` takes and `sketcraft-cli script` writes), read by this server within the folders the \
                      agent may use; the steps run as if they had been sent here"),
                     "rollback": {"type": "boolean", "description": "Undo completed steps when one fails (default true)"},
                     "coalesce_parameters": {"type": "boolean", "description": "Set each run of consecutive plain parameter edits (parameters.change or set_parameter with a name and a value, or changes) together, rebuilding the design once for the run instead of once per edit; a run that is refused goes step by step, naming the refused step. Other steps still see the design up to date. Each step keeps its own result; the run is one undo step (default false)"},
@@ -376,8 +376,8 @@ pub fn tool_definitions_with(opts: Options) -> Vec<Value> {
             "SketCraft's crash reports on this computer (the app's when connected to it). Without `id`: the list, newest \
              first (id, kind, time, message, command, count, version, path, replayable). With `id`: the whole report: \
              message, location, backtrace, app version and commit, system, the command that crashed and the recent ones, \
-             and design_path / replay_path when it can be replayed: `solidcraft-cli crashes replay <id>`, or \
-             `solidcraft-cli run <replay_path> --in <design_path>`. Reports never leave this computer.",
+             and design_path / replay_path when it can be replayed: `sketcraft-cli crashes replay <id>`, or \
+             `sketcraft-cli run <replay_path> --in <design_path>`. Reports never leave this computer.",
             obj(
                 json!({
                     "id": string("A report id from the list"),
@@ -419,7 +419,7 @@ pub fn tool_definitions_with(opts: Options) -> Vec<Value> {
         tool(
             "open",
             "Open a design",
-            "Open a .sc design file (or a .solidcraft one from an earlier release), a STEP file (.step/.stp: a new design whose bodies come from the file, as an \
+            "Open a .sc design file (or a .sketcraft one from an earlier release), a STEP file (.step/.stp: a new design whose bodies come from the file, as an \
              Import base feature in a component named after the file; an assembly's parts become nested components) or a \
              mesh (.3mf/.stl/.obj/.glb/.gltf: mesh bodies in such a component; a glTF file's nodes become nested components and its \
              materials appearances); the result reports the component (id, component_name). Replaces the current design; insert into it \
@@ -428,7 +428,7 @@ pub fn tool_definitions_with(opts: Options) -> Vec<Value> {
              so it is turned by default (`up: \"z\"` keeps its axes). `names` picks what the bodies are named after when the solids' own names say nothing useful.",
             obj(
                 json!({
-                    "path": string("Path to a .sc (or .solidcraft), .step/.stp, .3mf, .stl, .obj, .glb or .gltf file"),
+                    "path": string("Path to a .sc (or .sketcraft), .step/.stp, .3mf, .stl, .obj, .glb or .gltf file"),
                     "up": {"type": "string", "enum": ["z", "y"], "description": "STEP and glTF only. z keeps the file's axes; y: the file has Y up, so its bodies are turned to stand Z up. Default: z for STEP, y for glTF"},
                     "names": {"type": "string", "enum": ["auto", "solid", "product", "instance"], "description": "STEP, IGES, FreeCAD and Rhino. auto (default): keep meaningful solid names, replace placeholders with the nearest named product, else instance; solid: the solid's own name; product: the part's name; instance: the occurrence's name, else the product's"},
                 }),
@@ -439,9 +439,9 @@ pub fn tool_definitions_with(opts: Options) -> Vec<Value> {
         tool(
             "save",
             "Save the design",
-            "Save the design to `path` or its current file (a design opened as .solidcraft keeps that name). New designs are .sc files. The default is a design container; a .json path selects plain JSON. Set format to container or json to override the path. \
+            "Save the design to `path` or its current file (a design opened as .sketcraft keeps that name). New designs are .sc files. The default is a design container; a .json path selects plain JSON. Set format to container or json to override the path. \
              By default the path must lie in one of the agent's folders: the folder of a design opened or saved in this session (not its hidden files), \
-             SolidCraft's recovery folder, or a folder this server was started with `--allow-path DIR`. For a folder outside them, ask the user \
+             SketCraft's recovery folder, or a folder this server was started with `--allow-path DIR`. For a folder outside them, ask the user \
              to add `--allow-path` and that folder to this server's arguments in their MCP client configuration.",
             obj(
                 json!({"path": string("Path to save to, e.g. part.sc (default: the current file)"), "format": {"type": "string", "enum": ["container", "json"], "description": "Design encoding (default: JSON for .json, container otherwise)"}}),
@@ -452,12 +452,12 @@ pub fn tool_definitions_with(opts: Options) -> Vec<Value> {
         tool(
             "skill_reference",
             "Skill reference",
-            "Read a document of SolidCraft's bundled agent skills (solidcraft-modeling, solidcraft-mechanisms, \
-             solidcraft-editing, solidcraft-checking) from the copy built into SolidCraft. `file` defaults to reference.md; \
+            "Read a document of SketCraft's bundled agent skills (sketcraft-modeling, sketcraft-mechanisms, \
+             sketcraft-editing, sketcraft-checking) from the copy built into SketCraft. `file` defaults to reference.md; \
              each skill also has SKILL.md. Unknown skills or files are refused with the available ones.",
             obj(
                 json!({
-                    "skill": string("Skill name, such as solidcraft-modeling"),
+                    "skill": string("Skill name, such as sketcraft-modeling"),
                     "file": {"type": "string", "description": "Document of that skill", "default": "reference.md"},
                 }),
                 &["skill"],

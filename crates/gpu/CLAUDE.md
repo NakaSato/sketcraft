@@ -36,7 +36,7 @@ cargo run -p sketcraft-gpu --example glass_comparison
 - The engine cannot depend on this crate. Pictures reach it through the renderer the host installs (`crates/engine/src/capture.rs`).
 - GPU output differs between drivers. Tests count pixels of a kind; they do not compare bytes.
 - Every picture names the renderer that drew it (`gpu`, `gpu-software` or `cpu`). Keep that when adding a path.
-- Crash-safety rules apply (the crate root denies `unwrap` and friends): `skills/solidcraft-crash-safety/SKILL.md`. Window-thread and wasm cost: `skills/solidcraft-performance/SKILL.md`.
+- Crash-safety rules apply (the crate root denies `unwrap` and friends): `skills/sketcraft-crash-safety/SKILL.md`. Window-thread and wasm cost: `skills/sketcraft-performance/SKILL.md`.
 
 ## Gotchas
 

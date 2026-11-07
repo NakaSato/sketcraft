@@ -1,7 +1,7 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#3806",
-  "tangency-labs/solidcraft#3813"
+  "NakaSato/sketcraft#3806",
+  "NakaSato/sketcraft#3813"
  ],
  "what": "a dome: an IGES surface of revolution (120) of a 60-to-90 degree circular arc (100) of radius 50 centred on the axis, trimmed by a circle at the rim, over a flat base disc; the cap must be 50 mm across and 6.7 mm tall, not a whole sphere",
  "source": "analytic",

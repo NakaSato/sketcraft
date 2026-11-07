@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#3880"
+  "NakaSato/sketcraft#3880"
  ],
  "what": "a cylinder r=10 h=30 whose side face is written with a seam edge: one closed solid with 3 faces",
  "source": "analytic",

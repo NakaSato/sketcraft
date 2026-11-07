@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#4711"
+  "NakaSato/sketcraft#4711"
  ],
  "what": "a 2 mm shell, open at the bottom, of a 60x40x10 block with an r3 through hole 4 mm from its front face, beside a 10x10 notch at that edge: the walls from the hole and from the front would meet along a line, so the right answer is a refusal that says so (truck took 75 s and failed ('boolean Cut: no result'); SMLib refused it, but as 'status 1027')",
  "source": "invariants",

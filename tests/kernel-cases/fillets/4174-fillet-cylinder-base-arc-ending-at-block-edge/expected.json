@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#4174"
+  "NakaSato/sketcraft#4174"
  ],
  "what": "the concave arc where a cylinder (r10.5) stands on a block's top, its centre on the block's front edge so the arc runs out at the front face, filleted r2: refused ('each end of the edge must touch exactly one more face')",
  "source": "analytic",

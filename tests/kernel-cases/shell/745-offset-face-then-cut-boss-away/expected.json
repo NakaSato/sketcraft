@@ -1,7 +1,7 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#745",
-  "tangency-labs/solidcraft#3893"
+  "NakaSato/sketcraft#745",
+  "NakaSato/sketcraft#3893"
  ],
  "what": "the same end offset, then the boss and the box beyond x=24 cut away, which leaves an analytic body",
  "source": "analytic",

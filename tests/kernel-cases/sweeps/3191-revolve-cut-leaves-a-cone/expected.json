@@ -1,7 +1,7 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#3911",
-  "tangency-labs/solidcraft#3191"
+  "NakaSato/sketcraft#3911",
+  "NakaSato/sketcraft#3191"
  ],
  "what": "a triangle sharing the cylinder side and top rim revolved as a cut to leave a cone (the cut never completed)",
  "source": "analytic",

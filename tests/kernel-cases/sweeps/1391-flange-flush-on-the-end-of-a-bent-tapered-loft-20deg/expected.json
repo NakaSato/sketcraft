@@ -1,7 +1,7 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#1391",
-  "tangency-labs/solidcraft#1556"
+  "NakaSato/sketcraft#1391",
+  "NakaSato/sketcraft#1556"
  ],
  "what": "a half tube (6 mm wall, inner radius tapering 60 to 75 mm) lofted through 5 sections along an R300 bend of 20 degrees, with an 8 mm half-annulus flange (inner radius +3 into the wall, outer +25 beyond it) extruded from the end plane outward and joined: the flange face lies in the end plane (\"Union: no result\")",
  "source": "analytic",

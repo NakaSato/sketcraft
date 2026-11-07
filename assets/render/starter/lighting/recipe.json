@@ -1,11 +1,11 @@
 {
-  "schema": "solidcraft-light-author-recipe/1",
+  "schema": "sketcraft-light-author-recipe/1",
   "version": "1.0.0",
   "provenance": {
     "id": "ORIGINAL-2026-10-STARTER-LIGHTING",
     "date": "2026-10-21",
     "license": "MIT OR Apache-2.0",
-    "authoring": "Original numeric integration of original SolidCraft rig specifications; no external asset or implementation copied.",
+    "authoring": "Original numeric integration of original SketCraft rig specifications; no external asset or implementation copied.",
     "references": [
       {
         "url": "https://pbr-book.org/4ed/Radiometry,_Spectra,_and_Color/Working_with_Radiometric_Integrals",

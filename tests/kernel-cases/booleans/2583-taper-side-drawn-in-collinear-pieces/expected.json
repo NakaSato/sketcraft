@@ -1,6 +1,6 @@
 {
   "sources": [
-    "tangency-labs/solidcraft#2583"
+    "NakaSato/sketcraft#2583"
   ],
   "what": "a tapered extrude of a 20x10 rectangle whose bottom side is drawn as two collinear pieces: the sloped side is one face",
   "source": "analytic",

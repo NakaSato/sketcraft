@@ -1,7 +1,7 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#1974",
-  "tangency-labs/solidcraft#2043"
+  "NakaSato/sketcraft#1974",
+  "NakaSato/sketcraft#2043"
  ],
  "what": "a block whose every plane's axis points into the part and whose faces say same_sense .F. while their FACE_OUTER_BOUND loops run counter-clockwise about the outward normal: the loops are outer bounds, not holes",
  "source": "analytic",

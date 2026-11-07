@@ -1,4 +1,4 @@
-//! SolidCraft's GPU work: the viewport's render pipelines ([`view`]), pictures drawn with them
+//! SketCraft's GPU work: the viewport's render pipelines ([`view`]), pictures drawn with them
 //! offscreen ([`capture`]), and display tessellation plans evaluated in a compute shader.
 //!
 //! Plan evaluation: the surface point and normal at every vertex's parameters, in a compute
@@ -111,7 +111,7 @@ fn dxc_beside_program() -> Option<std::path::PathBuf> {
     dll.is_file().then_some(dll)
 }
 
-/// wgpu's instance settings from the environment, with SolidCraft's D3D12 shader compiler
+/// wgpu's instance settings from the environment, with SketCraft's D3D12 shader compiler
 /// ([`dx12_compiler`]).
 #[cfg(not(target_arch = "wasm32"))]
 pub fn instance_descriptor_from_env() -> wgpu::InstanceDescriptor {
@@ -148,7 +148,7 @@ const WORKGROUP: u32 = 64;
 
 #[derive(Debug, thiserror::Error)]
 pub enum GpuError {
-    #[error("no GPU adapter qualifies under the `{0}` policy (SKETCRAFT_GPU); `solidcraft-cli gpu` lists the adapters this machine offers")]
+    #[error("no GPU adapter qualifies under the `{0}` policy (SKETCRAFT_GPU); `sketcraft-cli gpu` lists the adapters this machine offers")]
     NoAdapter(&'static str),
     #[error("{0}")]
     Policy(String),

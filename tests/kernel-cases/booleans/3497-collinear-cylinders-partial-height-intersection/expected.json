@@ -1,7 +1,7 @@
 {
   "sources": [
-    "tangency-labs/solidcraft#3497",
-    "tangency-labs/solidcraft#3456"
+    "NakaSato/sketcraft#3497",
+    "NakaSato/sketcraft#3456"
   ],
   "what": "intersection of two collinear R2 H12 cylinders offset by 0.75 along the axis (curved walls coincide over part of the height)",
   "source": "analytic",

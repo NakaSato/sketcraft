@@ -41,13 +41,13 @@ cargo xtask web-offline-test         # service worker checks
 ## Rules
 
 - Application code is Rust. The only JavaScript allowed is `sw.js` and the small inline scripts in
-  `index.html`; keep them minimal (`skills/solidcraft-performance/SKILL.md`).
+  `index.html`; keep them minimal (`skills/sketcraft-performance/SKILL.md`).
 - Gate browser code with `cfg(target_arch = "wasm32")`. Logic you want tested natively goes in a
   `cfg(any(target_arch = "wasm32", test))` module, like `keep.rs` and `channel.rs`.
 - Every storage key goes through `channel::key(...)` so channels never share designs or settings.
 - Preferences must survive an immediate reload: write them in the frame they change, as `main.rs`
   does (AGENTS.md, "Persistent options and settings").
-- Downloads and dropped files are hostile input: bound sizes (`skills/solidcraft-crash-safety/SKILL.md`).
+- Downloads and dropped files are hostile input: bound sizes (`skills/sketcraft-crash-safety/SKILL.md`).
 - No dependency that cannot build for wasm32. Do not block the page's thread with long work.
 
 ## Gotchas
@@ -57,5 +57,4 @@ cargo xtask web-offline-test         # service worker checks
   this folder (port 8781, `dist/web`, offline hook) are separate.
 - `install.rs` reads `window.sketcraftInstall`, which only this folder's `index.html` sets. The
   root `index.html` has no `beforeinstallprompt` script, so the root build gets no install offer.
-- Some messages still say `apps/solidcraft-web`; the folder is `apps/sketcraft-web`.
 - `packaging/web-channels.sh`, named in `channel-storage.txt`, is not in this tree.

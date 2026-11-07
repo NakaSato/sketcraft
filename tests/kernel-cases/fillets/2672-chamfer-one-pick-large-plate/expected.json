@@ -1,7 +1,7 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#2672",
-  "tangency-labs/solidcraft#3295"
+  "NakaSato/sketcraft#2672",
+  "NakaSato/sketcraft#3295"
  ],
  "what": "one pick on a stadium boss top rim chamfers the whole tangent loop, also when the part is more than 200 mm across",
  "source": "analytic",

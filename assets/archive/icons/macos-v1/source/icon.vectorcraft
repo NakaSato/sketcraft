@@ -4,7 +4,7 @@
   "generator": "VectorCraft 0.10.0",
   "document": {
     "version": 1,
-    "title": "SolidCraft macOS application icon",
+    "title": "SketCraft macOS application icon",
     "units": "Pixels",
     "color_mode": "Rgb",
     "artboards": [
@@ -992,7 +992,7 @@
       },
       {
         "id": 3,
-        "name": "SolidCraft • machined solid",
+        "name": "SketCraft • machined solid",
         "kind": {
           "type": "layer",
           "color": {
@@ -1717,7 +1717,7 @@
                   },
                   {
                     "id": 10,
-                    "name": "Cut edges • original SolidCraft topology",
+                    "name": "Cut edges • original SketCraft topology",
                     "opacity": 0.88,
                     "appearance": {
                       "items": [

@@ -1,6 +1,6 @@
 {
   "sources": [
-    "tangency-labs/solidcraft#3671"
+    "NakaSato/sketcraft#3671"
   ],
   "what": "intersect with a tapered pocket tool whose top face lies in the block's top face, 0.5 mm short of a rib",
   "source": "analytic",

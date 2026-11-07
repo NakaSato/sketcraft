@@ -94,7 +94,7 @@ pub struct WinitState {
     /// Xdg activation.
     pub xdg_activation: Option<XdgActivationState>,
 
-    /// SolidCraft: touchpad pinch and rotation gestures.
+    /// SketCraft: touchpad pinch and rotation gestures.
     pub pointer_gestures: Option<PointerGesturesState>,
 
     /// Relative pointer.
@@ -173,7 +173,7 @@ impl WinitState {
             xdg_shell: XdgShell::bind(globals, queue_handle).map_err(WaylandError::Bind)?,
             xdg_activation: XdgActivationState::bind(globals, queue_handle).ok(),
 
-            // SolidCraft: bind zwp_pointer_gestures_v1 when the compositor has it.
+            // SketCraft: bind zwp_pointer_gestures_v1 when the compositor has it.
             pointer_gestures: PointerGesturesState::new(globals, queue_handle).ok(),
 
             windows: Default::default(),

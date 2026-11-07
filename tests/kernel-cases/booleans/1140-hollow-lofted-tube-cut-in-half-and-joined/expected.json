@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#1140"
+  "NakaSato/sketcraft#1140"
  ],
  "what": "a spiral round tube (radius growing 76 to 210 mm over one turn, 12 mm wall) built as 8 lofted bands, each minus a lofted bore, cut in half through the axis plane z=0 and the halves joined: must give one body",
  "source": "invariants",

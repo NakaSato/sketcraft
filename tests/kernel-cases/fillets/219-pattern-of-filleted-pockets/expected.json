@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#219"
+  "NakaSato/sketcraft#219"
  ],
  "what": "a plate with 6 pockets made by patterning one pocket and the R3.2 round of its four corner edges, the pocket height set by a parameter",
  "source": "analytic",

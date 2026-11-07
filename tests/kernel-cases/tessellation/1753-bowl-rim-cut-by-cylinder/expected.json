@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#1753"
+  "NakaSato/sketcraft#1753"
  ],
  "what": "a revolved bowl whose rim is cut by a large cylinder (R320, axis across the bowl): the cut edge is an intersection curve between the cylinder and the cone walls, whose two faces used to put different vertices on it, so the STL/3MF export had a 0.001 mm crack",
  "source": "analytic",

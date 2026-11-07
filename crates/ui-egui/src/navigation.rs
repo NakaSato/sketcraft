@@ -2060,7 +2060,7 @@ mod tests {
             "cam.rotate_in_view(",
         ];
         let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"));
-        let dirs = [root.join("src"), root.join("../../apps/solidcraft/src"), root.join("../../apps/solidcraft-web/src")];
+        let dirs = [root.join("src"), root.join("../../apps/sketcraft/src"), root.join("../../apps/sketcraft-web/src")];
         let allowed = ["navigation.rs"];
         let mut offenders = Vec::new();
         let mut scanned = 0;

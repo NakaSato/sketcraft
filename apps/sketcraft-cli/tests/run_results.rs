@@ -25,7 +25,7 @@ impl Scratch {
 
     fn saving_script(&self) -> (PathBuf, PathBuf) {
         let path = self.0.join("saving.json");
-        let saved = self.0.join("script-ran.solidcraft");
+        let saved = self.0.join("script-ran.sketcraft");
         std::fs::write(
             &path,
             json!({"commands": [{"command": "solid.box", "params": {"length": 2, "width": 3, "height": 4}},
@@ -72,7 +72,7 @@ fn run_rejects_invalid_options_before_script_execution_or_output_writes() {
         (&["--quality", "standard", "--quality", "best"][..], "--quality is given more than once"),
     ];
     for existing in [false, true] {
-        let saved = dir.0.join(format!("{existing}.solidcraft"));
+        let saved = dir.0.join(format!("{existing}.sketcraft"));
         let exported = dir.0.join(format!("{existing}.step"));
         let report = dir.0.join(format!("{existing}.json"));
         let outputs = [&saved, &exported, &report];
@@ -179,7 +179,7 @@ fn unknown_pending_concepts_preserve_the_open_design_and_output_files() {
             // It opens, and the reply says what it is.
             let reply = session.execute("doc.open", &json!({"path": source})).unwrap();
             let notice = reply["newer_file"]["notice"].as_str().unwrap().to_string();
-            assert!(notice.contains("experimental-card") && notice.starts_with("Saved by a newer SolidCraft"), "{notice}");
+            assert!(notice.contains("experimental-card") && notice.starts_with("Saved by a newer SketCraft"), "{notice}");
             assert_eq!(reply["warnings"][0], notice.as_str());
             assert_eq!(session.doc.name, "Experimental");
 
@@ -192,7 +192,7 @@ fn unknown_pending_concepts_preserve_the_open_design_and_output_files() {
                 let output = cli().args(["run", "--in"]).arg(&source).arg("--save").arg(&destination).output().unwrap();
                 let error = String::from_utf8_lossy(&output.stderr);
                 assert_eq!(output.status.code(), Some(0), "{error}");
-                assert!(error.contains("warning: Saved by a newer SolidCraft") && error.contains("experimental-card"), "{error}");
+                assert!(error.contains("warning: Saved by a newer SketCraft") && error.contains("experimental-card"), "{error}");
                 // Saved, it still says it has the change, and opens the same way.
                 let saved = io::read_design(&std::fs::read(&destination).unwrap()).unwrap();
                 assert!(saved.format_pending.iter().any(|name| name == "experimental-card"));
@@ -226,11 +226,11 @@ fn the_cli_opens_a_newer_design_and_saving_keeps_what_it_cant_read() {
     let output = cli().args(["eval"]).arg(&source).output().unwrap();
     let error = String::from_utf8_lossy(&output.stderr);
     assert_eq!(output.status.code(), Some(0), "{error}");
-    assert!(error.contains("warning: Saved by a newer SolidCraft") && error.contains("Lattice1"), "{error}");
+    assert!(error.contains("warning: Saved by a newer SketCraft") && error.contains("Lattice1"), "{error}");
     let reply: Value = serde_json::from_slice(&output.stdout).unwrap();
     assert_eq!(reply["body_count"], 1);
     assert!(reply["newer_file"]["not_understood"][0].as_str().unwrap().contains("gyroid_lattice"), "{reply}");
-    assert!(reply["warnings"][0].as_str().unwrap().starts_with("Saved by a newer SolidCraft"), "{reply}");
+    assert!(reply["warnings"][0].as_str().unwrap().starts_with("Saved by a newer SketCraft"), "{reply}");
 
     for extension in ["json", "sc"] {
         let destination = dir.0.join(format!("saved.{extension}"));
@@ -327,8 +327,8 @@ fn run_exports_meshes_at_the_quality_asked_for() {
 fn results_with_base_design_and_quiet_still_report_and_save() {
     let dir = Scratch::new();
     let script = dir.script();
-    let base = dir.0.join("base.solidcraft");
-    let saved = dir.0.join("combined.solidcraft");
+    let base = dir.0.join("base.sketcraft");
+    let saved = dir.0.join("combined.sketcraft");
     json_output(cli().arg("run").arg(&script).arg("--save").arg(&base).output().unwrap());
     let result = json_output(cli().args(["run", "--results", "--quiet", "--in"]).arg(&base).arg(&script).arg("--save").arg(&saved).output().unwrap());
     assert_eq!(result.as_array().unwrap().len(), 1);
@@ -341,7 +341,7 @@ fn results_with_base_design_and_quiet_still_report_and_save() {
 #[test]
 fn eval_runs_its_script_on_the_in_design() {
     let dir = Scratch::new();
-    let base = dir.0.join("base.solidcraft");
+    let base = dir.0.join("base.sketcraft");
     let script = dir.0.join("add.json");
     json_output(cli().arg("run").arg(dir.script()).arg("--save").arg(&base).output().unwrap());
     let original = std::fs::read(&base).unwrap();
@@ -444,7 +444,7 @@ fn eval_rejects_unknown_options_and_missing_input_values_before_writing_a_report
 fn results_propagate_output_errors() {
     let dir = Scratch::new();
     for flag in ["--save", "--out"] {
-        let path = dir.0.join("missing").join(if flag == "--save" { "box.solidcraft" } else { "box.stl" });
+        let path = dir.0.join("missing").join(if flag == "--save" { "box.sketcraft" } else { "box.stl" });
         let output = cli().arg("run").arg(dir.script()).arg("--results").arg(flag).arg(&path).output().unwrap();
         assert_eq!(output.status.code(), Some(1));
         assert!(!output.stderr.is_empty());
@@ -456,7 +456,7 @@ fn results_propagate_output_errors() {
 #[test]
 fn results_without_script_still_fail() {
     let dir = Scratch::new();
-    let base = dir.0.join("base.solidcraft");
+    let base = dir.0.join("base.sketcraft");
     json_output(cli().arg("run").arg(dir.script()).arg("--save").arg(&base).output().unwrap());
     let output = cli().args(["run", "--results", "--in"]).arg(&base).output().unwrap();
     assert_eq!(output.status.code(), Some(1));
@@ -476,12 +476,12 @@ fn legacy_extension_and_format_tag_still_open() {
     let legacy = dir.0.join("old.solvecraft");
     std::fs::write(&legacy, text.replace("\"sketcraft/", "\"solvecraft/")).unwrap();
     assert_eq!(body_count(&legacy), 1);
-    let resaved = dir.0.join("resaved.solidcraft");
+    let resaved = dir.0.join("resaved.sketcraft");
     json_output(cli().args(["run", "--in"]).arg(&legacy).arg(dir.script()).arg("--save").arg(&resaved).output().unwrap());
     assert_eq!(body_count(&resaved), 2);
     let reopened = sketcraft_engine::io::read_design(&std::fs::read(&resaved).unwrap()).unwrap();
     assert!(reopened.to_json().contains("\"sketcraft/"));
-    // `.solidcraft` (before `.sc`) opens as `--in` and as the design to evaluate; `.sc` too.
+    // `.sketcraft` (before `.sc`) opens as `--in` and as the design to evaluate; `.sc` too.
     let current = dir.0.join("current.sc");
     json_output(cli().args(["run", "--in"]).arg(&resaved).arg(dir.script()).arg("--save").arg(&current).output().unwrap());
     assert_eq!(body_count(&current), 3);
@@ -493,7 +493,7 @@ fn legacy_extension_and_format_tag_still_open() {
 #[test]
 fn snapshot_runs_its_script_on_the_in_design() {
     let dir = Scratch::new();
-    let base = dir.0.join("base.solidcraft");
+    let base = dir.0.join("base.sketcraft");
     json_output(cli().arg("run").arg(dir.script()).arg("--save").arg(&base).output().unwrap());
     let shifted = dir.0.join("shifted.json");
     std::fs::write(
@@ -544,7 +544,7 @@ fn unknown_command_suggests_the_closest_id() {
 #[test]
 fn timings_and_profile_report_each_command() {
     let dir = Scratch::new();
-    let saved = dir.0.join("timed.solidcraft");
+    let saved = dir.0.join("timed.sketcraft");
     let t = json_output(cli().arg("run").arg(dir.script()).arg("--timings").arg("--save").arg(&saved).output().unwrap());
     let rows = t["timings"].as_array().unwrap();
     assert_eq!(rows.len(), 1);
@@ -578,9 +578,9 @@ fn param_check_reaches_every_script_run_takes() {
     let typo = dir.0.join("typo.json");
     let step = json!({"command": "solid.box", "params": {"length": 2, "width": 3, "height": 4, "operaton": "new"}});
     std::fs::write(&typo, json!({"commands": [step.clone()]}).to_string()).unwrap();
-    let base = dir.0.join("base.solidcraft");
+    let base = dir.0.join("base.sketcraft");
     json_output(cli().arg("run").arg(dir.script()).arg("--save").arg(&base).output().unwrap());
-    let saved = dir.0.join("saved.solidcraft");
+    let saved = dir.0.join("saved.sketcraft");
     let start = dir.script();
     let (typo, base, saved_arg, start) = (typo.to_str().unwrap(), base.to_str().unwrap(), saved.to_str().unwrap(), start.to_str().unwrap());
     let paths = [&[][..], &["--in", base], &["--in", start], &["--results"], &["--timings"], &["--timings", "--profile"]];
@@ -679,7 +679,7 @@ fn render_uses_typed_cpu_setups_from_scripts_and_saved_designs() {
         let png = image::load_from_memory(&std::fs::read(&image).unwrap()).unwrap();
         assert_eq!((png.width(), png.height()), (16, 16));
 
-        let saved = dir.0.join("portable.solidcraft");
+        let saved = dir.0.join("portable.sketcraft");
         json_output(cli().arg("run").arg(&script).arg("--save").arg(&saved).output().unwrap());
         let original = std::fs::read(&saved).unwrap();
         let overridden = dir.0.join("overridden.png");

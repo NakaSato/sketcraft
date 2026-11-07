@@ -1,7 +1,7 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#4547",
-  "tangency-labs/solidcraft#4542"
+  "NakaSato/sketcraft#4547",
+  "NakaSato/sketcraft#4542"
  ],
  "what": "a join of two revolved rings that touch only along a circle (r 20.5 at z 4: the corner of one ring on the corner of the other): the app hung in the boolean",
  "source": "analytic",

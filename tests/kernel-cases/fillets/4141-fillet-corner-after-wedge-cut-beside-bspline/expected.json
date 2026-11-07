@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#4141"
+  "NakaSato/sketcraft#4141"
  ],
  "what": "an R5 round on the corner edge left by a wedge cut through a body vertex next to a B-spline face",
  "source": "invariants",

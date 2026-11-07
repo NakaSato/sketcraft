@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#423"
+  "NakaSato/sketcraft#423"
  ],
  "what": "a one-sided Through All cut from a sketch plane at x=98 toward -x, with its wall 0.0022 mm from a face of a notch beyond the plane: the cut must remove nothing at x > 98",
  "source": "analytic",

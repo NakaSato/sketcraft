@@ -181,7 +181,7 @@
    "type": "hole"
   }
  ],
- "format": "solidcraft/17",
+ "format": "sketcraft/17",
  "name": "mirror_bottom_blind",
  "next_id": 5,
  "params": [],

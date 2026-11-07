@@ -1,9 +1,9 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#1865",
-  "tangency-labs/solidcraft#1910",
-  "tangency-labs/solidcraft#1983",
-  "tangency-labs/solidcraft#2034"
+  "NakaSato/sketcraft#1865",
+  "NakaSato/sketcraft#1910",
+  "NakaSato/sketcraft#1983",
+  "NakaSato/sketcraft#2034"
  ],
  "what": "a union of two solids that meet along cylindrical faces: a tube (r10..12, z 0..20) and a 90 deg ring sector (same radii, z 10..30) whose curved faces are the tube's own, overlapping it axially; refused ('planar faces only') or, by the faceted fallback, left 1710 faceted faces",
  "source": "analytic",

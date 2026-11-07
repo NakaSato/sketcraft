@@ -1,6 +1,6 @@
 {
   "order": 130,
-  "provenance": "Original SolidCraft mapping of Atom One Dark (MIT palette)",
+  "provenance": "Original SketCraft mapping of Atom One Dark (MIT palette)",
   "base": "dark",
   "colors": {
     "accent": "#61afef",
@@ -190,7 +190,7 @@
     "viewport_top": "#282c34",
     "warning": "#e5c07b"
   },
-  "format": "solidcraft-theme/1",
+  "format": "sketcraft-theme/1",
   "name": "One Dark",
   "icon_palette": {
     "ink": "#21252b",

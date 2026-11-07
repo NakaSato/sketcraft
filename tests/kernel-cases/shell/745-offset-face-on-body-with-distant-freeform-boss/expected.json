@@ -1,7 +1,7 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#745",
-  "tangency-labs/solidcraft#3893"
+  "NakaSato/sketcraft#745",
+  "NakaSato/sketcraft#3893"
  ],
  "what": "Offset Face on a planar end of a body that has a spline-outlined boss far from the moved face",
  "source": "analytic",

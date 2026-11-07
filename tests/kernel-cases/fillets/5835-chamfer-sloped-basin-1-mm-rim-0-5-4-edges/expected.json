@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#5835"
+  "NakaSato/sketcraft#5835"
  ],
  "what": "all four of the top rim edges of a sloped basin whose walls slope unequally, its front rim 1 mm wide, chamfered 0.5: the chamfers meet in mitres at the rim's corners",
  "source": "analytic",

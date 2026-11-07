@@ -1,6 +1,6 @@
 {
   "sources": [
-    "tangency-labs/solidcraft#2904"
+    "NakaSato/sketcraft#2904"
   ],
   "what": "a countersunk hole in a small plate, near a rounded corner, while an unrelated body sits 120 mm away: only the plate may change, and the countersink must be complete",
   "source": "analytic",

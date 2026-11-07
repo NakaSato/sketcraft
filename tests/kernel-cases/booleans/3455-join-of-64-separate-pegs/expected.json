@@ -1,6 +1,6 @@
 {
   "sources": [
-    "tangency-labs/solidcraft#3455"
+    "NakaSato/sketcraft#3455"
   ],
   "what": "one combine of 64 separate pegs that do not touch: 36 s on truck, growing 4-9x per doubling; must finish in seconds",
   "source": "analytic",

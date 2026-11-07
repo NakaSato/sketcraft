@@ -1,4 +1,4 @@
-//! SolidCraft's environment variables, read in one place.
+//! SketCraft's environment variables, read in one place.
 //!
 //! Every variable is `SKETCRAFT_<NAME>`. Compatibility shim (see docs/compatibility.md): when
 //! it is unset, the same variable under the product's former prefix is read instead, so

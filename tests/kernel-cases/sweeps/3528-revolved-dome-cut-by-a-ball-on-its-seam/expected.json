@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#3528"
+  "NakaSato/sketcraft#3528"
  ],
  "what": "a ball of radius 4 centred on the dome of a revolved mushroom cap (azimuth 15 degrees, across an internal seam of the revolved faces), cut from it: removed nearly the whole ball",
  "source": "analytic",

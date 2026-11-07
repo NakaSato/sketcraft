@@ -43,7 +43,7 @@ performance benchmark.
 ## Bounded CPU scale probes
 
 ```sh
-cargo build --locked --profile ci -p solidcraft-render --features raytrace-cpu --example cpu_resource_smoke
+cargo build --locked --profile ci -p sketcraft-render --features raytrace-cpu --example cpu_resource_smoke
 # Select one case per fresh output folder:
 cpu_resource_smoke /new/output/directory 4k
 cpu_resource_smoke /another/output/directory 8k
@@ -69,7 +69,7 @@ or timeout is reported, never silently retried at reduced quality.
 
 ```python
 # Start in this directory with an explicitly built CLI and an unused output path:
-# python -i selene_studio.py --cli /path/to/solidcraft-cli --out /new/render/output
+# python -i selene_studio.py --cli /path/to/sketcraft-cli --out /new/render/output
 from selene_recipe import hero_request
 request = hero_request(studio, width=3840, height=2400, samples=1024)
 receipt = studio.render("selene-studio-4k", request, timeout=7200)

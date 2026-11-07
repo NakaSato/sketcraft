@@ -1,7 +1,7 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#122",
-  "tangency-labs/solidcraft#96"
+  "NakaSato/sketcraft#122",
+  "NakaSato/sketcraft#96"
  ],
  "what": "a loft cut through a 100 x 60 x 30 block from its whole 100 x 60 outline at z = 20 (edges flush with the side faces) down to a 10 x 10 pad in a corner at z = 11, sections given top first (the cut panicked for one order)",
  "source": "analytic",

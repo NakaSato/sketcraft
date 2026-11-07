@@ -10,7 +10,7 @@ edition = "2024"
 license = "MIT OR Apache-2.0"
 rust-version = "1.95"
 authors = ["SketCraft contributors"]
-repository = "https://github.com/tangency-labs/solidcraft"
+repository = "https://github.com/NakaSato/sketcraft"
 
 [workspace.dependencies]
 robust = "1.2"

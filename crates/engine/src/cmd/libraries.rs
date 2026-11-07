@@ -20,7 +20,7 @@ pub static COMMANDS: &[CommandSpec] = &[
     CommandSpec::new("library.export", "Export Design Library", crate::checked!("library.export", export)).icon("export").noundo().doc_only()
         .contract(&EXPORT_CONTRACT)
         .output(output_schema_for::<LibraryExported>)
-        .params("path: .json; id? (default user.local), name?, provenance?, overwrite? false, format? solidcraft-library/2 (default) | solidcraft-library/1 (refuses PBR/cards). Copies assigned looks and design-local physical definitions; never changes the design"),
+        .params("path: .json; id? (default user.local), name?, provenance?, overwrite? false, format? sketcraft-library/2 (default) | sketcraft-library/1 (refuses PBR/cards). Copies assigned looks and design-local physical definitions; never changes the design"),
     CommandSpec::new("library.apply", "Apply Local Library Entry", crate::checked!("library.apply", apply)).icon("import").enabled(super::not_in_sketch)
         .contract(&APPLY_CONTRACT)
         .output(output_schema_for::<LibraryApplied>)

@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#1995"
+  "NakaSato/sketcraft#1995"
  ],
  "what": "an M8x1 modelled thread in a 7 mm hole through a block (the report: the thread also changed the block's outer surface and made too many faces)",
  "source": "analytic",

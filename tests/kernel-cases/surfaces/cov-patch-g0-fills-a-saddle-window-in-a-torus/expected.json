@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#759"
+  "NakaSato/sketcraft#759"
  ],
  "what": "a window 240 deg round the saddle-shaped inner wall of a torus (R20, r8) between z = -3 and 3, its cut faces taken off, patched g0 and stitched",
  "source": "analytic",

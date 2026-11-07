@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#4726"
+  "NakaSato/sketcraft#4726"
  ],
  "what": "a modelled M48x0.75 thread over the whole 25 mm of a O48 bolt (33 turns): the browser build froze; coarse pitches and 4 mm of it worked, slowly",
  "source": "analytic",

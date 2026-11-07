@@ -1,7 +1,7 @@
 # Render resource starter pack
 
 Version **1.0.0**, authored 2026-10-21. This is a reproducible resource handoff
-for the personal SolidCraft render/materials fork. Its parent is the catalog
+for the personal SketCraft render/materials fork. Its parent is the catalog
 checkpoint `10ada1b45a4eb285ce752ac72f9aaa968ff8b5c4`, on the fixed
 `lab/render-materials` base. It does not update upstream or the application.
 
@@ -16,8 +16,8 @@ checkpoint `10ada1b45a4eb285ce752ac72f9aaa968ff8b5c4`, on the fixed
 The stable `MAT-*`, `ENV-*`, `LUZ-*` and `STU-*` concept identities remain in the
 [catalog](../../../docs/render-materials/README.md). This pack supplies authored
 realizations; it does not change all 1,160 concepts to "available". Neither
-`pack.json` nor the child manifests are a native `solidcraft-library/1` or
-`solidcraft-library/2` import file. Python is an offline authoring dependency only.
+`pack.json` nor the child manifests are a native `sketcraft-library/1` or
+`sketcraft-library/2` import file. Python is an offline authoring dependency only.
 
 ## Entry points and ownership
 
@@ -86,7 +86,7 @@ python3 -B assets/render/starter/tools/environments.py preview
 python3 -B assets/render/starter/tools/lighting.py review
 ```
 
-These are numerical data/fixture diagnostics, not screenshots of SolidCraft or
+These are numerical data/fixture diagnostics, not screenshots of SketCraft or
 proof of photorealistic output. They are not shipped as production resources.
 
 ## Integration contract

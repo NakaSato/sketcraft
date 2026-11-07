@@ -234,7 +234,7 @@
 //!   in `format_pending`, so a later build applies just the steps a file is missing. At release
 //!   time `scripts/fold-format-pending.sh` moves them into the next `v<N>/`.
 //!
-//! Drawings (`solidcraft-drawing/N`, #3890) are versioned by the same code ([`Family`]) from their
+//! Drawings (`sketcraft-drawing/N`, #3890) are versioned by the same code ([`Family`]) from their
 //! own first format, 1 (the record in [`crate::drawing`]): each later change is one file in
 //! `src/drawing/format/`, in `v<N>/` or `pending/` as above, and the release script folds that
 //! folder too.
@@ -290,7 +290,7 @@ pub const DESIGN: Family<'static> =
 pub const DRAWING: Family<'static> = Family {
     noun: "drawing",
     prefix: "sketcraft-drawing/",
-    legacy_prefixes: &["solidcraft-drawing/"],
+    legacy_prefixes: &[],
     untagged: None,
     formats: Formats { hand: &[], folded: DRAWING_FOLDED, pending: DRAWING_PENDING },
 };
@@ -474,10 +474,10 @@ pub fn format_string(n: u32) -> String {
 /// The oldest format tag of designs saved before the renames. Compatibility shim
 /// (docs/compatibility.md): read, never written.
 pub const LEGACY_FORMAT_PREFIX: &str = "solvecraft/";
-/// Every design tag read but never written: SolidCraft's `solidcraft/N` and the older `solvecraft/N`.
-pub const LEGACY_FORMAT_PREFIXES: &[&str] = &["solidcraft/", LEGACY_FORMAT_PREFIX];
+/// Every design tag read but never written: the older `solvecraft/N`.
+pub const LEGACY_FORMAT_PREFIXES: &[&str] = &[LEGACY_FORMAT_PREFIX];
 
-/// The version in a design's format string (`sketcraft/N`, or a legacy `solidcraft/N` or `solvecraft/N`).
+/// The version in a design's format string (`sketcraft/N`, or a legacy `solvecraft/N`).
 pub fn version_of(s: &str) -> Option<u32> {
     DESIGN.version_of(s)
 }
@@ -1583,7 +1583,7 @@ mod tests {
             "sketcraft-drawing/x",
             "sketcraft-drawing/-1",
             "sketcraft-drawing/4294967296",
-            "Solidcraft-drawing/1",
+            "Sketcraft-drawing/1",
             "sketcraft-drawing/1 ",
             "sketcraft-drawings/1",
             "sketcraft/drawing/1",
@@ -2388,8 +2388,8 @@ mod tests {
         assert_eq!(version_of("sketcraft/x"), None);
         // Compatibility shim: files saved before the rename carry the legacy tag.
         assert_eq!(version_of("solvecraft/13"), Some(13));
-        assert_eq!(version_of("solidcraft/15"), Some(15), "SolidCraft's designs open");
-        assert_eq!(DRAWING.version_of("solidcraft-drawing/1"), Some(1), "and its drawings");
+        assert_eq!(version_of("sketcraft/15"), Some(15), "SketCraft's designs open");
+        assert_eq!(DRAWING.version_of("sketcraft-drawing/1"), Some(1), "and its drawings");
         assert_eq!(version_of("solvecraftx/13"), None);
         let d = Document::new("A");
         assert_eq!(d.format, format_string(FORMAT));
@@ -2575,7 +2575,7 @@ mod tests {
     }
 
     /// An integer-valued coordinate is range-checked like a float one, while ids and counters
-    /// may still be large integers (solidcraft#5021).
+    /// may still be large integers (sketcraft#5021).
     #[test]
     fn integer_valued_coordinates_are_range_checked_and_large_ids_still_load() {
         let mut sketch = sketcraft_sketch::Sketch::new();

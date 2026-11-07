@@ -1,9 +1,9 @@
 //! Agent chat: a side panel that talks to a coding agent the user already has (Claude Code,
 //! Codex, Antigravity, OpenCode, …) over the Agent Client Protocol, and gives that agent
-//! SolidCraft's MCP server, bridged to this window, as its way to read and change the open design
+//! SketCraft's MCP server, bridged to this window, as its way to read and change the open design
 //! (docs/agent-chat.md, docs/design/in-app-agent-chat.md).
 //!
-//! Desktop only: the agent is a child process. Off unless turned on in Preferences. SolidCraft
+//! Desktop only: the agent is a child process. Off unless turned on in Preferences. SketCraft
 //! never handles the agent's credentials: an agent that needs a login says so, and the panel
 //! shows the agent's own login command for the user to run.
 //!
@@ -949,7 +949,7 @@ pub(crate) fn assistant_tip(app: &SolveApp, mark: AssistantMark) -> String {
     format!("{name} — {state}")
 }
 
-/// `solidcraft-cli` next to this program, else on the search path.
+/// `sketcraft-cli` next to this program, else on the search path.
 #[cfg(not(target_arch = "wasm32"))]
 pub(crate) fn find_cli() -> Option<std::path::PathBuf> {
     let name = if cfg!(windows) { "sketcraft-cli.exe" } else { "sketcraft-cli" };
@@ -963,7 +963,7 @@ pub(crate) fn find_cli() -> Option<std::path::PathBuf> {
         .or_else(|| discover::find_in("sketcraft-cli", &discover::search_dirs()))
 }
 
-/// The agent's working folder: an empty folder of SolidCraft's own, so an agent's own file tools
+/// The agent's working folder: an empty folder of SketCraft's own, so an agent's own file tools
 /// (where it has them) see nothing of the user's.
 fn working_dir() -> std::path::PathBuf {
     let d = sketcraft_engine::recovery::data_dir()
@@ -1759,7 +1759,7 @@ pub fn answer_permission(app: &mut SolveApp, index: usize, option: Option<&str>)
 }
 
 /// The agent asks before running something of its own. The chat's own MCP tools are checked by
-/// SolidCraft's gate, so they're allowed here (no double question, see [`acp::is_bridge_tool`]);
+/// SketCraft's gate, so they're allowed here (no double question, see [`acp::is_bridge_tool`]);
 /// otherwise the mode or an earlier "always allow" may answer, and the chat says so; otherwise the
 /// user is asked.
 fn on_permission(app: &mut SolveApp, key: u64, title: String, kind: Option<&str>, options: Vec<PermissionOption>) {

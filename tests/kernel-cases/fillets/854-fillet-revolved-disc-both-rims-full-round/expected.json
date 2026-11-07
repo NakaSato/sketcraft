@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#854"
+  "NakaSato/sketcraft#854"
  ],
  "what": "a disc r15 x 5 revolved from a sketch, both rims rounded R2.5 in one fillet: a full round of its 5 mm wall (robustness seed 33)",
  "source": "analytic",

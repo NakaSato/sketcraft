@@ -36,7 +36,7 @@ fn editor<'a>(app: &'a mut SolveApp, token: &Arc<()>) -> Option<&'a mut Ap> {
 /// Parameterless UI activation of the existing export command. JSON execution never picks files.
 pub(crate) fn start_export(app: &mut SolveApp) {
     let origin = app.session.doc.clone();
-    app.pick_save("my-library.solidcraft-library.json", &["json"], move |app, path| {
+    app.pick_save("my-library.sketcraft-library.json", &["json"], move |app, path| {
         if let Some(path) = path
             && Arc::ptr_eq(&origin, &app.session.doc)
             && let Err(error) = app.run("library.export", json!({"path":path,"overwrite":false}))
@@ -48,7 +48,7 @@ pub(crate) fn start_export(app: &mut SolveApp) {
 
 fn save_library(app: &mut SolveApp, token: Arc<()>, overwrite: bool) {
     let origin = app.session.doc.clone();
-    app.pick_save("my-library.solidcraft-library.json", &["json"], move |app, path| {
+    app.pick_save("my-library.sketcraft-library.json", &["json"], move |app, path| {
         let Some(path) = path else { return };
         if !Arc::ptr_eq(&origin, &app.session.doc) {
             app.set_status("The library export document changed while choosing its destination", true);

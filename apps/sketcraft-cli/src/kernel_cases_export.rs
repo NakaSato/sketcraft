@@ -12,7 +12,7 @@
 //! record. The entry is wholly expressible (`expressible`) when, besides, every value it grades is
 //! the kernel's: none of `continuity`, `watertight`, `files`, `results`, `construction` or
 //! `flat_pattern` (SketCraft computes them), no face, edge or vertex count that the rig's merging
-//! across analytic surfaces (`merged_topology`) changes, and no refusal graded on SolidCraft's
+//! across analytic surfaces (`merged_topology`) changes, and no refusal graded on SketCraft's
 //! wording of the kernel's error. Those are listed in `ungraded`.
 
 use std::collections::{BTreeMap, BTreeSet, HashMap};
@@ -105,7 +105,7 @@ pub fn write(root: &Path, dir: &str, out: &Value, capture: Capture) -> Result<()
     let want = read_json(&format!("{dir}/expected.json"))?;
     let t = Trace::of(&capture.events);
     // Why the operation is not the kernel's alone, and what the entry cannot grade without
-    // SolidCraft.
+    // SketCraft.
     let mut why_not: Vec<String> = Vec::new();
     let mut ungraded: Vec<String> = Vec::new();
     let has = |k: &str| want.get(k).is_some_and(|v| !v.is_null());
@@ -139,12 +139,12 @@ pub fn write(root: &Path, dir: &str, out: &Value, capture: Capture) -> Result<()
                     if let Err(k) = c.3 {
                         outcome["kernel_error"] = json!(k);
                         if let Some(why) = want["refusal"].as_str().filter(|w| !k.contains(*w)) {
-                            ungraded.push(format!("refusal {why:?}: SolidCraft's wording of the kernel's error"));
+                            ungraded.push(format!("refusal {why:?}: SketCraft's wording of the kernel's error"));
                         }
                     }
                 }
                 None if t.calls.is_empty() => why_not.push(format!("no kernel operation ran before the failure: {e}")),
-                None => why_not.push(format!("the failure is SolidCraft's, not a kernel operation's: {e}")),
+                None => why_not.push(format!("the failure is SketCraft's, not a kernel operation's: {e}")),
             }
         }
         (Some(Ok(world)), false) => {

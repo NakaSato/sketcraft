@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#1195"
+  "NakaSato/sketcraft#1195"
  ],
  "what": "text cut into a plate: a boundary curve's end meeting a point whatever its parameter (glyph outlines through a text cut)",
  "source": "invariants",

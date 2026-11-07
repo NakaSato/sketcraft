@@ -44,7 +44,7 @@ struct Manifest {
     description: String,
 }
 
-/// The plugins directory: `$XDG_DATA_HOME/solidcraft/plugins` (and the platform equivalents of
+/// The plugins directory: `$XDG_DATA_HOME/sketcraft/plugins` (and the platform equivalents of
 /// [`sketcraft_engine::recovery::data_dir`]). `None` when that folder cannot be named.
 pub fn plugins_dir() -> Option<PathBuf> {
     sketcraft_engine::recovery::data_dir().map(|d| d.join("plugins"))

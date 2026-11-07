@@ -37,25 +37,23 @@ cargo run -p xtask -- test -- <filter>                  # what the docs call `ca
 
 ## Rules
 
-- Adding or changing a command: follow `skills/solidcraft-commands/SKILL.md`. In short:
+- Adding or changing a command: follow `skills/sketcraft-commands/SKILL.md`. In short:
   - Add a `CommandSpec` to the right `COMMANDS` array in `src/cmd/`. A new file also needs its `mod` line (in the sorted group) and a `v.extend(...)` line in `command_specs()`.
   - Ids are our own: dotted, lower case, `<area>.<thing>[.<variant>]`.
   - Validate parameters first and return `EngineError::BadParams` (`params::bad`). Never build a broken feature.
   - Give every new command a contract and an output schema in `src/schema/<file>.rs`. Never add a line to `unconverted.txt`; it only shrinks.
-  - Add `cmd.<id>` (and `help.<id>` for ribbon commands) through `assets/locales/pending/`. See `skills/solidcraft-ui-text/SKILL.md`.
+  - Add `cmd.<id>` (and `help.<id>` for ribbon commands) through `assets/locales/pending/`. See `skills/sketcraft-ui-text/SKILL.md`.
 - Commands never open dialogs. Only `ui.start` in the front end starts interactive tools.
 - Commands that change the document are undoable by default. A failing command must leave the document unchanged.
-- Non-test code follows `skills/solidcraft-crash-safety/SKILL.md`. The crate root denies `unwrap`, `expect`, `panic!`, `todo!`, `unreachable!` and `unimplemented!`, and forbids `unsafe`.
+- Non-test code follows `skills/sketcraft-crash-safety/SKILL.md`. The crate root denies `unwrap`, `expect`, `panic!`, `todo!`, `unreachable!` and `unimplemented!`, and forbids `unsafe`.
 - Model decisions use exact geometry, not display meshes. `cargo run -p xtask -- mesh-decisions` checks this crate. `xtask/mesh-decisions.txt` only shrinks.
 - The crate builds for wasm32. Use `web_time` for clocks (std `Instant` panics in the browser). `slicer_files` is native-only.
-- A command that saves something new in a design needs a format file: `skills/solidcraft-file-formats/SKILL.md`.
-- Test placement: `skills/solidcraft-tests/SKILL.md`. Measure results (volume, area, counts) against values you can derive by hand.
+- A command that saves something new in a design needs a format file: `skills/sketcraft-file-formats/SKILL.md`.
+- Test placement: `skills/sketcraft-tests/SKILL.md`. Measure results (volume, area, counts) against values you can derive by hand.
 
 ## Gotchas
 
 - `Session::execute` runs each command under `catch_unwind` and turns a panic into `EngineError::Internal`. This is a last resort. Do not rely on it.
 - `find_command` falls back to a case-insensitive match.
 - `panels.*` commands always refuse in a bare `Session` ("application layout backend was not injected"). The host provides that backend.
-- Comments, usage strings and test hints still say `solidcraft-engine` and `solidcraft-cli`. The packages are `sketcraft-engine` and `sketcraft-cli`.
 - Docs that comments cite (`docs/book/`, `docs/control-protocol.md`, `docs/crash-reports.md`, `docs/robustness.md`) are not in this tree.
-- `tests/KNOWN_FAILING_TESTS` still names tests with the old `solidcraft-engine::` prefix.

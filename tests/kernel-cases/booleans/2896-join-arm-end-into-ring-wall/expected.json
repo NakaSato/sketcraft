@@ -1,6 +1,6 @@
 {
   "sources": [
-    "tangency-labs/solidcraft#2896"
+    "NakaSato/sketcraft#2896"
   ],
   "what": "a join of a ring (R30/R24, 6 tall) and an arm with a convex R5 end whose tip runs 0.1 mm into the ring's outer wall (curved faces that nearly graze)",
   "source": "analytic",

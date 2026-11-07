@@ -1,7 +1,7 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#757",
-  "tangency-labs/solidcraft#824"
+  "NakaSato/sketcraft#757",
+  "NakaSato/sketcraft#824"
  ],
  "what": "a line from (5,0) to (10,20) revolved a full turn into a surface body (a cone frustum wall, no caps)",
  "source": "analytic",

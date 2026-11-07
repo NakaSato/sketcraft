@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#1490"
+  "NakaSato/sketcraft#1490"
  ],
  "what": "a wall 2.5 mm thick with a 30 x 20 window cut through it and a loft (34 x 24 growing to 38 x 28 over 3.5 mm) joined into the window so that its strips overhang the wall on both faces (\"Union: no result\" at some wall thicknesses)",
  "source": "analytic",

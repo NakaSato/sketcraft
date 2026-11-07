@@ -30,18 +30,16 @@ use crate::theme::Tokens;
 use crate::ui_kit;
 
 /// The repository releases come from.
-pub const REPO: &str = "tangency-labs/solidcraft";
+pub const REPO: &str = "NakaSato/sketcraft";
 /// The one request an update check makes.
-pub const LATEST_API: &str = "https://api.github.com/repos/tangency-labs/solidcraft/releases/latest";
+pub const LATEST_API: &str = "https://api.github.com/repos/NakaSato/sketcraft/releases/latest";
 /// Where Download goes when no package fits this installation.
-pub const RELEASES_PAGE: &str = "https://github.com/tangency-labs/solidcraft/releases/latest";
-/// Release pages and assets must be on GitHub, under this repository. The repository moved to the
-/// `tangency-labs` organisation, so releases may still name either owner (older releases and the
-/// links GitHub redirects keep the old one).
-const RELEASE_PREFIXES: [&str; 2] = ["https://github.com/bherbruck/solidcraft/releases/", "https://github.com/tangency-labs/solidcraft/releases/"];
+pub const RELEASES_PAGE: &str = "https://github.com/NakaSato/sketcraft/releases/latest";
+/// Release pages and assets must be on GitHub, under this repository.
+const RELEASE_PREFIXES: [&str; 1] = ["https://github.com/NakaSato/sketcraft/releases/"];
 
-/// A release page or asset URL: github.com, one of the two owners, exactly `solidcraft`, then
-/// `/releases/` (the trailing slash rules out look-alike names such as `solidcraft-evil`).
+/// A release page or asset URL: github.com, the `NakaSato` owner, exactly `sketcraft`, then
+/// `/releases/` (the trailing slash rules out look-alike names such as `sketcraft-evil`).
 fn is_release_url(url: &str) -> bool {
     RELEASE_PREFIXES.iter().any(|p| url.starts_with(p))
 }
@@ -62,7 +60,7 @@ const MAX_ASSETS: usize = 400;
 const TAB_ROOM: f32 = 300.0;
 
 /// The Linux app ID (Flatpak, desktop files).
-pub const APP_ID: &str = "io.tangencylabs.solidcraft";
+pub const APP_ID: &str = "io.tangencylabs.sketcraft";
 
 /// Why a check failed. Automatic checks never show it; Check now does.
 #[derive(Clone, Debug, PartialEq)]
@@ -89,7 +87,7 @@ pub type HttpGet = Arc<dyn Fn(&str) -> Result<Vec<u8>, FetchError> + Send + Sync
 
 // ---- versions ---------------------------------------------------------------------------------
 
-/// A version as SolidCraft's tags and builds spell it: `0.10.0`, `v0.11.0-rc.1`,
+/// A version as SketCraft's tags and builds spell it: `0.10.0`, `v0.11.0-rc.1`,
 /// `0.9.0-nightly.20261014.36.1`.
 pub fn parse_version(v: &str) -> Option<semver::Version> {
     let v = v.trim();
@@ -112,7 +110,7 @@ pub fn comparable(v: &semver::Version) -> semver::Version {
 /// candidate and nightly releases are all tagged `v<version>`), else, for a development build or
 /// a string that is not a version, the release history.
 pub fn release_notes_url(version: &str, release_build: bool) -> String {
-    const HISTORY: &str = "https://github.com/tangency-labs/solidcraft/releases";
+    const HISTORY: &str = "https://github.com/NakaSato/sketcraft/releases";
     if release_build && parse_version(version).is_some() && version.chars().all(|c| c.is_ascii_alphanumeric() || matches!(c, '.' | '-' | '+')) {
         format!("{HISTORY}/tag/v{version}")
     } else {
@@ -164,9 +162,9 @@ pub enum InstallKind {
     WindowsMsi,
     /// The portable `.zip`, unpacked somewhere.
     WindowsPortable,
-    /// The lone `SolidCraft-<version>-windows-x64.exe`.
+    /// The lone `SketCraft-<version>-windows-x64.exe`.
     WindowsExe,
-    /// `SolidCraft.app`, at this path (the bundle).
+    /// `SketCraft.app`, at this path (the bundle).
     MacApp(PathBuf),
     /// A release build in a place none of the above explains (FreeBSD, a copied binary).
     Other,
@@ -181,7 +179,7 @@ pub struct Probe<'a> {
     /// The running executable.
     pub exe: Option<PathBuf>,
     pub exists: &'a dyn Fn(&Path) -> bool,
-    /// Where the Windows installer put SketCraft (`HKLM\Software\SolidCraft`, `InstallDir`): a
+    /// Where the Windows installer put SketCraft (`HKLM\Software\SketCraft`, `InstallDir`): a
     /// folder chosen in its wizard can be anywhere, not only under Program Files (#1870).
     pub msi_dir: Option<PathBuf>,
 }
@@ -209,7 +207,7 @@ pub fn detect(p: &Probe) -> InstallKind {
             }
             if exe.starts_with("/usr") {
                 // nfpm installs both packages under /usr; dpkg keeps a file list per package.
-                if (p.exists)(Path::new("/var/lib/dpkg/info/solidcraft.list")) {
+                if (p.exists)(Path::new("/var/lib/dpkg/info/sketcraft.list")) {
                     return InstallKind::Deb;
                 }
                 if (p.exists)(Path::new("/var/lib/rpm")) || (p.exists)(Path::new("/usr/lib/sysimage/rpm")) {
@@ -272,10 +270,10 @@ pub fn this_install() -> InstallKind {
     }
 }
 
-/// The folder the Windows installer recorded (solidcraft.wxs writes it for upgrades), if any.
+/// The folder the Windows installer recorded (sketcraft.wxs writes it for upgrades), if any.
 #[cfg(windows)]
 fn msi_install_dir() -> Option<PathBuf> {
-    let key = winreg::RegKey::predef(winreg::enums::HKEY_LOCAL_MACHINE).open_subkey(r"Software\SolidCraft").ok()?;
+    let key = winreg::RegKey::predef(winreg::enums::HKEY_LOCAL_MACHINE).open_subkey(r"Software\SketCraft").ok()?;
     key.get_value::<String, _>("InstallDir").ok().map(PathBuf::from)
 }
 
@@ -318,7 +316,7 @@ fn same_or_inside(a: &Path, b: &Path, ignore_case: bool) -> bool {
     !b.is_empty() && !b.ends_with(':') && (a == b || a.strip_prefix(&b).is_some_and(|rest| rest.starts_with('/')))
 }
 
-/// Whether the launcher's `installed.json` (`bytes`) records this installation: its `solidcraft`
+/// Whether the launcher's `installed.json` (`bytes`) records this installation: its `sketcraft`
 /// entry's `path` (the exe, the AppImage, the `.app`, or the folder of an unpacked tarball) is one
 /// of `places` or contains one.
 pub fn record_matches(bytes: &[u8], places: &[PathBuf], ignore_case: bool) -> bool {
@@ -366,7 +364,7 @@ pub fn managed_by(
         places.push(p.clone());
     }
     // The launcher runs an unpacked tarball with its own HOME, so the usual place is out of reach:
-    // `<launcher data>/apps/solidcraft/…` has the record two levels up.
+    // `<launcher data>/apps/sketcraft/…` has the record two levels up.
     let beside_apps = exe.into_iter().flat_map(Path::ancestors).find(|a| a.file_name().is_some_and(|n| n == "apps")).and_then(Path::parent);
     let records = beside_apps.map(|d| d.join("installed.json")).into_iter().chain(launcher_record_path(os, env));
     let ignore_case = matches!(os, "windows" | "macos");
@@ -427,7 +425,7 @@ impl InstallKind {
     pub fn update_command(&self, asset: Option<&str>) -> Option<String> {
         match self {
             InstallKind::Flatpak(id) => Some(format!("flatpak update {id}")),
-            InstallKind::Snap { store: true } => Some("sudo snap refresh solidcraft".into()),
+            InstallKind::Snap { store: true } => Some("sudo snap refresh sketcraft".into()),
             InstallKind::Snap { store: false } => {
                 Some(format!("sudo snap install --dangerous ./{}", asset.unwrap_or("sketcraft-linux-x86_64.snap")))
             }
@@ -439,7 +437,7 @@ impl InstallKind {
 }
 
 /// The release asset that installs or replaces this installation, by its fixed name
-/// (docs/releasing.md: `solidcraft-windows-x64.msi`, `solidcraft-linux-x86_64.AppImage`, …), or
+/// (docs/releasing.md: `sketcraft-windows-x64.msi`, `sketcraft-linux-x86_64.AppImage`, …), or
 /// the versioned name for the packages without one. `arch` is `std::env::consts::ARCH`.
 pub fn asset_name(kind: &InstallKind, arch: &str, version: &str) -> Option<String> {
     let linux = match arch {

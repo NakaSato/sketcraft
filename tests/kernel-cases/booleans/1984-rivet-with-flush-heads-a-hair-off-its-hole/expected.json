@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#1984"
+  "NakaSato/sketcraft#1984"
  ],
  "what": "a rivet (shank r=2, heads r=4 flat on both faces of a 1.5 mm sheet) 0.004 mm off the axis of its hole: overlap with the sheet is the shank's crescent; the heads touch the sheet faces over an area but add no volume",
  "source": "analytic",

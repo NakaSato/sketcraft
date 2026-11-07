@@ -1,7 +1,7 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#659",
-  "tangency-labs/solidcraft#692"
+  "NakaSato/sketcraft#659",
+  "NakaSato/sketcraft#692"
  ],
  "what": "a 160 x 100 plate with a 90 degree flange, unfolded, a 24 x 12 ellipse cut across the bend zone and refolded: the cut's wall folds to a curve on the bend's cylinder",
  "source": "analytic",

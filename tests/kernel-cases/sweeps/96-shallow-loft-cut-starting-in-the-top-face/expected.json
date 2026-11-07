@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#96"
+  "NakaSato/sketcraft#96"
  ],
  "what": "a loft cut from a 556.68 x 99 rectangle on the top face of a 900 x 480 x 160 slab down 4 mm to an 80 x 80 square (a kernel panic in healing; the sides are about 0.9 degrees from horizontal)",
  "source": "analytic",

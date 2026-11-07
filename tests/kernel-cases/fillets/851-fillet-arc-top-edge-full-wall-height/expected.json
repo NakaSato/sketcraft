@@ -1,7 +1,7 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#851",
-  "tangency-labs/solidcraft#1113"
+  "NakaSato/sketcraft#851",
+  "NakaSato/sketcraft#1113"
  ],
  "what": "the top edge of #851's concave R21 wall rounded R10, its full height: the round uses the wall up, its contact the bottom arc",
  "source": "analytic",

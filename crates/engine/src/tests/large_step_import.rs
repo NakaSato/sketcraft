@@ -137,7 +137,7 @@ fn raised_file_limits_let_larger_step_and_design_files_be_read() {
         path.to_string_lossy().to_string()
     };
     let step = sparse("big.step", 512 * MB + 1);
-    let design = sparse("big.solidcraft", 256 * MB + 1);
+    let design = sparse("big.sketcraft", 256 * MB + 1);
     let mut s = Session::default();
     assert_eq!(limits::effective(), FileLimits::DEFAULT);
     for path in [&step, &design] {

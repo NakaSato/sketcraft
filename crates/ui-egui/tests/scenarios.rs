@@ -144,7 +144,7 @@ fn dragging_a_conic_after_the_tool_sets_rho_and_its_apex_stays_separately_dragga
 fn home_tab_and_file_recent_open_designs() {
     use serde_json::json;
     let mut h = Harness::new();
-    let path = h.dir.join("recent.solidcraft").to_string_lossy().into_owned();
+    let path = h.dir.join("recent.sketcraft").to_string_lossy().into_owned();
     h.run(&json!([
         {"call":"engine.execute","params":{"command":"solid.box","params":{"length":10,"width":10,"height":10}}},
         {"call":"engine.execute","params":{"command":"file.save_as","params":{"path":path}}},

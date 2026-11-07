@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#13"
+  "NakaSato/sketcraft#13"
  ],
  "what": "split a body by a plane (the split-by-a-face path tripped a debug assertion, 'Two same vertices cannot construct an edge')",
  "source": "analytic",

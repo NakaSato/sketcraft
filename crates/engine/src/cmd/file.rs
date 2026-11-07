@@ -31,7 +31,7 @@ pub static COMMANDS: &[CommandSpec] = &[
         .icon("open")
         .key("Ctrl+O")
         .noundo()
-        .params("path: .sc design (or a .solidcraft design from an earlier release), .dxf/.svg drawing (opens as a new, unsaved design with an XY sketch, using sketch.insert_dxf/sketch.insert_svg units and defaults), or a .step/.stp/.igs/.fcstd/.3dm/.3mf/.stl/.obj/.glb/.gltf file (STEP, IGES, FreeCAD, Rhino, 3MF, STL, OBJ or glTF; opens as a new design holding the file as a component named after it, as file.insert_step and file.insert_mesh make), or a .ply/.xyz/.pts point cloud (opens as a new design holding it, as pointcloud.insert makes; its `units` and `max_points` as there); up?: z|y for a STEP, IGES, FreeCAD, Rhino or glTF file (see file.insert_step and file.insert_mesh); names?: auto|solid|product|instance for a STEP, IGES, FreeCAD or Rhino file (see file.insert_step); units?: for an STL or OBJ file (see file.insert_mesh); folder?: bool for a STEP, IGES, FreeCAD or Rhino file (see file.insert_step); read_only?: bool (a design: saving to its own file is refused, file.save_as keeps the changes elsewhere) → open_elsewhere: {host, user, app, opened} when another SketCraft has the design open (its lock file is fresh); newer_file: {format, reads_up_to, unknown_changes, not_understood, notice} and warnings when a newer SketCraft saved it: it opens all the same, and what this version can't read is named there and kept by saving"),
+        .params("path: .sc design (or a .sketcraft design from an earlier release), .dxf/.svg drawing (opens as a new, unsaved design with an XY sketch, using sketch.insert_dxf/sketch.insert_svg units and defaults), or a .step/.stp/.igs/.fcstd/.3dm/.3mf/.stl/.obj/.glb/.gltf file (STEP, IGES, FreeCAD, Rhino, 3MF, STL, OBJ or glTF; opens as a new design holding the file as a component named after it, as file.insert_step and file.insert_mesh make), or a .ply/.xyz/.pts point cloud (opens as a new design holding it, as pointcloud.insert makes; its `units` and `max_points` as there); up?: z|y for a STEP, IGES, FreeCAD, Rhino or glTF file (see file.insert_step and file.insert_mesh); names?: auto|solid|product|instance for a STEP, IGES, FreeCAD or Rhino file (see file.insert_step); units?: for an STL or OBJ file (see file.insert_mesh); folder?: bool for a STEP, IGES, FreeCAD or Rhino file (see file.insert_step); read_only?: bool (a design: saving to its own file is refused, file.save_as keeps the changes elsewhere) → open_elsewhere: {host, user, app, opened} when another SketCraft has the design open (its lock file is fresh); newer_file: {format, reads_up_to, unknown_changes, not_understood, notice} and warnings when a newer SketCraft saved it: it opens all the same, and what this version can't read is named there and kept by saving"),
     CommandSpec::new("file.insert_step", "Insert STEP", insert_step)
         .at("SOLID", "INSERT")
         .icon("import")
@@ -181,7 +181,7 @@ fn read_step(path: &str, names: sketcraft_io::StepNames) -> Result<sketcraft_io:
 }
 
 /// Which way is up in a STEP or IGES file, from the program its header names: `("y", name)` for
-/// an exporter whose files have Y up, `("z", name)` for SolidCraft's own (its STEP and IGES exports both name it), else `None`. Only
+/// an exporter whose files have Y up, `("z", name)` for SketCraft's own (its STEP and IGES exports both name it), else `None`. Only
 /// SolidWorks is listed as Y up: its STEP and IGES writers are well known to keep that program's
 /// Y-up front view, and its name is in FILE_NAME (originating system, preprocessor version) and
 /// often FILE_DESCRIPTION. Programs we aren't sure of stay unknown, so the file is only offered.
@@ -652,7 +652,7 @@ fn write_bytes(
     s.read_only = false;
     s.mark_saved();
     let mut out = json!({"path": path, "bytes": bytes.len(), "name": s.doc.name});
-    // A newer SolidCraft's file keeps what this version can't read, and its format number. What
+    // A newer SketCraft's file keeps what this version can't read, and its format number. What
     // couldn't go back, because the design was changed around it, is said.
     if s.doc.newer_file.is_some() {
         let mut lost = sketcraft_doc::newer_file::not_kept(&s.doc);
@@ -1260,25 +1260,25 @@ mod tests {
     fn follow_file_rename_updates_path_and_borrowed_design_name() {
         let mut s = Session::default();
         s.doc_mut().name = "Plate".into();
-        s.path = Some("opfs://Plate.solidcraft".into());
+        s.path = Some("opfs://Plate.sketcraft".into());
         s.user_named = false;
-        s.follow_file_rename("opfs://Plate.solidcraft", "opfs://Bracket.solidcraft");
-        assert_eq!(s.path.as_deref(), Some("opfs://Bracket.solidcraft"));
+        s.follow_file_rename("opfs://Plate.sketcraft", "opfs://Bracket.sketcraft");
+        assert_eq!(s.path.as_deref(), Some("opfs://Bracket.sketcraft"));
         assert_eq!(s.doc.name, "Bracket");
 
         let mut kept = Session::default();
         kept.doc_mut().name = "My part".into();
-        kept.path = Some("opfs://Plate.solidcraft".into());
+        kept.path = Some("opfs://Plate.sketcraft".into());
         kept.user_named = true;
-        kept.follow_file_rename("opfs://Plate.solidcraft", "opfs://Bracket.solidcraft");
-        assert_eq!(kept.path.as_deref(), Some("opfs://Bracket.solidcraft"));
+        kept.follow_file_rename("opfs://Plate.sketcraft", "opfs://Bracket.sketcraft");
+        assert_eq!(kept.path.as_deref(), Some("opfs://Bracket.sketcraft"));
         assert_eq!(kept.doc.name, "My part");
 
         let mut other = Session::default();
         other.doc_mut().name = "Other".into();
-        other.path = Some("opfs://Other.solidcraft".into());
-        other.follow_file_rename("opfs://Plate.solidcraft", "opfs://Bracket.solidcraft");
-        assert_eq!(other.path.as_deref(), Some("opfs://Other.solidcraft"));
+        other.path = Some("opfs://Other.sketcraft".into());
+        other.follow_file_rename("opfs://Plate.sketcraft", "opfs://Bracket.sketcraft");
+        assert_eq!(other.path.as_deref(), Some("opfs://Other.sketcraft"));
         assert_eq!(other.doc.name, "Other");
     }
 
@@ -1450,8 +1450,8 @@ mod tests {
         direct.execute("solid.box", &json!({"length": 10, "width": 10, "height": 10})).unwrap();
         let mut adopted = Session::new((*direct.doc).clone());
         adopted.execute("solid.box", &json!({"length": 10, "width": 10, "height": 10})).unwrap();
-        let a = dir.join("Bracket.solidcraft");
-        let b = dir.join("Bracket copy.solidcraft");
+        let a = dir.join("Bracket.sketcraft");
+        let b = dir.join("Bracket copy.sketcraft");
         direct.execute("file.save_as", &json!({"path": a.to_string_lossy()})).unwrap();
         let mut copy = adopted.scratch();
         copy.path.clone_from(&adopted.path);
@@ -1474,7 +1474,7 @@ mod tests {
     fn a_change_made_while_a_copy_saves_stays_unsaved() {
         let dir = std::env::temp_dir().join(format!("sketcraft-adopt-changed-{}", std::process::id()));
         std::fs::create_dir_all(&dir).unwrap();
-        let path = dir.join("Bracket.solidcraft");
+        let path = dir.join("Bracket.sketcraft");
         for hide in [false, true] {
             let mut s = Session::default();
             s.execute("solid.box", &json!({"length": 10, "width": 10, "height": 10, "body_name": "Block"})).unwrap();
@@ -1494,14 +1494,14 @@ mod tests {
         let _ = std::fs::remove_dir_all(&dir);
     }
 
-    /// A `.solidcraft` design from an earlier release opens, takes its file's name, and `file.save`
+    /// A `.sketcraft` design from an earlier release opens, takes its file's name, and `file.save`
     /// writes it back to that same file (container format), never to a new `.sc` beside it.
     #[test]
     fn saving_an_opened_legacy_design_keeps_its_name() {
         let dir = std::env::temp_dir().join(format!("sketcraft-legacy-ext-save-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&dir);
         std::fs::create_dir_all(&dir).unwrap();
-        let old = dir.join("Bracket.solidcraft");
+        let old = dir.join("Bracket.sketcraft");
         let mut first = Session::default();
         first.execute("solid.box", &json!({"length": 10, "width": 10, "height": 10})).unwrap();
         first.execute("file.save_as", &json!({"path": old.to_string_lossy()})).unwrap();
@@ -1517,7 +1517,7 @@ mod tests {
             .map(|e| e.file_name().to_string_lossy().into_owned())
             .filter(|n| !n.ends_with(".bak") && !n.ends_with(".lock"))
             .collect();
-        assert_eq!(names, ["Bracket.solidcraft"]);
+        assert_eq!(names, ["Bracket.sketcraft"]);
         let bytes = std::fs::read(&old).unwrap();
         assert!(sketcraft_io::is_design_container(&bytes));
         assert_eq!(sketcraft_io::read_design(&bytes).unwrap().features.len(), 2);
@@ -1588,7 +1588,7 @@ mod tests {
     fn a_save_over_a_file_changed_on_disk_or_opened_read_only_is_refused() {
         let dir = std::env::temp_dir().join(format!("sketcraft-changed-on-disk-{}", std::process::id()));
         std::fs::create_dir_all(&dir).unwrap();
-        let a = dir.join("Bracket.solidcraft");
+        let a = dir.join("Bracket.sketcraft");
         let a_str = a.to_string_lossy().to_string();
         let mut s = Session::default();
         s.execute("solid.box", &json!({"length": 10, "width": 10, "height": 10})).unwrap();
@@ -1614,7 +1614,7 @@ mod tests {
         assert_eq!(r["read_only"], json!(true));
         let e = ro.execute("file.save", &json!({"overwrite": true})).unwrap_err().to_string();
         assert!(e.contains("read-only"), "{e}");
-        let b = dir.join("Bracket copy.solidcraft");
+        let b = dir.join("Bracket copy.sketcraft");
         ro.execute("file.save_as", &json!({"path": b.to_string_lossy()})).unwrap();
         assert!(!ro.read_only);
         ro.execute("file.save", &json!({})).unwrap();
@@ -1683,7 +1683,7 @@ mod tests {
         let mut samples = [Vec::new(), Vec::new()];
         for round in 0..9 {
             for index in if round % 2 == 0 { [0, 1] } else { [1, 0] } {
-                let path = target.join(if index == 0 { "issue303-warm.json" } else { "issue303-warm.solidcraft" });
+                let path = target.join(if index == 0 { "issue303-warm.json" } else { "issue303-warm.sketcraft" });
                 let began = std::time::Instant::now();
                 session.execute("file.save", &json!({"path":path,"preview":true,"cache":false})).unwrap();
                 samples[index].push(began.elapsed().as_secs_f64() * 1000.0);
@@ -1692,7 +1692,7 @@ mod tests {
         for s in &mut samples {
             s.sort_by(f64::total_cmp);
         }
-        let bytes = std::fs::read(target.join("issue303-warm.solidcraft")).unwrap();
+        let bytes = std::fs::read(target.join("issue303-warm.sketcraft")).unwrap();
         assert!(sketcraft_io::read_design_preview(&bytes).is_some());
         assert_eq!(sketcraft_io::read_design(&bytes).unwrap(), *session.doc);
         let mut reads = Vec::new();
@@ -1720,7 +1720,7 @@ mod tests {
         for body in &state.bodies {
             body.mesh();
         }
-        let save_path = std::env::temp_dir().join(format!("sketcraft-preview-save-{}.solidcraft", std::process::id()));
+        let save_path = std::env::temp_dir().join(format!("sketcraft-preview-save-{}.sketcraft", std::process::id()));
         s.execute("file.save", &json!({"path":save_path})).unwrap();
         let saved = std::fs::read(&save_path).unwrap();
         assert!(sketcraft_io::read_design_geometry(&saved).is_some(), "ordinary saves keep the evaluated model");
@@ -1735,7 +1735,7 @@ mod tests {
             mesh.positions = mesh.positions.iter().map(|c| c * 10.0).collect();
         }
         let bytes = sketcraft_io::write_design_container_with_preview(&s.doc, sketcraft_io::DesignCompression::Fast, Some(&preview)).unwrap();
-        let path = std::env::temp_dir().join(format!("sketcraft-preview-{}.solidcraft", std::process::id()));
+        let path = std::env::temp_dir().join(format!("sketcraft-preview-{}.sketcraft", std::process::id()));
         std::fs::write(&path, bytes).unwrap();
         let seen = std::sync::Arc::new(std::sync::atomic::AtomicUsize::new(0));
         let callback_seen = seen.clone();
@@ -1805,7 +1805,7 @@ mod tests {
         for body in &world.bodies {
             body.mesh();
         }
-        let path = std::env::temp_dir().join(format!("sketcraft-cache-opt-in-{}.solidcraft", std::process::id()));
+        let path = std::env::temp_dir().join(format!("sketcraft-cache-opt-in-{}.sketcraft", std::process::id()));
         for command in ["file.save", "file.save_as"] {
             for cache in [None, Some(true), Some(false), None] {
                 let mut params = json!({"path":path});
@@ -1904,7 +1904,7 @@ mod tests {
                 .collect::<Vec<_>>()
         };
         let bytes = session.design_container(sketcraft_io::DesignCompression::Fast, false, true).unwrap();
-        let path = std::env::temp_dir().join(format!("sketcraft-roundtrip-{}.solidcraft", std::process::id()));
+        let path = std::env::temp_dir().join(format!("sketcraft-roundtrip-{}.sketcraft", std::process::id()));
         std::fs::write(&path, &bytes).unwrap();
         let mut reopened = Session::default();
         reopened.execute("doc.open", &json!({"path": path})).unwrap();
@@ -1924,7 +1924,7 @@ mod tests {
         assert!(
             sketcraft_io::read_design_geometry(&session.design_container(sketcraft_io::DesignCompression::Fast, false, false).unwrap()).is_none()
         );
-        let path = std::env::temp_dir().join(format!("sketcraft-saved-model-{}.solidcraft", std::process::id()));
+        let path = std::env::temp_dir().join(format!("sketcraft-saved-model-{}.sketcraft", std::process::id()));
         std::fs::write(&path, &bytes).unwrap();
         let mut reopened = Session::default();
         reopened.execute("doc.open", &json!({"path":path})).unwrap();
@@ -1979,7 +1979,7 @@ mod tests {
         assert_eq!(triangles(&session), [4], "one mesh body");
         let bytes = session.design_container(sketcraft_io::DesignCompression::Fast, false, true).unwrap();
         assert!(sketcraft_io::read_design_geometry(&bytes).is_some(), "the model is saved with the mesh body");
-        let path = dir.join("boxes-mesh.solidcraft");
+        let path = dir.join("boxes-mesh.sketcraft");
         std::fs::write(&path, &bytes).unwrap();
         let mut reopened = Session::default();
         reopened.execute("doc.open", &json!({"path": path})).unwrap();
@@ -2026,7 +2026,7 @@ mod tests {
         assert!(per_feature * 2 < sheet, "each later feature adds {per_feature} bytes, the sheet is {sheet}");
         // Taken from the file as saved: the sheet is the one evaluated.
         let flat = many.model.state().sheets.clone();
-        let path = std::env::temp_dir().join(format!("sketcraft-sheet-cache-{}.solidcraft", std::process::id()));
+        let path = std::env::temp_dir().join(format!("sketcraft-sheet-cache-{}.sketcraft", std::process::id()));
         std::fs::write(&path, many.design_container(sketcraft_io::DesignCompression::Fast, false, true).unwrap()).unwrap();
         let mut reopened = Session::default();
         reopened.execute("doc.open", &json!({"path":path})).unwrap();
@@ -2073,7 +2073,7 @@ mod tests {
             2 + 10,
             "the last sketch, its extrude and every box share one set"
         );
-        let path = std::env::temp_dir().join(format!("sketcraft-sketch-key-cache-{}.solidcraft", std::process::id()));
+        let path = std::env::temp_dir().join(format!("sketcraft-sketch-key-cache-{}.sketcraft", std::process::id()));
         let bytes = sketcraft_io::write_design_container_with_cache(&s.doc, sketcraft_io::DesignCompression::Fast, None, Some(&saved)).unwrap();
         std::fs::write(&path, bytes).unwrap();
         let mut reopened = Session::default();
@@ -2170,7 +2170,7 @@ mod tests {
         for round in 0..9 {
             for i in if round % 2 == 0 { [0, 1, 2, 3] } else { [3, 2, 1, 0] } {
                 let (format, cache, compression) = modes[i];
-                let path = target.join(format!("issue303-native-{i}.solidcraft"));
+                let path = target.join(format!("issue303-native-{i}.sketcraft"));
                 let start = std::time::Instant::now();
                 session.execute("file.save", &json!({"path":path,"format":format,"cache":cache,"compression":compression})).unwrap();
                 samples[i].push(start.elapsed().as_secs_f64() * 1000.);
@@ -2178,7 +2178,7 @@ mod tests {
         }
         for (i, times) in samples.iter_mut().enumerate() {
             times.sort_by(f64::total_cmp);
-            let bytes = std::fs::read(target.join(format!("issue303-native-{i}.solidcraft"))).unwrap();
+            let bytes = std::fs::read(target.join(format!("issue303-native-{i}.sketcraft"))).unwrap();
             assert_eq!(sketcraft_io::read_design(&bytes).unwrap(), *session.doc);
             assert_eq!(sketcraft_io::read_design_geometry(&bytes).is_some(), modes[i].1);
             eprintln!("native_save mode={i} median_ms={:.3} bytes={}", times[4], bytes.len());
@@ -2190,7 +2190,7 @@ mod tests {
     fn benchmark_native_cache_open() {
         let target = std::env::var_os("CARGO_TARGET_DIR").map(std::path::PathBuf::from).unwrap_or_else(|| std::path::PathBuf::from("target"));
         let mode = std::env::var("SKETCRAFT_BENCH_ENCODING").unwrap_or_else(|_| "2".into());
-        let path = target.join(format!("issue303-native-{mode}.solidcraft"));
+        let path = target.join(format!("issue303-native-{mode}.sketcraft"));
         let display = std::sync::Arc::new(std::sync::Mutex::new(None));
         let notify = display.clone();
         let start = std::time::Instant::now();
@@ -2225,7 +2225,7 @@ mod tests {
     #[test]
     fn save_as_names_an_untitled_design_after_its_file() {
         let dir = name_dir("untitled");
-        let path = dir.join("bracket.solidcraft");
+        let path = dir.join("bracket.sketcraft");
         let mut s = Session::default();
         s.execute("solid.box", &json!({"length":10,"width":20,"height":30})).unwrap();
         assert_eq!(s.doc.name, "Untitled");
@@ -2239,7 +2239,7 @@ mod tests {
         assert_eq!(s.doc.name, "bracket");
         // Saved under another file, a name taken from the old file follows it (#1710), in the
         // file too, so reopening shows it.
-        let copy = dir.join("copy.solidcraft");
+        let copy = dir.join("copy.sketcraft");
         s.execute("file.save_as", &json!({"path":copy})).unwrap();
         assert_eq!(s.doc.name, "copy");
         let mut reopened = Session::default();
@@ -2249,11 +2249,11 @@ mod tests {
         s.execute("file.save", &json!({})).unwrap();
         assert_eq!(s.doc.name, "copy");
         // As in the issue: a design opened from its file, then saved as another.
-        reopened.execute("file.save_as", &json!({"path":dir.join("third.solidcraft")})).unwrap();
+        reopened.execute("file.save_as", &json!({"path":dir.join("third.sketcraft")})).unwrap();
         assert_eq!(reopened.doc.name, "third");
         // A failed save leaves the name alone.
         let mut failed = Session::default();
-        assert!(failed.execute("file.save_as", &json!({"path":dir.join("missing-dir").join("plate.solidcraft")})).is_err());
+        assert!(failed.execute("file.save_as", &json!({"path":dir.join("missing-dir").join("plate.sketcraft")})).is_err());
         assert_eq!(failed.doc.name, "Untitled");
         std::fs::remove_dir_all(dir).unwrap();
     }
@@ -2293,10 +2293,10 @@ mod tests {
         let dir = name_dir("named");
         let mut s = Session::default();
         s.execute("file.new", &json!({"name":"Gearbox lid"})).unwrap();
-        s.execute("file.save_as", &json!({"path":dir.join("lid-v2.solidcraft")})).unwrap();
+        s.execute("file.save_as", &json!({"path":dir.join("lid-v2.sketcraft")})).unwrap();
         assert_eq!(s.doc.name, "Gearbox lid");
         let mut reopened = Session::default();
-        reopened.execute("doc.open", &json!({"path":dir.join("lid-v2.solidcraft")})).unwrap();
+        reopened.execute("doc.open", &json!({"path":dir.join("lid-v2.sketcraft")})).unwrap();
         assert_eq!(reopened.doc.name, "Gearbox lid");
         std::fs::remove_dir_all(dir).unwrap();
     }
@@ -2307,11 +2307,11 @@ mod tests {
     #[test]
     fn save_as_names_a_borrowed_name_after_the_new_file() {
         let dir = name_dir("borrowed");
-        // The issue's steps: the sample "Sample Plate" saved as "Bracket v2.solidcraft".
+        // The issue's steps: the sample "Sample Plate" saved as "Bracket v2.sketcraft".
         let mut s = Session::default();
         s.doc_mut().name = "Sample Plate".into();
         s.execute("solid.box", &json!({"length":10,"width":20,"height":30})).unwrap();
-        let path = dir.join("Bracket v2.solidcraft");
+        let path = dir.join("Bracket v2.sketcraft");
         let r = s.execute("file.save_as", &json!({"path":path})).unwrap();
         assert_eq!(r["name"], "Bracket v2");
         assert_eq!(s.doc.name, "Bracket v2");
@@ -2324,17 +2324,17 @@ mod tests {
         let mut reopened = Session::default();
         reopened.execute("doc.open", &json!({"path":path})).unwrap();
         assert_eq!(reopened.doc.name, "Bracket v2");
-        // A file whose stored name is not its own (renamed outside SolidCraft, or saved by a
+        // A file whose stored name is not its own (renamed outside SketCraft, or saved by a
         // version before #1710): Save As names the design after the new file, while a plain
         // Save to the file it has leaves the name alone.
-        let odd = dir.join("renamed.solidcraft");
+        let odd = dir.join("renamed.sketcraft");
         std::fs::write(&odd, sketcraft_io::write_design(&Document::new("Sample Plate"))).unwrap();
         let mut s = Session::default();
         s.execute("doc.open", &json!({"path":odd})).unwrap();
         assert_eq!(s.doc.name, "Sample Plate");
         s.execute("file.save", &json!({})).unwrap();
         assert_eq!(s.doc.name, "Sample Plate", "a plain Save does not rename behind the user's back");
-        s.execute("file.save_as", &json!({"path":dir.join("Bracket v3.solidcraft")})).unwrap();
+        s.execute("file.save_as", &json!({"path":dir.join("Bracket v3.sketcraft")})).unwrap();
         assert_eq!(s.doc.name, "Bracket v3");
         std::fs::remove_dir_all(dir).unwrap();
     }
@@ -2342,7 +2342,7 @@ mod tests {
     #[test]
     fn opening_an_untitled_file_shows_its_file_name() {
         let dir = name_dir("open");
-        for (stored, file) in [("Untitled", "hinge.solidcraft"), ("", "spacer.json")] {
+        for (stored, file) in [("Untitled", "hinge.sketcraft"), ("", "spacer.json")] {
             let path = dir.join(file);
             let bytes = sketcraft_io::write_design(&Document::new(stored));
             std::fs::write(&path, bytes).unwrap();
@@ -2360,7 +2360,7 @@ mod tests {
     fn design_save_formats_reopen_and_preserve_atomic_backups() {
         let dir = std::env::temp_dir().join(format!("sketcraft-container-{}", std::process::id()));
         std::fs::create_dir_all(&dir).unwrap();
-        let packaged = dir.join("design.solidcraft");
+        let packaged = dir.join("design.sketcraft");
         let plain = dir.join("design.json");
         let export = dir.join("export.json");
         let mut session = Session::default();
@@ -2398,7 +2398,7 @@ mod tests {
         use std::sync::Arc;
         let dir = std::env::temp_dir().join(format!("sketcraft-watched-open-{}", std::process::id()));
         std::fs::create_dir_all(&dir).unwrap();
-        let path = dir.join("three.solidcraft").to_string_lossy().to_string();
+        let path = dir.join("three.sketcraft").to_string_lossy().to_string();
         let mut s = Session::default();
         for x in [0, 20, 40] {
             s.execute("solid.box", &json!({"length":10,"width":10,"height":10,"corner":[x,0,0]})).unwrap();

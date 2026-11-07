@@ -1,12 +1,12 @@
 {
-  "schema": "solidcraft-physical-card-bundle/1",
+  "schema": "sketcraft-physical-card-bundle/1",
   "native_card_schema": 1,
   "native_library_format": false,
   "source_sha256": {
-    "sources.json": "8f684a2cf1fac8b2c836e12ca6a1afb9b8d85c8bdee73b4703ca0203936943b7",
-    "profiles.json": "61b8ec99225f4333a46027a4baa7eda1a9d77eeadcc3e79b4efc42113654c14a",
-    "quantities.json": "5083e049d446e6b8f5ce9add42f99c4e8c3aaa0c88fb46405da5911a4e0cf28c",
-    "bindings.json": "a2b7cddef7f164ef678cb45aa485d090150e1da3b8612f1b828ec3da4865f5e1"
+    "sources.json": "3c57ec3a84a29499c39da9624fddf560f759b5c65ed25e5ef09c04e0766a2911",
+    "profiles.json": "cc5aed75cbc852b8819a0d028f584efc826e960688302d96edfd790cf647b0da",
+    "quantities.json": "8b0fb9784f81d6f577f653edde3912ca91f1a2c3fcd12031fef60967ed710f30",
+    "bindings.json": "2cd42f62d813e13fa3d03f7201204383a43fed43a30cacb0f67cde805ce77932"
   },
   "generator_sha256": "f296e365a7740a75d933c7d5584dcc34e3c3ba16d5674f14fd2ad9f8dde87ffd",
   "runtime_assignment": false,

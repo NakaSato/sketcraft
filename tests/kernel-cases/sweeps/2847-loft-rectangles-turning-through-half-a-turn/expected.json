@@ -1,7 +1,7 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#2847",
-  "tangency-labs/solidcraft#3452"
+  "NakaSato/sketcraft#2847",
+  "NakaSato/sketcraft#3452"
  ],
  "what": "a loft through 19 identical 6 x 4 rectangles on planes turning about the Z axis every 10 degrees from 0 to 180 degrees, centred 30 mm from the axis (volume came out 6 % of the expected at 180 degrees, no error)",
  "source": "analytic",

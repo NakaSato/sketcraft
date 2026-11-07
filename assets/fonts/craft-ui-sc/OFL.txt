@@ -1,6 +1,6 @@
 Copyright 2014-2021 Adobe (http://www.adobe.com/), with Reserved Font Name 'Source'.
 Copyright 2014-2021 Google Inc. with Reserved Font Name 'Noto'.
-Subset for SolidCraft web UI (glyphs used by the zh locale); renamed Craft UI SC (no Reserved Font Name).
+Subset for SketCraft web UI (glyphs used by the zh locale); renamed Craft UI SC (no Reserved Font Name).
 
 This Font Software is licensed under the SIL Open Font License,
 Version 1.1.

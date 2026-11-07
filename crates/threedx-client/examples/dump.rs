@@ -1,6 +1,6 @@
 //! Prints what the 3Dconnexion driver reports: `cargo run -p sketcraft-3dx-client --example dump`.
 //! The driver sends nothing to a program that is not in an app bundle, so only `DeviceAdded` shows here;
-//! use SolidCraft's own `.app` to see the cap move.
+//! use SketCraft's own `.app` to see the cap move.
 
 fn main() {
     if let Err(error) = sketcraft_3dx_client::start(

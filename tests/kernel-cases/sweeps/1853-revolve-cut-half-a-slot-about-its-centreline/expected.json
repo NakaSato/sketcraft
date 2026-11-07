@@ -1,7 +1,7 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#1853",
-  "tangency-labs/solidcraft#1866"
+  "NakaSato/sketcraft#1853",
+  "NakaSato/sketcraft#1866"
  ],
  "what": "half a slot (r 3, centres 14 apart) revolved a full turn about its own centreline, which lies in the top face of a plate, as a cut (no result after about 10 s of retries)",
  "source": "analytic",

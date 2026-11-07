@@ -1,7 +1,7 @@
 {
   "sources": [
-    "tangency-labs/solidcraft#3497",
-    "tangency-labs/solidcraft#3456"
+    "NakaSato/sketcraft#3497",
+    "NakaSato/sketcraft#3456"
   ],
   "what": "a pin r=3.02 intersected with a tube whose bore is r=3: a thin annulus (0.02 mm overlap on a curved wall)",
   "source": "analytic",

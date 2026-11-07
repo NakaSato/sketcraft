@@ -1,5 +1,5 @@
 {
-  "schema": "solidcraft-physical-quantities/1",
+  "schema": "sketcraft-physical-quantities/1",
   "units": {
     "density": "kg/m^3",
     "young_modulus": "Pa",

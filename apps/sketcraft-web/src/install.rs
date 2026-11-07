@@ -1,6 +1,6 @@
 //! Install as an app (`sketcraft_ui_egui::install`). The browser offers it with a
 //! `beforeinstallprompt` event, which can come before this code runs: index.html keeps the event
-//! as `window.solidcraftInstall` (and drops it once the app is installed). The offer is good for
+//! as `window.sketcraftInstall` (and drops it once the app is installed). The offer is good for
 //! one prompt; a browser that is still willing makes a new one later. Safari makes no offer: it
 //! gets its steps, unless the app is already running installed.
 

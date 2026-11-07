@@ -2103,7 +2103,7 @@ mod tests {
     use sketcraft_geom::Aabb2;
 
     /// An infinite or huge box spans more cells than an `i64` holds; it is checked against all
-    /// shapes instead of wrapping the count and filling memory (solidcraft#5020).
+    /// shapes instead of wrapping the count and filling memory (sketcraft#5020).
     #[test]
     fn grid_cells_refuse_infinite_and_huge_boxes() {
         let small = Aabb2 { min: Vec2::new(0.0, 0.0), max: Vec2::new(10.0, 10.0) };

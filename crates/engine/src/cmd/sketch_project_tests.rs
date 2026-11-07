@@ -156,7 +156,7 @@ fn auto_project_off_holds_for_designs_started_and_opened() {
     let dir = std::env::temp_dir().join(format!("sketcraft-auto-project-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&dir);
     std::fs::create_dir_all(&dir).unwrap();
-    let file = dir.join("box.solidcraft");
+    let file = dir.join("box.sketcraft");
     let mut s = Session::default();
     box_part(&mut s);
     run(&mut s, "file.save_as", json!({"path": file.to_string_lossy()}));

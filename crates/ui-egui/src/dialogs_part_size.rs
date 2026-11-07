@@ -309,7 +309,7 @@ mod tests {
         assert_eq!(crate::browser::drawn_rows().iter().filter(|(label, _, _, _)| label.ends_with("[M6×20]")).count(), 2);
         h.app.run("edit.redo", json!({})).unwrap();
         assert_eq!(configuration(&h.app, component).as_deref(), Some("M8×25"));
-        let file = std::env::temp_dir().join(format!("sketcraft-part-configuration-{}.solidcraft", std::process::id()));
+        let file = std::env::temp_dir().join(format!("sketcraft-part-configuration-{}.sketcraft", std::process::id()));
         h.app.run("file.save", json!({"path":file})).unwrap();
         let mut reopened = Session::default();
         reopened.execute("doc.open", &json!({"path":file})).unwrap();

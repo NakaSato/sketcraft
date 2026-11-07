@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#5037"
+  "NakaSato/sketcraft#5037"
  ],
  "what": "a box wall swept round a rounded-rectangle rim (lines and r5 arcs) from a profile standing square to the path at its start, joined to the floor: the sweep didn't follow the path (synthetic: the report's card box had a stepped profile)",
  "source": "analytic",

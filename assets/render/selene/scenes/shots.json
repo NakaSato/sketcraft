@@ -3,11 +3,11 @@
     "schema_version": "0.1.0",
     "language": "en",
     "status": "specified_unbound",
-    "authorship": "Original SolidCraft prepared-demo authoring specifications. The separately pinned native source is documented in source-lock.json; these semantic resources remain unbound.",
+    "authorship": "Original SketCraft prepared-demo authoring specifications. The separately pinned native source is documented in source-lock.json; these semantic resources remain unbound.",
     "provenance_id": "ORIGINAL-2026-10-CATALOG",
     "source_lock": "../source-lock.json",
     "source_state": "pinned_native",
-    "expected_native_label": "SELENE-showcase.solidcraft",
+    "expected_native_label": "SELENE-showcase.sketcraft",
     "source_requirement": "Require ../source-lock.json active_source.status='pinned_native', matching accepted bytes/format/units/+Z, confirmed admission review and reviewed semantic selectors. An expected filename is not proof of identity.",
     "catalog_root": "../../../../docs/render-materials",
     "catalog_inputs": [

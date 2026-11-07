@@ -1,9 +1,9 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#647",
-  "tangency-labs/solidcraft#725",
-  "tangency-labs/solidcraft#1285",
-  "tangency-labs/solidcraft#1340"
+  "NakaSato/sketcraft#647",
+  "NakaSato/sketcraft#725",
+  "NakaSato/sketcraft#1285",
+  "NakaSato/sketcraft#1340"
  ],
  "what": "a 100 x 60 x 30 box shelled to 2 mm, converted to sheet metal by its four bottom edges and unfolded",
  "source": "analytic",

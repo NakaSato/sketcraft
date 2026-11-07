@@ -1,4 +1,4 @@
-//! The Part 21 parser lives in `solidcraft-step`; this reads with the kernel's progress watch.
+//! The Part 21 parser lives in `sketcraft-step`; this reads with the kernel's progress watch.
 
 pub use sketcraft_step::p21::{Entity, Exchange, Param};
 

@@ -127,7 +127,7 @@ fn a_y_up_step_file_comes_in_standing_up() {
     assert!(near(lo, [0.0, -20.0, 0.0]) && near(hi, [105.0, 106.0, 107.0]), "{lo:?} {hi:?}");
 
     // The turn is the component's placement: the saved design has it.
-    let design = std::path::Path::new(&path).with_file_name("frame.solidcraft");
+    let design = std::path::Path::new(&path).with_file_name("frame.sketcraft");
     run(&mut s, "edit.undo", json!({}));
     run(&mut s, "file.insert_step", json!({"path": path, "up": "y"}));
     run(&mut s, "file.save_as", json!({"path": design.to_string_lossy()}));
@@ -149,7 +149,7 @@ fn opening_a_y_up_step_file_can_stand_it_up() {
     assert_eq!(kinds(&s), ["BaseFeature"]);
 
     // The options belong to STEP files: a design file does not take them.
-    let design = std::path::Path::new(&path).with_file_name("kept.solidcraft");
+    let design = std::path::Path::new(&path).with_file_name("kept.sketcraft");
     run(&mut s, "file.save_as", json!({"path": design.to_string_lossy()}));
     let before = s.doc.clone();
     for p in [json!({"up": "y"}), json!({"names": "product"})] {
@@ -213,7 +213,7 @@ fn the_bodies_are_named_after_the_solid_the_product_or_the_instance() {
     let mut s = Session::default();
     run(&mut s, "doc.open", json!({"path": path, "names": "instance", "up": "y"}));
     assert_eq!(body_names(&s), ["Plate-1", "Post-1"]);
-    let design = std::path::Path::new(&path).with_file_name("frame-named.solidcraft");
+    let design = std::path::Path::new(&path).with_file_name("frame-named.sketcraft");
     run(&mut s, "file.save_as", json!({"path": design.to_string_lossy()}));
     let mut again = Session::default();
     run(&mut again, "doc.open", json!({"path": design.to_string_lossy()}));
@@ -263,7 +263,7 @@ fn automatic_part_names_and_assembly_survive_reopening() {
     let parts: Vec<_> = s.doc.components.iter().filter(|c| c.parent == top).collect();
     assert_eq!(parts.iter().map(|c| c.name.as_str()).collect::<Vec<_>>(), ["Plate", "Post"]);
     assert_eq!(s.doc.occurrences.iter().filter(|o| o.component == parts[1].id && o.parent == top).count(), 2);
-    let design = std::path::Path::new(&path).with_file_name("automatic.solidcraft");
+    let design = std::path::Path::new(&path).with_file_name("automatic.sketcraft");
     run(&mut s, "file.save_as", json!({"path": design.to_string_lossy()}));
     std::fs::remove_file(&path).unwrap();
     let mut again = Session::default();
@@ -284,9 +284,9 @@ fn step_replies_include_originating_system() -> std::result::Result<(), Box<dyn 
     source.execute("solid.box", &json!({"length": 10, "width": 40, "height": 5}))?;
     source.execute("file.export", &json!({"path": path.to_string_lossy()}))?;
     let text = std::fs::read_to_string(&path)?;
-    assert!(text.contains("'SolidCraft','SolidCraft'"));
+    assert!(text.contains("'SketCraft','SketCraft'"));
     for system in ["SketCraft", "Example CAD"] {
-        std::fs::write(&path, text.replace("'SolidCraft','SolidCraft'", &format!("'SolidCraft','{system}'")))?;
+        std::fs::write(&path, text.replace("'SketCraft','SketCraft'", &format!("'SketCraft','{system}'")))?;
         for command in ["file.insert_step", "doc.open"] {
             let reply = Session::default().execute(command, &json!({"path": path.to_string_lossy()}))?;
             assert_eq!(reply.get("system").and_then(Value::as_str), Some(system), "{command}: {reply}");
@@ -296,7 +296,7 @@ fn step_replies_include_originating_system() -> std::result::Result<(), Box<dyn 
     Ok(())
 }
 
-/// A header naming SolidWorks says the file has Y up; SolidCraft's own says Z; anything else
+/// A header naming SolidWorks says the file has Y up; SketCraft's own says Z; anything else
 /// says nothing (synthetic headers only).
 #[test]
 fn step_replies_name_a_y_up_exporter() -> std::result::Result<(), Box<dyn std::error::Error>> {
@@ -307,7 +307,7 @@ fn step_replies_name_a_y_up_exporter() -> std::result::Result<(), Box<dyn std::e
     source.execute("solid.box", &json!({"length": 10, "width": 40, "height": 5}))?;
     source.execute("file.export", &json!({"path": path.to_string_lossy()}))?;
     let text = std::fs::read_to_string(&path)?;
-    let header = "'SolidCraft','SolidCraft'";
+    let header = "'SketCraft','SketCraft'";
     assert!(text.contains(header));
     for (preprocessor, system, want) in [
         ("SketCraft", "SketCraft", Some(("z", "SketCraft"))),

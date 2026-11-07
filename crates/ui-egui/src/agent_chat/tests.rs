@@ -370,7 +370,7 @@ fn file_actions_wait_for_the_user() {
     let (mut app, tx) = app_in_a_turn();
     let dir = sketcraft_engine::io::vfs::temp_dir().join(format!("sc-agent-chat-approve-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
-    let path = dir.join("a.solidcraft");
+    let path = dir.join("a.sketcraft");
     let save = json!({"command": "file.save", "params": {"path": path.to_string_lossy()}, "allow_paths": [dir.to_string_lossy()]});
     let denied = ask(&tx, "engine.execute", save.clone());
     frame(&mut app);
@@ -622,7 +622,7 @@ fn permission_modes_decide_what_asks() {
     app.preferences.agent_permissions.insert("codex".into(), agents::Mode::All);
     let dir = sketcraft_engine::io::vfs::temp_dir().join(format!("sc-agent-chat-all-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
-    let path = dir.join("b.solidcraft");
+    let path = dir.join("b.sketcraft");
     let save = ask(
         &tx,
         "engine.execute",
@@ -639,7 +639,7 @@ fn permission_modes_decide_what_asks() {
     let _ = std::fs::remove_dir_all(&dir);
 }
 
-/// The agent's own questions: SolidCraft's tools are allowed (its gate checks them), an earlier
+/// The agent's own questions: SketCraft's tools are allowed (its gate checks them), an earlier
 /// "Always allow" answers by itself, and both leave a note; anything else is asked.
 #[test]
 fn the_agents_own_questions_are_answered_by_the_mode_or_asked() {
@@ -652,8 +652,8 @@ fn the_agents_own_questions_are_answered_by_the_mode_or_asked() {
             PermissionOption { id: "no".into(), name: "Reject".into(), kind: "reject_once".into() },
         ]
     };
-    on_permission(&mut app, 1, "mcp__solidcraft-app__batch".into(), Some("other"), opts());
-    assert!(matches!(app.agent_chat.items.last(), Some(Item::Notice { text, .. }) if text.contains("mcp__solidcraft-app__batch")));
+    on_permission(&mut app, 1, "mcp__sketcraft-app__batch".into(), Some("other"), opts());
+    assert!(matches!(app.agent_chat.items.last(), Some(Item::Notice { text, .. }) if text.contains("mcp__sketcraft-app__batch")));
     on_permission(&mut app, 2, "Run ls".into(), None, opts());
     assert!(matches!(app.agent_chat.items.last(), Some(Item::Permission { answer: None, .. })));
     let n = app.agent_chat.items.len() - 1;
@@ -663,19 +663,19 @@ fn the_agents_own_questions_are_answered_by_the_mode_or_asked() {
     assert!(matches!(app.agent_chat.items.last(), Some(Item::Notice { .. })), "remembered");
 }
 
-/// A title that only mentions SketCraft is no tool of SolidCraft's: in every mode but Allow
+/// A title that only mentions SketCraft is no tool of SketCraft's: in every mode but Allow
 /// everything the user is asked, and the mode still answers when it says to.
 #[test]
-fn a_title_that_mentions_solidcraft_goes_through_the_users_mode() {
+fn a_title_that_mentions_sketcraft_goes_through_the_users_mode() {
     let mut app = SolveApp::new(sketcraft_engine::Session::default(), crate::Services::default());
     app.agent_chat.running_id = "codex".into();
     let opts = || vec![PermissionOption { id: "allow".into(), name: "Allow".into(), kind: "allow_once".into() }];
     let titles = [
-        ("run solidcraft-cli; ls", Some("execute")),
-        ("run solidcraft-cli; ls", None),
-        ("Edit ~/.local/share/solidcraft/agent-chat/work/notes.txt", Some("edit")),
-        ("mcp__solidcraft__batch", Some("other")),
-        ("mcp__solidcraft-app__batch", Some("execute")),
+        ("run sketcraft-cli; ls", Some("execute")),
+        ("run sketcraft-cli; ls", None),
+        ("Edit ~/.local/share/sketcraft/agent-chat/work/notes.txt", Some("edit")),
+        ("mcp__sketcraft__batch", Some("other")),
+        ("mcp__sketcraft-app__batch", Some("execute")),
     ];
     for mode in [agents::Mode::Ask, agents::Mode::Edits] {
         app.preferences.agent_permissions.insert("codex".into(), mode);
@@ -685,7 +685,7 @@ fn a_title_that_mentions_solidcraft_goes_through_the_users_mode() {
             app.agent_chat.items.clear();
         }
         // The chat's own tool stays a single question, the gate's.
-        on_permission(&mut app, 2, "mcp__solidcraft-app__batch".into(), Some("other"), opts());
+        on_permission(&mut app, 2, "mcp__sketcraft-app__batch".into(), Some("other"), opts());
         assert!(matches!(app.agent_chat.items.last(), Some(Item::Notice { .. })), "{mode:?}");
         app.agent_chat.items.clear();
     }
@@ -849,7 +849,7 @@ fn a_late_sign_in_retry_or_permission_cannot_restart_a_departed_turn() {
     crate::documents::open_tab(&mut app, sketcraft_engine::Session::default()).unwrap();
     script.report(Event::Permission {
         key: 7,
-        title: "mcp__solidcraft-app__batch".into(),
+        title: "mcp__sketcraft-app__batch".into(),
         kind: None,
         options: vec![PermissionOption { id: "allow".into(), name: "Allow".into(), kind: "allow_once".into() }],
     });
@@ -931,7 +931,7 @@ fn an_agents_opened_design_keeps_its_conversation_and_undo_ownership() {
     for blank in [true, false] {
         let dir = std::env::temp_dir().join(format!("sketcraft-chat-open-{}-{blank}", std::process::id()));
         std::fs::create_dir_all(&dir).unwrap();
-        let path = dir.join("next.solidcraft");
+        let path = dir.join("next.sketcraft");
         let mut next = sketcraft_engine::Session::default();
         next.execute("solid.box", &boxed(100.0)["params"]).unwrap();
         next.execute("file.save_as", &json!({"path": path})).unwrap();
@@ -941,7 +941,7 @@ fn an_agents_opened_design_keeps_its_conversation_and_undo_ownership() {
         app.preferences.ai_permissions = agents::Mode::All;
         if !blank {
             app.run("solid.box", boxed(0.0)["params"].clone()).unwrap();
-            app.run("file.save_as", json!({"path": dir.join("first.solidcraft")})).unwrap();
+            app.run("file.save_as", json!({"path": dir.join("first.sketcraft")})).unwrap();
         }
         send(&mut app, &ctx, "open another design and add a box".into());
         let active = app.agent_chat.turn.as_ref().unwrap().active.clone();
@@ -962,7 +962,7 @@ fn an_agents_opened_design_keeps_its_conversation_and_undo_ownership() {
                 &ctx,
                 "engine.execute",
                 json!({
-                    "command": "doc.open", "params": {"path": dir.join("first.solidcraft")}, "allow_paths": [dir]
+                    "command": "doc.open", "params": {"path": dir.join("first.sketcraft")}, "allow_paths": [dir]
                 }),
             );
             assert_eq!(response["ok"], false, "another tab must keep its own conversation: {response}");
@@ -1029,7 +1029,7 @@ fn an_agents_failed_new_design_batch_restores_its_undo_boundary() {
 fn an_agents_cancelled_open_cannot_replace_the_design_later() {
     let dir = std::env::temp_dir().join(format!("sketcraft-chat-cancel-open-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
-    let path = dir.join("next.solidcraft");
+    let path = dir.join("next.sketcraft");
     sketcraft_engine::Session::default().execute("file.save_as", &json!({"path": path})).unwrap();
     let (mut app, script, ctx) = app_with_script();
     let (tx, rx) = channel();
@@ -3548,7 +3548,7 @@ fn an_attached_selection_goes_as_text_for_the_agent_and_as_chips_in_the_conversa
     app.agent_chat.attach_selection = true;
     send(&mut app, &ctx, "round this".into());
     let prompt = script.calls().pop().expect("a prompt");
-    assert!(prompt.starts_with("prompt: round this\n\n[Selected in SolidCraft"), "{prompt}");
+    assert!(prompt.starts_with("prompt: round this\n\n[Selected in SketCraft"), "{prompt}");
     for want in ["Elements:", "- Flat face ", "planar", "area ", "- Edge ", "length ", "name ", "Features:", "feature id", "Bodies:", "- Body1"] {
         assert!(prompt.contains(want), "{want:?} missing from {prompt}");
     }
@@ -4082,7 +4082,7 @@ fn the_picks_go_with_the_next_message_once() {
     app.agent_chat.attach_selection = true;
     send(&mut app, &ctx, "look at these".into());
     let prompt = script.calls().pop().expect("a prompt");
-    assert!(prompt.starts_with("prompt: look at these\n\n[Selected in SolidCraft"), "{prompt}");
+    assert!(prompt.starts_with("prompt: look at these\n\n[Selected in SketCraft"), "{prompt}");
     assert!(prompt.contains("3 item(s)"), "two picked and one more selected: {prompt}");
     assert_eq!(prompt.matches("- Body1").count(), 1, "{prompt}");
     let Some(Item::User { context, .. }) = app.agent_chat.items.last() else { panic!("a sent message") };
@@ -4401,7 +4401,7 @@ fn tool_calls_read_as_what_they_did() {
     assert_eq!(said("execute: solid.extrude", extrude.clone(), None).as_deref(), Some("Extrude Sketch1 by 10 mm"));
     // As an ACP agent names the bridged tool, with the body the result made.
     let made = r#"{"feature": 4, "name": "Extrude1", "created_bodies": ["Body2"], "changed_bodies": []}"#;
-    assert_eq!(said("mcp__solidcraft-app__execute", extrude, Some(made)).as_deref(), Some("Extrude Sketch1 by 10 mm → Body2"));
+    assert_eq!(said("mcp__sketcraft-app__execute", extrude, Some(made)).as_deref(), Some("Extrude Sketch1 by 10 mm → Body2"));
     let edges = json!([[20, 0, 20], [20, 30, 20], [0, 15, 20], [40, 15, 20]]);
     let batch = json!({"commands": [
         {"command": "solid.box", "params": {"length": 40, "width": 30, "height": 20}},
@@ -4410,10 +4410,10 @@ fn tool_calls_read_as_what_they_did() {
     assert_eq!(said("batch: solid.box, solid.fillet", batch, None).as_deref(), Some("Box 40 × 30 × 20 mm, then Fillet 4 edges (r 4 mm)"));
     let measured = r#"{"body_count": 1, "bodies": [{"name": "Block", "volume_mm3": 23620.4, "bbox": {"min": [0, 0, 0], "max": [40, 30, 20]}}]}"#;
     assert_eq!(said("measure", json!({"body": "Block"}), Some(measured)).as_deref(), Some("Measured Block: 40 × 30 × 20 mm, 23.6 cm³"));
-    assert_eq!(said("save", json!({"path": "C:\\designs\\block.solidcraft"}), None).as_deref(), Some("Saved block.solidcraft"));
+    assert_eq!(said("save", json!({"path": "C:\\designs\\block.sketcraft"}), None).as_deref(), Some("Saved block.sketcraft"));
     // Still running, or failed: what it does, not what it did.
-    let running = summary::summary("save", Some(&json!({"path": "/home/me/block.solidcraft"})), None, false, in_mm());
-    assert_eq!(running.as_deref(), Some("Save block.solidcraft"));
+    let running = summary::summary("save", Some(&json!({"path": "/home/me/block.sketcraft"})), None, false, in_mm());
+    assert_eq!(running.as_deref(), Some("Save block.sketcraft"));
     // Lengths in the design's units; an expression as written; one edge is one.
     let inches = summary::Units { units: "in", decimals: 3 };
     let one = json!({"command": "solid.fillet", "params": {"edges": [[0, 0, 0]], "radius": 2.54}});
@@ -4430,13 +4430,13 @@ fn tool_calls_read_as_what_they_did() {
 /// Details and the tooltip.
 #[test]
 fn tool_cards_show_file_names_never_paths() {
-    let shot = r"ui.screenshot: C:\Users\bherbruck\AppData\Local\Temp\solidcraft-mcp-8608-b4c7b64\shot-0.png";
+    let shot = r"ui.screenshot: C:\Users\bherbruck\AppData\Local\Temp\sketcraft-mcp-8608-b4c7b64\shot-0.png";
     assert_eq!(said(shot, json!({}), None).as_deref(), Some("Screenshot"));
-    assert_eq!(said("mcp__solidcraft-app__ui.screenshot", json!({}), None).as_deref(), Some("Screenshot"));
+    assert_eq!(said("mcp__sketcraft-app__ui.screenshot", json!({}), None).as_deref(), Some("Screenshot"));
     // The fallback title (another agent's tools) is cut to file names; temp files drop out.
     assert_eq!(summary::plain_title(shot), "ui.screenshot");
     assert_eq!(summary::plain_title(r"Read C:\Users\Jane Doe\Documents\part.step"), "Read part.step");
-    assert_eq!(summary::plain_title(r"Write D:/work/out/block.solidcraft now"), "Write block.solidcraft now");
+    assert_eq!(summary::plain_title(r"Write D:/work/out/block.sketcraft now"), "Write block.sketcraft now");
     assert_eq!(summary::plain_title(r"Open \\nas\share\parts\bracket.step"), "Open bracket.step");
     assert_eq!(summary::plain_title("Read /home/bherbruck/designs/part.step"), "Read part.step");
     assert_eq!(summary::plain_title("Edit ~/designs/part.step."), "Edit part.step.");
@@ -4444,17 +4444,17 @@ fn tool_cards_show_file_names_never_paths() {
     assert_eq!(summary::plain_title("Read /tmp/claude-1000/scratch/out.txt"), "Read");
     assert_eq!(summary::plain_title("ui.render: /var/folders/xy/T/shot.png"), "ui.render");
     assert_eq!(summary::plain_title("Run mcp__x__y with a/b and /"), "Run mcp__x__y with a/b and /");
-    // SolidCraft's own file tools: the name alone; a temp file has none.
+    // SketCraft's own file tools: the name alone; a temp file has none.
     assert_eq!(
         said("export", json!({"path": "/home/me/cad/part.step"}), None).as_deref().map(|s| s.ends_with("part.step") && !s.contains('/')),
         Some(true)
     );
     assert_eq!(
-        said("open", json!({"path": r"C:\cad\block.solidcraft"}), None).as_deref().map(|s| s.ends_with(" block.solidcraft") && !s.contains('\\')),
+        said("open", json!({"path": r"C:\cad\block.sketcraft"}), None).as_deref().map(|s| s.ends_with(" block.sketcraft") && !s.contains('\\')),
         Some(true)
     );
-    assert_eq!(said("save", json!({"path": "/tmp/x/block.solidcraft"}), None).as_deref(), Some("Save"));
-    assert_eq!(said("save", json!({"path": r"C:\Users\me\AppData\Local\Temp\a.solidcraft"}), Some("")).as_deref(), Some("Save"));
+    assert_eq!(said("save", json!({"path": "/tmp/x/block.sketcraft"}), None).as_deref(), Some("Save"));
+    assert_eq!(said("save", json!({"path": r"C:\Users\me\AppData\Local\Temp\a.sketcraft"}), Some("")).as_deref(), Some("Save"));
 }
 
 /// Another agent's own tools, an unknown command and malformed or hostile calls keep the card's
@@ -4462,7 +4462,7 @@ fn tool_cards_show_file_names_never_paths() {
 #[test]
 fn unknown_or_malformed_tool_calls_keep_their_title_and_never_panic() {
     for title in ["Read /etc/hosts", "mcp__github__create_issue", "mcp__github__save", "save /tmp/x.txt", "", "  ", "__", "mcp____"] {
-        assert_eq!(said(title, json!({"path": "x.solidcraft", "command": "solid.box"}), None), None, "{title}");
+        assert_eq!(said(title, json!({"path": "x.sketcraft", "command": "solid.box"}), None), None, "{title}");
     }
     assert_eq!(said("execute: solid.nope", json!({"command": "solid.nope"}), None), None, "an unknown command");
     assert_eq!(summary::summary("execute: solid.box", None, None, true, in_mm()), None, "arguments that did not parse");
@@ -4489,7 +4489,7 @@ fn unknown_or_malformed_tool_calls_keep_their_title_and_never_panic() {
         Some(r#"{"bodies": [{"bbox": {"min": [1], "max": "x"}}]}"#),
         Some(r#"{"created_bodies": [1, null, "B"]}"#),
     ];
-    for tool in ["execute", "batch", "measure", "save", "export", "open", "new_design", "set_parameter", "mcp__solidcraft__batch"] {
+    for tool in ["execute", "batch", "measure", "save", "export", "open", "new_design", "set_parameter", "mcp__sketcraft__batch"] {
         for input in &hostile {
             for output in outputs {
                 for done in [true, false] {
@@ -4552,7 +4552,7 @@ fn a_screenshot_card_hides_the_path_until_details() {
     let mut h = crate::scenario::Harness::new();
     h.call("ui.agent_chat", json!({"open": true}));
     h.frames(3);
-    let path = r"C:\Users\bherbruck\AppData\Local\Temp\solidcraft-mcp-8608-b4c7b64\shot-0.png";
+    let path = r"C:\Users\bherbruck\AppData\Local\Temp\sketcraft-mcp-8608-b4c7b64\shot-0.png";
     let n = h.app.agent_chat.items.len();
     h.app.agent_chat.items.push(Item::Tool {
         id: "s".into(),

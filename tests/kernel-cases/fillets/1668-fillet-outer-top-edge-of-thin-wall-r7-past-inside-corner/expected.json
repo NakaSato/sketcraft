@@ -1,7 +1,7 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#1668",
-  "tangency-labs/solidcraft#1080"
+  "NakaSato/sketcraft#1668",
+  "NakaSato/sketcraft#1080"
  ],
  "what": "an R7 round of the outer top edge of a 2 mm wall alone: past the sharp inside corner it would cut through the wall into the hollow, opening a slit along it, so it is refused, naming the largest radius that fits",
  "source": "analytic",

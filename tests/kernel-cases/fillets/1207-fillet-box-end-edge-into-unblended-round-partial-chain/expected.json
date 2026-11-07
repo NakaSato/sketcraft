@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#1207"
+  "NakaSato/sketcraft#1207"
  ],
  "what": "an edge that runs on tangentially into a round left out of the blend (tangent chain off) is rounded on past the round's end arc until it leaves the material",
  "source": "analytic",

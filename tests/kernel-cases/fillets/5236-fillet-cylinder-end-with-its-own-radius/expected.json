@@ -1,7 +1,7 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#5236",
-  "tangency-labs/solidcraft#3317"
+  "NakaSato/sketcraft#5236",
+  "NakaSato/sketcraft#3317"
  ],
  "what": "the end edge of a cylinder r10 filleted r10, making a hemispherical end: refused ('the blend is larger than a corner radius'); r 9.99 worked",
  "source": "analytic",

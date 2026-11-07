@@ -244,7 +244,7 @@ fn referenced_offset_recomputes_after_edit_and_save_reopen() {
     assert_eq!(extent(&h).to_offset.as_deref(), Some("clearance"));
     h.app.run("parameters.change", json!({"name":"clearance","expression":"6 mm"})).unwrap();
     assert_eq!(h.app.session.world_state().unwrap().body("Main").unwrap().mesh().bounds().max.z, 21.0);
-    let path = h.dir.join("extent.solidcraft");
+    let path = h.dir.join("extent.sketcraft");
     h.app.run("file.save", json!({"path":path})).unwrap();
     h.app.run("doc.open", json!({"path":path})).unwrap();
     assert_eq!(extent(&h).to_offset.as_deref(), Some("clearance"));
@@ -413,7 +413,7 @@ fn symmetric_total_distance_preview_handle_drag_apply_and_reopen_agree() {
         assert!((preview_bounds.min.z + 60.0).abs() < 1e-7 && (preview_bounds.max.z - 60.0).abs() < 1e-7);
         h.step(&json!({"widget":"OK"})).unwrap();
         assert_eq!(h.app.session.world_state().unwrap().body("Main").unwrap().mesh().bounds(), preview_bounds);
-        let path = h.dir.join("symmetric.solidcraft");
+        let path = h.dir.join("symmetric.sketcraft");
         h.app.run("file.save_as", json!({"path":path})).unwrap();
         h.app.run("doc.open", json!({"path":path})).unwrap();
         assert_eq!(h.app.session.world_state().unwrap().body("Main").unwrap().mesh().bounds(), preview_bounds);

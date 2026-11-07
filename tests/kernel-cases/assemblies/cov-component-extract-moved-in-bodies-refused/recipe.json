@@ -75,7 +75,7 @@
    "command": "component.extract",
    "params": {
     "component": "Arm",
-    "path": "$OUT/arm.solidcraft"
+    "path": "$OUT/arm.sketcraft"
    }
   }
  ]

@@ -198,7 +198,7 @@ mod tests {
                 count.set(count.get() + 1);
             };
             if save {
-                h.app.pick_save("part.solidcraft", &["sketcraft"], callback);
+                h.app.pick_save("part.sketcraft", &["sketcraft"], callback);
             } else {
                 h.app.pick_open(callback);
             }
@@ -234,7 +234,7 @@ mod tests {
         let mut h = crate::scenario::Harness::new();
         h.app.run("solid.box", json!({"length":10,"width":10,"height":10})).unwrap();
         let answer = picker(&mut h.app, true);
-        let path = h.dir.join("chosen.solidcraft");
+        let path = h.dir.join("chosen.sketcraft");
         crate::toolbar::save(&mut h.app);
         h.frames(3);
         assert!(h.app.session.is_dirty() && !path.exists());
@@ -336,8 +336,8 @@ mod tests {
                 assert!(h.app.file_picker_busy() && !h.app.quit_requested);
                 assert_eq!(h.app.docs.closing, Some(0));
                 let path = match outcome {
-                    "save" => Some(h.dir.join("chosen.solidcraft")),
-                    "fail" => Some(h.dir.join("missing/chosen.solidcraft")),
+                    "save" => Some(h.dir.join("chosen.sketcraft")),
+                    "fail" => Some(h.dir.join("missing/chosen.sketcraft")),
                     _ => None,
                 };
                 finish(&mut h.app, &answer, path.map(|p| p.to_string_lossy().into_owned()));
@@ -368,7 +368,7 @@ mod tests {
             crate::documents::answer_prompt(&mut h.app, crate::documents::Answer::Save);
             h.frames(2);
             assert!(!h.app.quit_requested);
-            finish(&mut h.app, &answer, Some(h.dir.join(format!("tab{i}.solidcraft")).to_string_lossy().into_owned()));
+            finish(&mut h.app, &answer, Some(h.dir.join(format!("tab{i}.sketcraft")).to_string_lossy().into_owned()));
             assert_eq!(h.app.quit_requested, i == 1);
         }
         assert!(!crate::documents::any_dirty(&h.app));

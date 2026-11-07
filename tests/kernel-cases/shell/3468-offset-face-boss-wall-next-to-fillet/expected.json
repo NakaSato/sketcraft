@@ -1,7 +1,7 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#3468",
-  "tangency-labs/solidcraft#3898"
+  "NakaSato/sketcraft#3468",
+  "NakaSato/sketcraft#3898"
  ],
  "what": "Offset Face on a boss wall whose base has a 2 mm fillet: the boss grows to r 11 and the fillet follows",
  "source": "analytic",

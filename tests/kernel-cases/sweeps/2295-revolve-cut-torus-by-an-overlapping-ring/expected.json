@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#2295"
+  "NakaSato/sketcraft#2295"
  ],
  "what": "a torus (R 10, r 5) cut by a disc of radius 5 centred at (15,0) in the XZ plane revolved about Z (the disc overlaps the torus tube)",
  "source": "analytic",

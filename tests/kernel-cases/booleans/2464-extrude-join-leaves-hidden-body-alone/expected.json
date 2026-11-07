@@ -1,7 +1,7 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#2464",
-  "tangency-labs/solidcraft#2465"
+  "NakaSato/sketcraft#2464",
+  "NakaSato/sketcraft#2465"
  ],
  "what": "an Extrude Join onto a plate with a hidden coincident copy: the hidden body must not be joined in",
  "source": "analytic",

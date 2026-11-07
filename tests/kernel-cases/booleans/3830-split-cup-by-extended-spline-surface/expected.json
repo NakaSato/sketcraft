@@ -1,6 +1,6 @@
 {
   "sources": [
-    "tangency-labs/solidcraft#3830"
+    "NakaSato/sketcraft#3830"
   ],
   "what": "split a thin-walled cup (shell of a d30 cylinder) with a surface body: an extruded spline surface, extended at both ends",
   "source": "analytic",

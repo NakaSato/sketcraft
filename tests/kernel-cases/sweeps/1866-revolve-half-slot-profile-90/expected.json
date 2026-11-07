@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#1866"
+  "NakaSato/sketcraft#1866"
  ],
  "what": "half a slot (r 3, centres 14 apart; the segment before the axis edge comes back to the axis along an arc) revolved 90 deg about its centreline",
  "source": "analytic",

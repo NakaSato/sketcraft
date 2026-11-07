@@ -29,7 +29,7 @@ const OTHERS_ROWS: f32 = 6.0;
 
 /// What is being typed; the properties themselves live in the document.
 pub struct DesignProperties {
-    /// Each of SolidCraft's design properties' text when the window opened, in
+    /// Each of SketCraft's design properties' text when the window opened, in
     /// `keys(Owner::Design)` order.
     pub opened: Vec<String>,
     /// The fields as edited.

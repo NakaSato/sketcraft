@@ -1,7 +1,7 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#896",
-  "tangency-labs/solidcraft#936"
+  "NakaSato/sketcraft#896",
+  "NakaSato/sketcraft#936"
  ],
  "what": "a fillet picked on the seam where a rounded edge runs tangent into the flat top has no corner to round and is refused as an invalid pick",
  "source": "invariants",

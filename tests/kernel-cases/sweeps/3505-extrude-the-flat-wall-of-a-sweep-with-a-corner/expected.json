@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#3505"
+  "NakaSato/sketcraft#3505"
  ],
  "what": "the inner side wall of the vertical leg of a mitred swept bar extruded outward by 3 mm (the wall is a B-spline net in a plane, \"the selected planar face no longer exists\")",
  "source": "analytic",

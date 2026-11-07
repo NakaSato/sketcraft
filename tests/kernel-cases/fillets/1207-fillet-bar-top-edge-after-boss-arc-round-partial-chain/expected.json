@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#1207"
+  "NakaSato/sketcraft#1207"
  ],
  "what": "after the boss's partial base arc is rounded r2, the bar's top edge that runs into the round rounded r2 without its tangent chain",
  "source": "invariants",

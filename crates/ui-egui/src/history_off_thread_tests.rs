@@ -888,12 +888,12 @@ fn an_inspection_on_a_copy_reports_the_history_and_the_file() {
     assert_eq!(inspect(&mut h), (json!(2), json!(0), json!(null)));
     h.app.run("edit.undo", json!({})).unwrap();
     assert_eq!(inspect(&mut h), (json!(1), json!(1), json!(null)));
-    let path = h.dir.join("boxes.solidcraft");
+    let path = h.dir.join("boxes.sketcraft");
     h.app.run("file.save_as", json!({"path": path})).unwrap();
     let (undo, redo, saved) = inspect(&mut h);
     assert_eq!((undo, redo), (json!(1), json!(1)));
     assert_eq!(saved, json!(h.app.session.path), "the file it was saved to");
-    assert!(saved.as_str().is_some_and(|p| p.ends_with("boxes.solidcraft")), "{saved}");
+    assert!(saved.as_str().is_some_and(|p| p.ends_with("boxes.sketcraft")), "{saved}");
 }
 
 /// A reading on a copy keeps the request's own `param_check` (#9184), as one run here does: its

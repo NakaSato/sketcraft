@@ -1,7 +1,7 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#1285",
-  "tangency-labs/solidcraft#1340"
+  "NakaSato/sketcraft#1285",
+  "NakaSato/sketcraft#1340"
  ],
  "what": "an 80 x 50 x 2 plate with a 40 wide, 30 high wall on part of its front edge, converted at the wall's outside bend edge: refused because the bend's setback used up an edge of a face",
  "source": "analytic",

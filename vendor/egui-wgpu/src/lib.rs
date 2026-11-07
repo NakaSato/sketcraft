@@ -41,14 +41,14 @@ use std::sync::Arc;
 
 use epaint::mutex::RwLock;
 
-/// SolidCraft: what [`set_startup_hook`] is told before each step of getting the graphics
+/// SketCraft: what [`set_startup_hook`] is told before each step of getting the graphics
 /// device and the window's surface up, so a crash inside the driver (with no Rust panic) can
 /// still say which step it died in. `detail` is empty except for [`STEP_ADAPTER_CHOSEN`].
 pub type StartupHook = fn(step: &'static str, detail: &str);
 
 static STARTUP_HOOK: std::sync::OnceLock<StartupHook> = std::sync::OnceLock::new();
 
-/// SolidCraft: the steps [`StartupHook`] is told about, in order.
+/// SketCraft: the steps [`StartupHook`] is told about, in order.
 pub const STEP_INSTANCE: &str = "graphics instance";
 pub const STEP_SURFACE: &str = "window surface";
 pub const STEP_ADAPTER: &str = "adapter request";
@@ -59,7 +59,7 @@ pub const STEP_RENDERER: &str = "egui renderer (shader compile)";
 pub const STEP_SURFACE_CONFIGURE: &str = "surface configure";
 pub const STEP_FIRST_PRESENT: &str = "first frame (present)";
 
-/// SolidCraft: install the startup hook (once; later calls are ignored).
+/// SketCraft: install the startup hook (once; later calls are ignored).
 pub fn set_startup_hook(hook: StartupHook) {
     let _ = STARTUP_HOOK.set(hook);
 }
@@ -85,7 +85,7 @@ pub enum WgpuError {
     #[error(transparent)]
     RequestDeviceError(#[from] wgpu::RequestDeviceError),
 
-    /// SolidCraft: pipeline validation must return to the startup retry.
+    /// SketCraft: pipeline validation must return to the startup retry.
     #[error("Could not create the egui renderer: {0}")]
     CreateRendererError(wgpu::Error),
 
@@ -133,7 +133,7 @@ impl SurfaceConfig {
     };
 }
 
-/// SolidCraft: whether a device was lost (the driver reset it, Windows' TDR among others, #4172).
+/// SketCraft: whether a device was lost (the driver reset it, Windows' TDR among others, #4172).
 ///
 /// A lost device can't be used again. wgpu only learns of the loss when a call into the driver
 /// fails: from then on every call on the device fails quietly, and the device's lost callback
@@ -220,7 +220,7 @@ impl DeviceLost {
     }
 }
 
-/// SolidCraft: a frame acquired from a window's surface, which gives its swapchain image back
+/// SketCraft: a frame acquired from a window's surface, which gives its swapchain image back
 /// however the frame ends: presented, dropped unpresented, or dropped while a panic unwinds
 /// (#7148).
 ///
@@ -258,7 +258,7 @@ impl<F, T: FreeSurfaceTexture> AcquiredFrame<F, T> {
     }
 }
 
-/// SolidCraft: what [`AcquiredFrame`] does with its texture handle once the frame is gone.
+/// SketCraft: what [`AcquiredFrame`] does with its texture handle once the frame is gone.
 pub trait FreeSurfaceTexture {
     /// Give the surface's image back, whatever the device's state; nothing once it is back.
     fn free(&self);
@@ -310,14 +310,14 @@ pub struct RenderState {
     /// Custom paint callbacks must use this, rather than the requested setting.
     pub msaa_samples: u32,
 
-    /// SolidCraft: the MSAA sample counts this device can render the target (and depth) format
+    /// SketCraft: the MSAA sample counts this device can render the target (and depth) format
     /// with, ascending, always starting with 1.
     pub msaa_supported: Vec<u32>,
 
     /// Egui renderer responsible for drawing the UI.
     pub renderer: Arc<RwLock<Renderer>>,
 
-    /// SolidCraft: the device was lost; the painter draws nothing more (#4172).
+    /// SketCraft: the device was lost; the painter draws nothing more (#4172).
     pub device_lost: DeviceLost,
 }
 
@@ -403,7 +403,7 @@ impl RenderState {
                 wgpu::Backends::all()
             };
 
-            startup_step(STEP_ADAPTER, ""); // SolidCraft
+            startup_step(STEP_ADAPTER, ""); // SketCraft
             instance.enumerate_adapters(backends).await
         };
 
@@ -441,7 +441,7 @@ impl RenderState {
                     }
                 }?;
 
-                // SolidCraft: name the adapter before the driver is asked for a device.
+                // SketCraft: name the adapter before the driver is asked for a device.
                 let info = adapter.get_info();
                 startup_step(
                     STEP_ADAPTER_CHOSEN,
@@ -467,7 +467,7 @@ impl RenderState {
                 queue,
             }) => (instance, adapter, device, queue),
         };
-        // SolidCraft: a device the driver loses stops the painter, not the app (#4172).
+        // SketCraft: a device the driver loses stops the painter, not the app (#4172).
         let device_lost = DeviceLost::watch(&device);
 
         log_adapter_info(&adapter.get_info());
@@ -481,7 +481,7 @@ impl RenderState {
         };
         let target_format = crate::preferred_framebuffer_format(&surface_formats)?;
 
-        // SolidCraft: the OpenGL resolve path can present an entirely black frame with MSAA
+        // SketCraft: the OpenGL resolve path can present an entirely black frame with MSAA
         // (notably Mesa/llvmpipe). Decide after selecting the real surface adapter,
         // before creating either pipelines or attachments; no second GPU probe.
         // A sample count the device doesn't support for the target or depth format fails
@@ -499,8 +499,8 @@ impl RenderState {
             msaa_samples,
             ..options
         };
-        startup_step(STEP_RENDERER, ""); // SolidCraft
-        // SolidCraft: capture errors on the real surface/device, including driver shader
+        startup_step(STEP_RENDERER, ""); // SketCraft
+        // SketCraft: capture errors on the real surface/device, including driver shader
         // compilation failures, before wgpu's default uncaptured-error handler can panic.
         // Await every scope (also on WebGPU); an invalid renderer is never handed to eframe.
         let scopes = [
@@ -657,7 +657,7 @@ impl Default for WgpuConfiguration {
                     SurfaceErrorAction::SkipFrame
                 }
                 wgpu::CurrentSurfaceTexture::Validation => {
-                    // SolidCraft: the acquire's error was captured; most often the surface has
+                    // SketCraft: the acquire's error was captured; most often the surface has
                     // no configuration ("Surface is not configured for presentation", #7007).
                     // Skipping alone would meet the same error on every frame after.
                     log::debug!("Dropped frame with error: {status:?}");
@@ -816,7 +816,7 @@ pub fn effective_msaa_samples(backend: wgpu::Backend, requested: u32) -> u32 {
     if backend == wgpu::Backend::Gl { 1 } else { requested.max(1) }
 }
 
-/// SolidCraft: the MSAA sample counts `device` can render `target_format` and
+/// SketCraft: the MSAA sample counts `device` can render `target_format` and
 /// `depth_stencil_format` with (ascending, always starting with 1). Without
 /// [`wgpu::Features::TEXTURE_ADAPTER_SPECIFIC_FORMAT_FEATURES`] the device allows only the counts
 /// WebGPU guarantees for a format (1 and 4), whatever the adapter could do.
@@ -857,7 +857,7 @@ fn msaa_counts(
         .collect()
 }
 
-/// SolidCraft: the largest of the `supported` sample counts that is at most `requested` (1 when
+/// SketCraft: the largest of the `supported` sample counts that is at most `requested` (1 when
 /// none is).
 pub fn clamp_msaa_samples(supported: &[u32], requested: u32) -> u32 {
     supported
@@ -900,7 +900,7 @@ mod msaa_tests {
     }
 }
 
-/// SolidCraft: run `f` with `device`'s errors captured, and the first error it caused. Uncaptured,
+/// SketCraft: run `f` with `device`'s errors captured, and the first error it caused. Uncaptured,
 /// an error goes to the device's handler, which panics by default: a surface the driver can't
 /// reconfigure (D3D12 "Failed to wait for GPU to come idle", #1935) crashed the app. Native error
 /// scopes resolve at once; on the web the scope still keeps the error from the handler.
@@ -925,7 +925,7 @@ pub fn capture_errors<T>(device: &wgpu::Device, f: impl FnOnce() -> T) -> (T, Op
     (value, failed)
 }
 
-/// SolidCraft: why a surface configure ([`configure_captured`]) left the surface without its
+/// SketCraft: why a surface configure ([`configure_captured`]) left the surface without its
 /// configuration.
 #[derive(Debug)]
 pub enum ConfigureError {
@@ -947,7 +947,7 @@ impl std::fmt::Display for ConfigureError {
     }
 }
 
-/// SolidCraft: run a surface configure on `device` under [`capture_errors`], and say whether the
+/// SketCraft: run a surface configure on `device` under [`capture_errors`], and say whether the
 /// surface has its configuration. A configure that meets a lost device reports nothing: wgpu
 /// passes device-loss errors to no error scope and no handler, only to the lost callback. On
 /// D3D12 a driver reset is found that way, when the configure waits for the present queue, after
@@ -969,10 +969,10 @@ pub fn configure_captured(
     Ok(())
 }
 
-/// SolidCraft: refused configures in a row after which the surface is recreated (#1935).
+/// SketCraft: refused configures in a row after which the surface is recreated (#1935).
 pub const SURFACE_RECREATE_AFTER: u32 = 3;
 
-/// SolidCraft: a surface's streak of refused configures (#1935) and when the next try is due.
+/// SketCraft: a surface's streak of refused configures (#1935) and when the next try is due.
 /// A refusal waits 16 ms, doubling with each refusal in a row up to 1 s, and every
 /// [`SURFACE_RECREATE_AFTER`] refusals the surface is recreated before the next try. Until the
 /// try is due, no configure or recreate happens however often the window repaints, so a device
@@ -986,7 +986,7 @@ pub struct ConfigureRetry {
     recreate: bool,
 }
 
-/// SolidCraft: what follows a refused configure ([`ConfigureRetry::refused`]).
+/// SketCraft: what follows a refused configure ([`ConfigureRetry::refused`]).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct RetryPlan {
     /// Refusals in a row, this one included.
@@ -1074,7 +1074,7 @@ impl ConfigureRetry {
     }
 }
 
-/// SolidCraft: what came of [`ConfigureRetry::attempt`].
+/// SketCraft: what came of [`ConfigureRetry::attempt`].
 #[derive(Debug)]
 pub enum Attempt<E> {
     /// Not tried: the retry after a refusal is due in this long.
@@ -1085,7 +1085,7 @@ pub enum Attempt<E> {
     Refused(RetryPlan, E),
 }
 
-/// SolidCraft: the present mode a viewport's surface is configured with. The main window keeps
+/// SketCraft: the present mode a viewport's surface is configured with. The main window keeps
 /// `configured`. Another window (the agent chat popped out into its own window) is an immediate
 /// viewport: eframe draws and presents it inside the main window's frame, one surface after the
 /// other. With vsync on both, every frame waited for the display twice, and on a compositor that
@@ -1113,7 +1113,7 @@ pub fn viewport_present_mode(
         .unwrap_or(configured)
 }
 
-/// SolidCraft: the surface size for a window of `width` x `height` pixels on a device whose
+/// SketCraft: the surface size for a window of `width` x `height` pixels on a device whose
 /// textures are at most `max_side` on a side, and the scale it is drawn at. A window that fits is
 /// unchanged (scale 1); a larger one shrinks uniformly, keeping its aspect ratio, so the image
 /// the compositor stretches back over the window is not distorted. Never zero on a side.

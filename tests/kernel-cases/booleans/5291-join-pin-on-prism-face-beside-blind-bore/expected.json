@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#5291"
+  "NakaSato/sketcraft#5291"
  ],
  "what": "a pin (r2.1 x 11) joined on the side face of a triangular prism that has a blind bore running in from its slanted face: the join ground for ~90 s, then 'boolean Union: no result'",
  "source": "analytic",

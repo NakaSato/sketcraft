@@ -1,7 +1,7 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#334",
-  "tangency-labs/solidcraft#335"
+  "NakaSato/sketcraft#334",
+  "NakaSato/sketcraft#335"
  ],
  "what": "an R2 round on the whole top outline of two merged cylinders after their two concave vertical edges were rounded R5",
  "source": "analytic",

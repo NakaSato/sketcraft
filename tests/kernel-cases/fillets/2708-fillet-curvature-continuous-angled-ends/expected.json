@@ -1,7 +1,7 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#2708",
-  "tangency-labs/solidcraft#2739"
+  "NakaSato/sketcraft#2708",
+  "NakaSato/sketcraft#2739"
  ],
  "what": "a curvature-continuous (G2) fillet of size 5 on a straight edge that ends on two slanted planar faces",
  "source": "analytic",

@@ -319,7 +319,7 @@ fn document_only_atomic_tool_fallback_keeps_existing_checkpoint_rollback_behavio
     assert!(backend.calls.iter().any(|(_, command)| command == "edit.restore_checkpoint"));
 }
 
-/// Screenshots are drawn on the GPU by the renderer the host installs (`solidcraft-cli mcp`); the
+/// Screenshots are drawn on the GPU by the renderer the host installs (`sketcraft-cli mcp`); the
 /// tests install the same one. `false`, with the reason printed, on a machine without a GPU
 /// adapter: the screenshots are then left out of the test.
 fn renders() -> bool {
@@ -482,13 +482,13 @@ fn handshake_and_tools_list() {
 fn skill_reference_returns_bundled_text_without_backend_calls() {
     let mut b = Recorder { calls: Vec::new(), batch: Err("unused".into()) };
     let docs = [
-        ("sketcraft-modeling", "reference.md", include_str!("../../../skills/solidcraft-modeling/reference.md")),
-        ("sketcraft-mechanisms", "reference.md", include_str!("../../../skills/solidcraft-mechanisms/reference.md")),
-        ("sketcraft-checking", "reference/porting.md", include_str!("../../../skills/solidcraft-checking/reference/porting.md")),
-        ("sketcraft-modeling", "SKILL.md", include_str!("../../../skills/solidcraft-modeling/SKILL.md")),
-        ("sketcraft-mechanisms", "SKILL.md", include_str!("../../../skills/solidcraft-mechanisms/SKILL.md")),
-        ("sketcraft-checking", "SKILL.md", include_str!("../../../skills/solidcraft-checking/SKILL.md")),
-        ("sketcraft-editing", "SKILL.md", include_str!("../../../skills/solidcraft-editing/SKILL.md")),
+        ("sketcraft-modeling", "reference.md", include_str!("../../../skills/sketcraft-modeling/reference.md")),
+        ("sketcraft-mechanisms", "reference.md", include_str!("../../../skills/sketcraft-mechanisms/reference.md")),
+        ("sketcraft-checking", "reference/porting.md", include_str!("../../../skills/sketcraft-checking/reference/porting.md")),
+        ("sketcraft-modeling", "SKILL.md", include_str!("../../../skills/sketcraft-modeling/SKILL.md")),
+        ("sketcraft-mechanisms", "SKILL.md", include_str!("../../../skills/sketcraft-mechanisms/SKILL.md")),
+        ("sketcraft-checking", "SKILL.md", include_str!("../../../skills/sketcraft-checking/SKILL.md")),
+        ("sketcraft-editing", "SKILL.md", include_str!("../../../skills/sketcraft-editing/SKILL.md")),
     ];
     for (skill, file, expected) in docs {
         let args = json!({"skill": skill, "file": file});
@@ -506,7 +506,7 @@ fn skill_reference_returns_bundled_text_without_backend_calls() {
 fn skill_reference_refuses_unknown_names_and_paths_with_available_choices() {
     let mut s = server();
     let skills = ["sketcraft-checking", "sketcraft-editing", "sketcraft-mechanisms", "sketcraft-modeling"];
-    for skill in ["unknown", "../solidcraft-modeling", "/tmp/solidcraft-modeling"] {
+    for skill in ["unknown", "../sketcraft-modeling", "/tmp/sketcraft-modeling"] {
         let r = raw_tool(&mut s, "skill_reference", json!({"skill": skill}));
         assert_eq!(r["result"]["isError"], true, "{r}");
         let text = r["result"]["content"][0]["text"].as_str().unwrap();
@@ -623,7 +623,7 @@ fn agent_builds_box_fillet_hole() {
         tool(&mut s, "screenshot", json!({"path": shot.to_string_lossy(), "width": 64, "height": 64}));
         assert!(std::fs::metadata(&shot).unwrap().len() > 100);
     }
-    let design = dir.join("part.solidcraft");
+    let design = dir.join("part.sketcraft");
     tool(&mut s, "save", json!({"path": design.to_string_lossy()}));
     tool(&mut s, "new_design", json!({"name": "Empty"}));
     assert_eq!(tool(&mut s, "measure", json!({}))["body_count"], 0);
@@ -780,8 +780,8 @@ fn save_selects_container_or_json_and_reopens_by_contents() {
     let dir = std::env::temp_dir().join(format!("sketcraft-mcp-encodings-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     for (name, format, is_json) in [
-        ("default.solidcraft", None, false),
-        ("explicit.solidcraft", Some("json"), true),
+        ("default.sketcraft", None, false),
+        ("explicit.sketcraft", Some("json"), true),
         ("legacy.solvecraft", None, false),
         ("inferred.json", None, true),
         ("container.json", Some("container"), false),
@@ -1825,12 +1825,12 @@ fn legacy_design_files_and_resource_uris() {
     let d = call(&mut s, 1, "resources/read", json!({"uri": "solvecraft://design"}));
     assert!(d["result"]["contents"][0]["text"].as_str().unwrap().contains("timeline"));
 
-    // `.sc` is what new designs are saved as; a `.solidcraft` file opens and `save {}` writes it
+    // `.sc` is what new designs are saved as; a `.sketcraft` file opens and `save {}` writes it
     // back under its own name.
     let dir = std::env::temp_dir().join(format!("sketcraft-mcp-ext-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&dir);
     std::fs::create_dir_all(&dir).unwrap();
-    let (new, old) = (dir.join("part.sc"), dir.join("part.solidcraft"));
+    let (new, old) = (dir.join("part.sc"), dir.join("part.sketcraft"));
     let mut s = server();
     tool(&mut s, "execute", json!({"command": "solid.box", "params": {"length": 10, "width": 10, "height": 10}}));
     tool(&mut s, "save", json!({"path": new.to_string_lossy()}));
@@ -1853,7 +1853,7 @@ fn legacy_design_files_and_resource_uris() {
 fn compare_picture_returns_the_overlay_as_an_image() {
     use image::ImageEncoder as _;
     use std::io::Cursor;
-    // A scoped server, like `solidcraft-cli mcp`: the reference must be inside the folders.
+    // A scoped server, like `sketcraft-cli mcp`: the reference must be inside the folders.
     let base = sketcraft_engine::io::vfs::temp_dir().join(format!("sketcraft-mcp-compare-{}", std::process::id()));
     let recovery = base.join("recovery");
     std::fs::create_dir_all(&recovery).unwrap();
@@ -1908,18 +1908,18 @@ fn the_default_folders_are_the_designs_the_recovery_folder_and_the_scratch_folde
 
     let mut session = sketcraft_engine::Session::default();
     session.execute("solid.box", &json!({"length": 10, "width": 10, "height": 10})).unwrap();
-    session.execute("file.save_as", &json!({"path": at(&proj, "part.solidcraft")})).unwrap();
+    session.execute("file.save_as", &json!({"path": at(&proj, "part.sketcraft")})).unwrap();
     let mut s = Server::new(Box::new(Headless::new(session))).with_path_scope(Some(scope));
     // Legitimate work in the design's folder: export, save, open, screenshots, the recovery folder.
     tool(&mut s, "export", json!({"path": at(&proj, "part.step")}));
     tool(&mut s, "execute", json!({"command": "parameters.export", "params": {"path": at(&proj, "params.csv")}}));
-    tool(&mut s, "save", json!({"path": at(&proj, "copy.solidcraft")}));
-    tool(&mut s, "open", json!({"path": at(&proj, "part.solidcraft")}));
+    tool(&mut s, "save", json!({"path": at(&proj, "copy.sketcraft")}));
+    tool(&mut s, "open", json!({"path": at(&proj, "part.sketcraft")}));
     if renders() {
         tool(&mut s, "screenshot", json!({"width": 32, "height": 32}));
     }
     tool(&mut s, "execute", json!({"command": "doc.recovery_list", "params": {"dir": recovery.to_string_lossy()}}));
-    assert!(proj.join("part.step").exists() && proj.join("copy.solidcraft").exists());
+    assert!(proj.join("part.step").exists() && proj.join("copy.sketcraft").exists());
     // Hidden files in it, and folders beside it, stay out of reach.
     for (name, args) in [
         ("export", json!({"path": at(&proj, ".env")})),
@@ -1950,26 +1950,26 @@ fn a_folder_the_agent_saved_a_design_in_stays_its_folder() {
     let at = |d: &std::path::Path, f: &str| d.join(f).to_string_lossy().to_string();
     let mut session = sketcraft_engine::Session::default();
     session.execute("solid.box", &json!({"length": 10, "width": 10, "height": 10})).unwrap();
-    session.execute("file.save_as", &json!({"path": at(&proj, "part.solidcraft")})).unwrap();
+    session.execute("file.save_as", &json!({"path": at(&proj, "part.sketcraft")})).unwrap();
     let mut s = Server::new(Box::new(Headless::new(session))).with_path_scope(Some(PathScope::new([])));
     tool(&mut s, "export", json!({"path": at(&proj, "part.step")}));
     tool(&mut s, "new_design", json!({}));
     tool(&mut s, "execute", json!({"command": "solid.box", "params": {"length": 5, "width": 5, "height": 5}}));
-    tool(&mut s, "save", json!({"path": at(&proj, "part-2.solidcraft")}));
+    tool(&mut s, "save", json!({"path": at(&proj, "part-2.sketcraft")}));
     // A STEP file opens as a new, unsaved design; it saves beside its file.
     tool(&mut s, "open", json!({"path": at(&proj, "part.step")}));
-    tool(&mut s, "save", json!({"path": at(&proj, "part-3.solidcraft")}));
+    tool(&mut s, "save", json!({"path": at(&proj, "part-3.sketcraft")}));
     // A save-as into a subfolder moves the design there; the folder above goes on counting.
-    tool(&mut s, "execute", json!({"command": "file.save_as", "params": {"path": at(&proj.join("sub"), "part-4.solidcraft")}}));
-    tool(&mut s, "save", json!({"path": at(&proj, "part-5.solidcraft")}));
+    tool(&mut s, "execute", json!({"command": "file.save_as", "params": {"path": at(&proj.join("sub"), "part-4.sketcraft")}}));
+    tool(&mut s, "save", json!({"path": at(&proj, "part-5.sketcraft")}));
     for f in ["part-2", "part-3", "sub/part-4", "part-5"] {
-        assert!(proj.join(format!("{f}.solidcraft")).exists(), "{f}");
+        assert!(proj.join(format!("{f}.sketcraft")).exists(), "{f}");
     }
     // Twice: the first refusal must not have added anything.
     for _ in 0..2 {
         let r = raw_tool(&mut s, "export", json!({"path": at(&proj, ".env")}));
         assert_eq!(r["result"]["isError"], json!(true), "{r}");
-        let r = raw_tool(&mut s, "save", json!({"path": at(&other, "x.solidcraft")}));
+        let r = raw_tool(&mut s, "save", json!({"path": at(&other, "x.sketcraft")}));
         assert!(r.to_string().contains("outside the folders this agent may use"), "{r}");
     }
     assert!(!proj.join(".env").exists());
@@ -1978,12 +1978,12 @@ fn a_folder_the_agent_saved_a_design_in_stays_its_folder() {
     #[cfg(unix)]
     {
         std::os::unix::fs::symlink(proj.join("part.step"), other.join("link.step")).unwrap();
-        std::os::unix::fs::symlink(proj.join("part.solidcraft"), other.join("link.solidcraft")).unwrap();
+        std::os::unix::fs::symlink(proj.join("part.sketcraft"), other.join("link.sketcraft")).unwrap();
         tool(&mut s, "open", json!({"path": at(&other, "link.step")}));
-        tool(&mut s, "open", json!({"path": at(&other, "link.solidcraft")}));
-        let r = raw_tool(&mut s, "save", json!({"path": at(&other, "x.solidcraft")}));
+        tool(&mut s, "open", json!({"path": at(&other, "link.sketcraft")}));
+        let r = raw_tool(&mut s, "save", json!({"path": at(&other, "x.sketcraft")}));
         assert!(r.to_string().contains("outside the folders this agent may use"), "{r}");
-        assert!(!other.join("x.solidcraft").exists());
+        assert!(!other.join("x.sketcraft").exists());
     }
     let _ = std::fs::remove_dir_all(&base);
 }
@@ -2006,9 +2006,9 @@ fn tool_calls_stay_inside_the_agents_folders() {
     // Only `root` here, to tell inside from outside within the temporary folder.
     let mut s = Server::new(Box::new(Headless::default())).with_path_scope(Some(PathScope::new([root.clone()])));
     tool(&mut s, "execute", json!({"command": "solid.box", "params": {"length": 10, "width": 10, "height": 10}}));
-    tool(&mut s, "save", json!({"path": at(&root, "part.solidcraft")}));
+    tool(&mut s, "save", json!({"path": at(&root, "part.sketcraft")}));
     tool(&mut s, "export", json!({"path": at(&root, "part.step")}));
-    tool(&mut s, "open", json!({"path": at(&root, "part.solidcraft")}));
+    tool(&mut s, "open", json!({"path": at(&root, "part.sketcraft")}));
     if renders() {
         tool(&mut s, "screenshot", json!({"path": at(&root, "shot.png"), "width": 64, "height": 64}));
     }
@@ -2179,7 +2179,7 @@ fn a_bridged_server_sends_the_folders_the_agent_saved_designs_in() {
     std::fs::create_dir_all(&other).unwrap();
     let at = |d: &std::path::Path, f: &str| d.join(f).to_string_lossy().to_string();
     let sent = std::sync::Arc::new(std::sync::Mutex::new(Vec::<Value>::new()));
-    let (log, refused) = (sent.clone(), at(&other, "x.solidcraft"));
+    let (log, refused) = (sent.clone(), at(&other, "x.sketcraft"));
     let (addr, _) = scripted_app(move |req| {
         if req["method"] == "engine.execute" {
             log.lock().unwrap().push(req["params"]["design_folders"].clone());
@@ -2192,10 +2192,10 @@ fn a_bridged_server_sends_the_folders_the_agent_saved_designs_in() {
     });
     let remote = crate::Remote::connect_with_token(&addr, Some("0123456789abcdef0123456789abcdef")).unwrap();
     let mut s = Server::new(Box::new(remote)).with_path_scope(Some(PathScope::new([])));
-    let r = raw_tool(&mut s, "save", json!({"path": at(&other, "x.solidcraft")}));
+    let r = raw_tool(&mut s, "save", json!({"path": at(&other, "x.sketcraft")}));
     assert_eq!(r["result"]["isError"], json!(true), "{r}");
-    tool(&mut s, "save", json!({"path": "relative/y.solidcraft"}));
-    tool(&mut s, "save", json!({"path": at(&proj, "a.solidcraft")}));
+    tool(&mut s, "save", json!({"path": "relative/y.sketcraft"}));
+    tool(&mut s, "save", json!({"path": at(&proj, "a.sketcraft")}));
     tool(&mut s, "new_design", json!({}));
     let proj = std::fs::canonicalize(&proj).unwrap();
     assert_eq!(*sent.lock().unwrap(), [Value::Null, Value::Null, Value::Null, json!([proj.to_string_lossy()])]);
@@ -2444,7 +2444,7 @@ fn hidden_body_stays_hidden_after_save_and_reopen() {
 
     let dir = std::env::temp_dir().join(format!("sketcraft-mcp-visibility-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
-    let design = dir.join("variants.solidcraft");
+    let design = dir.join("variants.sketcraft");
     tool(&mut s, "save", json!({"path": design.to_string_lossy()}));
     tool(&mut s, "new_design", json!({"name": "Empty"}));
     tool(&mut s, "open", json!({"path": design.to_string_lossy()}));
@@ -2535,11 +2535,11 @@ fn compact_execute_uses_one_backend_call_and_keeps_removed_bodies() {
     assert_eq!(v, json!({"feature": 7, "name": "Combine1", "created_bodies": [], "changed_bodies": ["Base"], "removed_bodies": ["Tool"]}));
 }
 
-/// The worked example in `skills/solidcraft-modeling/reference.md` is what agents copy, so it has
+/// The worked example in `skills/sketcraft-modeling/reference.md` is what agents copy, so it has
 /// to keep building with the volume the file documents, and follow a parameter change.
 #[test]
 fn skill_reference_example_builds_as_documented() {
-    let doc = include_str!("../../../skills/solidcraft-modeling/reference.md");
+    let doc = include_str!("../../../skills/sketcraft-modeling/reference.md");
     let start = doc.find("{\"commands\":[").expect("the reference has a worked example");
     let end = start + doc[start..].find("```").expect("the example's code block ends");
     let example: Value = serde_json::from_str(&doc[start..end]).expect("the example is JSON");
@@ -2703,12 +2703,12 @@ fn sketch_plane_axes_match_the_skill_reference() {
     }
 }
 
-/// The worked example in `skills/solidcraft-mechanisms/reference.md` is what agents copy: the
+/// The worked example in `skills/sketcraft-mechanisms/reference.md` is what agents copy: the
 /// actuator has to follow the hinge with the stroke the file computes, the mirrored panel its link,
 /// and the drive has to stop where the rod reaches its limit.
 #[test]
 fn mechanisms_skill_example_moves_as_documented() {
-    let doc = include_str!("../../../skills/solidcraft-mechanisms/reference.md");
+    let doc = include_str!("../../../skills/sketcraft-mechanisms/reference.md");
     let start = doc.find("{\"commands\":[").expect("the reference has a worked example");
     let end = start + doc[start..].find("```").expect("the example's code block ends");
     let example: Value = serde_json::from_str(&doc[start..end]).expect("the example is JSON");
@@ -2760,15 +2760,15 @@ fn mechanisms_skill_example_moves_as_documented() {
 #[test]
 fn skills_name_only_real_tools_and_commands() {
     let docs = [
-        include_str!("../../../skills/solidcraft-modeling/SKILL.md"),
-        include_str!("../../../skills/solidcraft-modeling/reference.md"),
-        include_str!("../../../skills/solidcraft-editing/SKILL.md"),
-        include_str!("../../../skills/solidcraft-checking/SKILL.md"),
-        include_str!("../../../skills/solidcraft-checking/reference/porting.md"),
-        include_str!("../../../skills/solidcraft-mechanisms/SKILL.md"),
-        include_str!("../../../skills/solidcraft-mechanisms/reference.md"),
-        include_str!("../../../skills/solidcraft-reporting/SKILL.md"),
-        include_str!("../../../skills/solidcraft-reporting/reference/report-template.md"),
+        include_str!("../../../skills/sketcraft-modeling/SKILL.md"),
+        include_str!("../../../skills/sketcraft-modeling/reference.md"),
+        include_str!("../../../skills/sketcraft-editing/SKILL.md"),
+        include_str!("../../../skills/sketcraft-checking/SKILL.md"),
+        include_str!("../../../skills/sketcraft-checking/reference/porting.md"),
+        include_str!("../../../skills/sketcraft-mechanisms/SKILL.md"),
+        include_str!("../../../skills/sketcraft-mechanisms/reference.md"),
+        include_str!("../../../skills/sketcraft-reporting/SKILL.md"),
+        include_str!("../../../skills/sketcraft-reporting/reference/report-template.md"),
     ];
     let mut s = server();
     let tools: Vec<String> = tool_definitions().iter().filter_map(|t| t["name"].as_str()).map(str::to_owned).collect();
@@ -3446,7 +3446,7 @@ fn batch_runs_a_script_file() {
     let bodies = tool(&mut s, "inspect_design", json!({"measure": false}))["bodies"].as_array().map(Vec::len);
     assert_eq!(bodies, Some(1));
 
-    // `{commands}`, as `solidcraft-cli script` writes it; a failing step rolls the batch back.
+    // `{commands}`, as `sketcraft-cli script` writes it; a failing step rolls the batch back.
     let script = json!({"commands": [{"command": "solid.box", "params": {"length": 5, "width": 5, "height": 5}}, {"command": "parameters.change", "params": {"name": "h2", "expression": "1 +"}}]});
     let r = raw_tool(&mut s, "batch", json!({"path": file(&root, "script.json", &script.to_string())}));
     assert_eq!(r["result"]["isError"], true, "{r}");

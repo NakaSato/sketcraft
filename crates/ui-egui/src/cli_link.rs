@@ -1,6 +1,6 @@
-//! `solidcraft-cli` on PATH for a macOS app bundle (a DMG install has no installer step): a
+//! `sketcraft-cli` on PATH for a macOS app bundle (a DMG install has no installer step): a
 //! symlink in `/opt/homebrew/bin` or `/usr/local/bin` to the CLI inside the bundle, made quietly at
-//! launch when one of them is writable, or from Help > Install solidcraft-cli command, which asks
+//! launch when one of them is writable, or from Help > Install sketcraft-cli command, which asks
 //! for an administrator password when it must. A file that is not our symlink is never replaced.
 
 use std::path::{Path, PathBuf};
@@ -29,7 +29,7 @@ pub enum Plan {
 /// is ours to refresh).
 fn ours(target: &Path) -> bool {
     let s = target.to_string_lossy();
-    s.ends_with(".app/Contents/MacOS/solidcraft-cli")
+    s.ends_with(".app/Contents/MacOS/sketcraft-cli")
 }
 
 /// What to do about the link slot for the CLI at `cli`.
@@ -92,7 +92,7 @@ fn link_in(_dirs: &[&str], _cli: &Path) -> Option<PathBuf> {
 }
 
 /// At launch: best effort, silent. Does nothing off macOS, outside a bundle, or when
-/// `solidcraft-cli` is already on PATH from somewhere else.
+/// `sketcraft-cli` is already on PATH from somewhere else.
 pub fn install_on_launch() {
     if !cfg!(target_os = "macos") {
         return;
@@ -104,11 +104,11 @@ pub fn install_on_launch() {
     link_in(DIRS, &cli);
 }
 
-/// Help > Install solidcraft-cli command: the same, then with an administrator prompt into
+/// Help > Install sketcraft-cli command: the same, then with an administrator prompt into
 /// `/usr/local/bin` when no folder is writable. A message for the status line, and whether it failed.
 pub fn install_from_menu() -> (String, bool) {
     if !cfg!(target_os = "macos") {
-        return ("This is for the macOS app; the other packages put solidcraft-cli on PATH themselves.".into(), true);
+        return ("This is for the macOS app; the other packages put sketcraft-cli on PATH themselves.".into(), true);
     }
     let Some(cli) = bundled_cli() else {
         return ("sketcraft-cli was not found inside this app.".into(), true);
@@ -120,7 +120,7 @@ pub fn install_from_menu() -> (String, bool) {
         return ("The app's path has characters the installer cannot quote; move SketCraft to /Applications.".into(), true);
     };
     match std::process::Command::new("osascript").args(["-e", &script]).output() {
-        Ok(o) if o.status.success() => ("sketcraft-cli is available as /usr/local/bin/solidcraft-cli".into(), false),
+        Ok(o) if o.status.success() => ("sketcraft-cli is available as /usr/local/bin/sketcraft-cli".into(), false),
         Ok(o) => (format!("Not installed: {}", String::from_utf8_lossy(&o.stderr).trim()), true),
         Err(e) => (format!("Not installed: {e}"), true),
     }
@@ -135,7 +135,7 @@ pub fn admin_script(cli: &Path) -> Option<String> {
     }
     // `[ -e ] && ! [ -L ]`: never replace a file that is not a link.
     Some(format!(
-        "do shell script \"mkdir -p /usr/local/bin && if [ -e /usr/local/bin/solidcraft-cli ] && [ ! -L /usr/local/bin/solidcraft-cli ]; then echo 'a file named solidcraft-cli is already in /usr/local/bin' >&2; exit 1; fi && ln -sfn '{c}' /usr/local/bin/solidcraft-cli\" with administrator privileges"
+        "do shell script \"mkdir -p /usr/local/bin && if [ -e /usr/local/bin/sketcraft-cli ] && [ ! -L /usr/local/bin/sketcraft-cli ]; then echo 'a file named sketcraft-cli is already in /usr/local/bin' >&2; exit 1; fi && ln -sfn '{c}' /usr/local/bin/sketcraft-cli\" with administrator privileges"
     ))
 }
 
@@ -143,7 +143,7 @@ pub fn admin_script(cli: &Path) -> Option<String> {
 mod tests {
     use super::*;
 
-    const CLI: &str = "/Applications/SolidCraft.app/Contents/MacOS/solidcraft-cli";
+    const CLI: &str = "/Applications/SketCraft.app/Contents/MacOS/sketcraft-cli";
 
     #[test]
     fn plans() {
@@ -151,8 +151,8 @@ mod tests {
         assert_eq!(plan(&Slot::Empty, cli), Plan::Write);
         assert_eq!(plan(&Slot::Link(cli.into()), cli), Plan::Keep);
         // A link to a moved or older bundle is ours to refresh; to anything else, not.
-        assert_eq!(plan(&Slot::Link("/Users/me/Old.app/Contents/MacOS/solidcraft-cli".into()), cli), Plan::Write);
-        assert_eq!(plan(&Slot::Link("/opt/other/solidcraft-cli".into()), cli), Plan::Skip);
+        assert_eq!(plan(&Slot::Link("/Users/me/Old.app/Contents/MacOS/sketcraft-cli".into()), cli), Plan::Write);
+        assert_eq!(plan(&Slot::Link("/opt/other/sketcraft-cli".into()), cli), Plan::Skip);
         assert_eq!(plan(&Slot::Other, cli), Plan::Skip);
     }
 
@@ -175,7 +175,7 @@ mod tests {
         assert_eq!(std::fs::read_link(b.join("sketcraft-cli")).unwrap(), cli);
         // A stale link of ours is refreshed.
         std::fs::remove_file(b.join("sketcraft-cli")).unwrap();
-        std::os::unix::fs::symlink("/x/Old.app/Contents/MacOS/solidcraft-cli", b.join("sketcraft-cli")).unwrap();
+        std::os::unix::fs::symlink("/x/Old.app/Contents/MacOS/sketcraft-cli", b.join("sketcraft-cli")).unwrap();
         assert_eq!(link_in(&dirs[1..], cli), Some(b.join("sketcraft-cli")));
         assert_eq!(std::fs::read_link(b.join("sketcraft-cli")).unwrap(), cli);
         let _ = std::fs::remove_dir_all(&d);
@@ -195,7 +195,7 @@ mod tests {
     #[test]
     fn admin_script_refuses_paths_that_need_escaping() {
         assert!(admin_script(Path::new(CLI)).unwrap().contains("with administrator privileges"));
-        assert!(admin_script(Path::new("/Apps/It's.app/Contents/MacOS/solidcraft-cli")).is_none());
-        assert!(admin_script(Path::new("/Apps/a\"b.app/Contents/MacOS/solidcraft-cli")).is_none());
+        assert!(admin_script(Path::new("/Apps/It's.app/Contents/MacOS/sketcraft-cli")).is_none());
+        assert!(admin_script(Path::new("/Apps/a\"b.app/Contents/MacOS/sketcraft-cli")).is_none());
     }
 }

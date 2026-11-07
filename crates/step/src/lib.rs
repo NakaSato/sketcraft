@@ -1,4 +1,4 @@
-//! STEP (ISO 10303) for SolidCraft, independent of any modelling backend. [`p21`] reads the
+//! STEP (ISO 10303) for SketCraft, independent of any modelling backend. [`p21`] reads the
 //! exchange structure, [`read`] turns its geometry entities into the plain curves and surfaces
 //! of [`geom`], and [`write`] writes them back. Written from the public ISO 10303-21 and -42
 //! specifications. [`topology`] reads solids (vertices to shells) into the kernel-neutral B-rep,

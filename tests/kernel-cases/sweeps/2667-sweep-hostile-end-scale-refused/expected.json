@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#2667"
+  "NakaSato/sketcraft#2667"
  ],
  "what": "a sweep with an end scale of 500 (the engine allows 0.01 to 100): the option check (SweepControl::check) must refuse it",
  "source": "invariants",

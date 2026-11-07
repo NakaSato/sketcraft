@@ -33,5 +33,5 @@ There are no numbered bulk authoring scripts or generated inventory files to mai
 Runtime discovery is also checked by `crates/ui-egui/tests/icon_audit.rs`. New menu
 surfaces must extend that Harness traversal. Regenerate the committed
 `design/requested_icons.txt` with `UPDATE_ICON_MANIFEST=1 cargo test -p
-solidcraft-ui-egui --test icon_audit`; review the sorted id/placeholder diff. The
+sketcraft-ui-egui --test icon_audit`; review the sorted id/placeholder diff. The
 review tool reads this fixture in addition to source scans, masters and aliases.

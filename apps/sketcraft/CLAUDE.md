@@ -18,8 +18,7 @@ cargo build -p sketcraft --release --locked
 ```
 
 For a deploy request, do not build or test locally: follow AGENTS.md ("Release workflow").
-Driving the running app: `skills/solidcraft-agent-tools/SKILL.md` (it says `-p solidcraft`; the
-package here is `sketcraft`).
+Driving the running app: `skills/sketcraft-agent-tools/SKILL.md`.
 
 ## Layout
 
@@ -50,7 +49,7 @@ package here is `sketcraft`).
 - `unsafe_code` is `deny`, not `forbid`. Only these files may `#[allow(unsafe_code)]`:
   `open_documents.rs`, `native_crash.rs`, `native_crash_macos.rs`, `native_frame.rs`,
   `space_mouse/windows_hid.rs`. Add no new unsafe without a case that has no safe API
-  (`skills/solidcraft-crash-safety/SKILL.md`). `Cargo.toml` copies the workspace lints: keep them in sync.
+  (`skills/sketcraft-crash-safety/SKILL.md`). `Cargo.toml` copies the workspace lints: keep them in sync.
 - Gate platform code with `cfg(target_os = ...)`; every platform must still build.
 - Preferences must survive an immediate restart: change `Prefs` so `PrefsWriter::store` writes
   them (AGENTS.md, "Persistent options and settings").
@@ -62,5 +61,3 @@ package here is `sketcraft`).
   falls back to the legacy `SOLVECRAFT_` prefix):
   `SKETCRAFT_CONTROL_PORT`, `SKETCRAFT_SAFE_MODE`, `SKETCRAFT_SETTINGS_DIR`, `SKETCRAFT_TITLEBAR`.
 - Without `--control`, the control channel still opens on the default port unless Preferences turns it off.
-- `main.rs` docs still show the binary as `solidcraft`; it is `sketcraft`.
-- `build.rs` reads `assets/icons/app/windows/exports/solidcraft-executable.ico` (old name, still used).

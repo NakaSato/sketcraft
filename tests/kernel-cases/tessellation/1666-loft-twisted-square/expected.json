@@ -1,7 +1,7 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#1666",
-  "tangency-labs/solidcraft#1670"
+  "NakaSato/sketcraft#1666",
+  "NakaSato/sketcraft#1670"
  ],
  "what": "a loft from a 20x20 square to the same square turned 45 degrees, 30 mm higher: its four side faces are strongly twisted ruled patches, the case a two-triangle mesh gets visibly wrong",
  "source": "analytic",

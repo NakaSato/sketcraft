@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#4542"
+  "NakaSato/sketcraft#4542"
  ],
  "what": "a fluted cup wall (a 72-point periodic fit spline round r 31.5..32.5 outside, a circle r 25 inside) extruded 90 mm as a join onto the top face of a revolved base disc of r 32: the app hung in the boolean",
  "source": "analytic",

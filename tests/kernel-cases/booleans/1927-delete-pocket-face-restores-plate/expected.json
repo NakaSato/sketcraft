@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#1927"
+  "NakaSato/sketcraft#1927"
  ],
  "what": "Delete Face on the 0.5 mm deep O15 recess of a plate: the face around the gap must keep its surface",
  "source": "analytic",

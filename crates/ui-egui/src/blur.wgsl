@@ -1,4 +1,4 @@
-// Original SolidCraft backdrop dual-Kawase and rounded surface composition.
+// Original SketCraft backdrop dual-Kawase and rounded surface composition.
 struct Params { a: vec4<f32>, rect: vec4<f32>, corners: vec4<f32>, top: vec4<f32>, bottom: vec4<f32>, outside: vec4<f32> }
 @group(0) @binding(0) var image: texture_2d<f32>;
 @group(0) @binding(1) var filtering: sampler;

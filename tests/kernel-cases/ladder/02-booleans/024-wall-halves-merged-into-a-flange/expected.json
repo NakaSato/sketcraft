@@ -1,8 +1,8 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#726",
-  "tangency-labs/solidcraft#494",
-  "tangency-labs/solidcraft#2114"
+  "NakaSato/sketcraft#726",
+  "NakaSato/sketcraft#494",
+  "NakaSato/sketcraft#2114"
  ],
  "what": "the flange top annulus of a freshly revolved hub (z = 6, r 18..30) picked by a point and extruded 5 mm (the pick found a third of the face: \"the selected planar face no longer exists\")",
  "source": "analytic",

@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#831"
+  "NakaSato/sketcraft#831"
  ],
  "what": "tapered extrude of a D shape (an arc meeting a line at a sharp corner): refused as 'tapered profiles where an arc meets another edge at a corner'",
  "source": "analytic",

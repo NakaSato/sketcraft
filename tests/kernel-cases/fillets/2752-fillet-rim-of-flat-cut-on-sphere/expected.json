@@ -1,7 +1,7 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#2752",
-  "tangency-labs/solidcraft#2787"
+  "NakaSato/sketcraft#2752",
+  "NakaSato/sketcraft#2787"
  ],
  "what": "an R1 round round the rim of a radius-2 sphere cut flat at z=1",
  "source": "analytic",

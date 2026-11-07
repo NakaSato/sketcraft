@@ -1,7 +1,7 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#1080",
-  "tangency-labs/solidcraft#1124"
+  "NakaSato/sketcraft#1080",
+  "NakaSato/sketcraft#1124"
  ],
  "what": "a 4 mm chamfer on the top front edge of a cube with three square openings stays clear of the openings (they start 5 mm in)",
  "source": "analytic",

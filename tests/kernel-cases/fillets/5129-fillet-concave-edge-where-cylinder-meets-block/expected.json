@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#5129"
+  "NakaSato/sketcraft#5129"
  ],
  "what": "the concave vertical edge where a taller cylinder (r8 x 15) meets a block's side (10 high), filleted r1: refused ('a vertex of the edge chain where other faces meet: both faces next to the edge must be planar'); it worked when both were the same height",
  "source": "analytic",

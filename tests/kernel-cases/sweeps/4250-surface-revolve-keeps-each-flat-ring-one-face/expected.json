@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#4250"
+  "NakaSato/sketcraft#4250"
  ],
  "what": "a surface revolve (360 deg) of a stepped open profile whose lines alternate square to and along the axis: truck split the flat rings into several faces at odd angles",
  "source": "analytic",

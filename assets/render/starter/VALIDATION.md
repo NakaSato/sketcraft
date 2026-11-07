@@ -4,7 +4,7 @@ Date: 2026-10-21. Parent catalog checkpoint:
 `10ada1b45a4eb285ce752ac72f9aaa968ff8b5c4`.
 
 This record covers authoring inputs, numerical invariants, format decoding and
-reproduction. It does not claim a rendered SolidCraft scene or application-ready
+reproduction. It does not claim a rendered SketCraft scene or application-ready
 library. The independent renderer implementation remains a separate delivery.
 
 ## Submitted payload
@@ -69,7 +69,7 @@ executes the installed FFmpeg program without reading or shipping its source.
 
 The unlit material sheet, HDR field sheet and numerical Lambert-sphere sheet were
 inspected from ignored `target/render-starter-review/`. These are diagnostic
-visualizations, not SolidCraft renderer output. The wood, cork and regolith
+visualizations, not SketCraft renderer output. The wood, cork and regolith
 resources remain visibly procedural approximations; no photorealism or calibrated
 species/location identification is inferred from those images.
 
@@ -106,7 +106,7 @@ or other branches:
 
 - **53/53 focused Python authoring tests passed** again, along with the combined
   manifest/PNG/HDR/lighting pack validator. The lighting numerical export hash
-  remained `52cac74c3b9ca2d66f0c36734336f498a4b8992d203d3305a9113a7753956617`.
+  remained `3227dab5710db5179fecbead710c617f249a9d165c93f916ed006da64151644e`.
 - The repository attribution checker reported **725 attributed assets**; Rust
   formatting and the targeted icon standards were also checked on Pegasus.
 - The first `cargo xtask ci` attempt reached and passed workspace Clippy, WASM

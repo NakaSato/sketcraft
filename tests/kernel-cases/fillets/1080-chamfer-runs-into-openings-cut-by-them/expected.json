@@ -1,7 +1,7 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#1080",
-  "tangency-labs/solidcraft#1124"
+  "NakaSato/sketcraft#1080",
+  "NakaSato/sketcraft#1124"
  ],
  "what": "a 9 mm chamfer on the top front edge of a cube with square openings 5 mm in runs past the 5 mm between the edge and the openings: built as if the faces went on over the openings, then cut by them (cliff overflow); it never bridges an opening",
  "source": "analytic",

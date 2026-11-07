@@ -1,7 +1,7 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#3576",
-  "tangency-labs/solidcraft#3573"
+  "NakaSato/sketcraft#3576",
+  "NakaSato/sketcraft#3573"
  ],
  "what": "a 120x80x40 box drafted 5 degrees with 4 mm rounds on the sloping corners, shelled 2 mm open at the top: the inner rounds' edges must lie on their faces (#3573 reports the same design)",
  "source": "analytic",

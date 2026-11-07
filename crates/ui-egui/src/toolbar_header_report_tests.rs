@@ -162,10 +162,10 @@ fn each_export_format_has_a_key_that_starts_it() {
     crate::dialogs::cancel(&mut h.app);
 }
 
-/// New designs are saved as `.sc`. A design opened from a `.solidcraft` file is saved back to
+/// New designs are saved as `.sc`. A design opened from a `.sketcraft` file is saved back to
 /// that file by Save (no rename behind the user's back); Save As offers `.sc` and leaves it.
 #[test]
-fn save_offers_sc_and_keeps_an_opened_solidcraft_file() {
+fn save_offers_sc_and_keeps_an_opened_sketcraft_file() {
     let mut h = crate::scenario::Harness::new();
     let offered = std::rc::Rc::new(std::cell::RefCell::new(Vec::<(String, Vec<String>)>::new()));
     let (seen, dir) = (offered.clone(), h.dir.clone());
@@ -183,7 +183,7 @@ fn save_offers_sc_and_keeps_an_opened_solidcraft_file() {
     assert!(h.dir.join("Bracket.sc").is_file(), "a new design is saved as .sc");
 
     // A design from an earlier release.
-    let old = h.dir.join("Old.solidcraft");
+    let old = h.dir.join("Old.sketcraft");
     std::fs::rename(h.dir.join("Bracket.sc"), &old).unwrap();
     h.app.run("doc.open", json!({"path": old.to_string_lossy()})).unwrap();
     h.app.run("solid.box", json!({"length":1,"width":1,"height":1})).unwrap();
@@ -202,7 +202,7 @@ fn save_offers_sc_and_keeps_an_opened_solidcraft_file() {
     h.settle();
     let name = offered.borrow().last().map(|(n, _)| n.clone()).unwrap();
     assert!(name.ends_with(".sc"), "Save As offers .sc: {name}");
-    assert!(h.dir.join(&name).is_file() && old.is_file(), "Save As leaves the .solidcraft file as it was");
+    assert!(h.dir.join(&name).is_file() && old.is_file(), "Save As leaves the .sketcraft file as it was");
 }
 
 /// #8329: Save As (and Save a Copy) offer the name of the file the design came from, not the
@@ -227,8 +227,8 @@ fn save_as_offers_the_open_files_own_name() {
     h.app.session.doc_mut().name = "Sample Plate".into();
     assert_eq!(ask(&mut h, save_as), "Sample Plate.sc", "a new design is offered its own name");
     // The same design under another file name, as copies of a file are (the report's
-    // "Sample Plate-bug.solidcraft"): it is still named "Sample Plate" inside.
-    let copy = h.dir.join("Sample Plate-bug.solidcraft");
+    // "Sample Plate-bug.sketcraft"): it is still named "Sample Plate" inside.
+    let copy = h.dir.join("Sample Plate-bug.sketcraft");
     std::fs::copy(h.dir.join("Sample Plate.sc"), &copy).unwrap();
     h.app.run("doc.open", json!({"path": copy.to_string_lossy()})).unwrap();
     assert_eq!(h.app.session.doc.name, "Sample Plate");
@@ -247,14 +247,14 @@ fn native_menu_actions_are_disabled_behind_an_open_issue_report() {
     let mut h = crate::scenario::Harness::new();
     h.app.home.open = false;
     h.app.run("solid.box", json!({"length":2,"width":3,"height":4})).unwrap();
-    h.app.home.recent = vec!["elsewhere.solidcraft".into()];
+    h.app.home.recent = vec!["elsewhere.sketcraft".into()];
     h.app.issue_report.draft = Some(crate::issue_report::draft_for(&h.app, None, None));
     let before = (h.app.session.doc.to_json(), h.app.session.undo.len(), h.app.docs.count(), h.app.home.recent.clone());
     for action in [
         FileAction::Undo,
         FileAction::New,
         FileAction::Open,
-        FileAction::OpenRecent("elsewhere.solidcraft".into()),
+        FileAction::OpenRecent("elsewhere.sketcraft".into()),
         FileAction::ClearRecent,
         FileAction::Command("file.insert_step"),
         FileAction::Save,
@@ -361,7 +361,7 @@ fn file_menu_has_export_stl_and_3mf_that_open_the_mesh_dialog_with_that_format()
 }
 
 /// The browser build's File > Download design hands the open design to the host as a
-/// `.solidcraft` container named after it; a host that saves real files shows no such item.
+/// `.sketcraft` container named after it; a host that saves real files shows no such item.
 #[test]
 fn file_menu_download_design_hands_the_container_to_the_host() {
     let mut h = crate::scenario::Harness::new();
@@ -389,7 +389,7 @@ fn file_menu_download_design_hands_the_container_to_the_host() {
 fn ctrl_shift_s_opens_save_as_in_the_workspace_and_the_file_menu_shows_the_shortcut() {
     let mut h = crate::scenario::Harness::new();
     h.app.run("solid.box", json!({"length":2,"width":3,"height":4})).unwrap();
-    let source = h.dir.join("source.solidcraft");
+    let source = h.dir.join("source.sketcraft");
     h.app.run("file.save_as", json!({"path":source})).unwrap();
     let bytes = std::fs::read(&source).unwrap();
     h.app.session.doc_mut().name = "Copy".into();
@@ -716,7 +716,7 @@ fn the_default_header_layout_is_the_desktop_one() {
     h.step(&json!({"click":{"handle":"appbar:help"}})).unwrap();
     assert!(h.app.help.menu);
     let version = crate::i18n::format("help.version", &[("version", crate::update::current_version())]);
-    assert!(h.widget("About SolidCraft").is_some());
+    assert!(h.widget("About SketCraft").is_some());
     assert!(h.widget(&version).is_none(), "the Help menu has no version row");
 }
 
@@ -755,7 +755,7 @@ fn a_host_can_move_search_report_and_version_in_the_header() {
     h.step(&json!({"click":{"handle":"appbar:help"}})).unwrap();
     assert!(h.app.help.menu);
     let version = crate::i18n::format("help.version", &[("version", crate::update::current_version())]);
-    let [_, about] = h.widget("About SolidCraft").unwrap();
+    let [_, about] = h.widget("About SketCraft").unwrap();
     let [_, row] = h.widget(&version).expect("the Help menu lists the version");
     let [_, shortcuts] = h.widget("Keyboard Shortcuts").unwrap();
     assert!(about < row && row < shortcuts, "between About and Keyboard Shortcuts");

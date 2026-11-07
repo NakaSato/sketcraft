@@ -78,7 +78,7 @@ impl Report {
         rows
     }
 
-    /// Self time per category, the most first: where the time went (SMLib or SolidCraft).
+    /// Self time per category, the most first: where the time went (SMLib or SketCraft).
     pub fn by_category(&self) -> Vec<(&'static str, Duration)> {
         let mut out: Vec<(&'static str, Duration)> = Vec::new();
         for r in &self.rows {

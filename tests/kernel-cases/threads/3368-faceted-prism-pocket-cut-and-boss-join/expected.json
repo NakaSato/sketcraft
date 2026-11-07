@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#3368"
+  "NakaSato/sketcraft#3368"
  ],
  "what": "booleans of a finely faceted body (a 1200-sided prism, 1202 flat faces, the kind of body a modelled thread leaves) with box tools: they must finish in bounded time with the exact result, not run for minutes",
  "source": "analytic",

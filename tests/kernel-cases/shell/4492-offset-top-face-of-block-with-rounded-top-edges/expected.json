@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#4492"
+  "NakaSato/sketcraft#4492"
  ],
  "what": "the top face of a 40x30x10 block whose four top edges are rounded r3, offset 19 mm up: truck refused it ('a corner whose faces don't meet the same way after the move')",
  "source": "analytic",

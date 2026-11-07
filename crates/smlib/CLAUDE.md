@@ -35,7 +35,7 @@ SMLIB_OPS_SHOTS=/tmp/shots cargo test -p sketcraft-smlib --lib ops::tests   # al
 - solidcore results are hostile too. `export.rs` checks every count and index it reads.
 - Refuse an operation solidcore cannot build exactly (`Unsupported`, `NotExact`, `CornerUnsupported`, …). Do not build it another way.
 - Tests compare against analytic volumes and topology counts, and run the validity check on every result.
-- Crash-safety rules apply (the crate root denies `unwrap` and friends): `skills/solidcraft-crash-safety/SKILL.md`.
+- Crash-safety rules apply (the crate root denies `unwrap` and friends): `skills/sketcraft-crash-safety/SKILL.md`.
 - A solidcore rev bump can change test results. Keep `tests/KNOWN_FAILING_TESTS` and `tests/kernel-cases/*/KNOWN_FAILING` in step.
 
 ## Gotchas
@@ -43,4 +43,3 @@ SMLIB_OPS_SHOTS=/tmp/shots cargo test -p sketcraft-smlib --lib ops::tests   # al
 - SMLib keeps some state for the whole process (for example the fillet solver's latched step). That is why there is one kernel per process.
 - Status codes in `Error::Status` are SMLib's (1001 `SM_ERR`, 1007 `SM_ERR_INVALID_INPUT`).
 - One test in `src/tests.rs` is ignored because solidcore reads an ASCII file of junk as an empty B-rep.
-- Comments still say `solidcraft-smlib` and `solidcraft-cli`. The packages are `sketcraft-smlib` and `sketcraft-cli`.

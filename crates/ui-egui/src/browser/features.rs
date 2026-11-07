@@ -938,7 +938,7 @@ mod tests {
             }
         }
         let stamp = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos();
-        let source = Source(std::env::temp_dir().join(format!("sketcraft-browser-import-{}-{stamp}.solidcraft", std::process::id())));
+        let source = Source(std::env::temp_dir().join(format!("sketcraft-browser-import-{}-{stamp}.sketcraft", std::process::id())));
         let mut saved = SolveApp::new(sketcraft_engine::Session::default(), crate::Services::default());
         saved.run("solid.box", json!({"length":10,"width":10,"height":10,"body_name":"Imported"})).unwrap();
         saved.run("file.save", json!({"path":source.0.to_string_lossy()})).unwrap();

@@ -898,7 +898,7 @@ fn preferred_units_update_only_a_blank_unsaved_design() {
     for design in ["new", "saved", "content"] {
         let mut app = crate::SolveApp::new(sketcraft_engine::Session::default(), Default::default());
         match design {
-            "saved" => app.session.path = Some("empty.solidcraft".into()),
+            "saved" => app.session.path = Some("empty.sketcraft".into()),
             "content" => {
                 app.session.execute("sketch.create", &serde_json::json!({"plane": "XY"})).unwrap();
                 app.session.mark_saved();
@@ -2507,7 +2507,7 @@ fn settings_loaded_over_changed_ones_replace_them_all() {
     reader.keymap.custom.insert("view.home".into(), vec!["H".into()]);
     reader.toolbar_custom.panels.insert(format!("{}/SOLID/CREATE", crate::toolbar_custom::WORKSPACE), vec!["feature.extrude".into()]);
     reader.tree.collapsed.insert("Bodies".into());
-    reader.home.recent.push("part.solidcraft".into());
+    reader.home.recent.push("part.sketcraft".into());
     reader.preferences.ui_scale = 1.5;
     reader.load_prefs(&writer.prefs());
     assert_eq!(reader.sbox.pinned, ["sketch.line"], "the other tab's pins, not this tab's");
@@ -6389,7 +6389,7 @@ fn a_y_up_step_file_can_be_stood_up() {
     // Another originating system is offered (asked in the dialog, without looking at how the
     // flat box rests).
     let text = std::fs::read_to_string(&path).unwrap();
-    std::fs::write(&path, text.replace("'SolidCraft','SolidCraft'", "'SolidCraft','Example CAD'")).unwrap();
+    std::fs::write(&path, text.replace("'SketCraft','SketCraft'", "'SketCraft','Example CAD'")).unwrap();
     app.preferences.stand_up_unknown = StandUpUnknown::Ask;
     app.open_path(&path);
     let offered = app.stand_up.clone().unwrap_or_default();

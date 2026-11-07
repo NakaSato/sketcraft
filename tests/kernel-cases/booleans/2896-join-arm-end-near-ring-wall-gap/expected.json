@@ -1,6 +1,6 @@
 {
   "sources": [
-    "tangency-labs/solidcraft#2896"
+    "NakaSato/sketcraft#2896"
   ],
   "what": "a join of a ring and an arm whose R5 convex tip stops 0.01 mm short of the ring's outer wall: nothing overlaps, so nothing fuses",
   "source": "analytic",

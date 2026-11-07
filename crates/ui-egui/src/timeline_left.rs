@@ -3446,7 +3446,7 @@ mod tests {
     }
 
     /// Frame time of the vertical History alone on a large design (P5 measurement, run by hand):
-    /// `SKETCRAFT_HISTORY_BENCH=<design> cargo test --release -p solidcraft-ui-egui --lib
+    /// `SKETCRAFT_HISTORY_BENCH=<design> cargo test --release -p sketcraft-ui-egui --lib
     /// bench_history_panel -- --ignored --nocapture`. Prints one JSON line per case. The folders
     /// cases add 120 folders of 20 features (every fourth nested in the one before).
     #[test]

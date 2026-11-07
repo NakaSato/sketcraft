@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#1269"
+  "NakaSato/sketcraft#1269"
  ],
  "what": "a 10 x 10 square swept 40 mm along a straight path while turning 90 degrees about the path",
  "source": "analytic",

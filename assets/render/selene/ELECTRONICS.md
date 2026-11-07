@@ -1,6 +1,6 @@
 # Raspberry Pi 5 visual reconstruction
 
-The electronics work uses original SolidCraft geometry to replace the source board's generic port and GPIO envelopes with recognizable packages, connectors and contacts. It is a dimension-informed visual model for close inspection and rendering. It is not a complete electrical BOM, netlist, PCB fabrication file or manufacturer-certified enclosure model.
+The electronics work uses original SketCraft geometry to replace the source board's generic port and GPIO envelopes with recognizable packages, connectors and contacts. It is a dimension-informed visual model for close inspection and rendering. It is not a complete electrical BOM, netlist, PCB fabrication file or manufacturer-certified enclosure model.
 
 ## Reference geometry
 

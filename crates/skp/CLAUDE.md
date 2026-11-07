@@ -26,12 +26,12 @@ SKP_FILES=/path/a.skp:/path/b.skp cargo test -p sketcraft-skp imports_local_file
 - `unsafe_code = "forbid"` is a workspace lint, and crates opt in with `[lints] workspace = true`. This crate's `Cargo.toml` does not, so the forbid (and the workspace clippy lints) do not apply here. The crate root also lacks the `#![deny(clippy::unwrap_used, …)]` line other production crates carry. The FFI in `parse_skp` is the only `unsafe`. Keep it there, with a `// SAFETY:` note on each block.
 - C++ exceptions must not cross the C ABI. `ketchup_skp_parse` is `noexcept` and catches everything, returning the message with `success = 0`.
 - Memory from the parser is freed once with `ketchup_skp_free`. A null return means out of memory.
-- A crash inside the C++ code (a segfault, an abort) is not caught by `catch_unwind` or `sketcraft_kernel::guard`. It takes the app down. Treat parser changes as crash-safety work: `skills/solidcraft-crash-safety/SKILL.md`.
+- A crash inside the C++ code (a segfault, an abort) is not caught by `catch_unwind` or `sketcraft_kernel::guard`. It takes the app down. Treat parser changes as crash-safety work: `skills/sketcraft-crash-safety/SKILL.md`.
 - Input is hostile. Keep the size check before parsing, the count caps in `decode_model`, and the loop bound in `any_ancestor` (a group may contain itself).
 - wasm32: `import_skp` returns an error ("only available in the desktop app"). Keep that stub so `cargo run -p xtask -- wasm` and the web build pass.
 - Do not add workspace crate dependencies; the layer table marks it `Standalone`.
 - Positions are metres, Z up. `crates/io/src/skp_in.rs` multiplies them by 1000 into millimetres.
-- Vendored code: keep `vendor/skp/LICENSE-openskp` and `native/miniz/LICENSE` with it. Record any change to the pinned sources in `vendor/skp/README.md`. New assets need attribution (`skills/solidcraft-ground-rules/SKILL.md`).
+- Vendored code: keep `vendor/skp/LICENSE-openskp` and `native/miniz/LICENSE` with it. Record any change to the pinned sources in `vendor/skp/README.md`. New assets need attribution (`skills/sketcraft-ground-rules/SKILL.md`).
 
 ## Gotchas
 

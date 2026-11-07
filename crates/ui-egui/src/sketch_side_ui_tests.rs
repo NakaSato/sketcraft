@@ -65,7 +65,7 @@ fn a_flipped_sketch_extrudes_toward_the_viewer_and_reopens_the_same() {
     let bounds = |h: &Harness| h.app.session.world_state().unwrap().body("Block").map(|b| b.mesh().bounds()).expect("an extruded body");
     let before = bounds(&h);
     assert!(before.min.y < -3.9 && before.max.y < 1e-6, "extruded away from the viewer: {before:?}");
-    let path = h.dir.join("flipped-sketch.solidcraft");
+    let path = h.dir.join("flipped-sketch.sketcraft");
     h.app.run("file.save", json!({"path":path})).unwrap();
     h.app.run("doc.open", json!({"path":path})).unwrap();
     assert_eq!(bounds(&h), before);

@@ -6,7 +6,7 @@
 //! current body alone). Page moves preserve that stored key set; device-specific 3D mouse keys,
 //! graphics, recent files and Assistant settings stay out.
 //!
-//! A profile is kept, exported and imported as one `solidcraft-profile/1` document. Every
+//! A profile is kept, exported and imported as one `sketcraft-profile/1` document. Every
 //! document is checked by [`sanitize`] first: unknown keys are dropped, sizes are capped, and a
 //! preference this version can't read is left out. Applying one sets each preference through
 //! [`prefs::set`], so it is checked again and has the same effects as a change in Preferences;
@@ -154,7 +154,7 @@ pub fn keys() -> impl Iterator<Item = &'static str> {
 /// The kept profiles, which one was applied or saved last, and the Preferences section's state.
 #[derive(Default)]
 pub struct Profiles {
-    /// Checked `solidcraft-profile/1` documents, in the order they were added.
+    /// Checked `sketcraft-profile/1` documents, in the order they were added.
     pub list: Vec<Value>,
     /// The profile applied or saved last, while it exists.
     pub active: Option<String>,
@@ -621,7 +621,7 @@ pub(crate) fn section(app: &mut SolveApp, ui: &mut egui::Ui) {
                                 match action {
                                     "export" => {
                                         let name = name.clone();
-                                        app.pick_save(&format!("{name}.solidcraft-profile.json"), &["json"], move |app, path| {
+                                        app.pick_save(&format!("{name}.sketcraft-profile.json"), &["json"], move |app, path| {
                                             if let Some(path) = path {
                                                 act(app, "settings.profile.export", json!({ "name": name, "path": path }), "prefs.profile_exported");
                                             }

@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#562"
+  "NakaSato/sketcraft#562"
  ],
  "what": "Press Pull of a floor whose neighbours are rounds (vertical corner fillets): 'a neighbouring edge is not straight'",
  "source": "analytic",

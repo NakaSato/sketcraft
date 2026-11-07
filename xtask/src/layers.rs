@@ -32,7 +32,7 @@ impl Class {
     }
 }
 
-/// The layering table. Names are package names without the `solidcraft-`
+/// The layering table. Names are package names without the `sketcraft-`
 /// prefix.
 pub const TABLE: &[(&str, Class)] = &[
     ("geom", Class::Layer(0)),
@@ -146,7 +146,7 @@ impl std::fmt::Display for Violation {
                 write!(f, "{krate}: standalone crate must not depend on workspace crate {dep}")
             }
             Violation::TestkitAsNormalDep { krate } => {
-                write!(f, "{krate}: solidcraft-testkit may only be a dev-dependency")
+                write!(f, "{krate}: sketcraft-testkit may only be a dev-dependency")
             }
             Violation::UiBelowL5 { krate, dep, layer } => {
                 write!(f, "{krate} (L{layer}) depends on UI crate `{dep}`; UI toolkits are only allowed in L5+")

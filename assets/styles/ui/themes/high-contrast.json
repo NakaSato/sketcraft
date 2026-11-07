@@ -1,6 +1,6 @@
 {
   "order": 170,
-  "provenance": "Original SolidCraft theme",
+  "provenance": "Original SketCraft theme",
   "base": "dark",
   "colors": {
     "accent": "#00bfff",
@@ -190,7 +190,7 @@
     "viewport_top": "#000000",
     "warning": "#ffcc00"
   },
-  "format": "solidcraft-theme/1",
+  "format": "sketcraft-theme/1",
   "name": "High Contrast",
   "icon_palette": {
     "ink": "#000000",

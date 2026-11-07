@@ -1313,7 +1313,7 @@ fn main() {
 
 #[cfg(not(target_arch = "wasm32"))]
 fn main() {
-    eprintln!("sketcraft-web only runs in the browser: build it with `trunk build --release` in apps/solidcraft-web");
+    eprintln!("sketcraft-web only runs in the browser: build it with `trunk build --release` in apps/sketcraft-web");
 }
 
 #[cfg(test)]
@@ -1325,22 +1325,22 @@ mod tests {
         assert!(!query_flag("?open=https://example.org/webgl?sample", "webgl"));
         assert!(!query_flag("?open=https://example.org/webgl?sample", "sample"));
         assert!(query_flag("?embed&webgl", "webgl"));
-        let launch = Launch::parse("?embed&open=https%3A%2F%2Fexample.org%2Farm.solidcraft%3Fx%3Da%2520b%26y%3D1");
-        assert_eq!(launch.open.as_deref(), Some("https://example.org/arm.solidcraft?x=a%20b&y=1"));
+        let launch = Launch::parse("?embed&open=https%3A%2F%2Fexample.org%2Farm.sketcraft%3Fx%3Da%2520b%26y%3D1");
+        assert_eq!(launch.open.as_deref(), Some("https://example.org/arm.sketcraft?x=a%20b&y=1"));
         assert!(launch.embed);
         assert!(!launch.persists());
         assert!(!Launch::parse("?embed").embed);
         assert!(!Launch::parse("?other=embed&reopen=https://example.org").embed);
         assert!(Launch::parse("?open=https://example.org/a").persists());
         assert_eq!(Launch::parse("?open=first&open=second").open.as_deref(), Some("first"));
-        let launch = Launch::parse("?embed&open=/dutchman/jobs/abc/part.solidcraft%3Fx%3Da%2520b");
+        let launch = Launch::parse("?embed&open=/dutchman/jobs/abc/part.sketcraft%3Fx%3Da%2520b");
         assert!(launch.embed);
         assert!(!launch.persists());
-        let page = url::Url::parse("http://solidcraft.io/?embed#view").expect("synthetic page");
+        let page = url::Url::parse("http://sketcraft.io/?embed#view").expect("synthetic page");
         let full = url::Url::parse(&launch.full_app_url(page)).expect("full app URL");
         let reopened = Launch::parse(full.query().unwrap_or_default());
         assert_eq!(reopened.open, launch.open);
-        assert_eq!(reopened.open.as_deref(), Some("/dutchman/jobs/abc/part.solidcraft?x=a%20b"));
+        assert_eq!(reopened.open.as_deref(), Some("/dutchman/jobs/abc/part.sketcraft?x=a%20b"));
         assert!(!reopened.embed);
         assert!(reopened.persists());
         assert!(full.fragment().is_none());
@@ -1359,7 +1359,7 @@ mod tests {
 
     #[test]
     fn design_links_refuse_hostile_schemes_credentials_and_sizes() {
-        assert!(design_url("https://example.org/arm.solidcraft?download=1", "http://solidcraft.io").is_ok());
+        assert!(design_url("https://example.org/arm.sketcraft?download=1", "http://sketcraft.io").is_ok());
         for value in [
             "http://example.org/a",
             "data:application/json,{}",
@@ -1380,17 +1380,17 @@ mod tests {
             "/a%3f/../x",
             "/a/..#view",
             "/a/..?download=1",
-            "https://solidcraft.io/a/../x",
-            "http://user:secret@solidcraft.io/x",
-            "http://solidcraft.io.evil.example/x",
-            "http://solidcraft.io:8080/x",
-            "relative.solidcraft",
+            "https://sketcraft.io/a/../x",
+            "http://user:secret@sketcraft.io/x",
+            "http://sketcraft.io.evil.example/x",
+            "http://sketcraft.io:8080/x",
+            "relative.sketcraft",
             "",
         ] {
-            assert!(design_url(value, "http://solidcraft.io").is_err(), "{value}");
+            assert!(design_url(value, "http://sketcraft.io").is_err(), "{value}");
         }
-        assert!(design_url(&format!("https://example.org/{}", "x".repeat(16_384)), "http://solidcraft.io").is_err());
-        assert!(design_url("http://redirect.example.org/a", "http://solidcraft.io").is_err());
+        assert!(design_url(&format!("https://example.org/{}", "x".repeat(16_384)), "http://sketcraft.io").is_err());
+        assert!(design_url("http://redirect.example.org/a", "http://sketcraft.io").is_err());
 
         let cap = sketcraft_engine::io::MAX_DESIGN_BYTES;
         assert!(check_download_size(0, cap as u64).is_ok());
@@ -1404,15 +1404,15 @@ mod tests {
 
     #[test]
     fn design_links_allow_same_origin_paths_and_redirects() {
-        for origin in ["http://solidcraft.io", "https://solidcraft.io", "http://solidcraft.io:8080"] {
-            assert_eq!(design_url("/a/b.solidcraft", origin).map(|url| url.to_string()), Ok(format!("{origin}/a/b.solidcraft")));
+        for origin in ["http://sketcraft.io", "https://sketcraft.io", "http://sketcraft.io:8080"] {
+            assert_eq!(design_url("/a/b.sketcraft", origin).map(|url| url.to_string()), Ok(format!("{origin}/a/b.sketcraft")));
             assert!(design_url(&format!("{origin}/x"), origin).is_ok());
             // Final response URLs follow the same origin and scheme rules as the request.
-            assert!(design_url("https://docs.solidcraft.io/x", origin).is_ok());
+            assert!(design_url("https://docs.sketcraft.io/x", origin).is_ok());
             assert!(design_url("http://other/x", origin).is_err());
         }
-        assert!(design_url("http://solidcraft.io/x", "https://solidcraft.io").is_err());
-        assert!(design_url("http://SOLIDCRAFT.io:80/x", "http://solidcraft.io").is_ok());
+        assert!(design_url("http://sketcraft.io/x", "https://sketcraft.io").is_err());
+        assert!(design_url("http://SKETCRAFT.io:80/x", "http://sketcraft.io").is_ok());
     }
 
     #[test]
@@ -1460,6 +1460,6 @@ mod tests {
         assert_eq!(settings_written(key, Some("sketcraft.webgl"), Some("1".into())), None);
         assert_eq!(settings_written(key, Some(key), None), None, "removed settings leave this tab's");
         assert_eq!(settings_written(key, None, None), None, "clearing all storage leaves this tab's settings");
-        assert_eq!(settings_written(key, Some("rc:solidcraft.prefs"), Some("{}".into())), None, "another channel's settings are not loaded");
+        assert_eq!(settings_written(key, Some("rc:sketcraft.prefs"), Some("{}".into())), None, "another channel's settings are not loaded");
     }
 }

@@ -1,7 +1,7 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#318",
-  "tangency-labs/solidcraft#190"
+  "NakaSato/sketcraft#318",
+  "NakaSato/sketcraft#190"
  ],
  "what": "a 40 x 30 x 5 plate's whole top outline rounded R5, as tall as its walls: each round uses its wall up, the four mitred at the corners",
  "source": "analytic",

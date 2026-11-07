@@ -1,7 +1,7 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#995",
-  "tangency-labs/solidcraft#11609"
+  "NakaSato/sketcraft#995",
+  "NakaSato/sketcraft#11609"
  ],
  "what": "a modelled M5 thread in a 5 mm hole, the hole as wide as the thread: the bore is narrowed to the thread's minor diameter and the thread cut into it",
  "source": "analytic",

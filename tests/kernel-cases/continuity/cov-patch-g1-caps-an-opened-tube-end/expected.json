@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#759"
+  "NakaSato/sketcraft#759"
  ],
  "what": "a cylinder r10 x 30 with its top face taken off, the open rim patched g1 (Tangent) and stitched: a dome over the tube that closes it",
  "source": "invariants",

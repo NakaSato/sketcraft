@@ -1,10 +1,10 @@
 //! A scripted ACP agent for trying the agent chat without an account (docs/agent-chat.md):
 //! it speaks the Agent Client Protocol on stdin and stdout like the real adapters, starts the MCP
-//! server the chat gives it (`solidcraft-cli mcp --connect …`) and models through it. No model
+//! server the chat gives it (`sketcraft-cli mcp --connect …`) and models through it. No model
 //! runs: what it does is fixed.
 //!
 //! ```text
-//! cargo build --release -p solidcraft-ui-egui --example acp_test_agent
+//! cargo build --release -p sketcraft-ui-egui --example acp_test_agent
 //! # Preferences → General → Agent chat → Add custom command: target/release/examples/acp_test_agent
 //! ```
 //!
@@ -177,7 +177,7 @@ fn main() {
                     send(&json!({"jsonrpc": "2.0", "id": 900, "method": "session/request_permission", "params": {
                         "sessionId": session,
                         // Named as the Claude Code adapter names an MCP tool.
-                        "toolCall": {"toolCallId": "t1", "title": "mcp__solidcraft-app__batch", "kind": "other"},
+                        "toolCall": {"toolCallId": "t1", "title": "mcp__sketcraft-app__batch", "kind": "other"},
                         "options": [{"optionId": "allow", "name": "Allow", "kind": "allow_once"}, {"optionId": "reject", "name": "Reject", "kind": "reject_once"}],
                     }}));
                     // Wait for the answer (other lines are not expected meanwhile).

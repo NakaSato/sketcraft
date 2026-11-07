@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#4468"
+  "NakaSato/sketcraft#4468"
  ],
  "what": "a 20x15x5 box minus an r3 through bore: truck's measure read 1.66e-4 of the removed volume too much (1358.6518 for 1358.6283) while the geometry was exact",
  "source": "analytic",

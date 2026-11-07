@@ -307,7 +307,7 @@ struct ContributionPart(std::path::PathBuf);
 impl ContributionPart {
     fn new() -> Self {
         let stamp = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos();
-        Self(std::env::temp_dir().join(format!("sketcraft-linked-clipboard-{}-{stamp}.solidcraft", std::process::id())))
+        Self(std::env::temp_dir().join(format!("sketcraft-linked-clipboard-{}-{stamp}.sketcraft", std::process::id())))
     }
 }
 impl Drop for ContributionPart {

@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#4280"
+  "NakaSato/sketcraft#4280"
  ],
  "what": "a round groove (r2) swept as a cut along the curved profile of a revolved hub, then circular-patterned 6 times about the hub's axis: 'boolean Cut: no result' in the pattern",
  "source": "analytic",

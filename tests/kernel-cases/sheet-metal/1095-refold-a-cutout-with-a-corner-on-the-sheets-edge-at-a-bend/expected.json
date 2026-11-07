@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#1095"
+  "NakaSato/sketcraft#1095"
  ],
  "what": "a flange unfolded, a triangular cut-out with a corner on the sheet's own edge at the middle of the bend zone, refolded: sew failed (this wire is not simple)",
  "source": "analytic",

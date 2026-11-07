@@ -140,7 +140,7 @@ fn outcome(v: &Value) -> Result<Value, String> {
 }
 
 /// A running SketCraft app reached through its loopback control port
-/// (`solidcraft --control PORT`).
+/// (`sketcraft --control PORT`).
 pub struct Remote {
     addr: String,
     port: u16,
@@ -261,12 +261,12 @@ impl Remote {
         let (addr, port) = (&self.addr, self.port);
         if e.kind() == std::io::ErrorKind::NotConnected {
             format!(
-                "{NOT_RUNNING} {addr} ({e}): it is not running, or it quit. Start it with `solidcraft --control {port}` \
+                "{NOT_RUNNING} {addr} ({e}): it is not running, or it quit. Start it with `sketcraft --control {port}` \
                  (or ask the user to); the next call connects to it"
             )
         } else {
             format!(
-                "the SketCraft app at {addr} did not answer ({e}): it may have quit or crashed during this call, after                  running it or not. Inspect the design before sending a change again; if the app quit, start it with                  `solidcraft --control {port}`"
+                "the SketCraft app at {addr} did not answer ({e}): it may have quit or crashed during this call, after                  running it or not. Inspect the design before sending a change again; if the app quit, start it with                  `sketcraft --control {port}`"
             )
         }
     }
@@ -679,7 +679,7 @@ impl Backend for Remote {
             // Still "connected to the SketCraft app": the skills tell bridged from headless by it.
             format!(
                 "connected to the SketCraft app at {} once it runs (the user watches the viewport). It was not running \
-                 when this server started; until it is (`solidcraft --control {}`), tool calls say so",
+                 when this server started; until it is (`sketcraft --control {}`), tool calls say so",
                 self.addr, self.port
             )
         }
@@ -828,7 +828,7 @@ impl Headless {
                 // A path outside the agent's folders is refused before anything is drawn.
                 sketcraft_engine::io::vfs::check(path).map_err(|e| format!("{path}: {e}"))?;
                 let scene = sketcraft_engine::view::scene_with_guides(s, &cam, s.section, guides).map_err(|e| e.to_string())?;
-                // Drawn on the GPU by the renderer the host installed (`solidcraft-cli mcp`).
+                // Drawn on the GPU by the renderer the host installed (`sketcraft-cli mcp`).
                 let png = sketcraft_engine::capture::png(&scene, &cam, w, h)?;
                 sketcraft_engine::io::vfs::write(path, &png.bytes).map_err(|e| format!("{path}: {e}"))?;
                 Ok(json!({
@@ -878,7 +878,7 @@ impl Backend for Headless {
     }
 }
 
-/// `solidcraft-cli mcp` with no `--connect`: a headless session while no app runs, which gives
+/// `sketcraft-cli mcp` with no `--connect`: a headless session while no app runs, which gives
 /// way to the app the moment one is found, as long as the session has no work of its own yet.
 /// Once it has, it stays headless (the work is not carried over) and every tool result says so.
 pub struct Auto {
@@ -964,7 +964,7 @@ impl Backend for Auto {
     fn notice(&self) -> Option<String> {
         self.headless.as_ref().map(|_| {
             "Note: this is a headless session because the SketCraft app was not found; the user cannot see this work. \
-             Ask them to start SolidCraft. While this session has no features, the next call connects to the app; once it \
+             Ask them to start SketCraft. While this session has no features, the next call connects to the app; once it \
              has work, it stays here."
                 .to_owned()
         })

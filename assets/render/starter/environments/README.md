@@ -45,7 +45,7 @@ development dependencies only; they are not application runtime dependencies.
 
 The preview command writes its fixed-exposure, Reinhard-mapped contact sheet
 only under ignored `target/render-starter-review/environments/`. It is a view of
-the authored radiance fields, not a screenshot or render from SolidCraft.
+the authored radiance fields, not a screenshot or render from SketCraft.
 
 ## Interpretation contract
 
@@ -149,7 +149,7 @@ are recorded in the parent pack's validation record.
 
 ## Provenance
 
-Original SolidCraft contribution, `MIT OR Apache-2.0`, authored 2026-10-21 for
+Original SketCraft contribution, `MIT OR Apache-2.0`, authored 2026-10-21 for
 the personal rendering fork. No external binary asset is bundled. Exact rows for
 all shipped files and development tools are maintained in root `ATTRIBUTION.md`.
 

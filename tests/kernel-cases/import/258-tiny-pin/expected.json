@@ -1,6 +1,6 @@
 {
   "sources": [
-    "tangency-labs/solidcraft#258"
+    "NakaSato/sketcraft#258"
   ],
   "what": "a STEP pin 0.5 mm across, 2 mm long: meshed 1.16 mm off at a 0.5 mm tolerance",
   "source": "analytic",

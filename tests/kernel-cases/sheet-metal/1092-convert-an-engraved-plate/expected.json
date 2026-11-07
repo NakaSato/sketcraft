@@ -1,7 +1,7 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#1092",
-  "tangency-labs/solidcraft#1314"
+  "NakaSato/sketcraft#1092",
+  "NakaSato/sketcraft#1314"
  ],
  "what": "a 60 x 40 x 1 plate with a 20 x 10 x 0.1 engraving in its top face converted to sheet metal (refused as not a plate of even thickness; the engraving becomes a pocket of the sheet)",
  "source": "analytic",

@@ -1,7 +1,7 @@
 //! What draws a headless picture: every adapter the platform's native backends offer is
 //! classified as hardware (a discrete, integrated or virtual GPU) or software (a GPU driver that
 //! runs on the CPU, such as llvmpipe, lavapipe or WARP), and a [`Policy`] picks one. The last
-//! tier, below any adapter, is SolidCraft's own CPU rasterizer (no surface analysis, highlights
+//! tier, below any adapter, is SketCraft's own CPU rasterizer (no surface analysis, highlights
 //! or legends): `auto` lands there only when no adapter qualifies, `cpu` forces it, `hardware`
 //! and `software` never use it. macOS uses Metal only, and has no software adapter. `SKETCRAFT_GPU`
 //! (`auto`, `hardware`, `software`, `cpu`) sets the policy from the environment; `WGPU_BACKEND`

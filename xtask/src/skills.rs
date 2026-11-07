@@ -300,7 +300,7 @@ mod tests {
         check(docs, &Repo { exists: &exists, roots: &roots, commands: &commands })
     }
 
-    const SKILL: &str = "---\nname: solidcraft-a\ndescription: Use when a.\n---\n# A\n";
+    const SKILL: &str = "---\nname: sketcraft-a\ndescription: Use when a.\n---\n# A\n";
 
     fn router(table: &str) -> Doc {
         doc("AGENTS.md", &format!("# Router\n\n| Working on | Read |\n|---|---|\n{table}\n"))
@@ -313,80 +313,80 @@ mod tests {
 
     #[test]
     fn a_consistent_router_passes() {
-        let docs = [router("| a | `skills/solidcraft-a/SKILL.md` |"), doc("skills/solidcraft-a/SKILL.md", SKILL)];
-        assert_eq!(problems(&docs, &["skills/solidcraft-a/SKILL.md"]), Vec::<String>::new());
+        let docs = [router("| a | `skills/sketcraft-a/SKILL.md` |"), doc("skills/sketcraft-a/SKILL.md", SKILL)];
+        assert_eq!(problems(&docs, &["skills/sketcraft-a/SKILL.md"]), Vec::<String>::new());
     }
 
     #[test]
     fn a_missing_path_is_reported_and_placeholders_are_not() {
         let text = "See `docs/gone.md`, `docs/here.md`, `crates/doc/src/format/v<N>/`, `crates/*/x.rs`, `plan/STATUS.md`, `~/.claude/skills/x`, `src/lib.rs`, `lib.rs`.";
-        let docs = [router("| a | `skills/solidcraft-a/SKILL.md` |"), doc("skills/solidcraft-a/SKILL.md", &format!("{SKILL}{text}"))];
-        let p = problems(&docs, &["skills/solidcraft-a/SKILL.md", "docs/here.md"]);
-        assert_eq!(p, ["skills/solidcraft-a/SKILL.md: `docs/gone.md` does not exist"]);
+        let docs = [router("| a | `skills/sketcraft-a/SKILL.md` |"), doc("skills/sketcraft-a/SKILL.md", &format!("{SKILL}{text}"))];
+        let p = problems(&docs, &["skills/sketcraft-a/SKILL.md", "docs/here.md"]);
+        assert_eq!(p, ["skills/sketcraft-a/SKILL.md: `docs/gone.md` does not exist"]);
     }
 
     #[test]
     fn links_resolve_from_the_file_and_fences_are_skipped() {
         let text = "[ok](../../docs/here.md#top) [bad](../../docs/no.md) [web](https://x.io/docs/no.md)\n```\n`docs/in-fence.md`\n```\n";
-        let docs = [router("| a | `skills/solidcraft-a/SKILL.md` |"), doc("skills/solidcraft-a/SKILL.md", &format!("{SKILL}{text}"))];
-        let p = problems(&docs, &["skills/solidcraft-a/SKILL.md", "docs/here.md"]);
-        assert_eq!(p, ["skills/solidcraft-a/SKILL.md: `../../docs/no.md` does not exist"]);
+        let docs = [router("| a | `skills/sketcraft-a/SKILL.md` |"), doc("skills/sketcraft-a/SKILL.md", &format!("{SKILL}{text}"))];
+        let p = problems(&docs, &["skills/sketcraft-a/SKILL.md", "docs/here.md"]);
+        assert_eq!(p, ["skills/sketcraft-a/SKILL.md: `../../docs/no.md` does not exist"]);
     }
 
     #[test]
     fn a_skills_own_relative_path_resolves_from_its_folder() {
         let docs = [
-            router("| a | `skills/solidcraft-a/SKILL.md` |"),
-            doc("skills/solidcraft-a/SKILL.md", &format!("{SKILL}`docs/scripts/x.py` `docs/other/y.py`")),
+            router("| a | `skills/sketcraft-a/SKILL.md` |"),
+            doc("skills/sketcraft-a/SKILL.md", &format!("{SKILL}`docs/scripts/x.py` `docs/other/y.py`")),
         ];
-        let p = problems(&docs, &["skills/solidcraft-a/SKILL.md", "skills/solidcraft-a/docs/scripts/x.py"]);
-        assert_eq!(p, ["skills/solidcraft-a/SKILL.md: `docs/other/y.py` does not exist"]);
+        let p = problems(&docs, &["skills/sketcraft-a/SKILL.md", "skills/sketcraft-a/docs/scripts/x.py"]);
+        assert_eq!(p, ["skills/sketcraft-a/SKILL.md: `docs/other/y.py` does not exist"]);
     }
 
     #[test]
     fn a_line_number_suffix_is_ignored() {
-        let docs = [router("| a | `skills/solidcraft-a/SKILL.md` |"), doc("skills/solidcraft-a/SKILL.md", &format!("{SKILL}`docs/here.md:12-30`"))];
-        assert!(problems(&docs, &["skills/solidcraft-a/SKILL.md", "docs/here.md"]).is_empty());
+        let docs = [router("| a | `skills/sketcraft-a/SKILL.md` |"), doc("skills/sketcraft-a/SKILL.md", &format!("{SKILL}`docs/here.md:12-30`"))];
+        assert!(problems(&docs, &["skills/sketcraft-a/SKILL.md", "docs/here.md"]).is_empty());
     }
 
     #[test]
     fn an_unknown_xtask_command_is_reported() {
         let docs = [
-            router("| a | `skills/solidcraft-a/SKILL.md` |"),
-            doc("skills/solidcraft-a/SKILL.md", &format!("{SKILL}Run `cargo xtask lists --fix` then `cargo xtask nope`.")),
+            router("| a | `skills/sketcraft-a/SKILL.md` |"),
+            doc("skills/sketcraft-a/SKILL.md", &format!("{SKILL}Run `cargo xtask lists --fix` then `cargo xtask nope`.")),
         ];
-        let p = problems(&docs, &["skills/solidcraft-a/SKILL.md"]);
-        assert_eq!(p, ["skills/solidcraft-a/SKILL.md: `cargo xtask nope` is not an xtask command"]);
+        let p = problems(&docs, &["skills/sketcraft-a/SKILL.md"]);
+        assert_eq!(p, ["skills/sketcraft-a/SKILL.md: `cargo xtask nope` is not an xtask command"]);
     }
 
     #[test]
     fn a_skill_that_does_not_exist_is_reported() {
         let docs =
-            [router("| a | `skills/solidcraft-a/SKILL.md` |\n| b | `skills/solidcraft-b/SKILL.md` |"), doc("skills/solidcraft-a/SKILL.md", SKILL)];
-        let p = problems(&docs, &["skills/solidcraft-a/SKILL.md"]);
-        assert!(p.contains(&"AGENTS.md: `skills/solidcraft-b` does not exist".to_string()), "{p:?}");
-        assert!(p.contains(&"AGENTS.md: the router table lists skills/solidcraft-b/SKILL.md, which has no SKILL.md".to_string()), "{p:?}");
+            [router("| a | `skills/sketcraft-a/SKILL.md` |\n| b | `skills/sketcraft-b/SKILL.md` |"), doc("skills/sketcraft-a/SKILL.md", SKILL)];
+        let p = problems(&docs, &["skills/sketcraft-a/SKILL.md"]);
+        assert!(p.contains(&"AGENTS.md: `skills/sketcraft-b` does not exist".to_string()), "{p:?}");
+        assert!(p.contains(&"AGENTS.md: the router table lists skills/sketcraft-b/SKILL.md, which has no SKILL.md".to_string()), "{p:?}");
     }
 
     #[test]
     fn a_skill_missing_from_the_table_is_reported() {
         let docs = [
-            router("| a | `skills/solidcraft-a/SKILL.md` |"),
-            doc("skills/solidcraft-a/SKILL.md", SKILL),
-            doc("skills/solidcraft-c/SKILL.md", &SKILL.replace("-a", "-c")),
+            router("| a | `skills/sketcraft-a/SKILL.md` |"),
+            doc("skills/sketcraft-a/SKILL.md", SKILL),
+            doc("skills/sketcraft-c/SKILL.md", &SKILL.replace("-a", "-c")),
         ];
-        let p = problems(&docs, &["skills/solidcraft-a/SKILL.md", "skills/solidcraft-c/SKILL.md"]);
-        assert_eq!(p, ["AGENTS.md: the router table does not list skills/solidcraft-c/SKILL.md"]);
+        let p = problems(&docs, &["skills/sketcraft-a/SKILL.md", "skills/sketcraft-c/SKILL.md"]);
+        assert_eq!(p, ["AGENTS.md: the router table does not list skills/sketcraft-c/SKILL.md"]);
     }
 
     #[test]
     fn prose_mentions_of_skills_outside_the_table_do_not_route() {
-        let docs = [doc("AGENTS.md", "Install into `~/.claude/skills/` or see skills/solidcraft-a.\n"), doc("skills/solidcraft-a/SKILL.md", SKILL)];
-        let p = problems(&docs, &["skills/solidcraft-a/SKILL.md"]);
+        let docs = [doc("AGENTS.md", "Install into `~/.claude/skills/` or see skills/sketcraft-a.\n"), doc("skills/sketcraft-a/SKILL.md", SKILL)];
+        let p = problems(&docs, &["skills/sketcraft-a/SKILL.md"]);
         assert_eq!(
             p,
             [
-                "AGENTS.md: the router table does not list skills/solidcraft-a/SKILL.md",
+                "AGENTS.md: the router table does not list skills/sketcraft-a/SKILL.md",
                 "AGENTS.md: no router table (rows naming `skills/<name>/SKILL.md`)"
             ]
         );
@@ -395,18 +395,18 @@ mod tests {
     #[test]
     fn front_matter_must_match_the_folder() {
         let docs =
-            [router("| a | `skills/solidcraft-a/SKILL.md` |"), doc("skills/solidcraft-a/SKILL.md", "---\nname: other\ndescription: \"\"\n---\n")];
-        let p = problems(&docs, &["skills/solidcraft-a/SKILL.md"]);
+            [router("| a | `skills/sketcraft-a/SKILL.md` |"), doc("skills/sketcraft-a/SKILL.md", "---\nname: other\ndescription: \"\"\n---\n")];
+        let p = problems(&docs, &["skills/sketcraft-a/SKILL.md"]);
         assert_eq!(
             p,
             [
-                "skills/solidcraft-a/SKILL.md: front matter name `other` is not the folder name `solidcraft-a`",
-                "skills/solidcraft-a/SKILL.md: front matter has no description"
+                "skills/sketcraft-a/SKILL.md: front matter name `other` is not the folder name `sketcraft-a`",
+                "skills/sketcraft-a/SKILL.md: front matter has no description"
             ]
         );
         assert_eq!(front_matter("no front matter"), None);
         assert_eq!(
-            front_matter("---\r\nname: solidcraft-a\r\ndescription: Windows checkout\r\n---\r\n"),
+            front_matter("---\r\nname: sketcraft-a\r\ndescription: Windows checkout\r\n---\r\n"),
             Some(("sketcraft-a".into(), "Windows checkout".into()))
         );
     }
@@ -415,13 +415,13 @@ mod tests {
     fn sizes_are_capped_except_for_the_older_skills() {
         let long = "x".repeat(SKILL_MAX_CHARS);
         let docs = [
-            doc("AGENTS.md", &format!("| `skills/solidcraft-a/SKILL.md` |{}", "y".repeat(ROUTER_MAX_CHARS))),
-            doc("skills/solidcraft-a/SKILL.md", &format!("{SKILL}{long}")),
-            doc("skills/solidcraft-modeling/SKILL.md", &format!("{}{long}", SKILL.replace("-a", "-modeling"))),
+            doc("AGENTS.md", &format!("| `skills/sketcraft-a/SKILL.md` |{}", "y".repeat(ROUTER_MAX_CHARS))),
+            doc("skills/sketcraft-a/SKILL.md", &format!("{SKILL}{long}")),
+            doc("skills/sketcraft-modeling/SKILL.md", &format!("{}{long}", SKILL.replace("-a", "-modeling"))),
         ];
-        let p = problems(&docs, &["skills/solidcraft-a/SKILL.md", "skills/solidcraft-modeling/SKILL.md"]);
+        let p = problems(&docs, &["skills/sketcraft-a/SKILL.md", "skills/sketcraft-modeling/SKILL.md"]);
         assert!(p.iter().any(|m| m.starts_with("AGENTS.md is ")), "{p:?}");
-        assert!(p.iter().any(|m| m.starts_with("skills/solidcraft-a/SKILL.md: ") && m.contains("split it")), "{p:?}");
+        assert!(p.iter().any(|m| m.starts_with("skills/sketcraft-a/SKILL.md: ") && m.contains("split it")), "{p:?}");
         assert!(!p.iter().any(|m| m.contains("sketcraft-modeling/SKILL.md: ") && m.contains("split it")), "{p:?}");
     }
 
@@ -431,12 +431,12 @@ mod tests {
     fn a_crlf_checkout_is_checked_as_git_stores_it() {
         let root = std::env::temp_dir().join(format!("xtask-skills-crlf-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&root);
-        std::fs::create_dir_all(root.join("skills/solidcraft-a")).unwrap();
+        std::fs::create_dir_all(root.join("skills/sketcraft-a")).unwrap();
         let lines = "x\n".repeat((SKILL_MAX_CHARS - SKILL.len()) / 2);
         let skill = format!("{SKILL}{lines}{}", "x".repeat(SKILL_MAX_CHARS - SKILL.len() - lines.len()));
         let crlf = |t: &str| t.replace('\n', "\r\n");
-        std::fs::write(root.join("AGENTS.md"), crlf("# Router\n\n| a | `skills/solidcraft-a/SKILL.md` |\n")).unwrap();
-        std::fs::write(root.join("skills/solidcraft-a/SKILL.md"), crlf(&skill)).unwrap();
+        std::fs::write(root.join("AGENTS.md"), crlf("# Router\n\n| a | `skills/sketcraft-a/SKILL.md` |\n")).unwrap();
+        std::fs::write(root.join("skills/sketcraft-a/SKILL.md"), crlf(&skill)).unwrap();
         let result = run(&root);
         let _ = std::fs::remove_dir_all(&root);
         assert_eq!(result, Ok(()));

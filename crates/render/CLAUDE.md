@@ -45,11 +45,8 @@ cargo test --release -p sketcraft-render --lib sampler_cost_against_the_referenc
 - May depend on `sketcraft-geom` only (plus `solidcore-record`). No egui, wgpu or window types:
   device resources belong in `crates/gpu`.
 - No `unsafe`. The crate root denies `unwrap`/`expect`/`panic!`. Image and texture input is hostile:
-  bound sizes and memory. See `skills/solidcraft-crash-safety/SKILL.md`.
+  bound sizes and memory. See `skills/sketcraft-crash-safety/SKILL.md`.
 - Must build for wasm32. Use `web_time`, not `std::time::Instant`.
 - `job/textures.rs` embeds starter textures from `assets/render/starter/` with `include_bytes!`;
   moving those files breaks the build.
 
-## Gotchas
-
-- Some example usage strings still say `solidcraft-render`; the package is `sketcraft-render`.

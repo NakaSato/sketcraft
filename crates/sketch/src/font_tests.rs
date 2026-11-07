@@ -283,7 +283,7 @@ fn a_font_name_is_a_path_when_it_has_a_separator_or_a_font_extension() {
     let message = |name: &str| font_data(Some(name)).err().unwrap().to_string();
     // A name with a separator or a font extension is a file, whatever else it looks like; `%VAR%` is expanded in it and a
     // variable that is not set (or no variable at all) stays as written.
-    assert!(message("%NO_SUCH_VAR_SOLIDCRAFT%/a.ttf").contains("font file `%NO_SUCH_VAR_SOLIDCRAFT%/a.ttf`"));
+    assert!(message("%NO_SUCH_VAR_SKETCRAFT%/a.ttf").contains("font file `%NO_SUCH_VAR_SKETCRAFT%/a.ttf`"));
     assert!(message("100% sure.ttf").contains("font file `100% sure.ttf`"));
     assert!(message("Arial.TTF").contains("font file `Arial.TTF`"));
     assert!(message("fonts/a.otf").contains("font file `fonts/a.otf`"));

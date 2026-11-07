@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#759"
+  "NakaSato/sketcraft#759"
  ],
  "what": "a window 240 deg round a cylinder's wall (r10 x 40, z 15..25), the faces the cut made taken off and the window patched g0 and stitched",
  "source": "analytic",

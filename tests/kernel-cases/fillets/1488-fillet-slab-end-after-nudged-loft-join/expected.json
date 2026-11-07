@@ -1,7 +1,7 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#1488",
-  "tangency-labs/solidcraft#1517"
+  "NakaSato/sketcraft#1488",
+  "NakaSato/sketcraft#1517"
  ],
  "what": "an R1 fillet on the end edge of a 3.5 mm slab after a pleated loft was joined flush with its inner face (the join needs a tool retry; later fillets must still work)",
  "source": "invariants",

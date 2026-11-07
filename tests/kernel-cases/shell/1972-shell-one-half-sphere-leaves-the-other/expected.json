@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#1972"
+  "NakaSato/sketcraft#1972"
  ],
  "what": "a sphere split into two hemispheres; shelling the flat face of one must hollow that half only, the other half stays solid",
  "source": "analytic",

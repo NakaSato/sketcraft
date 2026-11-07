@@ -65,7 +65,7 @@ fn positive_extrude_from_xz_goes_plus_y() {
 fn format_5_xz_design_opens_where_it_was_saved() {
     let dir = std::env::temp_dir().join(format!("sketcraft-xz78-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
-    let path = dir.join("old-xz.solidcraft");
+    let path = dir.join("old-xz.sketcraft");
     let mut s = Session::default();
     build(&mut s);
     // This fixture edits the historical JSON metadata directly; request JSON explicitly.
@@ -87,7 +87,7 @@ fn format_5_xz_design_opens_where_it_was_saved() {
     expect(&bodies(&mut old), &want);
 
     // Saving the migrated design writes the current format and keeps the geometry.
-    let resaved = dir.join("resaved.solidcraft");
+    let resaved = dir.join("resaved.sketcraft");
     run(&mut old, "file.save_as", json!({"path": resaved.to_string_lossy(), "format": "json"}));
     let text = std::fs::read_to_string(&resaved).unwrap();
     assert!(text.contains(&format!("\"sketcraft/{}\"", sketcraft_doc::format::FORMAT)), "resaved at the current format");

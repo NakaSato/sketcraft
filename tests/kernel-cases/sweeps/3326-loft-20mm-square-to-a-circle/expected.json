@@ -1,7 +1,7 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#3326",
-  "tangency-labs/solidcraft#3402"
+  "NakaSato/sketcraft#3326",
+  "NakaSato/sketcraft#3402"
  ],
  "what": "a loft from a 20 mm square to a circle of radius 10 offset 20 mm (the loft tool symbol): the loft geometry looked wrong",
  "source": "invariants",

@@ -1,7 +1,7 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#561",
-  "tangency-labs/solidcraft#677"
+  "NakaSato/sketcraft#561",
+  "NakaSato/sketcraft#677"
  ],
  "what": "the start face of a 3-turn square-wire coil (4 mm wire, pitch 8, centre diameter 40) extruded 5 mm",
  "source": "analytic",

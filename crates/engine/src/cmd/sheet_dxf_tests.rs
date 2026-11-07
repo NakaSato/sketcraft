@@ -169,7 +169,7 @@ fn a_spline_cut_out_is_the_splines_it_was() {
 #[test]
 fn a_g4_blend_cut_out_is_one_spline_of_degree_nine_and_closes() {
     // Three sides of a 20 × 20 square, closed on the right by a G4 blend from (40, 20) to (40, 40):
-    // one Bézier of degree 9 over ten control points (solidcraft#5269).
+    // one Bézier of degree 9 over ten control points (sketcraft#5269).
     let mut s = plate_with(&[]);
     run(&mut s, "sketch.create", json!({"plane": "XY", "name": "Cut"}));
     let mut line =

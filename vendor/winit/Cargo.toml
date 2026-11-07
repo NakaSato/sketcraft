@@ -127,7 +127,7 @@ x11 = [
 name = "winit"
 path = "src/lib.rs"
 
-# SolidCraft: example and test targets are dropped (their sources are not vendored).
+# SketCraft: example and test targets are dropped (their sources are not vendored).
 
 [dependencies.bitflags]
 version = "2"
@@ -167,7 +167,7 @@ version = "0.2.0"
 version = "0.1.40"
 default-features = false
 
-# SolidCraft: dev-dependencies are dropped along with the example and test targets
+# SketCraft: dev-dependencies are dropped along with the example and test targets
 # (their sources are not vendored).
 
 [build-dependencies.cfg_aliases]
@@ -238,7 +238,7 @@ optional = true
 
 [target.'cfg(all(unix, not(any(target_os = "redox", target_family = "wasm", target_os = "android", target_os = "ios", target_os = "macos"))))'.dependencies.wayland-protocols]
 version = "0.32.8"
-# SolidCraft: also enable the unstable protocols, for the trackpad pinch
+# SketCraft: also enable the unstable protocols, for the trackpad pinch
 # and rotation gestures of `zwp_pointer_gestures_v1` (wayland/seat/pointer/pointer_gesture.rs).
 features = ["staging", "unstable"]
 optional = true

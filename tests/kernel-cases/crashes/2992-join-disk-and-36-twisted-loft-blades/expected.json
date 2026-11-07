@@ -1,6 +1,6 @@
 {
   "sources": [
-    "tangency-labs/solidcraft#2992"
+    "NakaSato/sketcraft#2992"
   ],
   "what": "join of a disk and a circular pattern of 36 twisted lofted blades (embedded 2.54 mm in the disk): blocks for minutes",
   "source": "invariants",

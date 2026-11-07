@@ -1,7 +1,7 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#968",
-  "tangency-labs/solidcraft#1084"
+  "NakaSato/sketcraft#968",
+  "NakaSato/sketcraft#1084"
  ],
  "what": "a bent tube (circles r 30 lofted through 10 sections along an R100 arc turning 90 degrees) with a bore (r 18, sections running 5 mm of arc past both ends) cut out of it: a hollow elbow (\"no result\" for some section counts, not their neighbours)",
  "source": "analytic",

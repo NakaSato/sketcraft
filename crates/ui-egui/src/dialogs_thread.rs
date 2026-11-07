@@ -1108,7 +1108,7 @@ mod contribution_tests {
         let path = std::path::Path::new(&dir).join("catalogue-plate.png");
         let out = h.call("ui.render", json!({"path":path,"width":1000,"height":700,"grid":false,"axes":false}));
         assert_eq!(out["ok"], true, "{out}");
-        std::fs::write(std::path::Path::new(&dir).join("catalogue-plate.solidcraft"), h.app.session.doc.to_json()).unwrap();
+        std::fs::write(std::path::Path::new(&dir).join("catalogue-plate.sketcraft"), h.app.session.doc.to_json()).unwrap();
     }
 
     #[test]

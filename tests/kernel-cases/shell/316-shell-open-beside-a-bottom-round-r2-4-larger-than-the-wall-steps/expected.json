@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#316"
+  "NakaSato/sketcraft#316"
  ],
  "what": "a 40 x 30 x 10 box, its bottom outline rounded R2.4, shelled 2 mm open at the bottom: where the round meets the open bottom the cavity's wall steps down along the bottom's normal (a step wall), so the round meets it at 90 degrees at the opening's edge and the opening is exactly the picked face",
  "source": "analytic",

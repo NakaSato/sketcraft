@@ -1525,10 +1525,10 @@ const ELEMENTS: &[Element] = &[
             });
         });
     }),
-    element!("name_list", "dialog:table:gallery_names:Bracket.solidcraft", None, |ui, _| {
+    element!("name_list", "dialog:table:gallery_names:Bracket.sketcraft", None, |ui, _| {
         name_list(ui, "gallery_names", &["Name", "Size", "Actions"], "No files", |list| {
-            list.row("Bracket.solidcraft", |row| {
-                row.name("Bracket.solidcraft");
+            list.row("Bracket.sketcraft", |row| {
+                row.name("Bracket.sketcraft");
                 row.cell(|ui| text(ui, "12.3 KB", Text::Inline));
                 row.cell(|ui| button(ui, "Open", Button::Small));
             });

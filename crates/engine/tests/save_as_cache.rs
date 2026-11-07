@@ -19,7 +19,7 @@ fn warm(session: &Session) {
 }
 
 fn save(session: &mut Session, label: &str) -> Vec<u8> {
-    let path = std::env::temp_dir().join(format!("sketcraft-save-as-{label}-{}.solidcraft", std::process::id()));
+    let path = std::env::temp_dir().join(format!("sketcraft-save-as-{label}-{}.sketcraft", std::process::id()));
     session.execute("file.save_as", &json!({"path":path,"cache":true,"preview":true})).unwrap();
     let bytes = std::fs::read(&path).unwrap();
     assert_eq!(sketcraft_io::read_design(&bytes).unwrap().name, path.file_stem().unwrap().to_string_lossy());

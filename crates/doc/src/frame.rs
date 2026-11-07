@@ -1,7 +1,7 @@
 //! Frames: the profile library structural members are made of (#4003).
 //!
 //! A profile is a closed cross-section, an outline and its holes, built in code from a few
-//! dimensions ([`Profile`]). Every built-in profile is SolidCraft's own parametric definition:
+//! dimensions ([`Profile`]). Every built-in profile is SketCraft's own parametric definition:
 //! no vendor's or standard's size table is shipped. A dimension left out takes a default worked
 //! out from the others, so `{"kind": "rect_tube", "width": 40, "height": 40, "wall": 3}` is a
 //! complete profile. Any other section (a vendor's extrusion, say) comes from a sketch.

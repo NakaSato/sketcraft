@@ -7,7 +7,7 @@
 //!
 //! The resize zones are as wide as Windows' own resize border at the window's scale
 //! ([`resize_border_px`]), corners win where they overlap the edges ([`resize_hit`]). On Windows
-//! the desktop app answers the system's hit test with them (`apps/solidcraft/src/native_frame.rs`),
+//! the desktop app answers the system's hit test with them (`apps/sketcraft/src/native_frame.rs`),
 //! so the OS shows its resize cursors and resizes from the first frame; elsewhere egui zones above
 //! everything else start an OS resize ([`resize_zones`]). macOS keeps its traffic lights over the bar
 //! ([`SolveApp::integrated_titlebar`]); the web build has neither.

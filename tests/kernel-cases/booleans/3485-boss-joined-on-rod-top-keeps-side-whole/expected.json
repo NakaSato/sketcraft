@@ -1,7 +1,7 @@
 {
   "sources": [
-    "tangency-labs/solidcraft#3485",
-    "tangency-labs/solidcraft#3062"
+    "NakaSato/sketcraft#3485",
+    "NakaSato/sketcraft#3062"
   ],
   "what": "a boss joined on a rod's top face (the join runs the boss on into the rod); the rod's side must stay one face, not seamed at the boss's foot",
   "source": "analytic",

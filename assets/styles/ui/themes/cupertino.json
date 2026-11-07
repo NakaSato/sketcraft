@@ -1,6 +1,6 @@
 {
   "order": 90,
-  "provenance": "Original SolidCraft theme",
+  "provenance": "Original SketCraft theme",
   "base": "light",
   "colors": {
     "accent": "#007aff",
@@ -190,7 +190,7 @@
     "viewport_top": "#f5f5f7",
     "warning": "#ad7400"
   },
-  "format": "solidcraft-theme/1",
+  "format": "sketcraft-theme/1",
   "name": "Cupertino",
   "radii": {
     "radius_sm": 6,

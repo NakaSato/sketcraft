@@ -1,13 +1,13 @@
 # W23a — workshop plate fixtures and future Drawing acceptance (#4950)
 
 This contribution contains **geometry oracle recipes only**. Each is a reproducible
-SolidCraft 3D model with independently calculated body count, volume, surface
+SketCraft 3D model with independently calculated body count, volume, surface
 area, centre of mass and bounds. Drawing records, persistent references, UI
 commands, drawing fonts, HLR and file exporters are **not** implemented here.
 
 Run `python3 tools/oracle-analytic/cases_workshop.py` to regenerate the
 analytic `expected.json` values; run `cargo xtask oracle` to replay every
-reference case through SolidCraft's CLI. Formula sources and method strings are
+reference case through SketCraft's CLI. Formula sources and method strings are
 in the script and the corresponding expected-value files.
 
 ## Exact geometry and states

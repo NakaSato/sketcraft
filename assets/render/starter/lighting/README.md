@@ -59,7 +59,7 @@ With Pillow installed, `python3 -B assets/render/starter/tools/lighting.py revie
 writes `target/render-starter-review/lighting-reference.png`. This ignored sheet
 shows the numerical Lambertian fixture at one fixed view, with source radiance
 only and a declared Reinhard-to-sRGB display transform. It deliberately excludes
-passive cards and actual CAD geometry. It is not a SolidCraft screenshot, final
+passive cards and actual CAD geometry. It is not a SketCraft screenshot, final
 rig render, material preview or photometric measurement.
 
 `build` writes only the known lighting export. `validate` recomputes the export
@@ -121,7 +121,7 @@ The mathematical tests check an independently derived closed-form directional
 sphere response, six separately integrated projected disks, finite-area
 far-field inverse-square behavior, zero back emission, solar-disk integration,
 EV ratios, uniform-scale behavior, valid source frames and the source-admission
-failures. They are numeric authoring checks; they do not exercise SolidCraft's
+failures. They are numeric authoring checks; they do not exercise SketCraft's
 CPU/GPU backends or imply measured optical accuracy.
 
 ## Integration requirements

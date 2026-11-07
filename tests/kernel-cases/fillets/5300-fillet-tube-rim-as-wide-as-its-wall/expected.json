@@ -1,8 +1,8 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#5300",
-  "tangency-labs/solidcraft#5236",
-  "tangency-labs/solidcraft#3317"
+  "NakaSato/sketcraft#5300",
+  "NakaSato/sketcraft#5236",
+  "NakaSato/sketcraft#3317"
  ],
  "what": "the outer top edge of a tube with a 1 mm wall (r 9..10, 20 high) filleted 1 mm: the round spans the whole wall top and meets the inner wall at its edge; truck refused it",
  "source": "analytic",

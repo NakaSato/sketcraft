@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#2524"
+  "NakaSato/sketcraft#2524"
  ],
  "what": "a circular pattern (count 2, 360 deg, about Y) of a cut made off-axis: 'boolean Cut: no result'",
  "source": "analytic",

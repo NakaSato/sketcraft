@@ -3,7 +3,7 @@
   {
    "command": "component.insert_design",
    "params": {
-    "path": "$CASE/plate.solidcraft",
+    "path": "$CASE/plate.sketcraft",
     "translate": [
      100,
      0,

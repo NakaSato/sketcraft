@@ -90,7 +90,7 @@ fn a_flipped_sketch_extrudes_the_other_way_and_offsets_along_the_planes_own_norm
     assert!((bounds.min.y - 2.0).abs() < 1e-9 && (bounds.max.y - 5.0).abs() < 1e-9, "{bounds:?}");
     assert!((bounds.min.z).abs() < 1e-9 && (bounds.max.z - 4.0).abs() < 1e-9, "{bounds:?}");
     // Saved and opened again, it is the same.
-    let path = std::env::temp_dir().join(format!("sketcraft-flip-{}.solidcraft", std::process::id()));
+    let path = std::env::temp_dir().join(format!("sketcraft-flip-{}.sketcraft", std::process::id()));
     run(&mut s, "file.save", json!({"path": path}));
     let mut reopened = Session::default();
     run(&mut reopened, "doc.open", json!({"path": path}));
@@ -124,7 +124,7 @@ fn flip_is_refused_on_a_face() {
 /// same bodies and save and reopen unchanged.
 #[test]
 fn older_designs_open_rebuild_and_save_unchanged() {
-    let dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../apps/solidcraft-cli/tests/corpus");
+    let dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../apps/sketcraft-cli/tests/corpus");
     let mut files: Vec<_> =
         std::fs::read_dir(&dir).unwrap().flatten().map(|e| e.path()).filter(|p| p.extension().is_some_and(|x| x == "sketcraft")).collect();
     files.sort();
@@ -134,13 +134,13 @@ fn older_designs_open_rebuild_and_save_unchanged() {
         run(&mut s, "doc.open", json!({"path": old}));
         assert!(!serde_json::to_string(&*s.doc).unwrap().contains("\"flipped\""), "{}", old.display());
         // The oldest one's XZ sketch: sketch y along +Z, as it was drawn.
-        if old.ends_with("m0-revolve-primitives.solidcraft") {
+        if old.ends_with("m0-revolve-primitives.sketcraft") {
             let id = s.doc.features.iter().find(|f| matches!(f.kind, FeatureKind::Sketch { .. })).map(|f| f.id).unwrap();
             let p = sketch_plane(&s, id);
             assert!(close(p.origin, Vec3::ZERO) && close(p.x, Vec3::X) && close(p.y, Vec3::Z), "{p:?}");
         }
         let bodies = measured(&mut s);
-        let path = std::env::temp_dir().join(format!("sketcraft-old-{}.solidcraft", std::process::id()));
+        let path = std::env::temp_dir().join(format!("sketcraft-old-{}.sketcraft", std::process::id()));
         run(&mut s, "file.save", json!({"path": path}));
         let mut reopened = Session::default();
         run(&mut reopened, "doc.open", json!({"path": path}));

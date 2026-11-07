@@ -5,7 +5,7 @@
 //! Either one is enough ([`Options::or`]).
 
 /// The environment variable that turns on compact output: `1`, `true`, `yes` or `on`
-/// (`0`, `false`, `no`, `off` or empty: off). `solidcraft-cli mcp --compact` does the same.
+/// (`0`, `false`, `no`, `off` or empty: off). `sketcraft-cli mcp --compact` does the same.
 pub const COMPACT_ENV: &str = "SKETCRAFT_MCP_COMPACT";
 
 /// The command-line flag that turns on compact output.

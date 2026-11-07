@@ -1,4 +1,4 @@
-# Original SolidCraft studio scenes
+# Original SketCraft studio scenes
 
 These are editable command recipes, not imported models or triangle meshes.
 Every part is authored here from sketches, extrusions, primitive solids, boolean
@@ -93,8 +93,8 @@ opposite edges, one connected triangle shell and positive signed volume.
 Example replay (outputs belong outside the repository):
 
 ```text
-solidcraft-cli run examples/studio/coffee-exploded.json --save coffee.sc
-solidcraft-cli eval coffee.sc --json-out coffee-measurements.json
+sketcraft-cli run examples/studio/coffee-exploded.json --save coffee.sc
+sketcraft-cli eval coffee.sc --json-out coffee-measurements.json
 ```
 
 Use the evidence runner with the paired render-request JSON to capture runtime

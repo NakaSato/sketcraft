@@ -1,7 +1,7 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#560",
-  "tangency-labs/solidcraft#656"
+  "NakaSato/sketcraft#560",
+  "NakaSato/sketcraft#656"
  ],
  "what": "solid.hole square to a flat sheet metal panel was refused as sheet machining that cannot be preserved",
  "source": "analytic",

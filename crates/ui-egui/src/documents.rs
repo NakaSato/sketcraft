@@ -1492,7 +1492,7 @@ mod tests {
     #[test]
     fn reopening_saved_design_preserves_dirty_session_and_view() {
         let mut a = super::SolveApp::new(sketcraft_engine::Session::default(), Default::default());
-        let path = std::env::temp_dir().join(format!("sketcraft-reopen-{}.solidcraft", std::process::id()));
+        let path = std::env::temp_dir().join(format!("sketcraft-reopen-{}.sketcraft", std::process::id()));
         let path = path.to_string_lossy().into_owned();
         a.session.execute("file.save", &serde_json::json!({"path": path})).unwrap();
         a.session.execute("solid.box", &serde_json::json!({"length": 10, "width": 12, "height": 14})).unwrap();
@@ -1530,18 +1530,18 @@ mod tests {
     fn follow_file_rename_updates_every_open_tab_title() {
         let mut a = app();
         a.session.doc_mut().name = "Plate".into();
-        a.session.path = Some("opfs://Plate.solidcraft".into());
+        a.session.path = Some("opfs://Plate.sketcraft".into());
         a.session.user_named = false;
         new_tab(&mut a);
         a.session.doc_mut().name = "Other".into();
-        a.session.path = Some("opfs://Other.solidcraft".into());
+        a.session.path = Some("opfs://Other.sketcraft".into());
         // Background tab is Plate; active is Other.
-        follow_file_rename(&mut a, "opfs://Plate.solidcraft", "opfs://Bracket.solidcraft");
+        follow_file_rename(&mut a, "opfs://Plate.sketcraft", "opfs://Bracket.sketcraft");
         assert_eq!(a.session.doc.name, "Other");
-        assert_eq!(a.session.path.as_deref(), Some("opfs://Other.solidcraft"));
+        assert_eq!(a.session.path.as_deref(), Some("opfs://Other.sketcraft"));
         let bg = a.docs.background().next().expect("background Plate");
         assert_eq!(bg.doc.name, "Bracket");
-        assert_eq!(bg.path.as_deref(), Some("opfs://Bracket.solidcraft"));
+        assert_eq!(bg.path.as_deref(), Some("opfs://Bracket.sketcraft"));
         switch(&mut a, 0);
         assert_eq!(a.session.doc.name, "Bracket");
     }
@@ -1549,34 +1549,34 @@ mod tests {
     #[test]
     fn reuse_tracks_save_as_missing_files_and_full_capacity() {
         let mut a = app();
-        a.session.path = Some("original.solidcraft".into());
+        a.session.path = Some("original.sketcraft".into());
         let original = a.session.doc.clone();
         // Save As updates the live path; lookup must not retain the old identity.
-        a.session.path = Some("renamed.solidcraft".into());
-        assert!(!reuse_path(&mut a, "original.solidcraft").unwrap());
+        a.session.path = Some("renamed.sketcraft".into());
+        assert!(!reuse_path(&mut a, "original.sketcraft").unwrap());
         for _ in 1..MAX_OPEN {
             new_tab(&mut a);
         }
         assert_eq!(a.docs.count(), MAX_OPEN);
-        assert!(reuse_path(&mut a, "renamed.solidcraft").unwrap());
+        assert!(reuse_path(&mut a, "renamed.sketcraft").unwrap());
         assert_eq!(a.docs.active, 0);
         assert!(std::sync::Arc::ptr_eq(&original, &a.session.doc));
-        assert!(!reuse_path(&mut a, "elsewhere/renamed.solidcraft").unwrap());
+        assert!(!reuse_path(&mut a, "elsewhere/renamed.sketcraft").unwrap());
         assert_eq!(a.docs.count(), MAX_OPEN);
         a.home.open = true;
-        assert!(reuse_path(&mut a, "renamed.solidcraft").unwrap());
+        assert!(reuse_path(&mut a, "renamed.sketcraft").unwrap());
         assert!(!a.home.open);
     }
 
     #[test]
     fn reuse_does_not_claim_a_switch_while_a_picker_is_open() {
         let mut a = app();
-        a.session.path = Some("picker.solidcraft".into());
+        a.session.path = Some("picker.sketcraft".into());
         new_tab(&mut a);
         a.services.pick_open = Some(Box::new(|_| Box::pin(std::future::pending())));
         a.pick_open(|_, _| {});
         assert!(a.file_picker_busy());
-        assert!(reuse_path(&mut a, "picker.solidcraft").is_err());
+        assert!(reuse_path(&mut a, "picker.sketcraft").is_err());
         assert_eq!(a.docs.active, 1);
         assert_eq!(a.docs.count(), 2);
     }
@@ -1585,25 +1585,25 @@ mod tests {
     fn saved_path_identity_uses_the_filesystem_without_folding_case() {
         let dir = std::env::temp_dir().join(format!("sketcraft-tab-paths-{}", std::process::id()));
         std::fs::create_dir_all(dir.join("other")).unwrap();
-        let path = dir.join("design.solidcraft");
+        let path = dir.join("design.sketcraft");
         std::fs::write(&path, b"identity test").unwrap();
         let text = |p: &std::path::Path| p.to_string_lossy().into_owned();
-        assert!(same_path(&text(&path), &text(&dir.join("other/../design.solidcraft"))));
-        assert!(!same_path(&text(&path), &text(&dir.join("other/design.solidcraft"))));
+        assert!(same_path(&text(&path), &text(&dir.join("other/../design.sketcraft"))));
+        assert!(!same_path(&text(&path), &text(&dir.join("other/design.sketcraft"))));
         #[cfg(windows)]
-        assert!(same_path(&text(&path), &text(&dir.join("DESIGN.solidcraft"))));
+        assert!(same_path(&text(&path), &text(&dir.join("DESIGN.sketcraft"))));
         #[cfg(unix)]
         {
-            let link = dir.join("alias.solidcraft");
+            let link = dir.join("alias.sketcraft");
             std::os::unix::fs::symlink(&path, &link).unwrap();
             assert!(same_path(&text(&path), &text(&link)));
-            std::fs::write(dir.join("DESIGN.solidcraft"), b"distinct").unwrap();
+            std::fs::write(dir.join("DESIGN.sketcraft"), b"distinct").unwrap();
             if std::fs::read(&path).unwrap() != b"distinct" {
-                assert!(!same_path(&text(&path), &text(&dir.join("DESIGN.solidcraft"))));
+                assert!(!same_path(&text(&path), &text(&dir.join("DESIGN.sketcraft"))));
             }
         }
         std::fs::remove_file(&path).unwrap();
-        assert!(same_path(&text(&path), &text(&dir.join("./design.solidcraft"))));
+        assert!(same_path(&text(&path), &text(&dir.join("./design.sketcraft"))));
         std::fs::remove_dir_all(dir).unwrap();
     }
 
@@ -1706,20 +1706,20 @@ mod tests {
     /// changes not saved yet says so below, since a cut name hides the tab's bullet.
     #[test]
     fn tab_tooltip_says_where_the_design_is_saved() {
-        assert_eq!(tab_tooltip("plate", Some("/srv/designs/plate.solidcraft"), false, false), "/srv/designs/plate.solidcraft");
-        assert_eq!(tab_tooltip("a-long-name", Some("/srv/a-long-name.solidcraft"), true, false), "a-long-name\n/srv/a-long-name.solidcraft");
+        assert_eq!(tab_tooltip("plate", Some("/srv/designs/plate.sketcraft"), false, false), "/srv/designs/plate.sketcraft");
+        assert_eq!(tab_tooltip("a-long-name", Some("/srv/a-long-name.sketcraft"), true, false), "a-long-name\n/srv/a-long-name.sketcraft");
         assert_eq!(tab_tooltip("Untitled", None, false, false), "Not saved yet");
         assert_eq!(tab_tooltip("Untitled", None, true, false), "Untitled\nNot saved yet");
-        assert_eq!(tab_tooltip("plate", Some("/srv/designs/plate.solidcraft"), false, true), "/srv/designs/plate.solidcraft\nUnsaved changes");
+        assert_eq!(tab_tooltip("plate", Some("/srv/designs/plate.sketcraft"), false, true), "/srv/designs/plate.sketcraft\nUnsaved changes");
         assert_eq!(
-            tab_tooltip("a-long-name", Some("/srv/a-long-name.solidcraft"), true, true),
-            "a-long-name\n/srv/a-long-name.solidcraft\nUnsaved changes"
+            tab_tooltip("a-long-name", Some("/srv/a-long-name.sketcraft"), true, true),
+            "a-long-name\n/srv/a-long-name.sketcraft\nUnsaved changes"
         );
         // A design never saved says so already, changed or not.
         assert_eq!(tab_tooltip("Untitled", None, true, true), "Untitled\nNot saved yet");
         if let Some(home) = std::env::var_os("HOME").or_else(|| std::env::var_os("USERPROFILE")).filter(|h| !h.is_empty()) {
             // The abbreviation keeps the relative path's native separators after `~/`.
-            let relative = std::path::Path::new("Designs").join("bracket.solidcraft");
+            let relative = std::path::Path::new("Designs").join("bracket.sketcraft");
             let path = std::path::Path::new(&home).join(&relative);
             assert_eq!(tab_tooltip("bracket", path.to_str(), false, false), format!("~/{}", relative.display()));
         }
@@ -2067,7 +2067,7 @@ mod tests {
         assert!(a.quit_requested, "nothing unsaved: quits at once");
 
         let mut a = app();
-        let file = std::env::temp_dir().join(format!("sketcraft-quit-save-{}.solidcraft", std::process::id()));
+        let file = std::env::temp_dir().join(format!("sketcraft-quit-save-{}.sketcraft", std::process::id()));
         let _ = std::fs::remove_file(&file);
         a.run("solid.box", json!({"length": 10, "width": 10, "height": 10})).unwrap();
         a.run("file.save_as", json!({"path": file.to_string_lossy()})).unwrap();
@@ -2112,7 +2112,7 @@ mod tests {
         let dir = std::env::temp_dir().join(format!("sketcraft-reopen-plan-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&dir);
         std::fs::create_dir_all(&dir).unwrap();
-        let file = dir.join("part.solidcraft");
+        let file = dir.join("part.sketcraft");
         std::fs::write(&file, []).unwrap();
         let path = file.to_string_lossy().to_string();
         let mut a = app();
@@ -2152,7 +2152,7 @@ mod tests {
         assert!(!a.quit_requested && a.docs.quitting.is_none() && a.session.is_dirty());
 
         // A picked file: saved, then quit.
-        let file = std::env::temp_dir().join(format!("sketcraft-quit-saveas-{}.solidcraft", std::process::id()));
+        let file = std::env::temp_dir().join(format!("sketcraft-quit-saveas-{}.sketcraft", std::process::id()));
         let _ = std::fs::remove_file(&file);
         let to = file.to_string_lossy().to_string();
         a.services.pick_save = Some(Box::new(move |_: &str, _: &[&str]| Box::pin(std::future::ready(Some(to.clone())))));

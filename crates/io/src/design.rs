@@ -844,7 +844,7 @@ fn is_known_container(container: &Value) -> bool {
         || container.get("content").is_some_and(|c| c == "drawing")
 }
 
-/// A container format of ours, this build's or a later one's: `solidcraft-container/N`.
+/// A container format of ours, this build's or a later one's: `sketcraft-container/N`.
 pub(crate) fn is_container_version(format: &str) -> bool {
     format == LEGACY_VERSION || format.strip_prefix("sketcraft-container/").is_some_and(|n| n.parse::<u32>().is_ok())
 }
@@ -1331,7 +1331,7 @@ mod tests {
         let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
         let read = |p: std::path::PathBuf| std::fs::read_to_string(&p).unwrap_or_else(|e| panic!("{}: {e}", p.display()));
         let workspace = read(root.join("Cargo.toml"));
-        // `solidcraft-geom = { path = "crates/geom" }`: a workspace crate's folder.
+        // `sketcraft-geom = { path = "crates/geom" }`: a workspace crate's folder.
         let folder = |name: &str| {
             let prefix = format!("{name} = {{ path = \"crates/");
             workspace.lines().find_map(|l| l.strip_prefix(prefix.as_str())?.split('"').next().map(str::to_string))
@@ -2705,7 +2705,7 @@ mod tests {
         let dir = std::env::var_os("CARGO_TARGET_DIR").map(std::path::PathBuf::from).unwrap_or_else(|| std::path::PathBuf::from("target"));
         std::fs::create_dir_all(&dir).unwrap();
         std::fs::write(dir.join(format!("issue303-{label}.json")), &json).unwrap();
-        std::fs::write(dir.join(format!("issue303-{label}.solidcraft")), &container).unwrap();
+        std::fs::write(dir.join(format!("issue303-{label}.sketcraft")), &container).unwrap();
         let mut timings = [Vec::new(), Vec::new(), Vec::new(), Vec::new()];
         for _ in 0..9 {
             let start = std::time::Instant::now();
@@ -2740,7 +2740,7 @@ mod tests {
             for index in if round % 2 == 0 { [0, 1] } else { [1, 0] } {
                 let start = std::time::Instant::now();
                 let bytes = if index == 0 { crate::write_design(doc) } else { write_design_container(doc).unwrap() };
-                crate::write_atomic(&dir.join(format!("issue303-{label}-atomic-{index}.solidcraft")), &bytes, true).unwrap();
+                crate::write_atomic(&dir.join(format!("issue303-{label}-atomic-{index}.sketcraft")), &bytes, true).unwrap();
                 saves[index].push(start.elapsed().as_secs_f64() * 1000.0);
             }
         }

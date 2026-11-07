@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#2076"
+  "NakaSato/sketcraft#2076"
  ],
  "what": "a rectangular pattern of a cylinder join (pin-fin plate) scales quadratically in time",
  "source": "analytic",

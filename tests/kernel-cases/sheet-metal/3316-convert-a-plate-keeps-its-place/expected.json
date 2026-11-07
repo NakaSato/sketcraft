@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#3316"
+  "NakaSato/sketcraft#3316"
  ],
  "what": "a 100 x 60 x 2 plate converted from its top face moved down by one thickness (z -2..0 instead of 0..2)",
  "source": "analytic",

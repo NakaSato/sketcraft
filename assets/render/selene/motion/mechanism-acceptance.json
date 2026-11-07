@@ -5,7 +5,7 @@
     "status": "source_container_inspected_runtime_pending",
     "name": "SELENE improved showcase mechanism acceptance",
     "source_lock": "../source-lock.json",
-    "authorship": "Original acceptance criteria, source-container bindings and analytic planning checks derived from public SolidCraft descriptions and the pinned SychPL native source.",
+    "authorship": "Original acceptance criteria, source-container bindings and analytic planning checks derived from public SketCraft descriptions and the pinned SychPL native source.",
     "license": "MIT OR Apache-2.0",
     "provenance_id": "ORIGINAL-2026-10-CATALOG",
     "units": {
@@ -18,7 +18,7 @@
     "reference_resolution": "reference_ids resolve against ../source-lock.json references.",
     "automatic_admission_allowed": false,
     "source_sha256": "1b0df486f30da157db27a33e0b5ed67f13d527d4dfdc6c334717a1df4e5b8677",
-    "source_path": "../source/SELENE-showcase.solidcraft",
+    "source_path": "../source/SELENE-showcase.sketcraft",
     "inspection_date": "2026-10-22",
     "derivative_policy": "The functional derivative intentionally changes selected mechanisms. Its executable checks and result reports are separate; see ../MECHANISMS.md and ../tools/validate_native.py. Do not overwrite source facts with derivative values."
   },

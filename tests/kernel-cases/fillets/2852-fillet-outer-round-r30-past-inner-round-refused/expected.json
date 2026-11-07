@@ -1,7 +1,7 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#2852",
-  "tangency-labs/solidcraft#1080"
+  "NakaSato/sketcraft#2852",
+  "NakaSato/sketcraft#1080"
  ],
  "what": "a 3 mm U shell (60 x 20 x 50) whose inside top edges are rounded R15: its outside edges rounded R30 would cross into the hollow and cut the top plate off the walls, so it is refused, naming the largest radius that fits",
  "source": "analytic",

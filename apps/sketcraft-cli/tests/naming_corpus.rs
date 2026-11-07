@@ -48,7 +48,7 @@ fn designs() -> Vec<(String, Source)> {
             out.push((format!("{prefix}/{stem}"), Source::File(p)));
         }
     };
-    add("corpus", root.join("apps/solidcraft-cli/tests/corpus"), "sketcraft");
+    add("corpus", root.join("apps/sketcraft-cli/tests/corpus"), "sketcraft");
     add("examples", root.join("examples"), "json");
     add("examples", root.join("examples/acceptance"), "json");
     add("regressions", root.join("examples/regressions"), "json");

@@ -38,16 +38,13 @@ cargo test -p sketcraft-cli --test design_corpus         # one test file
 ## Rules
 
 - stdout is the command's JSON (or MCP's JSON-RPC). Notes, logs and profiles go to stderr.
-- The CLI only calls engine commands (`Session::execute`). Add behaviour as a command in `crates/engine`, not here. See `skills/solidcraft-commands/SKILL.md`.
+- The CLI only calls engine commands (`Session::execute`). Add behaviour as a command in `crates/engine`, not here. See `skills/sketcraft-commands/SKILL.md`.
 - A new subcommand needs an entry in the `Command` table and its usage string. `tests/help_output.rs` checks the help.
-- Crash-safety rules apply (both binaries deny `unwrap` and friends and forbid `unsafe`): `skills/solidcraft-crash-safety/SKILL.md`.
-- Oracle expected values never come from SketCraft's own output: `skills/solidcraft-tests/SKILL.md`.
+- Crash-safety rules apply (both binaries deny `unwrap` and friends and forbid `unsafe`): `skills/sketcraft-crash-safety/SKILL.md`.
+- Oracle expected values never come from SketCraft's own output: `skills/sketcraft-tests/SKILL.md`.
 
 ## Gotchas
 
-- The binary is `sketcraft-cli`, but usage text, comments and the alias's deprecation note still say `solidcraft-cli`.
-- 18 test files use `env!("CARGO_BIN_EXE_solidcraft-cli")`. Cargo sets only `CARGO_BIN_EXE_sketcraft-cli` and `CARGO_BIN_EXE_solvecraft-cli`, so those files do not compile until the name is fixed. This also breaks `xtask action-matrix`.
-- `tests/design_corpus.rs` collects files with the `.sketcraft` extension, but the files in `tests/corpus/` end in `.solidcraft`. It finds none, so its `assert!(v.len() >= 7)` fails. `.solidcraft` is also missing from `LEGACY_DESIGN_EXTS` in `crates/io`.
-- `tests/KNOWN_FAILING_TESTS` names these tests `solidcraft-cli::…`, while nextest will report `sketcraft-cli::…`.
+- `tests/KNOWN_FAILING_TESTS` names these tests `sketcraft-cli::…`, while nextest will report `sketcraft-cli::…`.
 - `src/main.rs` includes `assets/icons/app/shared/source/app_icon.rs` with `#[path]`.
 - Docs that comments cite (`docs/mcp.md`, `docs/crash-reports.md`, `docs/robustness.md`, `docs/oracle.md`) are not in this tree.

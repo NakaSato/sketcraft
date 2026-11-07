@@ -1102,7 +1102,7 @@ impl Body {
         self.record.faces.len() * 2048 + uses * (512 + 96)
     }
 
-    /// The body's triangles, `t` from its exact surfaces: SolidCraft's one mesher (the planner,
+    /// The body's triangles, `t` from its exact surfaces: SketCraft's one mesher (the planner,
     /// [`crate::tess`]), evaluated on the CPU, with its edges flagged for display (seams, tangent
     /// joins, protected creases). Triangles carry their face index and the edges their polylines,
     /// in the record's order; neighbouring faces share every boundary node, so the mesh is

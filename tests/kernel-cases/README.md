@@ -13,8 +13,8 @@ shrinks: `cargo xtask lists` fails on a case it does not list, and on a listed c
 
 ```sh
 cargo xtask kernel-cases                                    # every case
-cargo xtask kernel-cases --cli target/release/solidcraft-cli --out /tmp/run   # with a CLI already built
-cargo run -p solidcraft-cli -- kernel-cases tests/kernel-cases/booleans/<id>   # one case
+cargo xtask kernel-cases --cli target/release/sketcraft-cli --out /tmp/run   # with a CLI already built
+cargo run -p sketcraft-cli -- kernel-cases tests/kernel-cases/booleans/<id>   # one case
 ```
 
 The run's output folder (`--out`, default `target/kernel-cases`)
@@ -31,7 +31,7 @@ once), `each_step` (after every sweep, boolean and blend, as before) or `off`; t
   kernel's. It comes from analysis or a hand calculation, or else from the invariants below.
 - **No user designs.** A crash report or a repro design becomes a small synthetic recipe that
   shows the same geometry. Check for private content before committing anything.
-- **No workaround on SolidCraft's side.** A case that fails stays failing until the kernel is
+- **No workaround on SketCraft's side.** A case that fails stays failing until the kernel is
   fixed. SMLib defects go to tangency-labs/solidcore as issues (`priority: high`,
   `bug`), and the fix goes into the fork.
 
@@ -64,12 +64,12 @@ covers a command with no source at all is `cov-<short-name>`.
 
 Each case has:
 
-- `recipe.json`: an engine command script (`{"commands": [...]}`, as `solidcraft-cli run`
+- `recipe.json`: an engine command script (`{"commands": [...]}`, as `sketcraft-cli run`
   takes) or an oracle recipe (`tests/oracle/*/recipe.json`). `$CASE` in a string is the case
   directory, for an input file such as `$CASE/input.step` (written by hand from the STEP or IGES
   specification, never a user's file), and `$OUT` a scratch directory outside the repository for
   files the case writes (an export).
-- `expected.json`: the right answer, graded by `solidcraft-cli kernel-cases`.
+- `expected.json`: the right answer, graded by `sketcraft-cli kernel-cases`.
 
 A script may start with `"base": "<case directory>"` (relative to its own directory): that case's
 commands, and its own base's, run first. The ladder's cases build on each other this way.
@@ -78,7 +78,7 @@ Each area also has `skipped.json` (or several, `skipped-<part>.json`, where an a
 parts): every issue and PR looked at that did not become a case, with one line each saying why.
 
 ```json
-[{"source": "tangency-labs/solidcraft#123", "why": "UI only: the selection highlight, no geometry"}]
+[{"source": "NakaSato/sketcraft#123", "why": "UI only: the selection highlight, no geometry"}]
 ```
 
 `sources.json` says what kind each source number is (an open or closed issue, a merged PR, one of
@@ -88,7 +88,7 @@ the frozen truck-geometry PRs, a `kernel-paused` PR), for the report's coverage 
 
 ```json
 {
-  "sources": ["tangency-labs/solidcraft#1894", "tangency-labs/solidcraft#1629"],
+  "sources": ["NakaSato/sketcraft#1894", "NakaSato/sketcraft#1629"],
   "what": "a prism cut whose walls only touch the target's walls",
   "source": "analytic",
   "method": "box 40x30x20 minus the prism 10x30x5 flush with the side: V = 24000 - 1500",
@@ -125,20 +125,20 @@ the frozen truck-geometry PRs, a `kernel-paused` PR), for the report's coverage 
 | `files` | The files the case wrote to `$OUT`, each `{path, json \| csv \| dxf}`, matched as a part of what is there: every key the case gives, an array item by item and as long, a whole number exactly, any other number within `rel`. `json`: the file's JSON; `csv`: its rows, as objects keyed by the header row; `dxf`: per layer of its ENTITIES section, how many of each entity (`{"CUT": {"CIRCLE": 1, "ELLIPSE": 0, "length_mm": 31.416}}`; a count may be a range `[min, max]`) and `length_mm`, the total length of its lines, arcs, circles, ellipses and polylines. |
 | `results` | The commands' own answers, each `{step, pointer?, json, rel?, abs_mm?}`: the answer of the `step`th command (from 1, base commands included), or its part at the JSON `pointer` (RFC 6901), matched as `files` matches JSON: a whole number exactly (a count), another within `rel` (the case's relative tolerance unless given) or `abs_mm`, lists item by item. |
 | `construction` | `{name: spec}`, a spec being `{point: [x,y,z]}`, `{axis: {through, dir}}` or `{plane: {through, normal}}`: each named construction point, axis or plane as the timeline evaluated it. A point within the position tolerance (`tolerance.abs_mm`, else 1e-3 of the box diagonal, of 1 mm where there is no body); an axis whose direction is parallel to `dir` (either way, sine of the angle at most 1e-6) and whose line passes within it of `through`; a plane likewise with `normal`. An axis or plane is graded as the line or plane it is, not by the origin it keeps. |
-| `missing` | A capability SolidCraft has no command or parameter for yet (`"solid.thread has no start count"`): the case is reported **not supported yet** without running, so the gap stays visible. |
+| `missing` | A capability SketCraft has no command or parameter for yet (`"solid.thread has no start count"`): the case is reported **not supported yet** without running, so the gap stays visible. |
 
 ## The kernel rig gate
 
 Every area is a regression suite: each case is one small case of one issue, with its exact
 answer. `.github/workflows/kernel-rig.yml` runs them, and the ladder, on pull requests (not
 drafts). A plan job (`scripts/ci/kernel_rig_plan.py`) picks the areas from the changed files, one
-job builds `solidcraft-cli` (release) and the rig's runner, and a matrix of shards, one per
+job builds `sketcraft-cli` (release) and the rig's runner, and a matrix of shards, one per
 selected area plus the ladder, runs them in parallel; the `kernel-rig` check passes when every
 selected shard does (and when none was selected). Pushes to main and develop, merge groups, the
 release gate (`release-gate.yml`) and a run by hand run every area. Each area's shard runs:
 
 ```sh
-cargo xtask kernel-cases --area <area> --cli target/release/solidcraft-cli \
+cargo xtask kernel-cases --area <area> --cli target/release/sketcraft-cli \
   --known-failing tests/kernel-cases/<area>/KNOWN_FAILING
 ```
 
@@ -160,7 +160,7 @@ request, so the list only shrinks and never goes stale:
 - a regression: fix it in the same pull request.
 
 To check a list locally before pushing: `cargo xtask kernel-cases --area <area> --cli
-target/release/solidcraft-cli --known-failing tests/kernel-cases/<area>/KNOWN_FAILING`.
+target/release/sketcraft-cli --known-failing tests/kernel-cases/<area>/KNOWN_FAILING`.
 
 ### Which areas a pull request runs
 
@@ -187,8 +187,8 @@ joins: new kernel cases go to solidcore's corpus.
 
 ### Every command has a case
 
-`cargo xtask kernel-cases --coverage --cli target/release/solidcraft-cli` (run in the gate's
-build job) lists every registry command (`solidcraft-cli commands`, planned ones aside) that no
+`cargo xtask kernel-cases --coverage --cli target/release/sketcraft-cli` (run in the gate's
+build job) lists every registry command (`sketcraft-cli commands`, planned ones aside) that no
 `recipe.json` here runs, and fails unless `EXEMPT` lists it: one line a command, `<id>  <why it
 has no case>`, each section sorted. Lines before `[to cover]` have no geometry to grade (the
 view, rendering, appearance, files, component and parameter bookkeeping, ...). Lines after it
@@ -215,9 +215,9 @@ running part grows one tier at a time through `base`), so the last case carries 
   `method` gives the derivation).
 
 ```sh
-cargo xtask kernel-cases --ladder --cli target/release/solidcraft-cli
-cargo xtask kernel-cases --ladder --cli target/release/solidcraft-cli --gate
-cargo xtask kernel-cases --ladder --cli target/release/solidcraft-cli --record "why"
+cargo xtask kernel-cases --ladder --cli target/release/sketcraft-cli
+cargo xtask kernel-cases --ladder --cli target/release/sketcraft-cli --gate
+cargo xtask kernel-cases --ladder --cli target/release/sketcraft-cli --record "why"
 ```
 
 The ladder needs no known-failing list: the golden is the reference. Its shard in the kernel rig
@@ -252,4 +252,4 @@ above, answers in closed form or exact), export it with `--area <area> --export 
 `DIR/<area>/<id>.json` and its `.bodies.json.gz` to solidcore's corpus in a pull request there,
 and delete the draft (it is not in `CASES`, so it cannot be committed here). An entry can also be
 written by hand as solidcore's README describes. A case about a command, the UI or a product
-rule stays in SolidCraft as a test in its area's existing test file.
+rule stays in SketCraft as a test in its area's existing test file.

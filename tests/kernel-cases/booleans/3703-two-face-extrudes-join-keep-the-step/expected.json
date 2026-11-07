@@ -1,6 +1,6 @@
 {
   "sources": [
-    "tangency-labs/solidcraft#3703"
+    "NakaSato/sketcraft#3703"
   ],
   "what": "two joined face extrudes on one box (top face, then the right side face): the stepped shape must stay",
   "source": "analytic",

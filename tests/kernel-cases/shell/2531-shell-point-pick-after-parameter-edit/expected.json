@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#2531"
+  "NakaSato/sketcraft#2531"
  ],
  "what": "a shell opened by a point pick keeps opening only that face after a parameter edit moves the body under the stored point",
  "source": "analytic",

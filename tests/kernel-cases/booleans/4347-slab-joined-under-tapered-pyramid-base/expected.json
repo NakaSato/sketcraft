@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#4347"
+  "NakaSato/sketcraft#4347"
  ],
  "what": "a 60x60 slab sketched on the base of a tapered square pyramid frustum and extruded 10 mm away from it as a join: 'join cannot preserve the original faces; check for zero-thickness edge contact'",
  "source": "analytic",

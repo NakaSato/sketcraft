@@ -1,8 +1,8 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#3796",
-  "tangency-labs/solidcraft#3619",
-  "tangency-labs/solidcraft#2516"
+  "NakaSato/sketcraft#3796",
+  "NakaSato/sketcraft#3619",
+  "NakaSato/sketcraft#2516"
  ],
  "what": "a rectangle revolved about a construction axis picked by name (\"unknown sketch line `Axis1`\")",
  "source": "analytic",

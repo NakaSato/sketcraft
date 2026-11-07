@@ -594,12 +594,12 @@ fn requested_menu_icons_have_artwork_and_match_manifest() {
     }
     panels(&mut geometry, &mut requested);
     // Home recent-file context menus have their own native popup dispatch.
-    let path = geometry.dir.join("audit.solidcraft");
+    let path = geometry.dir.join("audit.sketcraft");
     geometry.app.run("file.save", json!({"path":path})).unwrap();
     geometry.app.home.recent = vec![path.to_string_lossy().into_owned()];
     geometry.app.recoverable.push(sketcraft_engine::recovery::Entry {
         id: "icon-audit".into(),
-        path: Some("audit.solidcraft".into()),
+        path: Some("audit.sketcraft".into()),
         name: "Audit design".into(),
         saved_at: 0,
         features: 1,
@@ -666,7 +666,7 @@ fn requested_menu_icons_have_artwork_and_match_manifest() {
         let expected = std::fs::read_to_string(&path).unwrap_or_default().replace("\r\n", "\n");
         assert_eq!(
             expected, manifest,
-            "Runtime icon discovery changed. Regenerate with UPDATE_ICON_MANIFEST=1 cargo test -p solidcraft-ui-egui --test icon_audit"
+            "Runtime icon discovery changed. Regenerate with UPDATE_ICON_MANIFEST=1 cargo test -p sketcraft-ui-egui --test icon_audit"
         );
     }
     let missing = requested.iter().filter(|(_, placeholder)| **placeholder).map(|(name, _)| name).collect::<Vec<_>>();

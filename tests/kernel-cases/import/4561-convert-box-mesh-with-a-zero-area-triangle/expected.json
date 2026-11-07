@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#4561"
+  "NakaSato/sketcraft#4561"
  ],
  "what": "Convert Mesh of a 20x10x5 box STL (12 triangles) with one extra zero-area triangle lying on an edge ((0,0,0) (10,0,0) (20,0,0)): refused with 'mesh conversion: degenerate triangle'",
  "source": "analytic",

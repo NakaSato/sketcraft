@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#4143"
+  "NakaSato/sketcraft#4143"
  ],
  "what": "an R4 round on the rim of an R5 notch where its cylinder meets an extruded B-spline ramp, both ends running into a square wall",
  "source": "invariants",

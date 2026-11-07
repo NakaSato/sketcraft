@@ -1,6 +1,6 @@
 {
   "sources": [
-    "tangency-labs/solidcraft#311"
+    "NakaSato/sketcraft#311"
   ],
   "what": "an inclined cut across a round blank, which used to pinch the cylindrical wall inward (a 4.4 mm chord deficit) in the display and STL mesh",
   "source": "analytic",

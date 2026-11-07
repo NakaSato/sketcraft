@@ -1,7 +1,7 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#4877",
-  "tangency-labs/solidcraft#5413"
+  "NakaSato/sketcraft#4877",
+  "NakaSato/sketcraft#5413"
  ],
  "what": "a 0.6 mm pocket cut from the top of a tab joined to a disc with a chamfered bottom edge (the join fell back to truck's tool nudge, which lifted the tab's top by 5e-5 mm): the pocket never opened, it left a sealed void under a 0.00005 mm skin",
  "source": "analytic",

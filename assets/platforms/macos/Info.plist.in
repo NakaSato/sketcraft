@@ -7,13 +7,13 @@
   <key>CFBundleDevelopmentRegion</key>
   <string>en</string>
   <key>CFBundleDisplayName</key>
-  <string>SolidCraft</string>
+  <string>SketCraft</string>
   <key>CFBundleName</key>
-  <string>SolidCraft</string>
+  <string>SketCraft</string>
   <key>CFBundleExecutable</key>
-  <string>SolidCraft</string>
+  <string>SketCraft</string>
   <key>CFBundleIdentifier</key>
-  <string>io.tangencylabs.solidcraft</string>
+  <string>io.tangencylabs.sketcraft</string>
   <key>CFBundleInfoDictionaryVersion</key>
   <string>6.0</string>
   <key>CFBundlePackageType</key>
@@ -24,12 +24,12 @@
   <string>@SHORT_VERSION@</string>
   <key>CFBundleVersion</key>
   <string>@SHORT_VERSION@</string>
-  <key>SolidCraftVersion</key>
+  <key>SketCraftVersion</key>
   <string>@VERSION@</string>
   <key>CFBundleIconFile</key>
-  <string>SolidCraft</string>
+  <string>SketCraft</string>
   <key>CFBundleIconName</key>
-  <string>SolidCraft</string>
+  <string>SketCraft</string>
   <key>LSApplicationCategoryType</key>
   <string>public.app-category.graphics-design</string>
   <!-- Must match MACOSX_DEPLOYMENT_TARGET in package.sh. -->
@@ -43,13 +43,13 @@
   <array>
     <dict>
       <key>CFBundleTypeName</key>
-      <string>SolidCraft design</string>
+      <string>SketCraft design</string>
       <key>CFBundleTypeExtensions</key>
-      <!-- solidcraft: designs saved before .sc; solvecraft: before the rename (compatibility
+      <!-- sketcraft: designs saved before .sc; solvecraft: before the rename (compatibility
            shims, docs/compatibility.md). -->
-      <array><string>sc</string><string>solidcraft</string><string>solvecraft</string></array>
+      <array><string>sc</string><string>sketcraft</string><string>solvecraft</string></array>
       <key>LSItemContentTypes</key>
-      <array><string>io.tangencylabs.solidcraft.design</string></array>
+      <array><string>io.tangencylabs.sketcraft.design</string></array>
       <key>CFBundleTypeRole</key>
       <string>Editor</string>
       <key>LSHandlerRank</key>
@@ -66,22 +66,22 @@
       <string>Alternate</string>
     </dict>
   </array>
-  <!-- The design type: .sc, and the older .solidcraft and .solvecraft (docs/compatibility.md). -->
+  <!-- The design type: .sc, and the older .sketcraft and .solvecraft (docs/compatibility.md). -->
   <key>UTExportedTypeDeclarations</key>
   <array>
     <dict>
       <key>UTTypeIdentifier</key>
-      <string>io.tangencylabs.solidcraft.design</string>
+      <string>io.tangencylabs.sketcraft.design</string>
       <key>UTTypeDescription</key>
-      <string>SolidCraft design</string>
+      <string>SketCraft design</string>
       <key>UTTypeConformsTo</key>
       <array><string>public.data</string><string>public.content</string></array>
       <key>UTTypeTagSpecification</key>
       <dict>
         <key>public.filename-extension</key>
-        <array><string>sc</string><string>solidcraft</string><string>solvecraft</string></array>
+        <array><string>sc</string><string>sketcraft</string><string>solvecraft</string></array>
         <key>public.mime-type</key>
-        <array><string>application/x-solidcraft</string></array>
+        <array><string>application/x-sketcraft</string></array>
       </dict>
     </dict>
   </array>

@@ -1,7 +1,7 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#3283",
-  "tangency-labs/solidcraft#3650"
+  "NakaSato/sketcraft#3283",
+  "NakaSato/sketcraft#3650"
  ],
  "what": "Offset Face on the outer cylindrical wall of a tube (the picker only accepted planar faces)",
  "source": "analytic",

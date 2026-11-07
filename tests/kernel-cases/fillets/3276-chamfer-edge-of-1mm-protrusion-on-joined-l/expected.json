@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#3276"
+  "NakaSato/sketcraft#3276"
  ],
  "what": "three extrudes joined into an L-shaped body with a 1 mm protrusion, then a chamfer on the protrusion's outer edge (the report: the corners are no longer 90 degrees and the chamfer fails)",
  "source": "analytic",

@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#2667"
+  "NakaSato/sketcraft#2667"
  ],
  "what": "a half disc of radius 6 on the axis revolved a full turn (mutation survivor: half_disc area factor)",
  "source": "analytic",

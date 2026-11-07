@@ -58,7 +58,7 @@ fn old_designs_open_upgrade_and_evaluate() {
 /// the design builds.
 #[test]
 fn names_saved_before_exact_history_ask_for_their_faces_again() {
-    let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/corpus/naming-split-pieces.solidcraft");
+    let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/corpus/naming-split-pieces.sketcraft");
     let s = open(&path);
     let feature = |name: &str| s.doc.features.iter().find(|f| f.name == name).unwrap_or_else(|| panic!("{name}"));
     assert_eq!(feature("Round").edge_names, vec!["?F2:side:l2|F2:top#2".to_string()]);
@@ -84,7 +84,7 @@ fn names_saved_before_exact_history_ask_for_their_faces_again() {
 /// ask for their edges to be picked again.
 #[test]
 fn body_names_saved_before_exact_history_open_marked_and_evaluate() {
-    let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/corpus/split-body-pieces.solidcraft");
+    let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/corpus/split-body-pieces.sketcraft");
     let s = open(&path);
     assert!(s.doc.features.iter().all(|f| f.shell_piece_order), "every saved feature keeps the shell order");
     for r in &s.model.results {

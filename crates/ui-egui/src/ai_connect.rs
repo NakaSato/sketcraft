@@ -1,5 +1,5 @@
 //! Makes SketCraft available to the AI apps on this computer without a step from the user: at
-//! start-up, off the window thread, the `solidcraft` entry is added to each installed client
+//! start-up, off the window thread, the `sketcraft` entry is added to each installed client
 //! (`sketcraft_engine::agent_setup`), and a status message names the clients that got it for the
 //! first time. The preference "Make SketCraft available to AI apps on this computer" turns it
 //! off, which takes the entries out again. Best effort: nothing here can fail the launch.

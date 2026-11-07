@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#3368"
+  "NakaSato/sketcraft#3368"
  ],
  "what": "a finely faceted body (a 1200-sided prism) with a curved partner: a vertical bore and a horizontal cross hole drilled through it (the case where the B-rep ladder is bounded but must still decide)",
  "source": "analytic",

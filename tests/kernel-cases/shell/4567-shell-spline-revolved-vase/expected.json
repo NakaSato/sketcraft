@@ -1,9 +1,9 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#4567",
-  "tangency-labs/solidcraft#5076",
-  "tangency-labs/solidcraft#5050",
-  "tangency-labs/solidcraft#4743"
+  "NakaSato/sketcraft#4567",
+  "NakaSato/sketcraft#5076",
+  "NakaSato/sketcraft#5050",
+  "NakaSato/sketcraft#4743"
  ],
  "what": "a vase revolved from a fit-point spline wall, shelled 2 mm from its flat top: truck refused any free-form wall ('offset: only bodies with planes, cylinders, cones, spheres and tori')",
  "source": "analytic",

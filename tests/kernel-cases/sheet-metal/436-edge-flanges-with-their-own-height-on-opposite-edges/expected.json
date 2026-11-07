@@ -1,7 +1,7 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#436",
-  "tangency-labs/solidcraft#447"
+  "NakaSato/sketcraft#436",
+  "NakaSato/sketcraft#447"
  ],
  "what": "one edge flange feature whose two edges carry their own heights (30 and 25 mm) over the feature's 20 mm default",
  "source": "analytic",

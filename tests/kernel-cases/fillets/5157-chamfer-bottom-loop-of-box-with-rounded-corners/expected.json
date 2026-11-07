@@ -1,6 +1,6 @@
 {
  "sources": [
-  "tangency-labs/solidcraft#5157"
+  "NakaSato/sketcraft#5157"
  ],
  "what": "the bottom loop of a 30x20x10 box whose vertical edges are rounded r4, chamfered 1 mm along its tangent chain: truck's corners bulged out instead of following the chamfer",
  "source": "analytic",

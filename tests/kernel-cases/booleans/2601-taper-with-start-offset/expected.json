@@ -1,6 +1,6 @@
 {
   "sources": [
-    "tangency-labs/solidcraft#2601"
+    "NakaSato/sketcraft#2601"
   ],
   "what": "a tapered extrude whose start is offset along the sketch normal (the app says: not supported yet: taper with two-sided, symmetric or offset extents)",
   "source": "analytic",
