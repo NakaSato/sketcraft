@@ -1626,11 +1626,51 @@ impl KetchupApp {
         inspector_section(ui, "Shadows", "shadows", false, |ui| {
             ui.checkbox(&mut d.shadows, "Display shadows");
             ui.add_enabled_ui(d.shadows, |ui| {
-                crate::inspector_table::inspector_field(ui, "sun_direction", "Direction", |ui| {
-                    ui.add(egui::Slider::new(&mut d.sun_angle, 0. ..=360.).suffix("°"))
-                });
-                crate::inspector_table::inspector_field(ui, "sun_elevation", "Elevation", |ui| {
-                    ui.add(egui::Slider::new(&mut d.sun_elevation, 5. ..=85.).suffix("°"))
+                ui.checkbox(&mut d.sun_from_time, "Set sun by date and time")
+                    .on_hover_text("Place the sun for a date, local solar time and latitude. The green axis points north.");
+                if d.sun_from_time {
+                    const MONTHS: [&str; 12] = [
+                        "January", "February", "March", "April", "May", "June", "July",
+                        "August", "September", "October", "November", "December",
+                    ];
+                    crate::inspector_table::inspector_field(ui, "sun_month", "Month", |ui| {
+                        let month = usize::from(d.sun_month.clamp(1, 12)) - 1;
+                        egui::ComboBox::from_id_salt("sun_month")
+                            .selected_text(MONTHS[month])
+                            .show_ui(ui, |ui| {
+                                for (index, name) in MONTHS.iter().enumerate() {
+                                    ui.selectable_value(&mut d.sun_month, index as u8 + 1, *name);
+                                }
+                            })
+                            .response
+                    });
+                    let days = ketchup_core::display::days_in_month(d.sun_month.clamp(1, 12));
+                    d.sun_day = d.sun_day.clamp(1, days);
+                    crate::inspector_table::inspector_field(ui, "sun_day", "Day", |ui| {
+                        ui.add(egui::Slider::new(&mut d.sun_day, 1..=days))
+                    });
+                    crate::inspector_table::inspector_field(ui, "sun_time", "Time", |ui| {
+                        ui.add(
+                            egui::Slider::new(&mut d.sun_minutes, 0..=24 * 60 - 1)
+                                .step_by(5.)
+                                .custom_formatter(|m, _| format!("{:02}:{:02}", m as u32 / 60, m as u32 % 60)),
+                        )
+                    });
+                    crate::inspector_table::inspector_field(ui, "sun_latitude", "Latitude", |ui| {
+                        ui.add(egui::Slider::new(&mut d.sun_latitude, -90. ..=90.).suffix("°"))
+                    });
+                    d.apply_solar_time();
+                    if d.solar_elevation() < 0. {
+                        ui.text_weak("The sun is below the horizon at this time, so shadows use the lowest sun.");
+                    }
+                }
+                ui.add_enabled_ui(!d.sun_from_time, |ui| {
+                    crate::inspector_table::inspector_field(ui, "sun_direction", "Direction", |ui| {
+                        ui.add(egui::Slider::new(&mut d.sun_angle, 0. ..=360.).suffix("°"))
+                    });
+                    crate::inspector_table::inspector_field(ui, "sun_elevation", "Elevation", |ui| {
+                        ui.add(egui::Slider::new(&mut d.sun_elevation, 5. ..=85.).suffix("°"))
+                    });
                 });
                 crate::inspector_table::inspector_field(ui, "shadow_darkness", "Darkness", |ui| {
                     ui.add(egui::Slider::new(&mut d.shadow_darkness, 0. ..=1.))

@@ -127,6 +127,28 @@ fn frame_rate_diagnostics_save_immediately_and_default_off() {
 }
 
 #[test]
+fn solar_date_time_and_latitude_save_immediately_and_restore_the_sun() {
+    let ctx = egui::Context::default();
+    let mut storage = SavedPreferences::default();
+    let mut app = KetchupApp::with_document(Document::default(), None, true);
+    let d = &mut app.doc.display;
+    (d.shadows, d.sun_from_time, d.sun_month, d.sun_day, d.sun_minutes, d.sun_latitude) =
+        (true, true, 12, 21, 10 * 60 + 30, -33.9);
+    d.apply_solar_time();
+    let expected = app.doc.display.clone();
+    app.persist_inspector_changes(&ctx, Some(&mut storage), false);
+    assert!(storage.flushed);
+    assert!(!app.project.modified);
+    let mut restored = KetchupApp::with_document(Document::default(), None, true);
+    restored.restore_inspector_preferences(&egui::Context::default(), Some(&storage));
+    let r = &restored.doc.display;
+    assert!(r.sun_from_time);
+    assert_eq!((r.sun_month, r.sun_day, r.sun_minutes), (12, 21, 630));
+    assert_eq!(r.sun_latitude, -33.9);
+    assert_eq!((r.sun_angle, r.sun_elevation), (expected.sun_angle, expected.sun_elevation));
+}
+
+#[test]
 fn shadows_and_sun_save_together_and_default_off_for_older_preferences() {
     let ctx = egui::Context::default();
     let mut storage = SavedPreferences::default();

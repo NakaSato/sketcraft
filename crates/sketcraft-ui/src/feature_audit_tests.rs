@@ -51,6 +51,7 @@ pub(super) fn render_cases() -> Vec<RenderCase> {
                 "section_cuts" => "section_cuts",
                 "section_fill" => "section_fill",
                 "shadows" => "shadows",
+                "sun_from_time" => "sun_from_time",
                 "fog" => "fog",
                 "sky" => "sky",
                 "ground" => "ground",
@@ -80,6 +81,7 @@ pub(super) fn render_cases() -> Vec<RenderCase> {
         ("shadow_darkness", 0., 1.),
         ("sun_angle", 0., 180.),
         ("sun_elevation", 5., 85.),
+        ("sun_latitude", -30., 60.),
         ("fog_start", 0., 10.),
         ("fog_end", 10., 50.),
     ] {
@@ -110,6 +112,9 @@ pub(super) fn render_cases() -> Vec<RenderCase> {
         ),
         ("section_axes", serde_json::json!([true, true, false])),
         ("section_offsets", serde_json::json!([0.5, 1.5])),
+        ("sun_month", serde_json::json!(12)),
+        ("sun_day", serde_json::json!(1)),
+        ("sun_minutes", serde_json::json!(8 * 60)),
     ] {
         pair(key, key, defaults[key].clone(), value);
     }
