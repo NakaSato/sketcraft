@@ -6,7 +6,7 @@ Read `AGENTS.md` too. It holds the project's binding rules: persisted UI state, 
 
 ## What this repository is
 
-KetchUp is a SketchUp-style 3D edge/face editor in Rust that runs natively (Windows/macOS/Linux) and in the browser (WebAssembly via Trunk). It is built on a fork of SolidCraft, a parametric CAD workspace. Crate and binary names still use the `sketcraft-*` prefix, and the contributor skills in `skills/` still say "SolidCraft". Some docs those skills mention (`docs/book/`, `ROADMAP.md`) are not in this tree.
+SketCraft is a SketchUp-style 3D edge/face editor in Rust that runs natively (Windows/macOS/Linux) and in the browser (WebAssembly via Trunk). It is built on a fork of SolidCraft, a parametric CAD workspace. Crate and binary names still use the `sketcraft-*` prefix, and the contributor skills in `skills/` still say "SolidCraft". Some docs those skills mention (`docs/book/`, `ROADMAP.md`) are not in this tree.
 
 Shared UI building blocks live in `crates/ui-egui/src/ui_kit/`: sections, tables, modals, footers and disclosures. Preferences are in `crates/ui-egui/src/prefs.rs`. Use these before writing new widgets.
 

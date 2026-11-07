@@ -1,4 +1,4 @@
-# KetchUp branding
+# SketCraft branding
 
 An extruded K with cream faces on a tomato-red (`#D94836`) badge, inspired by the geometry of 3D modeling tools.
 

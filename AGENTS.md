@@ -26,7 +26,7 @@ Whenever the user asks to push a new version tag:
 
 Trunk output is saved to `/tmp/ketchup-trunk.log` (started with `trunk serve 2>&1 | tee /tmp/ketchup-trunk.log`). Read this file for the compilation check.
 
-Only at the end of each change, immediately before reporting completion, check the currently running KetchUp process, if one exists, and its associated compiler or development-server output for new compilation errors. Perform this check once per fix, not during intermediate edits. Use the existing process and logs; do not start a new build just for this check. If the output is unavailable, report that the check could not be completed.
+Only at the end of each change, immediately before reporting completion, check the currently running SketCraft process, if one exists, and its associated compiler or development-server output for new compilation errors. Perform this check once per fix, not during intermediate edits. Use the existing process and logs; do not start a new build just for this check. If the output is unavailable, report that the check could not be completed.
 
 # Modal actions
 
@@ -40,7 +40,7 @@ All current and future right-sidebar tables use the shared table in `crates/ui-e
 
 # Project names
 
-- “KetchUp” / “Ketchup app” refers to the existing Rust desktop/WebAssembly client at this repository root.
+- “SketCraft” (formerly “KetchUp” / “Ketchup app”) refers to the existing Rust desktop/WebAssembly client at this repository root.
 - “Ketchup Server” refers to the separate PHP repository at `/home/dcoulombe/dev/ketchup-server`. When the user names Ketchup Server, scope the work to that directory and read `/home/dcoulombe/dev/ketchup-server/AGENTS.md`.
 
 # Application language
@@ -49,4 +49,4 @@ All user-facing application text must be in English, even when the user requests
 
 # PDF export header
 
-This tree has no PDF export yet (`crates/io/src/paper.rs` writes sheets as SVG; PDF is planned there). When PDF export is added, build one shared header module for every PDF export: the bundled KetchUp logo and brand, report type, project name, generation date, and separator on every page, with a body-top offset that all body content stays below. Preserve page size, orientation, readability and existing transparency. Every later PDF export must reuse it; do not introduce a separate PDF header implementation.
+This tree has no PDF export yet (`crates/io/src/paper.rs` writes sheets as SVG; PDF is planned there). When PDF export is added, build one shared header module for every PDF export: the bundled SketCraft logo and brand, report type, project name, generation date, and separator on every page, with a body-top offset that all body content stays below. Preserve page size, orientation, readability and existing transparency. Every later PDF export must reuse it; do not introduce a separate PDF header implementation.

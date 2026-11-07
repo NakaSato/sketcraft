@@ -75,7 +75,7 @@ def release_notes(current):
 
 
 def format_notes(release):
-    lines = [f"# KetchUp {release['version']} — {release['title']}", "", release["date"]]
+    lines = [f"# SketCraft {release['version']} — {release['title']}", "", release["date"]]
     for section in release["sections"]:
         lines += ["", f"## {section['title']}", ""]
         lines += [f"- {change}" for change in section["changes"]]
@@ -95,7 +95,7 @@ def package(platform, tag, pack_dir, output_dir):
     if not (pack_dir / executable).is_file():
         raise ValueError(f"Missing staged executable: {pack_dir / executable}")
     args = [
-        "vpk", "pack", "--packId", APP_ID, "--packTitle", "KetchUp",
+        "vpk", "pack", "--packId", APP_ID, "--packTitle", "SketCraft",
         "--packAuthors", "Ketchup3D", "--packVersion", current,
         "--packDir", str(pack_dir.resolve()), "--mainExe", executable,
         "--runtime", runtime, "--channel", runtime,
