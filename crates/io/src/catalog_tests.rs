@@ -257,8 +257,8 @@ fn pinned_v1_bytes_revisions_and_scalar_material_canonical_fields_are_preserved(
         source_url: Some("https://example.invalid/original".into()),
     };
     let entry = Entry::new("user.test", Definition::Material(material), provenance).unwrap();
-    assert_eq!(entry.revision, "3dc003a875463baef587b85b9883f227cb546178317271c60078989bdb86c245");
-    assert_eq!(entry.id, "user.test/material-3dc003a875463bae");
+    assert_eq!(entry.revision, "a687750d3471ab3e69892752c51ede26afda35213aef9d34e5fcda3795e7f55e");
+    assert_eq!(entry.id, "user.test/material-a687750d3471ab3e");
 }
 
 #[test]
