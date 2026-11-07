@@ -3761,10 +3761,10 @@ pub fn shortcuts(app: &mut SolveApp, ctx: &egui::Context) {
                 }
             }
             Key::Backspace if crate::tools::undo_spline_point(app) => {}
-            Key::P if !mods.shift && !mods.alt && !mods.command && app.session.active_sketch.is_none() => {
-                app.start("solid.extrude");
+            Key::P if !mods.shift && !mods.alt && !mods.command => {
+                app.start("solid.press_pull");
             }
-            Key::T if !mods.shift && !mods.alt && !mods.command && app.session.active_sketch.is_none() => {
+            Key::T if !mods.shift && !mods.alt && !mods.command => {
                 app.start("inspect.measure");
             }
             Key::Delete | Key::Backspace | Key::E => {
