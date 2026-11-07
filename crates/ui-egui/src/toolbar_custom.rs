@@ -367,8 +367,10 @@ pub const SKETCHUP_LARGE_TOOLSET: &[&str] = &[
     "solid.scale",
     "inspect.measure",
     "sketch.dimension",
+    "inspect.section",
     "appearance.paint",
     "component.create",
+    "tags.manage",
 ];
 
 /// Load SketchUp Large Tool Set into the quick access bar.
