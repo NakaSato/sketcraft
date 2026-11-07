@@ -1,8 +1,8 @@
-# KetchUp
+# SketCraft
 
-![KetchUp editor screenshot](assets/screenshots/ketchup.jpg)
+![SketCraft editor screenshot](assets/screenshots/ketchup.jpg)
 
-[![Try KetchUp in your browser](https://img.shields.io/badge/Try_KetchUp_in_your_browser-d63b32?style=for-the-badge)](https://ketchup3d.github.io/app/play/)
+[![Try SketCraft in your browser](https://img.shields.io/badge/Try_SketCraft_in_your_browser-d63b32?style=for-the-badge)](https://ketchup3d.github.io/app/play/)
 
 ## Download for desktop
 
@@ -18,7 +18,7 @@ The workspace includes Select, Line, Rectangle, Circle, Polygon, Freehand, Push/
 ## Documentation
 
 This README covers developer installation, building, verification, and deployment.
-For instructions on using KetchUp, see the [user documentation](docs/README.md).
+For instructions on using SketCraft, see the [user documentation](docs/README.md).
 
 ## Prerequisites
 
@@ -41,7 +41,7 @@ On Linux, register the application launcher and icons once after compiling:
 python3 scripts/install_linux_desktop.py
 ```
 
-This installs into your user data directory (`$XDG_DATA_HOME`, or `~/.local/share`) without root access. GNOME on Wayland uses the application's ID and matching desktop entry to find its icon. Restart KetchUp after installing. The launcher points to `target/debug/sketcraft`, so later development compilations update the same executable. For a release installation, pass its path: `python3 scripts/install_linux_desktop.py target/release/sketcraft`. Keep that executable in place, or rerun the installer with its new path if you move it.
+This installs into your user data directory (`$XDG_DATA_HOME`, or `~/.local/share`) without root access. GNOME on Wayland uses the application's ID and matching desktop entry to find its icon. Restart SketCraft after installing. The launcher points to `target/debug/sketcraft`, so later development compilations update the same executable. For a release installation, pass its path: `python3 scripts/install_linux_desktop.py target/release/sketcraft`. Keep that executable in place, or rerun the installer with its new path if you move it.
 
 ## Run in a browser
 

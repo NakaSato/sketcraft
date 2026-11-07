@@ -226,7 +226,7 @@ impl KetchupApp {
                         crate::file_dialog::FileDialogMode::OpenProject,
                         crate::file_dialog::FileDialogPayload::None,
                         &["ketchup"],
-                        "Open KetchUp project",
+                        "Open SketCraft project",
                         "",
                         self.project.path.as_deref(),
                     );
@@ -440,7 +440,7 @@ impl KetchupApp {
                 crate::file_dialog::FileDialogMode::SaveProject,
                 crate::file_dialog::FileDialogPayload::SaveProject { contents },
                 &["ketchup"],
-                "Save KetchUp project as",
+                "Save SketCraft project as",
                 &default_name,
                 self.project.path.as_deref(),
             );

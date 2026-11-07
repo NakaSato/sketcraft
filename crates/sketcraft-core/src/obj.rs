@@ -21,7 +21,7 @@ pub fn export_obj(model: &Model) -> Result<String, String> {
     // Pre-allocate buffer based on geometry count to prevent unbounded reallocations on large models.
     let estimated_bytes = visible_vertices.len() * 32 + model.faces.len() * 64 + 64;
     let mut out = String::with_capacity(estimated_bytes);
-    out.push_str("# KetchUp OBJ export\n# Units: metres; Z up\n");
+    out.push_str("# SketCraft OBJ export\n# Units: metres; Z up\n");
     let mut indices = BTreeMap::new();
     let mut positions = BTreeMap::new();
     for vertex in model

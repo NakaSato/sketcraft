@@ -1,4 +1,4 @@
-# KetchUp documentation
+# SketCraft documentation
 
 Guides for using the desktop and browser editor.
 

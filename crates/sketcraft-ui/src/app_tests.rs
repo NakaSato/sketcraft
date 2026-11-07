@@ -703,7 +703,7 @@ fn render_snapshots(state: eframe::egui_wgpu::RenderState, audit: bool) {
         let device = &state.device;
         let queue = &state.queue;
         let texture = device.create_texture(&wgpu::TextureDescriptor {
-            label: Some("KetchUp QA screenshot"),
+            label: Some("SketCraft QA screenshot"),
             size: wgpu::Extent3d {
                 width,
                 height,

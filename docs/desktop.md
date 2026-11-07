@@ -25,7 +25,7 @@ stops future automatic checks; a check already in progress may finish, and an
 already downloaded update will still install on the next launch. Failed checks
 leave the app usable and can be retried manually. The **Update ready** button
 appears after a download completes. Installation happens on the next launch,
-or through **Restart now**. KetchUp does not force a restart during editing.
+or through **Restart now**. SketCraft does not force a restart during editing.
 
 Restart now offers to save modified work as a `.ketchup` file, or keep it in
 local recovery. It saves the model and its project-file association before

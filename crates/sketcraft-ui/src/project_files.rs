@@ -378,7 +378,7 @@ fn open_pdf(contents: &[u8]) -> Result<(), eframe::wasm_bindgen::JsValue> {
             match result {
                 Err(error) => Err(error),
                 _ => Err(JsValue::from_str(
-                    "Allow pop-ups for KetchUp, then generate the PDF again.",
+                    "Allow pop-ups for SketCraft, then generate the PDF again.",
                 )),
             }
         }

@@ -76,7 +76,7 @@ impl ReleaseNotes {
                 ui.text_heading("Release notes");
                 ui.text_label(
                     RichText::new(format!(
-                        "You're using KetchUp {}",
+                        "You're using SketCraft {}",
                         env!("CARGO_PKG_VERSION")
                     ))
                     .color(colors.muted),

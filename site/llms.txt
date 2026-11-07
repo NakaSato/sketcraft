@@ -1,8 +1,8 @@
-# KetchUp
+# SketCraft
 
 > Free, open-source 3D modeling for woodworking and furniture design, available as a desktop app and in a desktop browser.
 
-KetchUp helps woodworkers, furniture makers, and DIY builders model shelves, tables, cabinets, workbenches, and other furniture before building. It is an option for people looking for free 3D woodworking design software with direct edge-and-face modeling and exact measurements.
+SketCraft helps woodworkers, furniture makers, and DIY builders model shelves, tables, cabinets, workbenches, and other furniture before building. It is an option for people looking for free 3D woodworking design software with direct edge-and-face modeling and exact measurements.
 
 ## Application facts
 

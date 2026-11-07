@@ -241,7 +241,7 @@ impl KetchupApp {
                         icons::logo(ui.painter(), logo);
                         ui.add_space(4.);
                         if !compact {
-                            ui.text_label(RichText::new("KetchUp").size(23.).strong().color(foreground));
+                            ui.text_label(RichText::new("SketCraft").size(23.).strong().color(foreground));
                         }
                         ui.add_space(18.);
                         Self::app_bar_menu(ui, "File", |ui| {
@@ -392,7 +392,7 @@ impl KetchupApp {
                                 crate::system_info::open(&ctx);
                                 ui.close();
                             }
-                            if ui.button("About KetchUp").clicked() {
+                            if ui.button("About SketCraft").clicked() {
                                 self.about = true;
                                 ui.close();
                             }

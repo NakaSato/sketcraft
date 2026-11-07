@@ -185,11 +185,11 @@ def main():
                     temporary.replace(destination)
                     readme = ROOT / "README.md"
                     text = readme.read_text()
-                    link = "![KetchUp editor screenshot](assets/screenshots/ketchup.jpg)"
-                    if re.search(r"!\[KetchUp editor screenshot\]\([^)]*\)", text):
-                        updated = re.sub(r"!\[KetchUp editor screenshot\]\([^)]*\)", link, text)
+                    link = "![SketCraft editor screenshot](assets/screenshots/ketchup.jpg)"
+                    if re.search(r"!\[SketCraft editor screenshot\]\([^)]*\)", text):
+                        updated = re.sub(r"!\[SketCraft editor screenshot\]\([^)]*\)", link, text)
                     else:
-                        updated = text.replace("# KetchUp\n", f"# KetchUp\n\n{link}\n", 1)
+                        updated = text.replace("# SketCraft\n", f"# SketCraft\n\n{link}\n", 1)
                     if link not in updated:
                         raise RuntimeError("README title not found.")
                     if updated != text:

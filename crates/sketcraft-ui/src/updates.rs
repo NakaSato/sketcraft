@@ -254,10 +254,10 @@ impl Updater {
             State::Unavailable => "Automatic updates are available in the packaged desktop app. Download it from GitHub Releases.".into(),
             State::Idle => "Ready to check for updates.".into(),
             State::Checking => "Checking for updates…".into(),
-            State::Downloading(version) => format!("Downloading KetchUp {version}… You can keep working."),
-            State::Current => "KetchUp is up to date.".into(),
-            State::Ready(asset) => format!("KetchUp {} is ready. It will install on your next launch, or you can restart now.", asset.Version),
-            State::Failed(error) => format!("Could not update KetchUp: {error}"),
+            State::Downloading(version) => format!("Downloading SketCraft {version}… You can keep working."),
+            State::Current => "SketCraft is up to date.".into(),
+            State::Ready(asset) => format!("SketCraft {} is ready. It will install on your next launch, or you can restart now.", asset.Version),
+            State::Failed(error) => format!("Could not update SketCraft: {error}"),
         }
     }
 

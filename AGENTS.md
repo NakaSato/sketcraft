@@ -40,7 +40,7 @@ All current and future right-sidebar tables use `crate::inspector_table::Inspect
 
 # Project names
 
-- “KetchUp” / “Ketchup app” refers to the existing Rust desktop/WebAssembly client at this repository root.
+- “SketCraft”, “KetchUp” and “Ketchup app” all refer to the existing Rust desktop/WebAssembly client at this repository root. Its user-facing name is SketCraft. Keep the existing `.ketchup` extension, preference and storage keys, app ID and `Ketchup3D` URLs so saved projects, settings and updates keep working.
 - “Ketchup Server” refers to the separate PHP repository at `/home/dcoulombe/dev/ketchup-server`. When the user names Ketchup Server, scope the work to that directory and read `/home/dcoulombe/dev/ketchup-server/AGENTS.md`.
 
 # Application language
@@ -49,4 +49,4 @@ All user-facing application text must be in English, even when the user requests
 
 # PDF export header
 
-All PDF exports, current and future, must use the shared header in `crates/sketcraft-ui/src/pdf_header.rs`, based on Time & Cost Estimates: the bundled KetchUp logo and brand, report type, project name, generation date, and separator on every page. Keep body content below `body_top`; preserve page size, orientation, readability and existing transparency. Do not introduce a separate PDF header implementation.
+All PDF exports, current and future, must use the shared header in `crates/sketcraft-ui/src/pdf_header.rs`, based on Time & Cost Estimates: the bundled logo and SketCraft brand, report type, project name, generation date, and separator on every page. Keep body content below `body_top`; preserve page size, orientation, readability and existing transparency. Do not introduce a separate PDF header implementation.

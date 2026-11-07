@@ -13,7 +13,7 @@ fn main() -> eframe::Result {
             eframe::icon_data::from_png_bytes(include_bytes!(
                 "../../../assets/branding/icon-256.png"
             ))
-            .expect("The bundled KetchUp icon must be a valid PNG"),
+            .expect("The bundled SketCraft icon must be a valid PNG"),
         );
     // GNOME/Wayland resolves the icon through the matching .desktop file.
     #[cfg(target_os = "linux")]
@@ -33,7 +33,7 @@ fn main() -> eframe::Result {
         ..Default::default()
     };
     eframe::run_native(
-        "KetchUp — 3D workspace",
+        "SketCraft — 3D workspace",
         options,
         Box::new(|cc| Ok(Box::new(sketcraft_ui::KetchupApp::new(cc)))),
     )
@@ -65,7 +65,7 @@ fn main() {
         if let Some(loading) = document.get_element_by_id("loading") {
             match result {
                 Ok(())=>loading.remove(),
-                Err(_)=>loading.set_text_content(Some("KetchUp could not start its GPU renderer. Enable hardware acceleration or try a browser with WebGPU or WebGL2 support.")),
+                Err(_)=>loading.set_text_content(Some("SketCraft could not start its GPU renderer. Enable hardware acceleration or try a browser with WebGPU or WebGL2 support.")),
             }
         }
     });

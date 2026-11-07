@@ -6,7 +6,7 @@ Read `AGENTS.md` too. It holds the project's binding rules: persisted UI state, 
 
 ## What this repository is
 
-KetchUp is a SketchUp-style 3D edge/face editor in Rust. The same editor runs natively (Windows/macOS/Linux) and in the browser (WebAssembly via Trunk). Crates use the `sketcraft-*` prefix; the product name shown to users is KetchUp.
+SketCraft (formerly KetchUp) is a SketchUp-style 3D edge/face editor in Rust. The same editor runs natively (Windows/macOS/Linux) and in the browser (WebAssembly via Trunk). Crates use the `sketcraft-*` prefix; the product name shown to users is SketCraft. The `.ketchup` extension, storage and preference keys, app ID and `Ketchup3D` URLs keep the old name on purpose, so saved data and updates keep working.
 
 ## Commands
 

@@ -395,7 +395,7 @@ fn system_information_opens_from_help_and_copies_the_report() {
             _ => None,
         })
         .expect("copy button sends report to clipboard");
-    assert!(report.contains(concat!("KetchUp ", env!("CARGO_PKG_VERSION"))));
+    assert!(report.contains(concat!("SketCraft ", env!("CARGO_PKG_VERSION"))));
     assert!(report.contains("Architecture:"));
     assert!(report.contains("Window:"));
     assert!(

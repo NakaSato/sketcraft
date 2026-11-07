@@ -951,7 +951,7 @@ impl KetchupApp {
                     icons::logo(ui.painter(), logo);
                     ui.add_space(8.);
                     ui.vertical(|ui| {
-                        ui.text_heading("About KetchUp");
+                        ui.text_heading("About SketCraft");
                         ui.text_label(
                             RichText::new(format!("Version {}", env!("CARGO_PKG_VERSION")))
                                 .color(colors.muted),
@@ -961,7 +961,7 @@ impl KetchupApp {
             });
             modal.body(|ui| {
                 let colors = Palette::for_ui(ui);
-                ui.text_label("KetchUp is a 3D modeling app for turning ideas into shapes. Draw precise geometry, shape surfaces, and organize your model with groups and components.");
+                ui.text_label("SketCraft is a 3D modeling app for turning ideas into shapes. Draw precise geometry, shape surfaces, and organize your model with groups and components.");
                 ui.add_space(8.);
                 ui.text_label(
                     RichText::new("Your work is saved automatically on this device. Save a .ketchup project to keep a portable copy.")
@@ -1110,7 +1110,7 @@ impl eframe::App for KetchupApp {
         );
         #[cfg(target_arch = "wasm32")]
         if let Some(document) = web_sys::window().and_then(|window| window.document()) {
-            let title = format!("{} - KetchUp", self.doc.name);
+            let title = format!("{} - SketCraft", self.doc.name);
             if document.title() != title {
                 document.set_title(&title);
             }
