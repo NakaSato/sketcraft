@@ -634,6 +634,7 @@ impl KetchupApp {
                     InspectorSection::TimeCostEstimates => self.time_estimates_contents(ui),
                     InspectorSection::Materials => self.materials_contents(ui),
                     InspectorSection::History => self.history_contents(ui),
+                    InspectorSection::ModelLibrary => self.model_library_contents(ui),
                     InspectorSection::Fasteners => {},
                 },
             );

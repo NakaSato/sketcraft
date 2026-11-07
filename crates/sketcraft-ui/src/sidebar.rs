@@ -37,6 +37,7 @@ pub(super) struct InspectorPreferences {
     docking: Option<docking::DockLayout>,
     component_filter: String,
     outliner_filter: String,
+    model_library: super::model_library::Preferences,
     shortcut_filter: String,
     paint_color: [u8; 3],
     paint_target: PaintTarget,
@@ -75,6 +76,7 @@ impl Default for InspectorPreferences {
             docking: None,
             component_filter: String::new(),
             outliner_filter: String::new(),
+            model_library: Default::default(),
             shortcut_filter: String::new(),
             paint_color: [195, 96, 67],
             paint_target: PaintTarget::default(),
@@ -463,6 +465,10 @@ impl KetchupApp {
         };
         self.component_filter = preferences.component_filter.clone();
         self.outliner_filter = preferences.outliner_filter.clone();
+        if self.model_library.prefs != preferences.model_library {
+            self.model_library.prefs = preferences.model_library.clone();
+            self.model_library.scanned = None; // Rescan the restored folder on next view.
+        }
         self.shortcut_filter = preferences.shortcut_filter.clone();
         self.paint_color = preferences.paint_color;
         self.paint_target = preferences.paint_target;
@@ -541,6 +547,7 @@ impl KetchupApp {
             .dock,
             component_filter: self.component_filter.clone(),
             outliner_filter: self.outliner_filter.clone(),
+            model_library: self.model_library.prefs.clone(),
             shortcut_filter: self.shortcut_filter.clone(),
             paint_color: self.paint_color,
             paint_target: self.paint_target,
@@ -639,6 +646,7 @@ pub(super) enum InspectorSection {
     TimeCostEstimates,
     Materials,
     History,
+    ModelLibrary,
     // Legacy serialized section retained only to migrate saved layouts.
     Fasteners,
 }
@@ -676,6 +684,7 @@ pub(super) fn restore_order(
         InspectorSection::TimeCostEstimates,
         InspectorSection::Materials,
         InspectorSection::History,
+        InspectorSection::ModelLibrary,
     ] {
         if !order.contains(&section) {
             order.push(section);
@@ -697,7 +706,7 @@ pub(super) fn save_order(
 mod preference_tests;
 
 impl InspectorSection {
-    pub(super) const COUNT: usize = 10;
+    pub(super) const COUNT: usize = 11;
 
     pub(super) const ALL: [Self; Self::COUNT] = [
         Self::EntityInfo,
@@ -710,6 +719,7 @@ impl InspectorSection {
         Self::TimeCostEstimates,
         Self::Materials,
         Self::History,
+        Self::ModelLibrary,
     ];
 
     fn default_open(self) -> bool {
@@ -728,6 +738,7 @@ impl InspectorSection {
             Self::TimeCostEstimates => "Time & Cost Estimates",
             Self::Materials => "Materials",
             Self::History => "History",
+            Self::ModelLibrary => "Model Library",
             Self::Fasteners => "Automatic Fasteners",
         }
     }
@@ -744,6 +755,7 @@ impl InspectorSection {
             Self::TimeCostEstimates => "time_cost_estimates",
             Self::Materials => "materials",
             Self::History => "history",
+            Self::ModelLibrary => "model_library",
             Self::Fasteners => "connections/fasteners",
         }
     }
@@ -874,6 +886,7 @@ fn inspector_icon_color(ui: &egui::Ui, id: &str) -> Color32 {
     let (light, dark) = match icons::section_icon(id) {
         "outliner" => ([48, 111, 173], [131, 185, 239]),
         "history" => ([117, 105, 155], [181, 169, 219]),
+        "model_library" => ([142, 96, 52], [214, 170, 124]),
         "entity_info" => ([17, 129, 133], [103, 207, 211]),
         "units" => ([67, 131, 68], [143, 205, 144]),
         "time_cost_estimates" => ([183, 92, 19], [242, 170, 100]),

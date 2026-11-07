@@ -88,7 +88,7 @@ impl Harness {
         // Fresh-layout defaults and restoration have separate preference tests.
         use sidebar::InspectorSection::*;
         let order = [Outliner, EntityInfo, Units, Components, Tags, Display, View,
-            TimeCostEstimates, Materials, History];
+            TimeCostEstimates, Materials, History, ModelLibrary];
         harness.app.inspector_order = order;
         for key in ["outliner", "entity_info", "units", "components", "tags",
             "display", "view", "time_cost_estimates", "materials", "history"] {

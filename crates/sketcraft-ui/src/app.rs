@@ -120,6 +120,8 @@ mod solid_tools;
 mod stock_settings;
 #[path = "text_tools.rs"]
 mod text_tools;
+#[path = "model_library.rs"]
+mod model_library;
 #[path = "tag_menu.rs"]
 mod tag_menu;
 #[path = "time_estimates.rs"]
@@ -354,6 +356,7 @@ pub struct KetchupApp {
     history_preview: Option<Model>,
     outliner_anchor: Option<u64>,
     outliner_filter: String,
+    model_library: model_library::ModelLibrary,
     outliner_cache: sidebar::OutlinerCache,
     focus_outliner_search: bool,
     line_start: Option<DVec3>,
@@ -522,6 +525,7 @@ impl KetchupApp {
             history_preview: None,
             outliner_anchor: None,
             outliner_filter: String::new(),
+            model_library: Default::default(),
             outliner_cache: Default::default(),
             focus_outliner_search: false,
             line_start: None,

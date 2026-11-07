@@ -1242,6 +1242,25 @@ fn paint_line_icon(p: &egui::Painter, c: Pos2, kind: &str, color: Color32) {
             p.line_segment([c + egui::vec2(-5., -5.), c + egui::vec2(5., 5.)], s);
             p.line_segment([c + egui::vec2(-5., 5.), c + egui::vec2(5., -5.)], s);
         }
+        "model_library" => {
+            p.add(egui::Shape::closed_line(
+                vec![
+                    c + egui::vec2(-9., -6.),
+                    c + egui::vec2(-3., -6.),
+                    c + egui::vec2(-1., -3.),
+                    c + egui::vec2(9., -3.),
+                    c + egui::vec2(9., 7.),
+                    c + egui::vec2(-9., 7.),
+                ],
+                s,
+            ));
+            p.rect_stroke(
+                Rect::from_center_size(c + egui::vec2(0., 2.5), egui::vec2(6., 5.)),
+                0,
+                s,
+                egui::StrokeKind::Middle,
+            );
+        }
         "history" => {
             p.circle_stroke(c, 8., s);
             p.line_segment([c, c + egui::vec2(0., -5.)], s);

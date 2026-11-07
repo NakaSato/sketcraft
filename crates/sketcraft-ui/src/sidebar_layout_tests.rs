@@ -906,11 +906,12 @@ fn estimator_appends_to_previously_complete_orders() {
     let restored = restore_order(Some(&storage));
     assert_eq!(&restored[..previous.len()], previous.as_slice());
     assert_eq!(
-        restored[restored.len() - 3],
+        restored[restored.len() - 4],
         InspectorSection::TimeCostEstimates
     );
-    assert_eq!(restored[restored.len() - 2], InspectorSection::Materials);
-    assert_eq!(restored.last(), Some(&InspectorSection::History));
+    assert_eq!(restored[restored.len() - 3], InspectorSection::Materials);
+    assert_eq!(restored[restored.len() - 2], InspectorSection::History);
+    assert_eq!(restored.last(), Some(&InspectorSection::ModelLibrary));
 }
 
 #[test]
@@ -933,6 +934,7 @@ fn original_fixed_array_order_migrates_without_losing_layout() {
         InspectorSection::TimeCostEstimates,
         InspectorSection::Materials,
         InspectorSection::History,
+        InspectorSection::ModelLibrary,
     ];
     let mut storage = SavedPreferences::default();
     eframe::set_value(&mut storage, ORDER_PREFERENCE_KEY, &original);
@@ -1028,11 +1030,12 @@ fn properties_and_outliner_default_first_and_units_append_to_existing_layouts() 
     assert_eq!(&restored[..previous.len()], previous.as_slice());
     assert_eq!(restored[previous.len()], InspectorSection::Units);
     assert_eq!(
-        restored[restored.len() - 3],
+        restored[restored.len() - 4],
         InspectorSection::TimeCostEstimates
     );
-    assert_eq!(restored[restored.len() - 2], InspectorSection::Materials);
-    assert_eq!(restored.last(), Some(&InspectorSection::History));
+    assert_eq!(restored[restored.len() - 3], InspectorSection::Materials);
+    assert_eq!(restored[restored.len() - 2], InspectorSection::History);
+    assert_eq!(restored.last(), Some(&InspectorSection::ModelLibrary));
 }
 
 #[test]
@@ -1189,6 +1192,7 @@ fn older_section_orders_keep_their_layout_and_append_new_sections() {
             InspectorSection::TimeCostEstimates,
             InspectorSection::Materials,
             InspectorSection::History,
+            InspectorSection::ModelLibrary,
         ]
     );
 }

@@ -83,6 +83,7 @@ fn sidebar_headers_dock_and_rejoin_in_memory_and_keep_their_disclosure_state() {
             InspectorSection::TimeCostEstimates,
             InspectorSection::Materials,
             InspectorSection::History,
+            InspectorSection::ModelLibrary,
         ]
     );
     let order = h.app.inspector_order;

@@ -357,3 +357,33 @@ fn viewed_release_notes_save_immediately_and_restore_for_other_projects() {
     assert!(updated.release_notes.open);
     assert!(updated.release_notes.has_unread());
 }
+
+#[test]
+fn model_library_folder_search_and_format_save_immediately_and_rescan_after_restore() {
+    let ctx = egui::Context::default();
+    let mut storage = SavedPreferences::default();
+    let folder = tempfile::tempdir().unwrap();
+    std::fs::write(folder.path().join("truck.glb"), b"glTF").unwrap();
+    std::fs::write(folder.path().join("canopy.skp"), b"skp").unwrap();
+    let mut app = KetchupApp::with_document(Document::default(), None, true);
+    app.model_library.prefs = super::super::model_library::Preferences {
+        folder: folder.path().to_string_lossy().into_owned(),
+        search: "truck".into(),
+        format: "glb".into(),
+    };
+    app.persist_inspector_changes(&ctx, Some(&mut storage), false);
+    assert!(storage.flushed);
+    assert!(!app.project.modified);
+
+    let mut restored = KetchupApp::with_document(Document::default(), None, true);
+    restored.restore_inspector_preferences(&egui::Context::default(), Some(&storage));
+    assert_eq!(restored.model_library.prefs, app.model_library.prefs);
+    assert!(restored.model_library.scanned.is_none(), "the restored folder rescans when shown");
+    restored.model_library.rescan();
+    let matches = restored.model_library.matches();
+    assert_eq!(matches.len(), 1);
+    assert_eq!(matches[0].relative, "truck.glb");
+
+    let older: InspectorPreferences = serde_json::from_str("{}").unwrap();
+    assert_eq!(older.model_library, Default::default());
+}
