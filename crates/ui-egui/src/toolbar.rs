@@ -3744,7 +3744,13 @@ pub fn shortcuts(app: &mut SolveApp, ctx: &egui::Context) {
                     crate::dialogs::cancel(app);
                 } else if crate::viewport_status::enabled(app) && crate::viewport_status::escape(app, repeat) {
                     app.last_escape = None;
-                } else if !app.session.selection.is_empty() || app.session.active_sketch.is_none() {
+                } else if !app.session.selection.is_empty() {
+                    crate::edit_clipboard::drop_cut(app);
+                    app.tree.picked_joints.clear();
+                    let _ = app.run("select.clear", json!({}));
+                } else if app.session.active_component != 0 {
+                    let _ = app.run("component.activate", json!({ "component": 0 }));
+                } else if app.session.active_sketch.is_none() {
                     crate::edit_clipboard::drop_cut(app);
                     app.tree.picked_joints.clear();
                     let _ = app.run("select.clear", json!({}));
