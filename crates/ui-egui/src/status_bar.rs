@@ -174,6 +174,18 @@ fn paint(app: &mut SolveApp, ui: &mut egui::Ui, contents: &Contents) {
         crate::scenario::publish_target(handle, item);
         right = item.left();
     }
+
+    // Active tool prompt / status message on the left (SketchUp status bar prompt parity)
+    let prompt_text = app.status.as_ref().map(|(msg, _, _)| msg.clone())
+        .or_else(|| app.tool.as_ref().map(|tool| crate::tools::hint(tool.cmd)))
+        .unwrap_or_default();
+    if !prompt_text.is_empty() && right > left + t.space_16 {
+        let max_w = right - left - t.space_8;
+        let prompt_color = app.status.as_ref().map_or(t.text_dim, |(_, _, err)| if *err { t.error } else { t.text });
+        let galley = painter.layout(prompt_text, font, prompt_color, max_w);
+        let pos = pos2(left, r.center().y - galley.size().y / 2.0);
+        painter.galley(pos, galley, prompt_color);
+    }
 }
 
 /// A flat button with the kit's dropdown chevron, its right edge at `right`; a click opens (or
