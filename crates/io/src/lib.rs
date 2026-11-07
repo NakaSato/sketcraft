@@ -344,9 +344,11 @@ pub fn mesh_import_feature_in(bytes: &[u8], file: &str, mm_per_unit: f64) -> Res
         let n = u32::try_from(tris.len()).map_err(|_| IoError::Invalid("STL too large".into()))?;
         let triangles = (0..n).map(|i| [i * 3, i * 3 + 1, i * 3 + 2]).collect();
         (vec![MeshObject { name: stem.clone(), positions, triangles, ..Default::default() }], Vec::new())
-    } else {
+    } else if ext == "3mf" {
         own_units("3MF")?;
         read_3mf(bytes)?
+    } else {
+        return Err(IoError::Invalid(format!("format `.{ext}` is not supported for mesh import")));
     };
     if mm_per_unit != 1.0 {
         let limit = sketcraft_doc::point_cloud::MAX_COORD;

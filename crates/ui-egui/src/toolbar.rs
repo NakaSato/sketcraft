@@ -789,16 +789,15 @@ fn file_menu(app: &mut SolveApp, ctx: &egui::Context) {
                         ui.close();
                     }
                 });
-                if item_if(ui, "Insert STEP…", "", "import", shown) {
+                let import_key = crate::keymap::display_for(app, "file.insert_mesh").unwrap_or_else(|| {
+                    if cfg!(target_os = "macos") { "Cmd+I".into() } else { "Ctrl+I".into() }
+                });
+                if item_if(ui, "Import 3D Model…", &import_key, "import", shown) {
+                    FileAction::Command("file.insert_mesh").run(app);
+                    close = true;
+                }
+                if item_if(ui, "Insert CAD Solid (STEP / DXF)…", "", "import", shown) {
                     FileAction::Command("file.insert_step").run(app);
-                    close = true;
-                }
-                if item_if(ui, "Insert Mesh…", "", "import", shown) {
-                    FileAction::Command("file.insert_mesh").run(app);
-                    close = true;
-                }
-                if item_if(ui, "Insert SketchUp (.skp)…", "", "import", shown) {
-                    FileAction::Command("file.insert_mesh").run(app);
                     close = true;
                 }
                 if item_if(ui, &format!("{}…", app.tr_label("Insert Point Cloud")), "", "import", shown) {

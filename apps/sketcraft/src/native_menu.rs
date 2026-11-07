@@ -50,21 +50,24 @@ impl NativeMenu {
         application.append(&PredefinedMenuItem::services(None))?;
         application.append(&PredefinedMenuItem::separator())?;
         application.append_items(&[
-            &PredefinedMenuItem::hide(Some("Hide SolidCraft")),
+            &PredefinedMenuItem::hide(Some("Hide SketCraft")),
             &PredefinedMenuItem::hide_others(None),
             &PredefinedMenuItem::show_all(None),
             &PredefinedMenuItem::separator(),
         ])?;
-        add(&application, &format!("{} SolidCraft", app.tr("ui.quit")), FileAction::Quit, Some(Accelerator::new(Modifiers::META, Code::KeyQ)))?;
+        add(&application, &format!("{} SketCraft", app.tr("ui.quit")), FileAction::Quit, Some(Accelerator::new(Modifiers::META, Code::KeyQ)))?;
         add(&file, app.tr("ui.new_design"), FileAction::New, Some(Accelerator::new(Modifiers::META, Code::KeyN)))?;
         add(&file, &format!("{}\u{2026}", app.tr("ui.open")), FileAction::Open, Some(Accelerator::new(Modifiers::META, Code::KeyO)))?;
         file.append(&recent)?;
         file.append(&PredefinedMenuItem::separator())?;
-        for (label, command) in
-            [("Insert STEP\u{2026}", "file.insert_step"), ("Insert Mesh\u{2026}", "file.insert_mesh"), ("Insert Design", "component.insert_design")]
-        {
-            add(&file, app.tr_label(label), FileAction::Command(command), None)?;
-        }
+        add(
+            &file,
+            app.tr_label("Import 3D Model\u{2026}"),
+            FileAction::Command("file.insert_mesh"),
+            Some(Accelerator::new(Modifiers::META, Code::KeyI)),
+        )?;
+        add(&file, app.tr_label("Insert CAD Solid (STEP / DXF)\u{2026}"), FileAction::Command("file.insert_step"), None)?;
+        add(&file, app.tr_label("Insert Design"), FileAction::Command("component.insert_design"), None)?;
         file.append(&PredefinedMenuItem::separator())?;
         add(&file, app.tr("ui.save"), FileAction::Save, Some(Accelerator::new(Modifiers::META, Code::KeyS)))?;
         add(

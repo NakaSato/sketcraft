@@ -36,10 +36,11 @@ pub static COMMANDS: &[CommandSpec] = &[
         .at("SOLID", "INSERT")
         .icon("import")
         .params("path: STEP, IGES, FreeCAD .FCStd or Rhino .3dm file (its bodies join the design as an Import base feature in a new component named after the file, placed in the active component; an assembly's products become nested components, a repeated part one component with an occurrence per placement, all held as one rigid group until component.unlock → component, component_name, occurrence, subcomponents?, rigid_joints?, group?: the folder); folder?: bool (default false; true: an import that brings more than one item into the history (its Import feature and the rigid joints holding its parts) goes into a new history folder named `Group #N`); name? (the feature's and the component's); up?: z|y (default z: the file's axes are kept; y: the file has Y up, so the import's component is turned a quarter turn about X, Y becoming Z → stand_up: its occurrence); names?: auto|solid|product|instance (default auto: keep meaningful solid names, replace placeholders with the nearest named product, else instance; solid: the solid's own name; product: the part's name; instance: the occurrence's name, else the product's); matrix?: [12 or 16 numbers] (where the new component's occurrence sits in the active component, after `up`: a rigid row-major 3x4 rotation-and-translation or 4x4 matrix, flat or as rows, as occurrence.move takes it; a scale, shear or mirror is refused before the file is read); tolerance? (see occurrence.move)"),
-    CommandSpec::new("file.insert_mesh", "Insert Mesh", insert_mesh)
+    CommandSpec::new("file.insert_mesh", "Import 3D Model", insert_mesh)
         .at("SOLID", "INSERT")
         .icon("import")
-        .params("path: .3mf, .stl, .obj, .ply (with faces), .glb or .gltf file (its meshes join the design as mesh bodies in a new component named after the file → component, component_name, occurrence; a glTF file's node tree becomes nested components held as one rigid group until component.unlock, a mesh placed again another occurrence, its materials the bodies' appearances, and its metres millimetres); name?; up?: z|y for a glTF file (default y: glTF has Y up, so the import's component is turned a quarter turn about X, Y becoming Z → stand_up: its occurrence; z: the file's axes are kept); units?: mm|cm|m|in|ft for an STL or OBJ file, or a PLY file with faces (default mm): the unit its coordinates are in, scaled to millimetres as the file is read (a 3MF or glTF file states its own). The design keeps the millimetre mesh and not the unit, so insert the file again to try another"),
+        .key("Ctrl+I")
+        .params("path: .3mf, .stl, .obj, .ply (with faces), .glb, .gltf or .skp file (its meshes join the design as mesh bodies in a new component named after the file → component, component_name, occurrence; a glTF or SKP file's node tree becomes nested components held as one rigid group until component.unlock, a mesh placed again another occurrence, its materials the bodies' appearances, and its metres millimetres); name?; up?: z|y for a glTF file (default y: glTF has Y up, so the import's component is turned a quarter turn about X, Y becoming Z → stand_up: its occurrence; z: the file's axes are kept); units?: mm|cm|m|in|ft for an STL or OBJ file, or a PLY file with faces (default mm): the unit its coordinates are in, scaled to millimetres as the file is read (a 3MF, glTF or SketchUp file states its own). The design keeps the millimetre mesh and not the unit, so insert the file again to try another"),
     CommandSpec::new("file.save", "Save", save)
         .icon("save")
         .key("Ctrl+S")
@@ -346,8 +347,8 @@ fn mesh_units(p: &Value, path: &str, cmd: &str) -> Result<Option<(&'static str, 
             .ok_or_else(|| bad(cmd, format!("`units` must be one of {} (not `{u}`)", names())))?,
         Some(_) => return Err(bad(cmd, format!("`units` must be one of {}", names()))),
     };
-    if sketcraft_io::is_gltf_path(path) || path.to_ascii_lowercase().ends_with(".3mf") {
-        return Err(bad(cmd, "`units` applies to STL, OBJ and PLY files only: a 3MF or glTF file states its own"));
+    if sketcraft_io::is_gltf_path(path) || path.to_ascii_lowercase().ends_with(".3mf") || path.to_ascii_lowercase().ends_with(".skp") {
+        return Err(bad(cmd, "`units` applies to STL, OBJ and PLY files only: a 3MF, glTF or SketchUp file states its own"));
     }
     Ok(Some(unit))
 }
@@ -356,7 +357,7 @@ fn insert_mesh(s: &mut Session, p: &Value) -> Result<Value> {
     let cmd = "file.insert_mesh";
     let path = path_arg(p, cmd)?;
     if !sketcraft_io::is_mesh_path(path) && !sketcraft_io::is_ply_path(path) {
-        return Err(bad(cmd, "only 3MF, STL, OBJ, PLY and glTF files (.3mf, .stl, .obj, .ply, .glb, .gltf) can be inserted as meshes"));
+        return Err(bad(cmd, "only 3MF, STL, OBJ, PLY, glTF and SketchUp files (.3mf, .stl, .obj, .ply, .glb, .gltf, .skp) can be inserted as meshes"));
     }
     let up = mesh_up(p, path, cmd)?;
     let unit = mesh_units(p, path, cmd)?;

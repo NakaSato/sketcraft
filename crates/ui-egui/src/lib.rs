@@ -2011,12 +2011,10 @@ impl SolveApp {
             return;
         }
         if id == "file.insert_mesh" {
-            // Insert Mesh is an explicit ask for a mesh: a PLY chosen here is read as one (its
-            // faces), after asking its unit, where any other way of inserting it is a point cloud.
-            // Like Insert SVG it asks the host for its own kind of file (on the web a file dialog,
-            // not the window that also opens and downloads designs), so the file comes straight
-            // back here and nothing has to remember which command asked.
-            self.pick_open_for(&["3mf", "stl", "obj", "ply", "glb", "gltf", "skp"], |app, path| {
+            // Import 3D Model: mesh models (.skp, .stl, .obj, .3mf, .glb, .gltf, .ply).
+            // A PLY chosen here is read as one (its faces), after asking its unit, where
+            // any other way of inserting it is a point cloud.
+            self.pick_open_for(&["skp", "stl", "obj", "3mf", "glb", "gltf", "ply"], |app, path| {
                 if let Some(path) = path
                     && !mesh_units::ask_ply_as_mesh(app, &path)
                 {
