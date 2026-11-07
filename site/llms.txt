@@ -19,7 +19,7 @@ SketCraft helps woodworkers, furniture makers, and DIY builders model shelves, t
 
 - [Homepage](https://ketchup3d.github.io/app/): overview, features, and platform downloads.
 - [Browser editor](https://ketchup3d.github.io/app/play/): try the application.
-- [Source repository](https://github.com/Ketchup3D/app): implementation and developer documentation.
-- [User guide](https://github.com/Ketchup3D/app/tree/main/docs): modeling instructions and workflows.
-- [Latest desktop release](https://github.com/Ketchup3D/app/releases/latest): downloads and release notes.
-- [MIT license](https://github.com/Ketchup3D/app/blob/main/LICENSE).
+- [Source repository](https://github.com/NakaSato/sketcraft): implementation and developer documentation.
+- [User guide](https://github.com/NakaSato/sketcraft/tree/main/docs): modeling instructions and workflows.
+- [Latest desktop release](https://github.com/NakaSato/sketcraft/releases/latest): downloads and release notes.
+- [MIT license](https://github.com/NakaSato/sketcraft/blob/main/LICENSE).

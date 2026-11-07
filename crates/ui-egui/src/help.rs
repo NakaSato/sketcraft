@@ -192,7 +192,7 @@ fn about(app: &mut SolveApp, ctx: &egui::Context) {
             );
             ui_kit::text(
                 ui,
-                crate::i18n::tr_label("Open-source parametric 3D CAD in Rust. Licensed MIT OR Apache-2.0."),
+                crate::i18n::tr("help.about_description"),
                 ui_kit::Text::Note("description"),
             );
             let copy = ui_kit::button(ui, crate::i18n::tr_label("Copy diagnostic information"), ui_kit::Button::Normal);

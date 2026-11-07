@@ -4,7 +4,7 @@
 
 ## Install a packaged release
 
-Download the installer or AppImage from [Releases](https://github.com/Ketchup3D/app/releases).
+Download the installer or AppImage from [Releases](https://github.com/NakaSato/sketcraft/releases).
 Workflow artifacts are also available on the run's summary page for 14 days.
 On Linux, keep the AppImage in a user-writable location, run `chmod +x` on it,
 and launch it. AppImage mounting may require your distro's FUSE 2 compatibility

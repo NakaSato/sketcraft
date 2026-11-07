@@ -1,13 +1,13 @@
 # SketCraft
 
-[![Try SketCraft in your browser](https://img.shields.io/badge/Try_SketCraft_in_your_browser-d63b32?style=for-the-badge)](https://ketchup3d.github.io/app/play/)
-[![Download the latest release](https://img.shields.io/badge/Download-555555?style=for-the-badge)](https://github.com/Ketchup3D/app/releases/latest)
+[![Try SketCraft in your browser](https://img.shields.io/badge/Try_SketCraft_in_your_browser-d63b32?style=for-the-badge)](https://nakasato.github.io/sketcraft/play/)
+[![Download the latest release](https://img.shields.io/badge/Download-555555?style=for-the-badge)](https://github.com/NakaSato/sketcraft/releases/latest)
 
 SketCraft is a SketchUp-style 3D modeler written in Rust. The same editor runs as a native
 Windows, macOS or Linux application and in a desktop browser through WebAssembly.
 
-It is built on a fork of SketCraft, a parametric CAD workspace, so SketchUp's way of working
-sits on top of a real solid-modeling core:
+It is built on a parametric CAD workspace, so SketchUp's way of working sits on top of a real
+solid-modeling core:
 
 - **SketchUp first.** The app opens on the **SketchUp** ribbon tab, which holds SketchUp's Large
   Tool Set: Select, Eraser and Paint; Line, Arc, Rectangle, Circle and Polygon; Push/Pull,
@@ -197,8 +197,8 @@ configured signing fails rather than silently producing unsigned files.
 [Deploy GitHub Pages](.github/workflows/pages.yml) builds the browser editor into
 `dist/site/play/` and the landing page from [`site/`](site/index.html) into `dist/site/`. It runs
 after a release workflow succeeds, or by hand from the Actions tab. Set **Settings › Pages ›
-Source** to **GitHub Actions** once. The site is at <https://ketchup3d.github.io/app/>, the
-editor at <https://ketchup3d.github.io/app/play/>. Browser work is saved locally; GitHub Pages
+Source** to **GitHub Actions** once. The site is at <https://nakasato.github.io/sketcraft/>, the
+editor at <https://nakasato.github.io/sketcraft/play/>. Browser work is saved locally; GitHub Pages
 is not model storage.
 
 ## License

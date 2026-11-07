@@ -1,0 +1,35 @@
+{
+  "en": {
+    "help.about_description": "SketchUp-style 3D modeler in Rust, on a solid-modeling core. Licensed MIT OR Apache-2.0."
+  },
+  "en-GB": {
+    "help.about_description": "SketchUp-style 3D modeller in Rust, on a solid-modelling core. Licensed MIT OR Apache-2.0."
+  },
+  "ar": {
+    "help.about_description": "برنامج نمذجة ثلاثية الأبعاد بأسلوب SketchUp مكتوب بلغة Rust، مبني على نواة نمذجة مجسمات. الترخيص: MIT OR Apache-2.0."
+  },
+  "de": {
+    "help.about_description": "3D-Modellierer im Stil von SketchUp, geschrieben in Rust, auf einem Volumenmodellierungskern. Lizenz: MIT OR Apache-2.0."
+  },
+  "es": {
+    "help.about_description": "Modelador 3D al estilo de SketchUp escrito en Rust, sobre un núcleo de modelado de sólidos. Licencia: MIT OR Apache-2.0."
+  },
+  "fr": {
+    "help.about_description": "Modeleur 3D à la manière de SketchUp, écrit en Rust, sur un noyau de modélisation de solides. Licence : MIT OR Apache-2.0."
+  },
+  "he": {
+    "help.about_description": "כלי מידול תלת־ממדי בסגנון SketchUp שנכתב ב־Rust, על גבי ליבת מידול מוצקים. רישיון: MIT OR Apache-2.0."
+  },
+  "ja": {
+    "help.about_description": "ソリッドモデリングのコアを持つ、Rust 製の SketchUp スタイル 3D モデラー。ライセンス: MIT OR Apache-2.0。"
+  },
+  "ko": {
+    "help.about_description": "솔리드 모델링 코어 위에서 동작하는, Rust로 만든 SketchUp 스타일 3D 모델러. 라이선스: MIT OR Apache-2.0."
+  },
+  "vi": {
+    "help.about_description": "Phần mềm dựng mô hình 3D theo phong cách SketchUp viết bằng Rust, trên lõi mô hình hóa khối đặc. Giấy phép MIT OR Apache-2.0."
+  },
+  "zh": {
+    "help.about_description": "基于实体建模内核、用 Rust 编写的 SketchUp 风格 3D 建模软件。许可证：MIT OR Apache-2.0。"
+  }
+}
