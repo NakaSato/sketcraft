@@ -72,7 +72,9 @@ pub fn started(app: &SolveApp) -> bool {
 /// Note a press at `at` when it is on a planar face or a profile.
 pub fn press(app: &mut SolveApp, proj: &Proj, at: Pos2) {
     app.viewport.drag_extrude.gesture = None;
-    if !app.preferences.direct_interaction {
+    let push_pull_active = app.dialog.as_ref().is_some_and(|d| d.press_pull)
+        || app.tool.as_ref().is_some_and(|t| t.cmd == "solid.press_pull");
+    if !app.preferences.direct_interaction && !push_pull_active {
         return;
     }
     let hits = crate::viewport::pick(app, proj, at);
@@ -128,11 +130,18 @@ fn pulls(proj: &Proj, g: &Gesture, p: Pos2) -> bool {
 pub fn to(app: &mut SolveApp, proj: &Proj, p: Pos2) {
     let Some(mut g) = app.viewport.drag_extrude.gesture.clone() else { return };
     if !g.started {
-        if app.dialog.is_some() || !pulls(proj, &g, p) {
+        let press_pull_waiting = app.dialog.as_ref().is_some_and(|d| d.press_pull);
+        if (app.dialog.is_some() && !press_pull_waiting) || !pulls(proj, &g, p) {
             return;
         }
         crate::viewport::select(app, Some(g.sel.clone()), false, false);
-        app.start("solid.press_pull");
+        if press_pull_waiting {
+            if let Some(d) = app.dialog.as_mut() {
+                d.pick(&app.session, g.sel.clone());
+            }
+        } else {
+            app.start("solid.press_pull");
+        }
         if !matches!(app.dialog.as_ref().map(|d| &d.kind), Some(Kind::Extrude { .. })) {
             app.viewport.drag_extrude.gesture = None;
             return;
