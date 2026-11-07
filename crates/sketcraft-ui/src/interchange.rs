@@ -38,7 +38,9 @@ fn decode_model(json: &str, name: &str) -> Result<Model, String> {
     // The adapter always emits the outer import group last.
     if let Some((_, group)) = model.objects.last_key_value() {
         let id = group.id;
-        model.objects.get_mut(&id).unwrap().name = name.to_owned();
+        if let Some(object) = model.objects.get_mut(&id) {
+            object.name = name.to_owned();
+        }
     }
     Ok(model)
 }
@@ -101,53 +103,8 @@ fn js_error(error: eframe::wasm_bindgen::JsValue) -> String {
         .unwrap_or_else(|| "SketchUp reader failed".into())
 }
 
-/// OBJ uses metre coordinates with KetchUp's Z-up convention. Triangulating
-/// faces keeps holes intact even in readers without polygon-hole support.
-pub fn export_obj(model: &Model) -> Result<String, String> {
-    use std::{collections::BTreeMap, fmt::Write};
-    let mut out = String::from("# KetchUp OBJ export\n# Units: metres; Z up\n");
-    let visible_vertices: std::collections::BTreeSet<_> = model
-        .edges
-        .values()
-        .filter(|e| !model.is_hidden(e.id))
-        .flat_map(|e| [e.a, e.b])
-        .chain(
-            model
-                .faces
-                .values()
-                .filter(|f| !model.is_hidden(f.id))
-                .flat_map(|f| f.vertices.iter().chain(f.holes.iter().flatten()).copied()),
-        )
-        .collect();
-    let mut indices = BTreeMap::new();
-    let mut positions = BTreeMap::new();
-    for vertex in model
-        .vertices
-        .values()
-        .filter(|v| visible_vertices.contains(&v.id))
-    {
-        let p = vertex.position;
-        let _ = writeln!(out, "v {} {} {}", p.x, p.y, p.z);
-        indices.insert(vertex.id, indices.len() + 1);
-        positions.insert(p.to_array().map(f64::to_bits), indices[&vertex.id]);
-    }
-    for face in model.faces.values().filter(|f| !model.is_hidden(f.id)) {
-        for triangle in model.face_triangles(face) {
-            let [a, b, c] = triangle.map(|p| positions[&p.to_array().map(f64::to_bits)]);
-            let _ = writeln!(out, "f {a} {b} {c}");
-        }
-    }
-    for edge in model.edges.values().filter(|e| !model.is_hidden(e.id)) {
-        let _ = writeln!(out, "l {} {}", indices[&edge.a], indices[&edge.b]);
-    }
-    if !out
-        .lines()
-        .any(|line| line.starts_with("f ") || line.starts_with("l "))
-    {
-        return Err("There is no visible geometry to export".into());
-    }
-    Ok(out)
-}
+/// OBJ export lives in the core so the example generator and the app share it.
+pub use sketcraft_core::obj::export_obj;
 
 #[cfg(test)]
 #[path = "interchange_tests.rs"]

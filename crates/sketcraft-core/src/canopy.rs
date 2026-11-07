@@ -428,7 +428,7 @@ pub fn export_canopy_files(target_dir: &std::path::Path) -> Result<(), String> {
     let ketchup_path = target_dir.join("Canopy.ketchup");
     std::fs::write(&ketchup_path, json.as_bytes()).map_err(|e| e.to_string())?;
 
-    let obj_content = crate::skp::export_obj(&doc.model)?;
+    let obj_content = crate::obj::export_obj(&doc.model)?;
     let obj_path = target_dir.join("canopy.obj");
     std::fs::write(&obj_path, obj_content.as_bytes()).map_err(|e| e.to_string())?;
 
@@ -471,7 +471,7 @@ mod tests {
         assert_eq!(restored.name, "Service Station Canopy");
 
         // Verify OBJ export
-        let obj = crate::skp::export_obj(&doc.model).expect("OBJ export must succeed");
+        let obj = crate::obj::export_obj(&doc.model).expect("OBJ export must succeed");
         assert!(obj.contains("v ") && obj.contains("f "));
     }
 

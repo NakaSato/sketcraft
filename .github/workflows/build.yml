@@ -132,8 +132,8 @@ jobs:
           mkdir -p dist package/licenses/skp
           cp "target/${{ matrix.target }}/release/${{ matrix.executable }}" package/
           cp LICENSE README.md package/
-          cp crates/sketcraft-core/vendor/skp/LICENSE* package/licenses/skp/
-          cp crates/sketcraft-core/vendor/skp/native/miniz/LICENSE package/licenses/skp/LICENSE-miniz
+          cp crates/sketcraft-ui/vendor/skp/LICENSE* package/licenses/skp/
+          cp crates/sketcraft-ui/vendor/skp/native/miniz/LICENSE package/licenses/skp/LICENSE-miniz
 
       - name: Create installer and update feed
         run: python scripts/desktop_release.py package --tag "$TAG_NAME" --platform "${{ matrix.platform }}"
