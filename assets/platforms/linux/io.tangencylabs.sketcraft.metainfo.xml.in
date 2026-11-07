@@ -26,9 +26,9 @@
   </description>
   <launchable type="desktop-id">io.tangencylabs.sketcraft.desktop</launchable>
   <icon type="stock">io.tangencylabs.sketcraft</icon>
-  <url type="homepage">https://docs.sketcraft.io/</url>
+  <url type="homepage">https://github.com/NakaSato/sketcraft</url>
   <url type="bugtracker">https://github.com/NakaSato/sketcraft/issues</url>
-  <url type="help">https://docs.sketcraft.io/</url>
+  <url type="help">https://github.com/NakaSato/sketcraft/tree/main/docs</url>
   <categories>
     <category>Graphics</category>
     <category>3DGraphics</category>

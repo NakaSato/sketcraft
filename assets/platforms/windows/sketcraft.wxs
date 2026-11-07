@@ -34,7 +34,7 @@
     <!-- Advertised shortcuts to an .exe need an .exe icon identifier (ICE50). -->
     <Icon Id="SketcraftIcon.exe" SourceFile="$(var.IconPath)" />
     <Property Id="ARPPRODUCTICON" Value="SketcraftIcon.exe" />
-    <Property Id="ARPURLINFOABOUT" Value="https://docs.sketcraft.io/" />
+    <Property Id="ARPURLINFOABOUT" Value="https://github.com/NakaSato/sketcraft" />
     <Property Id="ARPURLUPDATEINFO" Value="https://github.com/NakaSato/sketcraft/releases" />
     <Property Id="ARPHELPLINK" Value="https://github.com/NakaSato/sketcraft/issues" />
 

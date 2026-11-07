@@ -396,7 +396,7 @@ pub fn no_window_message(error: &str, settings: Option<&Path>) -> String {
          - Over Remote Desktop or in a virtual machine, enable 3D acceleration or run it on the machine itself.\n\
          - Start it once with `sketcraft --safe-mode`.\n\
          - Rename the settings folder: {folder}\n\n\
-         More: https://docs.sketcraft.io/guide/troubleshooting.html"
+         If it still fails, report it: https://github.com/NakaSato/sketcraft/issues"
     )
 }
 

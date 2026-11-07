@@ -11,7 +11,7 @@ pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 pub const COMMIT: &str = env!("SKETCRAFT_COMMIT");
 pub const BUILD_DATE: &str = env!("SKETCRAFT_BUILD_DATE");
 /// The user and developer guide (docs/book, published by .github/workflows/pages.yml).
-pub const DOCS_URL: &str = "https://docs.sketcraft.io/";
+pub const DOCS_URL: &str = "https://github.com/NakaSato/sketcraft/tree/main/docs";
 const ATTRIBUTION: &str = include_str!("../../../ATTRIBUTION.md");
 use sketcraft_engine::licences::{LICENSE_APACHE, LICENSE_MIT, NOTICE, THIRD_PARTY};
 
