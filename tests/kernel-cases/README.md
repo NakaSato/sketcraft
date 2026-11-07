@@ -1,14 +1,14 @@
 # Kernel regression rig
 
 Every geometry case the old kernel (truck) got wrong, recorded in an issue, a pull request or a
-crash report, is a use case here with its own right answer. The kernel, solidcore, is held to all
+crash report, is a use case here with its own right answer. The kernel, sketcore, is held to all
 of them. `cargo xtask kernel-cases` runs them and writes
 [`docs/kernel-cases.md`](../../docs/kernel-cases.md).
 
-**This folder takes no new cases.** New kernel cases go to solidcore's corpus,
+**This folder takes no new cases.** New kernel cases go to sketcore's corpus,
 `crates/solidcore/tests/kernel_cases/<area>/` in
 [tangency-labs/solidcore](https://github.com/tangency-labs/solidcore) (see
-[Exporting to solidcore](#exporting-to-solidcore)). `CASES` lists every case here and only
+[Exporting to sketcore](#exporting-to-sketcore)). `CASES` lists every case here and only
 shrinks: `cargo xtask lists` fails on a case it does not list, and on a listed case that is gone.
 
 ```sh
@@ -144,7 +144,7 @@ cargo xtask kernel-cases --area <area> --cli target/release/sketcraft-cli \
 
 `<area>/KNOWN_FAILING` lists the cases of that area that fail today, sorted, one a line with its
 cause (`<case> <why it fails today>`; `#` starts a comment; the header names the baseline: the
-solidcore pin it was taken from). The gate fails on a **regression**, a
+sketcore pin it was taken from). The gate fails on a **regression**, a
 case that fails (or crashes, hangs, or is not supported yet) and is not listed, and on a
 **fixed** case, one listed that passes. With `--known-failing` the run writes no report;
 `docs/kernel-cases.md` stays the full run's.
@@ -152,9 +152,9 @@ case that fails (or crashes, hangs, or is not supported yet) and is not listed, 
 **Updating a list.** The pull request that changes an outcome changes the list in the same pull
 request, so the list only shrinks and never goes stale:
 
-- a fix (yours, or a solidcore pin bump): remove the line of each case the shard reports as
+- a fix (yours, or a sketcore pin bump): remove the line of each case the shard reports as
   `FIXED`;
-- a case here that starts failing for a reason the kernel owns (a solidcore pin bump): add its
+- a case here that starts failing for a reason the kernel owns (a sketcore pin bump): add its
   line, sorted, with the cause from its result (`results.json` in the shard's
   `kernel-rig-results-<area>` artifact, or a local run);
 - a regression: fix it in the same pull request.
@@ -183,7 +183,7 @@ starts no job at all. To see what a change would run:
 
 The plan finds the areas from the folders, so the workflow needs no edit when an area's `PATHS`
 changes (unless a glob lies outside the trigger paths, which the self-test reports). No new area
-joins: new kernel cases go to solidcore's corpus.
+joins: new kernel cases go to sketcore's corpus.
 
 ### Every command has a case
 
@@ -195,7 +195,7 @@ view, rendering, appearance, files, component and parameter bookkeeping, ...). L
 make geometry and wait for a case: that section only shrinks. The check also fails on a listed
 command that a case now uses (remove its line in the same pull request) or that the registry no
 longer has. A new command gets an `EXEMPT` line before `[to cover]` whose reason names where it
-is tested: its kernel case in solidcore's corpus, or its test in its area's test file. The build
+is tested: its kernel case in sketcore's corpus, or its test in its area's test file. The build
 job runs for this check on any change to `crates/engine/src/cmd/`, a recipe or `EXEMPT`, even when no area does.
 
 ## The complexity ladder
@@ -238,9 +238,9 @@ Per case: **pass**; **fail** with the numbers; **not supported yet** (the kernel
 so, or the case names a `missing` capability); **crash** (a panic caught by the guards, or the process died); **hang** (no result before
 the timeout).
 
-## Exporting to solidcore
+## Exporting to sketcore
 
-solidcore holds the kernel cases as a corpus of kernel operations,
+sketcore holds the kernel cases as a corpus of kernel operations,
 `crates/solidcore/tests/kernel_cases/<area>/<case>.json`, described in that folder's README.
 `cargo xtask kernel-cases [--ladder] [--area AREA] --export DIR` writes each case here as such
 an entry: the kernel operations that made its result, their operand records
@@ -249,7 +249,7 @@ every case that is not expressible as kernel input and why.
 
 A new kernel case: draft it here as `<area>/<id>/recipe.json` and `expected.json` (the format
 above, answers in closed form or exact), export it with `--area <area> --export DIR`, add
-`DIR/<area>/<id>.json` and its `.bodies.json.gz` to solidcore's corpus in a pull request there,
+`DIR/<area>/<id>.json` and its `.bodies.json.gz` to sketcore's corpus in a pull request there,
 and delete the draft (it is not in `CASES`, so it cannot be committed here). An entry can also be
-written by hand as solidcore's README describes. A case about a command, the UI or a product
+written by hand as sketcore's README describes. A case about a command, the UI or a product
 rule stays in SketCraft as a test in its area's existing test file.

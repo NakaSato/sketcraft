@@ -1,7 +1,7 @@
-//! Fillets and chamfers on solidcore, against closed forms: every result exports to a record that
+//! Fillets and chamfers on sketcore, against closed forms: every result exports to a record that
 //! validates.
 //!
-//! The bodies are solidcore's own boxes and cylinders.
+//! The bodies are sketcore's own boxes and cylinders.
 
 use std::collections::BTreeMap;
 use std::f64::consts::PI;
@@ -215,7 +215,7 @@ struct Measured {
     kinds: BTreeMap<String, usize>,
 }
 
-fn kinds(rec: &solidcore_record::brep::Brep) -> BTreeMap<String, usize> {
+fn kinds(rec: &sketcore_record::brep::Brep) -> BTreeMap<String, usize> {
     let mut out = BTreeMap::new();
     for f in &rec.faces {
         let v = serde_json::to_value(&f.surface).unwrap();
@@ -248,13 +248,13 @@ fn timed<T: Send + 'static>(name: &str, f: impl FnOnce() -> T + Send + 'static) 
             Err(p) => std::panic::resume_unwind(p),
             Ok(()) => panic!("{name}: no result"),
         },
-        Err(mpsc::RecvTimeoutError::Timeout) => panic!("{name}: solidcore hung (no result after {TIMEOUT:?})"),
+        Err(mpsc::RecvTimeoutError::Timeout) => panic!("{name}: sketcore hung (no result after {TIMEOUT:?})"),
     }
 }
 
 type Got = std::result::Result<Measured, Error>;
 
-/// `e` without the size solidcore names for a blend too large ([`Error::TooLarge`]): the C++
+/// `e` without the size sketcore names for a blend too large ([`Error::TooLarge`]): the C++
 /// kernel's [`Error::NoRoom`], which the capi here does not size.
 fn without_size(e: Error) -> Error {
     if matches!(e, Error::TooLarge { .. }) { Error::NoRoom } else { e }
@@ -273,7 +273,7 @@ fn judge(name: &str, who: &str, expect: &Expect, got: Got) -> Got {
     got
 }
 
-fn solidcore_case(name: &'static str) -> Got {
+fn sketcore_case(name: &'static str) -> Got {
     timed(name, move || {
         let c = case(name);
         let got = on_core(name, &c).map(|body| {
@@ -283,7 +283,7 @@ fn solidcore_case(name: &'static str) -> Got {
             sketcraft_geom::brep::check::validate(&rec).unwrap_or_else(|e| panic!("{name}: record: {e}"));
             Measured { volume: v, counts: n, kinds: kinds(&rec) }
         });
-        judge(name, "solidcore", &c.expect, got)
+        judge(name, "sketcore", &c.expect, got)
     })
 }
 
@@ -292,8 +292,8 @@ macro_rules! cases {
         mod $m {
             #[test]
             $(#[$ign])?
-            fn solidcore_matches_the_closed_form() {
-                let _ = super::solidcore_case(stringify!($m));
+            fn sketcore_matches_the_closed_form() {
+                let _ = super::sketcore_case(stringify!($m));
             }
         }
     )*};
@@ -316,7 +316,7 @@ cases!(
     pick_ambiguous,
 );
 
-/// What solidcore does not have yet is refused as not supported, after the capi's own checks.
+/// What sketcore does not have yet is refused as not supported, after the capi's own checks.
 #[test]
 fn fork_only_blends_are_not_supported_yet() {
     let r = timed("unsupported", || {
@@ -332,7 +332,7 @@ fn fork_only_blends_are_not_supported_yet() {
 }
 
 /// #199's bar, 14 x 6 x 10, its four upright edges rounded: past r 3 (a full round of the 6 mm
-/// ends) the two rounds on each end would cross. solidcore refuses it with the largest radius that
+/// ends) the two rounds on each end would cross. sketcore refuses it with the largest radius that
 /// builds and its edge (`SolidError::FilletRefused`, `fixes.fillet_gn_section_generator`): 3, and a
 /// point halfway up an upright edge; an equal chamfer of the 4 mm rib's top edges past 2, as its
 /// distance.
@@ -356,7 +356,7 @@ fn a_blend_too_large_is_refused_with_the_largest_size_that_fits() {
 /// A cliff overflow the fork refuses too (`fixes.fillet_cliff_overflow`, solidcore#960): the
 /// three edges at a 20 mm cube's corner rounded r20, their fillet's boundary on two faces'
 /// surfaces, has no room, as on the fork, not "not supported": too large, the largest radius that
-/// builds 19.99 (the whole edge less solidcore's fit margin), which builds.
+/// builds 19.99 (the whole edge less sketcore's fit margin), which builds.
 #[test]
 fn a_cliff_overflow_the_fork_refuses_has_no_room() {
     let corner = [[10.0, 0.0, 0.0], [0.0, 10.0, 0.0], [0.0, 0.0, 10.0]];
@@ -451,7 +451,7 @@ fn rounds_at_a_concave_face_corner_are_mitred() {
 /// rounds' part beyond both walls, whose section's first moment about the upright edge is
 /// M = (5/6 - π/4) r³: mitred, 8 M in all; swept, the section revolved a quarter turn at each,
 /// 2π M, the corner a horn torus of radii r, r. Swept with unequal radii, or along a pocket's floor
-/// (its upright edges sharp and concave), is refused with solidcore's reason.
+/// (its upright edges sharp and concave), is refused with sketcore's reason.
 #[test]
 fn rounds_turning_round_a_boss_edge_mitred_or_swept() {
     let made = |a: Body, b: Body, op| boolean(&a, &b, op).unwrap().unwrap();
@@ -464,17 +464,17 @@ fn rounds_turning_round_a_boss_edge_mitred_or_swept() {
     let r = 1.0;
     let rounded =
         move |body: Body, at: [[f64; 3]; 4], turn, sizes: [f64; 4]| blend_dropping(&body, Blend::Round, turn, &at, &sizes, 0.1).map(|(b, _)| b);
-    // solidcore's tori, and the record's kinds of surface: its torus is a ring torus, so a horn
+    // sketcore's tori, and the record's kinds of surface: its torus is a ring torus, so a horn
     // torus's face there is its exact rational form.
     let measured = |b: &Body| {
-        use solidcore::surface::surface::p2::SurfaceKind;
+        use sketcore::surface::surface::p2::SurfaceKind;
         let (rec, _) = native(&to_arrays(b).unwrap()).unwrap();
         rec.validate().unwrap();
         let mut tori = Vec::new();
         {
             let g = b.0.lock().unwrap();
-            for f in solidcore::query::api_queries::get_faces(&g).unwrap() {
-                if let Some(s) = solidcore::topology::face::p2::surface(&g, f).unwrap()
+            for f in sketcore::query::api_queries::get_faces(&g).unwrap() {
+                if let Some(s) = sketcore::topology::face::p2::surface(&g, f).unwrap()
                     && let SurfaceKind::Torus(t) = s.kind()
                 {
                     tori.push((t.major_radius(), t.minor_radius()));
@@ -510,18 +510,18 @@ fn rounds_turning_round_a_boss_edge_mitred_or_swept() {
     );
 }
 
-/// Solidcore alone: edge attributes across a cliff overflow. A 40 x 30 x 10 block notched below its
+/// Sketcore alone: edge attributes across a cliff overflow. A 40 x 30 x 10 block notched below its
 /// top at (40, 0), its front and right top edges rounded r8 (their rails run off over the notch).
 /// The back and left top edges are each trimmed 8 by those rounds: (0, 30)-(32, 30) and (0, 8)-(0, 30)
 /// at z = 10, and each piece keeps its edge's attribute (`Behavior::Copy`), as on the fork.
 #[test]
 fn an_edge_tag_crosses_a_cliff_overflow() {
-    use solidcore::blend::fillet_executive::session::FilletSession;
-    use solidcore::boolean::api_brep::boolean_difference;
-    use solidcore::geom::attribute::{Attribute, Behavior};
-    use solidcore::primitive::api_primitives::create_box;
-    use solidcore::topology::{Brep, EdgeId, edge, vertex};
-    use solidcore::{EntityRef, Kernel, Point3};
+    use sketcore::blend::fillet_executive::session::FilletSession;
+    use sketcore::boolean::api_brep::boolean_difference;
+    use sketcore::geom::attribute::{Attribute, Behavior};
+    use sketcore::primitive::api_primitives::create_box;
+    use sketcore::topology::{Brep, EdgeId, edge, vertex};
+    use sketcore::{EntityRef, Kernel, Point3};
     fn between(b: &Brep, a: Point3, q: Point3) -> Option<EdgeId> {
         b.edges().ids().find(|&e| {
             let (s, t) = edge::start_end_vertices(b, e).unwrap();
@@ -556,18 +556,18 @@ fn an_edge_tag_crosses_a_cliff_overflow() {
     }
 }
 
-/// Solidcore alone: the pocket rim chamfered 5.5, as `fillet_mitre_concave_face_corners`' own test
+/// Sketcore alone: the pocket rim chamfered 5.5, as `fillet_mitre_concave_face_corners`' own test
 /// does it, with `keep_operand_uv_trims` on too, on the body the boolean gives:
 /// 21000 - (50 d² + 4/3 d³) = 19265.666666667 (the fork, and the same body through the flat
 /// arrays). Without `fillet_run_on_bspline_trims` it is refused: error 3, Corner Edge Computation
 /// Failure (solidcore#1981).
 #[test]
 fn pocket_chamfer_on_a_boolean_body() {
-    use solidcore::blend::fillet_executive::session::FilletSession;
-    use solidcore::boolean::api_brep::boolean_difference;
-    use solidcore::primitive::api_primitives::create_box;
-    use solidcore::topology::{EdgeId, edge, vertex};
-    use solidcore::{Kernel, Point3};
+    use sketcore::blend::fillet_executive::session::FilletSession;
+    use sketcore::boolean::api_brep::boolean_difference;
+    use sketcore::primitive::api_primitives::create_box;
+    use sketcore::topology::{EdgeId, edge, vertex};
+    use sketcore::{Kernel, Point3};
     let p = Point3::new;
     let mut k = Kernel::default();
     k.fixes.fillet_refuse_rails_leaving_faces = true;
@@ -922,7 +922,7 @@ fn tabbed_plate_rounds_mitred_on_the_arcs_continuation() {
 /// with one blend on its top front edge (y = 0, z = 10), leaves the bottom and back as they were,
 /// trims the top, front and both sides, and makes the blend face.
 mod history {
-    use solidcore_record::brep::history::Change;
+    use sketcore_record::brep::history::Change;
 
     use crate::history::Raw;
     use crate::{Blend, Brep};

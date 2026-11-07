@@ -32,7 +32,7 @@ fn independent_links(sketch: &sketcraft_sketch::Sketch, features: &BTreeSet<u64>
             L::Text { .. } | L::SketchAxis { .. } => true,
             L::SketchCurve { sketch, .. } | L::SketchPoint { sketch, .. } => features.contains(sketch),
             L::Origin | L::Axis { .. } => !moved,
-            L::Plane { name } => !moved && solidcore_record::Plane::named(name).is_some(),
+            L::Plane { name } => !moved && sketcore_record::Plane::named(name).is_some(),
             _ => false,
         };
         if !supported {

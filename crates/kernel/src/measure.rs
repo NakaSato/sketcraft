@@ -1,5 +1,5 @@
 use serde::Serialize;
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 use sketcraft_geom::Aabb3;
 
 use crate::Result;
@@ -141,7 +141,7 @@ mod tests {
     // A body's measured volume does not depend on where it sits: the same revolved ring of cones
     // and cylinders, moved far from the origin, measures what it measures at the origin.
     use crate::{revolve, transform};
-    use solidcore_record::{Loop2, Plane, Region2, Vec2};
+    use sketcore_record::{Loop2, Plane, Region2, Vec2};
     use std::f64::consts::{PI, TAU};
 
     /// Ring cross-section in (radius, height): cones top and bottom, cylinders inside and out.

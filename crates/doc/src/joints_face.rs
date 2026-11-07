@@ -7,7 +7,7 @@
 use sketcraft_geom::prelude::*;
 use std::collections::{BTreeMap, BTreeSet};
 
-use solidcore_record::{Loop2, Plane, Vec2, Vec3};
+use sketcore_record::{Loop2, Plane, Vec2, Vec3};
 use sketcraft_geom::{Mesh, Ring};
 use sketcraft_kernel::CylinderFace;
 

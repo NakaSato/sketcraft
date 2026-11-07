@@ -4,7 +4,7 @@ use sketcraft_geom::prelude::*;
 use std::collections::HashMap;
 
 use serde_json::{Value, json};
-use solidcore_record::Vec2;
+use sketcore_record::Vec2;
 use sketcraft_io::{Geom2, MAX_DRAWING_BYTES};
 use sketcraft_sketch::{CurveKind, LinkKind, LinkSource, Sketch};
 
@@ -170,7 +170,7 @@ fn bounds_of(geom: &[Geom2]) -> Option<(Vec2, Vec2)> {
             // Points along the curve, not its apex, which can lie well outside it (an elliptical
             // arc of a DXF comes in as conics, #8155).
             Geom2::Conic { a, apex, b, rho } if *rho > 0.0 && *rho < 1.0 => {
-                let seg = solidcore_record::Seg2::Conic { a: *a, apex: *apex, b: *b, w: rho / (1.0 - rho) };
+                let seg = sketcore_record::Seg2::Conic { a: *a, apex: *apex, b: *b, w: rho / (1.0 - rho) };
                 pts.extend((0..=64).map(|i| seg.point_at(f64::from(i) / 64.0)));
             }
             Geom2::Conic { a, apex, b, .. } => pts.extend([*a, *apex, *b]),

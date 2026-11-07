@@ -53,7 +53,7 @@
 use crate::bspline::{NurbsSurface, SplineError, SplineResult, invalid};
 use crate::prelude::*;
 use crate::spline_space::{Cond, Interpolant, Linear, Monotone, Space, embed};
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 
 /// Most curves in one direction of a network.
 pub const MAX_NETWORK_CURVES: usize = 32;

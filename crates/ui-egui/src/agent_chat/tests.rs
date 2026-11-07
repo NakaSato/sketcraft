@@ -128,8 +128,8 @@ fn chat() -> AgentChat {
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-fn app_with_discovered_login() -> SolveApp {
-    let mut app = SolveApp::new(sketcraft_engine::Session::default(), crate::Services::default());
+fn app_with_discovered_login() -> SketApp {
+    let mut app = SketApp::new(sketcraft_engine::Session::default(), crate::Services::default());
     app.agent_chat.detection = Some(discover::Detection {
         found: vec![discover::Found {
             id: "qwen",
@@ -184,7 +184,7 @@ while IFS= read -r line; do :; done
     let result = acp_client::test_agent(&argv, &std::env::temp_dir());
     assert_eq!(result, Err(backend::TestError::AuthRequired), "keep the protocol error, not translated text");
     let mut app = app_with_discovered_login();
-    let complete = |app: &mut SolveApp, result| {
+    let complete = |app: &mut SketApp, result| {
         let (tx, rx) = channel();
         app.agent_chat.settings.tests.insert("qwen".into(), settings::Test::Running(rx));
         tx.send(result).unwrap();
@@ -313,8 +313,8 @@ fn a_permission_is_answered_once() {
 }
 
 /// An app with the chat's endpoint wired to a channel the test feeds, and a message in progress.
-fn app_in_a_turn() -> (SolveApp, Sender<ControlRequest>) {
-    let mut app = SolveApp::new(sketcraft_engine::Session::default(), crate::Services::default());
+fn app_in_a_turn() -> (SketApp, Sender<ControlRequest>) {
+    let mut app = SketApp::new(sketcraft_engine::Session::default(), crate::Services::default());
     // The default mode: modelling runs, files ask.
     assert_eq!(app.preferences.ai_permissions, agents::Mode::Edits);
     let (tx, rx) = channel();
@@ -330,7 +330,7 @@ fn ask(tx: &Sender<ControlRequest>, method: &str, params: Value) -> Receiver<Val
     rx
 }
 
-fn frame(app: &mut SolveApp) {
+fn frame(app: &mut SketApp) {
     let ctx = crate::fonts::test_context();
     poll(app, &ctx);
     app.drain_control(&ctx);
@@ -532,7 +532,7 @@ fn the_chat_pops_out_into_its_own_window_and_docks_back() {
 /// down (686, 687, 686…) on a Retina screen.
 #[test]
 fn the_window_place_is_given_once_when_it_opens() {
-    let mut app = SolveApp::new(sketcraft_engine::Session::default(), crate::Services::default());
+    let mut app = SketApp::new(sketcraft_engine::Session::default(), crate::Services::default());
     app.preferences.agent_chat_window = Some([1967.0, 160.0, 569.0, 686.0]);
     let first = panel::window_builder(&app);
     assert_eq!(first.position, Some(egui::pos2(1967.0, 160.0)));
@@ -643,7 +643,7 @@ fn permission_modes_decide_what_asks() {
 /// "Always allow" answers by itself, and both leave a note; anything else is asked.
 #[test]
 fn the_agents_own_questions_are_answered_by_the_mode_or_asked() {
-    let mut app = SolveApp::new(sketcraft_engine::Session::default(), crate::Services::default());
+    let mut app = SketApp::new(sketcraft_engine::Session::default(), crate::Services::default());
     app.agent_chat.running_id = "claude".into();
     let opts = || {
         vec![
@@ -667,7 +667,7 @@ fn the_agents_own_questions_are_answered_by_the_mode_or_asked() {
 /// everything the user is asked, and the mode still answers when it says to.
 #[test]
 fn a_title_that_mentions_sketcraft_goes_through_the_users_mode() {
-    let mut app = SolveApp::new(sketcraft_engine::Session::default(), crate::Services::default());
+    let mut app = SketApp::new(sketcraft_engine::Session::default(), crate::Services::default());
     app.agent_chat.running_id = "codex".into();
     let opts = || vec![PermissionOption { id: "allow".into(), name: "Allow".into(), kind: "allow_once".into() }];
     let titles = [
@@ -748,8 +748,8 @@ impl ChatBackend for Script {
 }
 
 /// An app whose agent is scripted and ready.
-fn app_with_script() -> (SolveApp, Script, egui::Context) {
-    let mut app = SolveApp::new(sketcraft_engine::Session::default(), crate::Services::default());
+fn app_with_script() -> (SketApp, Script, egui::Context) {
+    let mut app = SketApp::new(sketcraft_engine::Session::default(), crate::Services::default());
     let script = Script::default();
     app.agent_chat.backend = Some(Box::new(script.clone()));
     app.agent_chat.state = Some(State::Ready);
@@ -866,7 +866,7 @@ fn a_late_sign_in_retry_or_permission_cannot_restart_a_departed_turn() {
 
 /// Exercise the chat endpoint's gate and the real dispatch paths, including the animated
 /// pointer and asynchronous file loads. The scripted backend never needs a model account.
-fn chat_tool(app: &mut SolveApp, tx: &Sender<ControlRequest>, ctx: &egui::Context, method: &str, params: Value) -> Value {
+fn chat_tool(app: &mut SketApp, tx: &Sender<ControlRequest>, ctx: &egui::Context, method: &str, params: Value) -> Value {
     let reply = ask(tx, method, params);
     pump_tools(app);
     let deadline = std::time::Instant::now() + std::time::Duration::from_secs(10);
@@ -1214,7 +1214,7 @@ fn late_events_approvals_and_undo_stay_with_the_originating_document() {
     assert!(app.agent_chat.backend.is_none(), "disabling AI stops hidden conversations too");
 }
 
-fn texts(app: &SolveApp) -> Vec<String> {
+fn texts(app: &SketApp) -> Vec<String> {
     app.agent_chat.pending.iter().map(|p| p.text.clone()).collect()
 }
 
@@ -1397,7 +1397,7 @@ fn a_change_by_hand_between_messages_is_told_to_the_agent() {
     let (tx, rx) = channel();
     app.agent_chat.tools_rx = Some(rx);
     app.agent_chat.attach_selection = false;
-    let expr = |app: &SolveApp| app.session.doc.params.iter().find(|p| p.name == "w").map(|p| p.expr.clone()).unwrap();
+    let expr = |app: &SketApp| app.session.doc.params.iter().find(|p| p.name == "w").map(|p| p.expr.clone()).unwrap();
 
     send(&mut app, &ctx, "a box and a parameter w".into());
     let replies = [
@@ -1488,11 +1488,11 @@ done
 "#;
     let argv = vec!["sh".to_string(), "-c".to_string(), script.to_string(), "fake-agent".to_string(), log.to_string_lossy().into_owned()];
     let start = backend::StartContext { cwd: dir.clone(), bridge: None, tools: None, wake: Box::new(|| {}) };
-    let mut app = SolveApp::new(sketcraft_engine::Session::default(), crate::Services::default());
+    let mut app = SketApp::new(sketcraft_engine::Session::default(), crate::Services::default());
     app.agent_chat.backend = Some(Box::new(acp_client::AcpBackend::start(&argv, start).unwrap()));
     app.agent_chat.state = Some(State::Starting);
     let ctx = crate::fonts::test_context();
-    let until = |app: &mut SolveApp, what: &str, done: &dyn Fn(&SolveApp) -> bool| {
+    let until = |app: &mut SketApp, what: &str, done: &dyn Fn(&SketApp) -> bool| {
         let t = std::time::Instant::now();
         while !done(app) {
             assert!(t.elapsed() < std::time::Duration::from_secs(20), "timed out waiting for {what}");
@@ -1581,11 +1581,11 @@ done
 "#;
     let argv = vec!["sh".to_string(), "-c".to_string(), script.to_string(), "fake-agent".to_string(), log.to_string_lossy().into_owned()];
     let start = backend::StartContext { cwd: dir.clone(), bridge: None, tools: None, wake: Box::new(|| {}) };
-    let mut app = SolveApp::new(sketcraft_engine::Session::default(), crate::Services::default());
+    let mut app = SketApp::new(sketcraft_engine::Session::default(), crate::Services::default());
     app.agent_chat.backend = Some(Box::new(acp_client::AcpBackend::start(&argv, start).unwrap()));
     app.agent_chat.state = Some(State::Starting);
     let ctx = crate::fonts::test_context();
-    let until = |app: &mut SolveApp, done: &dyn Fn(&SolveApp) -> bool| {
+    let until = |app: &mut SketApp, done: &dyn Fn(&SketApp) -> bool| {
         let t = std::time::Instant::now();
         while !done(app) {
             assert!(t.elapsed() < std::time::Duration::from_secs(20), "timed out");
@@ -1634,11 +1634,11 @@ done
 "#;
     let argv = vec!["sh".to_string(), "-c".to_string(), script.to_string(), "fake-agent".to_string(), log.to_string_lossy().into_owned()];
     let start = backend::StartContext { cwd: dir.clone(), bridge: None, tools: None, wake: Box::new(|| {}) };
-    let mut app = SolveApp::new(sketcraft_engine::Session::default(), crate::Services::default());
+    let mut app = SketApp::new(sketcraft_engine::Session::default(), crate::Services::default());
     app.agent_chat.backend = Some(Box::new(acp_client::AcpBackend::start(&argv, start).unwrap()));
     app.agent_chat.state = Some(State::Starting);
     let ctx = crate::fonts::test_context();
-    let until = |app: &mut SolveApp, done: &dyn Fn(&SolveApp) -> bool| {
+    let until = |app: &mut SketApp, done: &dyn Fn(&SketApp) -> bool| {
         let t = std::time::Instant::now();
         while !done(app) {
             assert!(t.elapsed() < std::time::Duration::from_secs(20), "timed out");
@@ -1710,7 +1710,7 @@ fn custom_instructions_reach_the_system_note_of_each_new_session() {
     });
     h.app.agent_chat.agent_id = Some("api-1".into());
     let ctx = crate::fonts::test_context();
-    let until = |app: &mut SolveApp, done: &dyn Fn(&SolveApp) -> bool| {
+    let until = |app: &mut SketApp, done: &dyn Fn(&SketApp) -> bool| {
         let t = std::time::Instant::now();
         while !done(app) {
             assert!(t.elapsed() < std::time::Duration::from_secs(20), "timed out");
@@ -1720,7 +1720,7 @@ fn custom_instructions_reach_the_system_note_of_each_new_session() {
     };
     let sent = |n: usize| {
         let seen = seen.clone();
-        move |a: &SolveApp| a.agent_chat.state() == State::Ready && seen.lock().unwrap().len() == n
+        move |a: &SketApp| a.agent_chat.state() == State::Ready && seen.lock().unwrap().len() == n
     };
     connect(&mut h.app, &ctx);
     until(&mut h.app, &|a| a.agent_chat.state() == State::Ready);
@@ -1846,7 +1846,7 @@ fn choosing_a_model_sets_it_and_remembers_it() {
 
 /// A scripted endpoint: its agent is configured, and it is running with these models.
 #[cfg(not(target_arch = "wasm32"))]
-fn endpoint_with_script() -> (SolveApp, Script, egui::Context) {
+fn endpoint_with_script() -> (SketApp, Script, egui::Context) {
     let (mut app, script, ctx) = app_with_script();
     let endpoint = "http://localhost:11434/v1";
     app.agent_chat.running_id = "api-1".into();
@@ -2201,7 +2201,7 @@ fn a_listing_that_fails_says_why_and_keeps_the_list_of_last_time() {
     script.report(models_reply("fast"));
     poll(&mut app, &ctx);
     assert_eq!(app.agent_chat.models_note, None);
-    let ids = |app: &SolveApp| app.agent_chat.models.iter().map(|m| m.id.clone()).collect::<Vec<_>>();
+    let ids = |app: &SketApp| app.agent_chat.models.iter().map(|m| m.id.clone()).collect::<Vec<_>>();
     assert_eq!(ids(&app), ["fast", "smart"]);
 
     let only = |id: &str| acp::ModelInfo { id: id.into(), name: id.into(), description: String::new() };
@@ -2281,7 +2281,7 @@ fn models_from_several_providers_are_picked_by_provider_first() {
     let providers = model_providers(&app);
     assert_eq!(providers, [("Nous Portal".to_string(), 2), ("Host".to_string(), 2), ("Other".to_string(), 1)]);
     assert_eq!(shown_provider(&app).as_deref(), Some("Host"), "the current model's provider");
-    let names = |app: &SolveApp| listed_models(app).into_iter().map(|(_, n)| n).collect::<Vec<_>>();
+    let names = |app: &SketApp| listed_models(app).into_iter().map(|(_, n)| n).collect::<Vec<_>>();
     assert_eq!(names(&app), ["deepseek-v4.1-flash", "haiku"]);
     set_model_provider(&mut app, "Nous Portal");
     set_model_provider(&mut app, "nonsense");
@@ -2488,7 +2488,7 @@ fn closing_a_pending_modern_chat_preserves_the_surviving_api_endpoint_and_saved_
 
 #[test]
 fn document_disconnect_paths_clear_modern_configuration_and_pending_requests() {
-    let assert_cleared = |app: &SolveApp| {
+    let assert_cleared = |app: &SketApp| {
         assert!(app.agent_chat.backend.is_none());
         assert!(app.agent_chat.config_options.is_none() && !app.agent_chat.config_pending);
         assert!(app.agent_chat.models.is_empty() && app.agent_chat.modes.is_empty());
@@ -2559,12 +2559,12 @@ done
             let _ = wake_tx.send(());
         }),
     };
-    let mut app = SolveApp::new(sketcraft_engine::Session::default(), crate::Services::default());
+    let mut app = SketApp::new(sketcraft_engine::Session::default(), crate::Services::default());
     app.agent_chat.backend = Some(Box::new(acp_client::AcpBackend::start(&argv, start).unwrap()));
     app.agent_chat.running_id = "modern".into();
     app.agent_chat.state = Some(State::Starting);
     let ctx = crate::fonts::test_context();
-    let until = |app: &mut SolveApp, done: &dyn Fn(&SolveApp) -> bool| {
+    let until = |app: &mut SketApp, done: &dyn Fn(&SketApp) -> bool| {
         let deadline = std::time::Instant::now() + std::time::Duration::from_secs(15);
         loop {
             poll(app, &ctx);
@@ -2726,7 +2726,7 @@ done
 "#;
     let argv = vec!["sh".to_string(), "-c".to_string(), script.to_string(), "fake-agent".to_string(), log.to_string_lossy().into_owned()];
     let start = backend::StartContext { cwd: dir.clone(), bridge: None, tools: None, wake: Box::new(|| {}) };
-    let mut app = SolveApp::new(sketcraft_engine::Session::default(), crate::Services::default());
+    let mut app = SketApp::new(sketcraft_engine::Session::default(), crate::Services::default());
     app.agent_chat.backend = Some(Box::new(acp_client::AcpBackend::start(&argv, start).unwrap()));
     app.agent_chat.state = Some(State::Starting);
     app.agent_chat.running_id = "fake".into();
@@ -2783,12 +2783,12 @@ done
 "#;
     let argv = vec!["sh".to_string(), "-c".to_string(), script.to_string(), "fake-agent".to_string(), log.to_string_lossy().into_owned()];
     let start = backend::StartContext { cwd: dir.clone(), bridge: None, tools: None, wake: Box::new(|| {}) };
-    let mut app = SolveApp::new(sketcraft_engine::Session::default(), crate::Services::default());
+    let mut app = SketApp::new(sketcraft_engine::Session::default(), crate::Services::default());
     app.agent_chat.backend = Some(Box::new(acp_client::AcpBackend::start(&argv, start).unwrap()));
     app.agent_chat.state = Some(State::Starting);
     app.agent_chat.running_id = "fake".into();
     let ctx = crate::fonts::test_context();
-    let errors = |app: &SolveApp| -> Vec<String> {
+    let errors = |app: &SketApp| -> Vec<String> {
         app.agent_chat.items.iter().filter_map(|i| if let Item::Notice { text, error: true } = i { Some(text.clone()) } else { None }).collect()
     };
     let t = std::time::Instant::now();
@@ -2831,7 +2831,7 @@ fn at(d: &std::path::Path, f: &str) -> String {
 }
 
 /// Wait for the files read off the window thread to join the message.
-fn settle_files(app: &mut SolveApp, ctx: &egui::Context) {
+fn settle_files(app: &mut SketApp, ctx: &egui::Context) {
     let deadline = std::time::Instant::now() + std::time::Duration::from_secs(20);
     while !app.agent_chat.loading.is_empty() && std::time::Instant::now() < deadline {
         take_loaded(app, ctx);
@@ -2962,7 +2962,7 @@ fn files_wait_with_their_message_and_pictures_skip_an_agent_that_takes_none() {
 #[test]
 fn at_most_eight_files_on_a_message() {
     let d = attachable("eight");
-    let mut app = SolveApp::new(sketcraft_engine::Session::default(), crate::Services::default());
+    let mut app = SketApp::new(sketcraft_engine::Session::default(), crate::Services::default());
     for _ in 0..attach::MAX_FILES {
         attach_path(&mut app, &at(&d, "brief.md")).unwrap();
     }
@@ -3519,12 +3519,12 @@ fn an_agents_markdown_is_drawn_as_blocks() {
 
 /// A 40 x 30 x 20 block, its first face and first edge as the selection would hold them, its body
 /// and its feature.
-fn box_selection(app: &mut SolveApp) -> Vec<sketcraft_engine::Sel> {
+fn box_selection(app: &mut SketApp) -> Vec<sketcraft_engine::Sel> {
     use sketcraft_engine::Sel;
     app.run("solid.box", json!({"length": 40, "width": 30, "height": 20})).expect("a box");
     let face = app.session.execute("model.faces", &json!({"body": "Body1"})).expect("faces")["faces"][0].clone();
     let edge = app.session.execute("model.edges", &json!({"body": "Body1"})).expect("edges")["edges"][0].clone();
-    let at = |v: &Value| solidcore_record::Vec3::new(v[0].as_f64().unwrap_or(0.0), v[1].as_f64().unwrap_or(0.0), v[2].as_f64().unwrap_or(0.0));
+    let at = |v: &Value| sketcore_record::Vec3::new(v[0].as_f64().unwrap_or(0.0), v[1].as_f64().unwrap_or(0.0), v[2].as_f64().unwrap_or(0.0));
     vec![
         Sel::Face { body: "Body1".into(), index: face["index"].as_u64().unwrap_or(0) as usize, point: at(&face["point"]) },
         Sel::Edge { body: "Body1".into(), index: edge["index"].as_u64().unwrap_or(0) as usize, point: at(&edge["mid"]) },
@@ -3602,8 +3602,8 @@ fn a_huge_selection_is_counted_not_dropped_silently() {
     assert_eq!((both.items.len(), both.total()), (context::MAX_ITEMS, 200));
     // Unknown bodies, faces and features are described by what is known, without panicking.
     let odd = [
-        Sel::Face { body: "Nope".into(), index: usize::MAX, point: solidcore_record::Vec3::new(f64::NAN, f64::INFINITY, 0.0) },
-        Sel::Edge { body: "Nope".into(), index: 7, point: solidcore_record::Vec3::new(0.0, 0.0, 0.0) },
+        Sel::Face { body: "Nope".into(), index: usize::MAX, point: sketcore_record::Vec3::new(f64::NAN, f64::INFINITY, 0.0) },
+        Sel::Edge { body: "Nope".into(), index: 7, point: sketcore_record::Vec3::new(0.0, 0.0, 0.0) },
         Sel::Feature { id: u64::MAX },
         Sel::Plane { name: "XY".into() },
         Sel::SketchCurve { id: "c1".into(), sketch: None },
@@ -3663,9 +3663,9 @@ fn assistant_marks_follow_chat_login_turns_and_approvals() {
 
 /// An app whose endpoint agents answer at once (offline), with `api-1` and `api-2` added.
 #[cfg(not(target_arch = "wasm32"))]
-fn app_with_endpoints() -> SolveApp {
+fn app_with_endpoints() -> SketApp {
     let http: backend::HttpFn = Arc::new(|_| Err("offline".into()));
-    let mut app = SolveApp::new(sketcraft_engine::Session::default(), crate::Services { agent_http: Some(http), ..Default::default() });
+    let mut app = SketApp::new(sketcraft_engine::Session::default(), crate::Services { agent_http: Some(http), ..Default::default() });
     for id in ["api-1", "api-2"] {
         app.preferences.agents.push(agents::AgentConfig {
             id: id.into(),
@@ -3737,7 +3737,7 @@ fn a_connection_that_never_gets_ready_says_connection_failed_and_offers_retry() 
     assert_eq!(status(&app)["state"], "failed");
 
     // An agent that cannot start.
-    let mut app = SolveApp::new(sketcraft_engine::Session::default(), crate::Services::default());
+    let mut app = SketApp::new(sketcraft_engine::Session::default(), crate::Services::default());
     app.preferences.agents.push(agents::AgentConfig { id: "custom-1".into(), command: "sketcraft-no-such-agent-7009".into(), ..Default::default() });
     connect(&mut app, &ctx);
     assert_eq!(app.agent_chat.state(), State::Failed);
@@ -3745,7 +3745,7 @@ fn a_connection_that_never_gets_ready_says_connection_failed_and_offers_retry() 
 
     // A found agent that failed its version check (#9034): the picker says it doesn't start, and
     // connecting says why and how to install it again, besides the system's own message.
-    let mut app = SolveApp::new(sketcraft_engine::Session::default(), crate::Services::default());
+    let mut app = SketApp::new(sketcraft_engine::Session::default(), crate::Services::default());
     let reason = "This version of opencode.exe is not compatible with the version of Windows you're running.";
     app.agent_chat.detection = Some(discover::Detection {
         found: vec![discover::Found {
@@ -3772,7 +3772,7 @@ fn a_connection_that_never_gets_ready_says_connection_failed_and_offers_retry() 
     assert_eq!(fine.problem_hint(), None);
 
     // No agent at all: the picker opens on what to install.
-    let mut app = SolveApp::new(sketcraft_engine::Session::default(), crate::Services::default());
+    let mut app = SketApp::new(sketcraft_engine::Session::default(), crate::Services::default());
     app.agent_chat.detection = Some(discover::Detection::default());
     connect(&mut app, &ctx);
     assert_eq!((app.agent_chat.state(), app.agent_chat.picking), (State::Failed, Some(true)));
@@ -4002,7 +4002,7 @@ fn the_viewer_opens_in_the_popped_out_window() {
 // ---- Pick context (#2286) ----
 
 /// Put `sels` into the open picker's inputs the way clicks would: each in the input that takes it.
-fn pick_into_dialog(app: &mut SolveApp, sels: &[sketcraft_engine::Sel]) {
+fn pick_into_dialog(app: &mut SketApp, sels: &[sketcraft_engine::Sel]) {
     use sketcraft_engine::Sel;
     let mut d = app.dialog.take().expect("the picker is open");
     for sel in sels {
@@ -4146,7 +4146,7 @@ fn a_split_wall_clicked_once_is_one_item() {
         .and_then(|faces| faces.iter().find(|f| f["cylinder"]["radius"].is_number()).cloned())
         .expect("the wall");
     let at = &wall["point"];
-    let point = solidcore_record::Vec3::new(at[0].as_f64().unwrap_or(0.0), at[1].as_f64().unwrap_or(0.0), at[2].as_f64().unwrap_or(0.0));
+    let point = sketcore_record::Vec3::new(at[0].as_f64().unwrap_or(0.0), at[1].as_f64().unwrap_or(0.0), at[2].as_f64().unwrap_or(0.0));
     crate::viewport::select(
         &mut app,
         Some(Sel::Face { body: "Body1".into(), index: wall["index"].as_u64().unwrap_or(0) as usize, point }),
@@ -4264,12 +4264,12 @@ fn add_agent_opens_its_dialog_from_home() {
 #[test]
 fn add_agent_takes_a_request_timeout_and_the_state_reports_it() {
     let ctx = egui::Context::default();
-    let mut app = SolveApp::new(sketcraft_engine::Session::default(), crate::Services::default());
-    let timeout = |app: &mut SolveApp, id: &str| {
+    let mut app = SketApp::new(sketcraft_engine::Session::default(), crate::Services::default());
+    let timeout = |app: &mut SketApp, id: &str| {
         let state = control(app, &ctx, &json!({})).unwrap();
         state["agents"].as_array().unwrap().iter().find(|a| a["id"] == id).map(|a| a["request_timeout_s"].clone())
     };
-    let add = |app: &mut SolveApp, t: Value| {
+    let add = |app: &mut SketApp, t: Value| {
         let mut a = json!({"id": "slow", "name": "Slow", "kind": "api", "base_url": "http://localhost:11434/v1", "model": "m"});
         if !t.is_null() {
             a["request_timeout_s"] = t;
@@ -4633,7 +4633,7 @@ fn the_composer_hint_stays_on_one_row_at_the_narrowest_width() {
 /// (the window of #9492): the Assistant's side gives way instead of panicking in `f32::clamp`.
 #[test]
 fn tool_room_beside_the_docked_assistant_survives_an_inside_out_view() {
-    let mut app = SolveApp::new(sketcraft_engine::Session::default(), crate::Services::default());
+    let mut app = SketApp::new(sketcraft_engine::Session::default(), crate::Services::default());
     app.ui.layout = crate::shell::LayoutMode::Floating;
     app.preferences.ai_features = true;
     app.agent_chat.open = true;

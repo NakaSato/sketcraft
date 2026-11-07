@@ -8,7 +8,7 @@ use egui::vec2;
 use sketcraft_engine::Session;
 use sketcraft_engine::render::{Camera, StandardView};
 
-use crate::SolveApp;
+use crate::SketApp;
 use crate::theme::Tokens;
 use crate::ui_kit::{self, FileView, RecoveryMessage};
 
@@ -425,7 +425,7 @@ fn start_sample(h: &mut HomeState) {
 
 /// Take finished pictures and designs (one job per frame on the web, where there are no
 /// threads).
-fn poll(app: &mut SolveApp, ctx: &egui::Context) {
+fn poll(app: &mut SketApp, ctx: &egui::Context) {
     let mut done: Vec<Made> = Vec::new();
     #[cfg(not(target_arch = "wasm32"))]
     let mut remembered = None;
@@ -527,7 +527,7 @@ fn want(h: &mut HomeState, key: &str) {
 }
 
 /// Open a built-in sample (a copy of the design made for its picture).
-pub fn open_sample(app: &mut SolveApp, i: usize) {
+pub fn open_sample(app: &mut SketApp, i: usize) {
     match app.home.samples.get(&i) {
         Some(s) => {
             let mut copy = s.scratch();
@@ -544,11 +544,11 @@ pub fn open_sample(app: &mut SolveApp, i: usize) {
 }
 
 /// Is this recent design there to open: in memory, or something the host can bring back?
-pub fn available(app: &SolveApp, path: &str) -> bool {
+pub fn available(app: &SketApp, path: &str) -> bool {
     app.home.present.get(path).copied().unwrap_or(true) || app.services.can_restore.as_ref().is_some_and(|can| can(path))
 }
 
-pub fn open_recent(app: &mut SolveApp, path: &str) {
+pub fn open_recent(app: &mut SketApp, path: &str) {
     if !sketcraft_engine::io::vfs::exists(path) {
         if let Some(restore) = app.services.restore_file.as_ref().filter(|_| available(app, path)) {
             restore(path);
@@ -626,7 +626,7 @@ enum FileAction {
 }
 
 /// File view replaces the workspace while keeping the open design and its history intact.
-pub fn show(app: &mut SolveApp, ui: &mut egui::Ui) {
+pub fn show(app: &mut SketApp, ui: &mut egui::Ui) {
     poll(app, ui.ctx());
     let file_menu_open = ui.ctx().data(|data| data.get_temp::<bool>(egui::Id::unique("sc_file_menu"))).unwrap_or(false);
     let interactive = !app.file_picker_busy() && !app.file_load.busy() && !file_menu_open;
@@ -731,7 +731,7 @@ pub fn show(app: &mut SolveApp, ui: &mut egui::Ui) {
     }
 }
 
-fn navigation(app: &SolveApp, ui: &mut egui::Ui, action: &mut Option<FileAction>) {
+fn navigation(app: &SketApp, ui: &mut egui::Ui, action: &mut Option<FileAction>) {
     let busy = app.file_picker_busy();
     let design = !crate::documents::active_is_blank(app);
     let response = FileView::back_to(ui, "home:back", app.tr("home.back"), &app.session.doc.name, "Esc");
@@ -777,7 +777,7 @@ fn publish(id: &str, response: &egui::Response) {
     crate::scenario::publish_rect(id, response.rect);
 }
 
-fn content(app: &mut SolveApp, ui: &mut egui::Ui, action: &mut Option<FileAction>, narrow: bool) {
+fn content(app: &mut SketApp, ui: &mut egui::Ui, action: &mut Option<FileAction>, narrow: bool) {
     let t = Tokens::get();
     FileView::content(ui, narrow, |ui| {
         egui::ScrollArea::vertical().id_salt("home_content").auto_shrink([false, false]).show(ui, |ui| {
@@ -803,7 +803,7 @@ fn content(app: &mut SolveApp, ui: &mut egui::Ui, action: &mut Option<FileAction
     });
 }
 
-fn start_content(app: &mut SolveApp, ui: &mut egui::Ui, action: &mut Option<FileAction>) {
+fn start_content(app: &mut SketApp, ui: &mut egui::Ui, action: &mut Option<FileAction>) {
     let t = Tokens::get();
     if let Some(entry) = app.recoverable.first().cloned() {
         let title = crate::i18n::format("home.recovery_count", &[("count", &app.recoverable.len().to_string())]);
@@ -956,7 +956,7 @@ fn abbreviated_path(path: &str, home: Option<&std::path::Path>) -> String {
 }
 
 /// Kind column for a recent file: Design for `.sc`/legacy, else STEP, STL, … (#9081).
-fn recent_kind(app: &SolveApp, path: &str) -> String {
+fn recent_kind(app: &SketApp, path: &str) -> String {
     let ext = std::path::Path::new(path).extension().and_then(|e| e.to_str()).unwrap_or("");
     if sketcraft_engine::io::is_design_ext(ext) || ext.eq_ignore_ascii_case("json") {
         return app.tr("home.design_workspace").to_string();
@@ -980,13 +980,13 @@ fn recent_kind(app: &SolveApp, path: &str) -> String {
     label.to_string()
 }
 
-fn recent_time(app: &SolveApp, path: &str) -> String {
+fn recent_time(app: &SketApp, path: &str) -> String {
     let Some(time) = app.home.opened_at.get(path) else { return String::new() };
     let now = web_time::SystemTime::now().duration_since(web_time::UNIX_EPOCH).map(|d| d.as_secs()).unwrap_or(*time);
     recent_time_at(app, *time, now)
 }
 
-fn recent_time_at(app: &SolveApp, time: u64, now: u64) -> String {
+fn recent_time_at(app: &SketApp, time: u64, now: u64) -> String {
     let seconds = now.saturating_sub(time);
     if seconds < 60 {
         return app.tr("home.opened_just_now").to_string();
@@ -1008,7 +1008,7 @@ fn recent_time_at(app: &SolveApp, time: u64, now: u64) -> String {
     crate::i18n::format(key, &[("count", &count.to_string())])
 }
 
-fn recovery_content(app: &SolveApp, ui: &mut egui::Ui, action: &mut Option<FileAction>) {
+fn recovery_content(app: &SketApp, ui: &mut egui::Ui, action: &mut Option<FileAction>) {
     if app.recoverable.is_empty() {
         ui_kit::text(ui, app.tr("home.recovery_empty"), ui_kit::Text::Inline);
     }
@@ -1034,7 +1034,7 @@ fn recovery_content(app: &SolveApp, ui: &mut egui::Ui, action: &mut Option<FileA
     }
 }
 
-fn export_content(app: &SolveApp, ui: &mut egui::Ui, action: &mut Option<FileAction>) {
+fn export_content(app: &SketApp, ui: &mut egui::Ui, action: &mut Option<FileAction>) {
     let formats = [
         ("step", "STEP", Some("home.export_step_hint")),
         ("mesh", "Mesh", Some("home.export_mesh_hint")),
@@ -1066,7 +1066,7 @@ fn export_content(app: &SolveApp, ui: &mut egui::Ui, action: &mut Option<FileAct
     });
 }
 
-fn dispatch(app: &mut SolveApp, ctx: &egui::Context, action: FileAction) {
+fn dispatch(app: &mut SketApp, ctx: &egui::Context, action: FileAction) {
     match action {
         FileAction::Back => app.home.open = false,
         FileAction::Section(section) => {
@@ -1420,7 +1420,7 @@ mod tests {
     #[cfg(not(target_arch = "wasm32"))]
     #[test]
     fn selecting_a_sample_does_not_wait_for_a_running_cold_recent() {
-        let mut app = SolveApp::new(Session::default(), Default::default());
+        let mut app = SketApp::new(Session::default(), Default::default());
         let (_blocked_worker, rx) = std::sync::mpsc::channel();
         app.home.rx = Some(rx);
         app.home.open = false;
@@ -1444,7 +1444,7 @@ mod tests {
     #[cfg(not(target_arch = "wasm32"))]
     #[test]
     fn a_sample_picture_arriving_while_the_sample_builds_is_not_a_failed_build() {
-        let mut app = SolveApp::new(Session::default(), Default::default());
+        let mut app = SketApp::new(Session::default(), Default::default());
         let (pictures, rx) = std::sync::mpsc::channel();
         app.home.rx = Some(rx);
         let ctx = egui::Context::default();
@@ -1487,7 +1487,7 @@ mod tests {
         let s = session.unwrap();
         assert_eq!(s.doc.name, "Sample Plate");
         assert!(!s.is_dirty() && s.undo.is_empty());
-        let mut app = SolveApp::new(Session::default(), crate::Services::default());
+        let mut app = SketApp::new(Session::default(), crate::Services::default());
         app.home.samples.insert(0, s);
         app.home.show(app.session.revision);
         open_sample(&mut app, 0);

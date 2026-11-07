@@ -11,7 +11,7 @@
 
 use std::path::{Path, PathBuf};
 
-use super::SolveApp;
+use super::SketApp;
 
 /// A picture on the clipboard: RGBA rows, as the system gives them.
 pub struct Picture {
@@ -108,7 +108,7 @@ const SAME_PASTE_SECS: f64 = 1.5;
 
 /// The paste shortcut for the focused text box this frame. Call before the box is drawn: a paste
 /// that is files is taken out of the input, so the box doesn't type their names.
-pub fn handle(app: &mut SolveApp, ui: &egui::Ui) {
+pub fn handle(app: &mut SketApp, ui: &egui::Ui) {
     let now = ui.input(|i| i.time);
     let (text, released) = ui.input(|i| {
         let text = i.events.iter().find_map(|e| if let egui::Event::Paste(t) = e { Some(t.clone()) } else { None });
@@ -135,7 +135,7 @@ pub fn handle(app: &mut SolveApp, ui: &egui::Ui) {
 }
 
 /// Do what [`decide`] said.
-fn apply(app: &mut SolveApp, ui: &egui::Ui, paste: Paste, had_text: bool) {
+fn apply(app: &mut SketApp, ui: &egui::Ui, paste: Paste, had_text: bool) {
     match paste {
         Paste::Text | Paste::Nothing => {}
         Paste::Files(paths) => {

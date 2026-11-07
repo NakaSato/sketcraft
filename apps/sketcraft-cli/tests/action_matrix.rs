@@ -29,7 +29,7 @@ use std::process::{Command, Stdio};
 use std::time::{Duration, Instant};
 
 use serde_json::{Value, json};
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 use sketcraft_engine::Session;
 use sketcraft_engine::doc::kernel::{FaceSurface, face_surface};
 use sketcraft_engine::doc::{FaceAttachmentStatus, ModelBody, naming};
@@ -1657,7 +1657,7 @@ impl TipConstruction {
             other => panic!("expected an axis, got {other:?}"),
         }
     }
-    fn plane(&self) -> solidcore_record::Plane {
+    fn plane(&self) -> sketcore_record::Plane {
         match &self.0 {
             sketcraft_engine::doc::construct::ConstructGeom::Plane(p) => *p,
             other => panic!("expected a plane, got {other:?}"),

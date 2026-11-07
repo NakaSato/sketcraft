@@ -3,7 +3,7 @@
 //! line, also past the place the point is stored at.
 
 use serde_json::{Value, json};
-use solidcore_record::Vec2;
+use sketcore_record::Vec2;
 use sketcraft_geom::prelude::*;
 
 use crate::Session;

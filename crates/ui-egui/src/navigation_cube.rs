@@ -11,7 +11,7 @@ const HALF: f64 = 40.0;
 // The remaining regions belong to the face, including the middle of each edge.
 const INSET: f64 = 0.68;
 
-fn camera(app: &SolveApp) -> Camera {
+fn camera(app: &SketApp) -> Camera {
     let mut cam = app.cam;
     if !crate::render_workspace::active(app) {
         cam.fov = app.view_fov();
@@ -149,11 +149,11 @@ fn hit(faces: &[Facet], p: Pos2) -> Option<usize> {
     faces.iter().enumerate().rev().find(|(_, f)| contains(&f.points, p)).map(|(i, _)| i)
 }
 
-pub(super) fn drag_origin(app: &SolveApp, centre: Pos2, pointer: Pos2, scale: f32) -> bool {
+pub(super) fn drag_origin(app: &SketApp, centre: Pos2, pointer: Pos2, scale: f32) -> bool {
     hit(&facets(&camera(app), centre, HALF * f64::from(scale)), pointer).is_some()
 }
 
-pub(super) fn navigate(app: &mut SolveApp, action: Option<&str>, dir: Option<Vec3>) {
+pub(super) fn navigate(app: &mut SketApp, action: Option<&str>, dir: Option<Vec3>) {
     // Same as arrow-key steps (#8912): turn from where a glide in flight is going, so rapid
     // clicks add full turns instead of restarting from a mid-animation camera.
     let from = app.cam_anim.map_or(app.cam, |a| a.to);
@@ -171,7 +171,7 @@ pub(super) fn navigate(app: &mut SolveApp, action: Option<&str>, dir: Option<Vec
     let _ = app.run("view.navigate", params);
 }
 
-fn control(app: &mut SolveApp, ui: &mut egui::Ui, bounds: Rect, action: &str, tooltip: &str) -> bool {
+fn control(app: &mut SketApp, ui: &mut egui::Ui, bounds: Rect, action: &str, tooltip: &str) -> bool {
     crate::scenario::publish_handle(&format!("navigation_cube:control:{action}"), bounds.center());
     let response = ui.interact(bounds, ui.scope_id().with(("navigation_cube", action)), Sense::click()).backing_on_hover_text(tooltip);
     let hover = response.hovered();
@@ -215,7 +215,7 @@ fn inverted_roll(action: &str) -> Option<&'static str> {
     }
 }
 
-pub(super) fn show(app: &mut SolveApp, ui: &mut egui::Ui, rect: Rect) {
+pub(super) fn show(app: &mut SketApp, ui: &mut egui::Ui, rect: Rect) {
     let outer = axis_rect(app, rect);
     if !outer.is_positive() {
         app.viewport.axis_drag = None;
@@ -288,7 +288,7 @@ pub(super) fn show(app: &mut SolveApp, ui: &mut egui::Ui, rect: Rect) {
 }
 
 /// The Home button at the top left of a gizmo centred at `c`, painted while it is `active`.
-pub(super) fn home(app: &mut SolveApp, ui: &mut egui::Ui, painter: &egui::Painter, c: Pos2, scale: f32, active: bool, t: Tokens) {
+pub(super) fn home(app: &mut SketApp, ui: &mut egui::Ui, painter: &egui::Painter, c: Pos2, scale: f32, active: bool, t: Tokens) {
     let home = Rect::from_center_size(c + vec2(-65.0, -65.0) * scale, vec2(26.0, 26.0) * scale);
     crate::scenario::publish_target("axis_view:home", home);
     let home_hover = control(app, ui, home, "home", "Home: isometric view and fit model");
@@ -300,7 +300,7 @@ pub(super) fn home(app: &mut SolveApp, ui: &mut egui::Ui, painter: &egui::Painte
 /// The four orbit arrows and the two roll arrows around a gizmo centred at `c`: nearer and larger
 /// while a cube face is square on, painted while the gizmo is `active`.
 #[allow(clippy::too_many_arguments)]
-pub(super) fn arrows(app: &mut SolveApp, ui: &mut egui::Ui, painter: &egui::Painter, c: Pos2, scale: f32, active: bool, square_on: bool, t: Tokens) {
+pub(super) fn arrows(app: &mut SketApp, ui: &mut egui::Ui, painter: &egui::Painter, c: Pos2, scale: f32, active: bool, square_on: bool, t: Tokens) {
     let (distance, button_size) = if square_on { (54.0, 20.0) } else { (74.0, 16.0) };
     for (action, offset, direction, tooltip) in [
         ("left", vec2(-distance, 0.0), vec2(1.0, 0.0), "Orbit left 90°"),

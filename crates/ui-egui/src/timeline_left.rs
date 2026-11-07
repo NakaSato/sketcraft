@@ -10,7 +10,7 @@ use crate::theme::Tokens;
 use crate::timeline::{
     TimelineKind, clipboard_buttons, delete_after_marker_button, delete_button, delete_features, message_button, selected_feature_ids,
 };
-use crate::{SolveApp, icons};
+use crate::{SketApp, icons};
 
 mod plan;
 
@@ -65,14 +65,14 @@ impl TimelineItem {
 }
 
 /// Saved width; contents are selected from the actual available width at render time.
-pub(crate) fn strip_width(app: &SolveApp) -> f32 {
+pub(crate) fn strip_width(app: &SketApp) -> f32 {
     app.shell
         .history_drag_width
         .map(crate::ui_kit::history_clamp_width)
         .unwrap_or_else(|| crate::ui_kit::history_snap_width(app.preferences.timeline_left_width))
 }
 
-pub(crate) fn stacked(app: &SolveApp) -> bool {
+pub(crate) fn stacked(app: &SketApp) -> bool {
     app.ui.show_timeline && app.preferences.timeline_left && app.preferences.timeline_under_browser
 }
 
@@ -109,7 +109,7 @@ impl FoldMotion {
 }
 
 /// Calculate only two scalars per frame; cards and input geometry share the result.
-pub(crate) fn animate_folds(app: &mut SolveApp, ctx: &egui::Context) {
+pub(crate) fn animate_folds(app: &mut SketApp, ctx: &egui::Context) {
     if !stacked(app) {
         app.shell.history_folding = None;
         app.shell.history_fold_motion = None;
@@ -129,7 +129,7 @@ pub(crate) fn animate_folds(app: &mut SolveApp, ctx: &egui::Context) {
 /// Shared bounds keep browser and history at exactly the same width. Their split is the
 /// remembered share of the available height (half until the seam is dragged, #7371). One folded
 /// header gives the other the remainder; two folded headers sit together at the top.
-pub(crate) fn stacked_rects(app: &SolveApp, available: Rect) -> (Rect, Rect) {
+pub(crate) fn stacked_rects(app: &SketApp, available: Rect) -> (Rect, Rect) {
     let progress = app
         .shell
         .history_folding
@@ -137,11 +137,11 @@ pub(crate) fn stacked_rects(app: &SolveApp, available: Rect) -> (Rect, Rect) {
     column_rects_at(app, available, progress[0], progress[1])
 }
 
-fn column_rects(app: &SolveApp, available: Rect, browser_collapsed: bool, history_collapsed: bool) -> (Rect, Rect) {
+fn column_rects(app: &SketApp, available: Rect, browser_collapsed: bool, history_collapsed: bool) -> (Rect, Rect) {
     column_rects_at(app, available, f32::from(browser_collapsed), f32::from(history_collapsed))
 }
 
-fn column_rects_at(app: &SolveApp, available: Rect, browser_fold: f32, history_fold: f32) -> (Rect, Rect) {
+fn column_rects_at(app: &SketApp, available: Rect, browser_fold: f32, history_fold: f32) -> (Rect, Rect) {
     let mut available = available;
     available.min.x += crate::agent_chat::left_inset(app, available);
     let gap = Container::for_layout(app.ui.layout, Surface::Panel).gap();
@@ -175,7 +175,7 @@ const SPLIT_RAIL: f32 = 6.0;
 
 /// Dragging the seam between the expanded browser and History moves their split (#7371), as the
 /// column's right edge moves its width.
-fn split_handle(app: &mut SolveApp, ui: &egui::Ui, available: Rect) {
+fn split_handle(app: &mut SketApp, ui: &egui::Ui, available: Rect) {
     if !app.ui.show_browser
         || app.preferences.timeline_left_browser_collapsed
         || app.preferences.timeline_collapsed
@@ -205,7 +205,7 @@ fn split_handle(app: &mut SolveApp, ui: &egui::Ui, available: Rect) {
     crate::scenario::publish_handle("left-column-split", rail.center());
 }
 
-pub(crate) fn floating_rect(app: &SolveApp, available: Rect) -> Rect {
+pub(crate) fn floating_rect(app: &SketApp, available: Rect) -> Rect {
     if stacked(app) {
         return stacked_rects(app, available).1;
     }
@@ -215,7 +215,7 @@ pub(crate) fn floating_rect(app: &SolveApp, available: Rect) -> Rect {
 }
 
 /// Under the browser, History is one column with it and follows its translucency.
-fn card_fill(app: &SolveApp, floating: bool) -> egui::Color32 {
+fn card_fill(app: &SketApp, floating: bool) -> egui::Color32 {
     let panel = Tokens::get().panel;
     if floating && stacked(app) && app.ui.show_browser && app.preferences.browser_float {
         panel.gamma_multiply(crate::browser::BROWSER_FLOAT_ALPHA)
@@ -225,7 +225,7 @@ fn card_fill(app: &SolveApp, floating: bool) -> egui::Color32 {
 }
 
 /// Full-height left card, or a card sharing the browser column below it.
-pub fn left_panel(app: &mut SolveApp, ui: &mut egui::Ui) {
+pub fn left_panel(app: &mut SketApp, ui: &mut egui::Ui) {
     crate::browser::sync_reveals(app);
     let t = Tokens::get();
     let available = ui.available_rect_before_wrap();
@@ -295,7 +295,7 @@ fn names_fit(width: f32) -> bool {
     width >= crate::ui_kit::history_width(true) - (t.space_8 + t.space_2)
 }
 
-fn seam_handle(app: &mut SolveApp, ui: &mut egui::Ui, card: Rect, parent: egui::LayerId) {
+fn seam_handle(app: &mut SketApp, ui: &mut egui::Ui, card: Rect, parent: egui::LayerId) {
     let seam = crate::ui_kit::HistorySeam::new(card);
     let bounds = seam.edge.union(seam.pill);
     let overlay = Container::new(ui.ctx(), Surface::Panel).area(egui::Id::unique("history_seam_overlay")).fixed_pos(bounds.min);
@@ -321,7 +321,7 @@ fn seam_handle(app: &mut SolveApp, ui: &mut egui::Ui, card: Rect, parent: egui::
 }
 
 /// Width alone chooses icons, names, horizontal transport and the optional title.
-pub fn left_timeline(app: &mut SolveApp, ui: &mut egui::Ui) {
+pub fn left_timeline(app: &mut SketApp, ui: &mut egui::Ui) {
     let t = Tokens::get();
     let names = names_fit(ui.available_width());
     timeline_transport(app, ui, names);
@@ -341,7 +341,7 @@ pub fn left_timeline(app: &mut SolveApp, ui: &mut egui::Ui) {
         .show(ui, |ui| vertical_features(app, ui, names));
 }
 
-fn timeline_transport(app: &mut SolveApp, ui: &mut egui::Ui, names: bool) {
+fn timeline_transport(app: &mut SketApp, ui: &mut egui::Ui, names: bool) {
     let t = Tokens::get();
     let mut controls = crate::ui_kit::HistoryTransport::shown(app.preferences.history_play_button);
     let count = controls.len() as f32;
@@ -427,7 +427,7 @@ impl Dock {
     }
 }
 
-fn dock_target(app: &SolveApp, available: Rect, at: egui::Pos2) -> Option<Dock> {
+fn dock_target(app: &SketApp, available: Rect, at: egui::Pos2) -> Option<Dock> {
     let t = Tokens::get();
     if !available.contains(at) {
         return None;
@@ -442,7 +442,7 @@ fn dock_target(app: &SolveApp, available: Rect, at: egui::Pos2) -> Option<Dock> 
     if app.ui.show_browser && at.x <= column.right() && at.y >= column.top() + header_outer_height() { Some(Dock::UnderBrowser) } else { None }
 }
 
-pub(crate) fn dock_drag(app: &mut SolveApp, ui: &egui::Ui, drag: &egui::Response) {
+pub(crate) fn dock_drag(app: &mut SketApp, ui: &egui::Ui, drag: &egui::Response) {
     if drag.hovered() {
         ui.ctx().set_cursor_icon(egui::CursorIcon::Grab);
     }
@@ -560,7 +560,7 @@ fn vertical_drop_bar_left(panel_left: f32, target: Option<u64>, groups: &[sketcr
 
 /// Paints the marker row and returns its centre height, which splits the slots at its position
 /// into before and after the marker.
-fn vertical_marker(app: &mut SolveApp, ui: &mut egui::Ui, drag: &mut Option<Drag>) -> f32 {
+fn vertical_marker(app: &mut SketApp, ui: &mut egui::Ui, drag: &mut Option<Drag>) -> f32 {
     let t = Tokens::get();
     let (rect, response) = ui.allocate_exact_size(vec2(ui.available_width(), t.space_12), Sense::drag());
     crate::ui_kit::history_marker(ui.painter(), rect, true, crate::theme::TabAccent::for_tab(&t, &app.ui.tab));
@@ -582,7 +582,7 @@ pub(crate) fn group_for(groups: &[sketcraft_engine::doc::TimelineGroup], feature
 
 /// The features a drag starting on feature `id`'s row moves: the selection, with the row
 /// selected first when it isn't. Shared with the History in the browser (#9565).
-pub(crate) fn drag_features(app: &mut SolveApp, id: u64, selected: bool) -> Vec<u64> {
+pub(crate) fn drag_features(app: &mut SketApp, id: u64, selected: bool) -> Vec<u64> {
     if !selected {
         select_only(app, TimelineItem::Feature(id));
     }
@@ -591,15 +591,7 @@ pub(crate) fn drag_features(app: &mut SolveApp, id: u64, selected: bool) -> Vec<
 
 /// Drops dragged History items at timeline `position`, into folder `group` (`None`: the timeline
 /// root), before the history marker when `active`. Shared with the History in the browser (#9565).
-pub(crate) fn drop_items(
-    app: &mut SolveApp,
-    plan: &HistoryRows,
-    features: &[u64],
-    groups: &[u64],
-    group: Option<u64>,
-    position: usize,
-    active: bool,
-) {
+pub(crate) fn drop_items(app: &mut SketApp, plan: &HistoryRows, features: &[u64], groups: &[u64], group: Option<u64>, position: usize, active: bool) {
     let mut params = json!({"group": group, "position": position});
     // A feature and the sketches listed under it move as one block (#6489); the move's own checks
     // refuse a place where anything would fail.
@@ -618,7 +610,7 @@ pub(crate) fn drop_items(
     }
 }
 
-fn selected_drag_items(app: &SolveApp, origin_x: f32, source_group: Option<u64>) -> DragItems {
+fn selected_drag_items(app: &SketApp, origin_x: f32, source_group: Option<u64>) -> DragItems {
     DragItems { features: selected_feature_ids(app), groups: app.tree.picked_timeline_groups.clone(), origin_x, source_group }
 }
 
@@ -630,7 +622,7 @@ fn drag_x(items: &DragItems, pointer_x: f32) -> f32 {
     pointer_x - items.origin_x
 }
 
-fn select_only(app: &mut SolveApp, item: TimelineItem) {
+fn select_only(app: &mut SketApp, item: TimelineItem) {
     app.tree.picked_joints.clear();
     match item {
         TimelineItem::Group(id) => {
@@ -646,7 +638,7 @@ fn select_only(app: &mut SolveApp, item: TimelineItem) {
     app.tree.timeline_anchor = Some(item.key());
 }
 
-fn select_item(app: &mut SolveApp, ui: &egui::Ui, item: TimelineItem, order: &[TimelineItem]) {
+fn select_item(app: &mut SketApp, ui: &egui::Ui, item: TimelineItem, order: &[TimelineItem]) {
     let modifiers = ui.input(|input| input.modifiers);
     if !modifiers.command && !modifiers.ctrl {
         app.tree.picked_joints.clear();
@@ -717,7 +709,7 @@ fn select_item(app: &mut SolveApp, ui: &egui::Ui, item: TimelineItem, order: &[T
     }
 }
 
-fn selection_actions(app: &mut SolveApp, ui: &mut egui::Ui, groups: &[sketcraft_engine::doc::TimelineGroup], feature_menu: bool) {
+fn selection_actions(app: &mut SketApp, ui: &mut egui::Ui, groups: &[sketcraft_engine::doc::TimelineGroup], feature_menu: bool) {
     let features = selected_feature_ids(app);
     let selected_groups = app.tree.picked_timeline_groups.clone();
     let has_selection = !features.is_empty() || !selected_groups.is_empty();
@@ -795,7 +787,7 @@ fn selection_actions(app: &mut SolveApp, ui: &mut egui::Ui, groups: &[sketcraft_
 }
 
 /// Delete selected timeline folders while preserving their features and nested folders.
-pub fn delete_selected_folders(app: &mut SolveApp) -> bool {
+pub fn delete_selected_folders(app: &mut SketApp) -> bool {
     if app.tree.picked_timeline_groups.is_empty() {
         return false;
     }
@@ -808,7 +800,7 @@ pub fn delete_selected_folders(app: &mut SolveApp) -> bool {
 
 /// Open the folder holding this feature and every folder above it, so its row is shown. A sketch
 /// listed under the feature built from it also opens that feature's fold (#6489).
-pub fn reveal_feature(app: &mut SolveApp, feature: u64) {
+pub fn reveal_feature(app: &mut SketApp, feature: u64) {
     if let Some(host) = drawn_rows(app, nests(app)).host(feature) {
         app.tree.expanded.insert(sketches_key(host));
     }
@@ -828,7 +820,7 @@ pub fn reveal_feature(app: &mut SolveApp, feature: u64) {
 }
 
 /// The features of these folders and of the folders nested in them, in timeline order.
-fn folder_features(app: &SolveApp, roots: &[u64]) -> Vec<u64> {
+fn folder_features(app: &SketApp, roots: &[u64]) -> Vec<u64> {
     let groups = &app.session.doc.timeline_groups;
     let inside = |feature: u64| {
         group_for(groups, feature).is_some_and(|group| roots.contains(&group) || roots.iter().any(|root| group_is_descendant(groups, group, *root)))
@@ -836,7 +828,7 @@ fn folder_features(app: &SolveApp, roots: &[u64]) -> Vec<u64> {
     app.session.doc.features.iter().map(|feature| feature.id).filter(|feature| inside(*feature)).collect()
 }
 
-fn folder_joints(app: &SolveApp, roots: &[u64]) -> Vec<u64> {
+fn folder_joints(app: &SketApp, roots: &[u64]) -> Vec<u64> {
     let groups = &app.session.doc.timeline_groups;
     groups
         .iter()
@@ -887,7 +879,7 @@ fn group_depth(groups: &[sketcraft_engine::doc::TimelineGroup], id: u64) -> usiz
     depth
 }
 
-fn group_is_open(app: &SolveApp, groups: &[sketcraft_engine::doc::TimelineGroup], id: u64) -> bool {
+fn group_is_open(app: &SketApp, groups: &[sketcraft_engine::doc::TimelineGroup], id: u64) -> bool {
     let mut current = Some(id);
     let mut steps = 0usize;
     while let Some(group_id) = current {
@@ -905,7 +897,7 @@ fn group_is_open(app: &SolveApp, groups: &[sketcraft_engine::doc::TimelineGroup]
 
 /// The reference the cached [`RowPlan`] is tested against.
 #[cfg(test)]
-fn group_ancestors_are_open(app: &SolveApp, groups: &[sketcraft_engine::doc::TimelineGroup], id: u64) -> bool {
+fn group_ancestors_are_open(app: &SketApp, groups: &[sketcraft_engine::doc::TimelineGroup], id: u64) -> bool {
     let mut current = groups.iter().find(|group| group.id == id).and_then(|group| group.parent);
     let mut steps = 0usize;
     while let Some(group_id) = current {
@@ -966,14 +958,14 @@ fn group_position(
 }
 
 /// Whether Sketches: Under their feature is on (#6489).
-pub(crate) fn nests(app: &SolveApp) -> bool {
+pub(crate) fn nests(app: &SketApp) -> bool {
     app.preferences.history_sketches == crate::prefs::HistorySketches::UnderFeature
 }
 
 /// The rows the vertical History draws: with `nest`, `history_rows::rows` (each sketch listed
 /// under the feature built from it, with reference rows); otherwise every feature a row of its
 /// own, in creation order.
-fn drawn_rows(app: &SolveApp, nest: bool) -> HistoryRows {
+fn drawn_rows(app: &SketApp, nest: bool) -> HistoryRows {
     let doc = &app.session.doc;
     if !nest {
         let sketch = |feature: &sketcraft_engine::doc::Feature| matches!(feature.kind, sketcraft_engine::doc::FeatureKind::Sketch { .. });
@@ -991,7 +983,7 @@ pub(crate) fn sketches_key(feature: u64) -> String {
 /// The reference the cached [`RowPlan`] is tested against.
 #[cfg(test)]
 fn visible_order(
-    app: &SolveApp,
+    app: &SketApp,
     features: &[(u64, String, &'static str, bool, &'static str, TimelineKind)],
     groups: &[sketcraft_engine::doc::TimelineGroup],
     rows: &HistoryRows,
@@ -1028,7 +1020,7 @@ fn visible_order(
 }
 
 fn timeline_group_name(
-    app: &mut SolveApp,
+    app: &mut SketApp,
     ui: &mut egui::Ui,
     group: &sketcraft_engine::doc::TimelineGroup,
     rect: Rect,
@@ -1081,7 +1073,7 @@ fn timeline_group_name(
 }
 
 fn vertical_group_row(
-    app: &mut SolveApp,
+    app: &mut SketApp,
     names: bool,
     ui: &mut egui::Ui,
     group: &sketcraft_engine::doc::TimelineGroup,
@@ -1181,7 +1173,7 @@ fn vertical_group_row(
 }
 
 fn folder_joint_rows(
-    app: &mut SolveApp,
+    app: &mut SketApp,
     ui: &mut egui::Ui,
     group: &sketcraft_engine::doc::TimelineGroup,
     groups: &[sketcraft_engine::doc::TimelineGroup],
@@ -1240,7 +1232,7 @@ struct Rows<'a> {
     sketch_states: crate::sketch_state::SketchStates,
 }
 
-fn vertical_features(app: &mut SolveApp, ui: &mut egui::Ui, names: bool) {
+fn vertical_features(app: &mut SketApp, ui: &mut egui::Ui, names: bool) {
     let t = Tokens::get();
     // Show origin and bodies at the top (#6490): the browser's Bodies folder and Origin rows lead
     // the history when it is wide enough for names. They are not places in the history: nothing
@@ -1447,7 +1439,7 @@ fn vertical_features(app: &mut SolveApp, ui: &mut egui::Ui, names: bool) {
 
 /// One feature's row at timeline position `index`, `indent` points in, and for a feature that
 /// sketches are listed under, those sketches' rows when its fold is open.
-fn feature_row(app: &mut SolveApp, ui: &mut egui::Ui, rows: &mut Rows, index: usize, indent: f32, row_kind: RowKind) {
+fn feature_row(app: &mut SketApp, ui: &mut egui::Ui, rows: &mut Rows, index: usize, indent: f32, row_kind: RowKind) {
     let (table, names) = (rows.table, rows.names);
     let (features, plan) = (&table.features, &table.rows);
     let Some((id, name, _, _, _, kind)) = features.get(index) else { return };
@@ -1545,7 +1537,7 @@ struct RowPlaces {
 
 /// The drawing and interaction of a feature row that is in view.
 fn feature_row_body(
-    app: &mut SolveApp,
+    app: &mut SketApp,
     ui: &mut egui::Ui,
     rows: &mut Rows,
     index: usize,
@@ -2155,7 +2147,7 @@ mod tests {
             assert!((shorter.bottom() - history.bottom()).abs() < 1.0 && (taller.top() - browser.top()).abs() < 1.0);
             let share = h.app.preferences.browser_share;
             assert!(share > 0.6 && share < 0.7, "{mode:?}: {share}");
-            let mut restored = SolveApp::new(Default::default(), Default::default());
+            let mut restored = SketApp::new(Default::default(), Default::default());
             restored.load_prefs(&h.app.prefs());
             assert_eq!(restored.preferences.browser_share, share);
             // Either card keeps its header and two rows however far the seam goes.
@@ -3461,7 +3453,7 @@ mod tests {
         let ctx = crate::fonts::test_context();
         let size = egui::vec2(300.0, 1000.0);
         let mut time = 0.0;
-        let mut run = |app: &mut SolveApp, events: Vec<egui::Event>| {
+        let mut run = |app: &mut SketApp, events: Vec<egui::Event>| {
             time += 1.0 / 60.0;
             crate::scenario::clear_handles();
             let raw = egui::RawInput {

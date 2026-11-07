@@ -4,26 +4,26 @@ use sketcraft_engine::doc::render_settings::{CpuJob, GpuJob, RenderJob, RenderSe
 use sketcraft_engine::render::job::{AreaLights, RaytraceEnvironmentOptions, RaytraceOptions, StudioLighting};
 
 use super::{ImageMethod, cpu, hdr, materials, studio};
-use crate::SolveApp;
+use crate::SketApp;
 
 /// Unsaved inputs protect local shot edits and independent navigation. Portable
 /// Glass and coat drafts remain unsaved while using the typed capture route.
-pub(super) fn has_runtime_inputs(app: &SolveApp) -> bool {
+pub(super) fn has_runtime_inputs(app: &SketApp) -> bool {
     requires_runtime_request(app)
         || app.render_workspace.view.materials.bindings.iter().any(|binding| binding.has_unsaved_coat_intent() || binding.has_unsaved_optics_intent())
 }
 
 /// File sources and ordinal Glass/maps use the runtime request schema. Stable
 /// Glass and coat drafts overlay targets into typed captured settings instead.
-pub(super) fn requires_runtime_request(app: &SolveApp) -> bool {
+pub(super) fn requires_runtime_request(app: &SketApp) -> bool {
     has_runtime_bindings(app) || hdr::active(app).is_some_and(|target| !hdr::input(app, target).embedded())
 }
 
-pub(super) fn has_unportable_bindings(app: &SolveApp) -> bool {
+pub(super) fn has_unportable_bindings(app: &SketApp) -> bool {
     !app.render_workspace.view.materials.bindings.is_empty() || has_runtime_bindings(app)
 }
 
-fn has_runtime_bindings(app: &SolveApp) -> bool {
+fn has_runtime_bindings(app: &SketApp) -> bool {
     let view = &app.render_workspace.view;
     if view.materials.bindings.iter().any(super::materials::Binding::has_runtime_intent) {
         return true;
@@ -46,17 +46,17 @@ fn has_runtime_bindings(app: &SolveApp) -> bool {
 }
 
 /// Pure construction: saving intent must work with no CPU/GPU host and stale geometry.
-pub(super) fn snapshot(app: &SolveApp) -> Result<RenderSetup, String> {
+pub(super) fn snapshot(app: &SketApp) -> Result<RenderSetup, String> {
     snapshot_with_lens_override(app, None)
 }
 
 /// Validate a prospective lens edit without changing the live draft first. In particular,
 /// removing an authored lens remains possible after navigating to orthographic.
-pub(super) fn snapshot_with_lens(app: &SolveApp, lens: Option<sketcraft_engine::render::job::ThinLens>) -> Result<RenderSetup, String> {
+pub(super) fn snapshot_with_lens(app: &SketApp, lens: Option<sketcraft_engine::render::job::ThinLens>) -> Result<RenderSetup, String> {
     snapshot_with_lens_override(app, Some(lens))
 }
 
-fn snapshot_with_lens_override(app: &SolveApp, lens: Option<Option<sketcraft_engine::render::job::ThinLens>>) -> Result<RenderSetup, String> {
+fn snapshot_with_lens_override(app: &SketApp, lens: Option<Option<sketcraft_engine::render::job::ThinLens>>) -> Result<RenderSetup, String> {
     cpu::validate_progressive_image(app)?;
     if has_unportable_bindings(app) {
         return Err(app.tr("render.setup_runtime_unsupported").to_string());
@@ -74,7 +74,7 @@ fn snapshot_with_lens_override(app: &SolveApp, lens: Option<Option<sketcraft_eng
 
 /// Stable saved optical edits stay transient while every ordinary image capture sees
 /// the prospective values. Generic Save still requires the explicit optical review.
-pub(super) fn image_snapshot(app: &SolveApp) -> Result<RenderSetup, String> {
+pub(super) fn image_snapshot(app: &SketApp) -> Result<RenderSetup, String> {
     cpu::validate_progressive_image(app)?;
     if has_runtime_bindings(app) {
         return Err(app.tr("render.setup_runtime_unsupported").into());
@@ -84,7 +84,7 @@ pub(super) fn image_snapshot(app: &SolveApp) -> Result<RenderSetup, String> {
     validate_snapshot(app, setup)
 }
 
-fn validate_snapshot(app: &SolveApp, setup: RenderSetup) -> Result<RenderSetup, String> {
+fn validate_snapshot(app: &SketApp, setup: RenderSetup) -> Result<RenderSetup, String> {
     // Preserve unsupported legacy intent visibly instead of erasing it while upgrading a setup.
     if setup.environment_rotation != 0.0 || setup.environment_intensity != 1.0 {
         return Err(app.tr("render.setup_legacy_environment").to_string());
@@ -98,7 +98,7 @@ fn validate_snapshot(app: &SolveApp, setup: RenderSetup) -> Result<RenderSetup, 
 
 // Compare editable numerical intent before validation, so an incompatible legacy value
 // or a lens temporarily paired with an orthographic camera cannot disable dirty tracking.
-pub(super) fn draft(app: &SolveApp) -> Result<RenderSetup, String> {
+pub(super) fn draft(app: &SketApp) -> Result<RenderSetup, String> {
     let view = &app.render_workspace.view;
     let mut setup = RenderSetup { camera: app.cam, ..view.draft.clone() };
     setup.job = Some(match view.method {
@@ -205,7 +205,7 @@ pub(super) fn draft(app: &SolveApp) -> Result<RenderSetup, String> {
 
 /// Save only fields a numerical editor changed. Navigation keeps its explicit
 /// Update shot/Revert flow, and temporary optical bindings remain local.
-pub(super) fn persist_editor(app: &mut SolveApp, before: &RenderSetup) -> Result<(), String> {
+pub(super) fn persist_editor(app: &mut SketApp, before: &RenderSetup) -> Result<(), String> {
     let after = draft(app)?;
     // A corrective edit (for example removing an invalid wear layer) must not
     // require the hostile previous draft to be serialisable. The new value and
@@ -270,7 +270,7 @@ pub(super) fn persist_editor(app: &mut SolveApp, before: &RenderSetup) -> Result
 
 /// A missing setup uses the same transient baseline for initial loading and later model edits.
 /// Existing entries, including a legacy job-less setup, retain their saved interpretation.
-fn saved_or_initial(app: &SolveApp) -> RenderSetup {
+fn saved_or_initial(app: &SketApp) -> RenderSetup {
     app.session.doc.render.setups.get(&app.render_workspace.view.name).cloned().unwrap_or_else(|| {
         let mut setup = RenderSetup::default();
         // Only a new, unsaved setup adopts the useful native image route. Discovery is read-only;
@@ -286,7 +286,7 @@ fn saved_or_initial(app: &SolveApp) -> RenderSetup {
 }
 
 /// A setup switch/reload replaces its numeric editor draft, never a completed image or camera.
-pub(super) fn load(app: &mut SolveApp) {
+pub(super) fn load(app: &mut SketApp) {
     let persisted = app.session.doc.render.setups.contains_key(&app.render_workspace.view.name);
     let setup = saved_or_initial(app);
     load_values(&mut app.render_workspace.view, setup);
@@ -431,7 +431,7 @@ fn load_values(view: &mut super::ViewState, setup: RenderSetup) {
 
 /// Compare the complete authoring source, excluding only saved Render settings.
 /// Stable body labels alone do not prove that geometry or its material is unchanged.
-pub(super) fn same_model_source(app: &SolveApp, document: &std::sync::Weak<sketcraft_engine::doc::Document>) -> bool {
+pub(super) fn same_model_source(app: &SketApp, document: &std::sync::Weak<sketcraft_engine::doc::Document>) -> bool {
     if app.session.model.is_stale() {
         return false;
     }
@@ -491,7 +491,7 @@ pub(super) fn same_model_source(app: &SolveApp, document: &std::sync::Weak<sketc
 pub(super) struct SourceCache(Vec<(std::sync::Weak<sketcraft_engine::doc::Document>, bool)>);
 
 impl SourceCache {
-    pub(super) fn same_model_source(&mut self, app: &SolveApp, document: &std::sync::Weak<sketcraft_engine::doc::Document>) -> bool {
+    pub(super) fn same_model_source(&mut self, app: &SketApp, document: &std::sync::Weak<sketcraft_engine::doc::Document>) -> bool {
         if let Some((_, same)) = self.0.iter().find(|(source, _)| std::sync::Weak::ptr_eq(source, document)) {
             return *same && !app.session.model.is_stale() && document.upgrade().is_some();
         }
@@ -502,7 +502,7 @@ impl SourceCache {
 }
 
 /// Synchronize saved edits/Undo without replacing local camera or runtime inputs.
-pub(super) fn sync_revision(app: &mut SolveApp) {
+pub(super) fn sync_revision(app: &mut SketApp) {
     if app.render_workspace.revision == app.session.revision {
         return;
     }
@@ -636,18 +636,18 @@ pub(super) fn sync_revision(app: &mut SolveApp) {
     refresh_dirty(app);
 }
 
-pub(super) fn refresh_dirty(app: &mut SolveApp) {
+pub(super) fn refresh_dirty(app: &mut SketApp) {
     if let Some(clean) = &app.render_workspace.view.clean_setup {
         app.render_workspace.view.dirty = has_runtime_inputs(app) || draft(app).as_ref() != Ok(clean);
     }
 }
 
-pub(super) fn save(app: &mut SolveApp) -> Result<(), String> {
+pub(super) fn save(app: &mut SketApp) -> Result<(), String> {
     save_with_camera(app, true)
 }
 
 /// Numerical source edits capture bytes/intent atomically without updating the shot camera.
-pub(super) fn save_numerical(app: &mut SolveApp) -> Result<(), String> {
+pub(super) fn save_numerical(app: &mut SketApp) -> Result<(), String> {
     save_with_camera(app, false)
 }
 
@@ -660,7 +660,7 @@ fn setup_patch(setup: RenderSetup, save_camera: bool) -> Result<serde_json::Valu
 }
 
 /// Numeric reloads keep both the live camera and its previous dirty baseline.
-pub(super) fn reload_numerical(app: &mut SolveApp) {
+pub(super) fn reload_numerical(app: &mut SketApp) {
     let camera = app.render_workspace.view.clean_setup.as_ref().map(|clean| clean.camera);
     load(app);
     if let Some(camera) = camera
@@ -671,7 +671,7 @@ pub(super) fn reload_numerical(app: &mut SolveApp) {
     refresh_dirty(app);
 }
 
-fn save_with_camera(app: &mut SolveApp, save_camera: bool) -> Result<(), String> {
+fn save_with_camera(app: &mut SketApp, save_camera: bool) -> Result<(), String> {
     let clean_camera = app.render_workspace.view.clean_setup.as_ref().map_or(app.cam, |clean| clean.camera);
     let mut setup = snapshot(app)?;
     let name = app.render_workspace.view.name.clone();

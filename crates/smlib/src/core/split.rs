@@ -1,4 +1,4 @@
-//! Split Face and Split Body on solidcore: the C API's composition, ported from the fork's
+//! Split Face and Split Body on sketcore: the C API's composition, ported from the fork's
 //! `capi/src/smlib_split.cpp` (`smlib_split_faces`, `smlib_split_body`, `cut_face`,
 //! `plane_covers`, `slice`, `both_sides`, `smlib_split_body_by_sheet`) and the tool surfaces of `capi/src/smlib_ssi.cpp`
 //! (`smlib_surface_plane`, `_cylinder`, `_cone`, `_sphere`, `_torus`, `_nurbs`).
@@ -12,51 +12,51 @@
 //! with a one-face sheet on the tool surface, once with the surface turned over; or with a sheet
 //! of several faces as it is, its surfaces first turned to agree.
 //!
-//! A tool is a [`crate::ssi::Surface`]; solidcore's own surface is made from its description
+//! A tool is a [`crate::ssi::Surface`]; sketcore's own surface is made from its description
 //! ([`Spec`]), as `smlib_ssi.cpp` makes SMLib's, over the surface's natural UV domain.
 
 use std::sync::PoisonError;
 
-use solidcore::EntityRef;
-use solidcore::boolean::api_brep::boolean_with_options;
-use solidcore::boolean::merge::MergeOptions;
-use solidcore::geom::a_object::BooleanOperation;
-use solidcore::geom::axis2_placement::Axis2Placement;
-use solidcore::geom::extent2d::Extent2d;
-use solidcore::geom::object::ObjectRef;
-use solidcore::geom::tol::{USE_DEFAULT, approx_tol3d};
-use solidcore::geom::vector2d::Vec2;
-use solidcore::geom::vector3d::{Point3, Vec3};
-use solidcore::kernel::Kernel;
-use solidcore::nurbs::b_spline_curve::p1::KnotType;
-use solidcore::nurbs::b_spline_surface::p1::{BSplineSurface, BSplineSurfaceForm, CanonicalSurfaceData};
-use solidcore::nurbs::math::CPoint;
-use solidcore::query::brep::BrepFaceServices;
-use solidcore::query::face::p1::calculate_bounding_box;
-use solidcore::surface::cone::p1::Cone;
-use solidcore::surface::plane::p1::Plane;
-use solidcore::surface::sphere::{Sphere, SphereOptions};
-use solidcore::surface::surface::Surface;
-use solidcore::surface::surface::p2::TsectCurveType;
-use solidcore::surface::torus::{Torus, TorusOptions};
-use solidcore::topology::brep::p1 as brep_p1;
-use solidcore::topology::brep::p2::{is_manifold_solid, is_sheet};
-use solidcore::topology::brep::p3::{new_brep, with_kernel_callbacks};
-use solidcore::topology::brep::p8::create_face_from_surface;
-use solidcore::topology::brep::p9::orient_sheet_surfaces;
-use solidcore::topology::brep::p10::merge_curves_on_surface_through_surface;
-use solidcore::topology::brep::planar_section::face_planar_section_curves;
-use solidcore::topology::brep_cache::CacheObject;
-use solidcore::topology::edge::NotifyEnv;
-use solidcore::topology::face::p2 as face_p2;
-use solidcore::topology::{Brep, EdgeId, FaceId};
+use sketcore::EntityRef;
+use sketcore::boolean::api_brep::boolean_with_options;
+use sketcore::boolean::merge::MergeOptions;
+use sketcore::geom::a_object::BooleanOperation;
+use sketcore::geom::axis2_placement::Axis2Placement;
+use sketcore::geom::extent2d::Extent2d;
+use sketcore::geom::object::ObjectRef;
+use sketcore::geom::tol::{USE_DEFAULT, approx_tol3d};
+use sketcore::geom::vector2d::Vec2;
+use sketcore::geom::vector3d::{Point3, Vec3};
+use sketcore::kernel::Kernel;
+use sketcore::nurbs::b_spline_curve::p1::KnotType;
+use sketcore::nurbs::b_spline_surface::p1::{BSplineSurface, BSplineSurfaceForm, CanonicalSurfaceData};
+use sketcore::nurbs::math::CPoint;
+use sketcore::query::brep::BrepFaceServices;
+use sketcore::query::face::p1::calculate_bounding_box;
+use sketcore::surface::cone::p1::Cone;
+use sketcore::surface::plane::p1::Plane;
+use sketcore::surface::sphere::{Sphere, SphereOptions};
+use sketcore::surface::surface::Surface;
+use sketcore::surface::surface::p2::TsectCurveType;
+use sketcore::surface::torus::{Torus, TorusOptions};
+use sketcore::topology::brep::p1 as brep_p1;
+use sketcore::topology::brep::p2::{is_manifold_solid, is_sheet};
+use sketcore::topology::brep::p3::{new_brep, with_kernel_callbacks};
+use sketcore::topology::brep::p8::create_face_from_surface;
+use sketcore::topology::brep::p9::orient_sheet_surfaces;
+use sketcore::topology::brep::p10::merge_curves_on_surface_through_surface;
+use sketcore::topology::brep::planar_section::face_planar_section_curves;
+use sketcore::topology::brep_cache::CacheObject;
+use sketcore::topology::edge::NotifyEnv;
+use sketcore::topology::face::p2 as face_p2;
+use sketcore::topology::{Brep, EdgeId, FaceId};
 
 use super::Body;
 use super::blend::status;
 use super::sweep::build_faces;
 use crate::ssi::Spec;
 use crate::{Error, Result};
-use solidcore::topology::brep::p3::brep_copy;
+use sketcore::topology::brep::p3::brep_copy;
 
 /// `SMLIB_SPLIT_MAX_FACES`, `SMLIB_SPLIT_MAX_TOOLS`.
 pub(crate) const MAX_FACES: usize = 100_000;
@@ -68,7 +68,7 @@ const SM_ERR: i32 = 1001;
 /// The capi's statuses as SketCraft errors: an operation's own result.
 type Out<T> = std::result::Result<T, Error>;
 
-/// A tool surface as solidcore holds it: the surface over its natural UV domain (`smlib_surface`'s
+/// A tool surface as sketcore holds it: the surface over its natural UV domain (`smlib_surface`'s
 /// `s` and `domain`), and for a plane its point and unit normal (`IsPlanar`).
 pub(crate) struct Tool {
     pub(super) surface: Surface,
@@ -112,7 +112,7 @@ fn clamped(k: &[f64], p: usize) -> bool {
 
 /// The tool's surface as `smlib_ssi.cpp`'s constructors make it, then its natural UV domain
 /// (`construct`: finite and not empty, else `SM_ERR_INVALID_INPUT`).
-pub(super) fn tool(k: &Kernel, spec: &Spec) -> solidcore::Result<Out<Tool>> {
+pub(super) fn tool(k: &Kernel, spec: &Spec) -> sketcore::Result<Out<Tool>> {
     let mut plane = None;
     let surface = match spec {
         Spec::Plane { origin, xaxis, yaxis, u, v } => {
@@ -196,7 +196,7 @@ pub(super) fn tool(k: &Kernel, spec: &Spec) -> solidcore::Result<Out<Tool>> {
 /// `plane_covers`: whether the plane `tool` reaches over all of `bx` (each corner's foot on the
 /// plane lies in the tool's parameter box): then its section with a face in the box is the
 /// infinite plane's.
-fn plane_covers(k: &Kernel, tool: &Tool, bx: &solidcore::geom::extent3d::Extent3d, tol: f64) -> bool {
+fn plane_covers(k: &Kernel, tool: &Tool, bx: &sketcore::geom::extent3d::Extent3d, tol: f64) -> bool {
     let (lo, hi) = (tool.domain.min(), tool.domain.max());
     let at = |u: f64, v: f64| tool.surface.evaluate_point(k, Vec2::new(u, v)).ok();
     let (Some(o), Some(pu), Some(pv)) = (at(lo.x, lo.y), at(hi.x, lo.y), at(lo.x, hi.y)) else {
@@ -224,11 +224,11 @@ fn plane_covers(k: &Kernel, tool: &Tool, bx: &solidcore::geom::extent3d::Extent3
 
 /// The name of each edge curve a merge makes (`SmApiCut`'s).
 fn curve_ref(e: EdgeId, _type_code: i64) -> ObjectRef {
-    solidcore::topology::loopuse::notify_ref(EntityRef::Edge(e))
+    sketcore::topology::loopuse::notify_ref(EntityRef::Edge(e))
 }
 
 /// `cut_face`: cuts `face` where `tool` meets it; the faces it was split into besides itself.
-fn cut_face(k: &mut Kernel, b: &mut Brep, env: &mut NotifyEnv<'_>, face: FaceId, tool: &Tool, tol: f64) -> solidcore::Result<Out<Vec<FaceId>>> {
+fn cut_face(k: &mut Kernel, b: &mut Brep, env: &mut NotifyEnv<'_>, face: FaceId, tool: &Tool, tol: f64) -> sketcore::Result<Out<Vec<FaceId>>> {
     let Some(surface) = face_p2::surface(b, face)? else {
         return Ok(Err(Error::Status(SM_ERR)));
     };
@@ -274,7 +274,7 @@ fn cut_face(k: &mut Kernel, b: &mut Brep, env: &mut NotifyEnv<'_>, face: FaceId,
         return merge(k, b, env, section.curves_3d, uv);
     }
     // `face->GetSurface()` reaches its face's trimmed cache: the solve runs through the B-rep's
-    // face services, as solidcore's own face intersections do (a face-owned surface has no cache
+    // face services, as sketcore's own face intersections do (a face-owned surface has no cache
     // of its own).
     let mut services = BrepFaceServices::new(&mut *b);
     let found = match surface.global_surface_intersect_with_context(
@@ -375,7 +375,7 @@ pub(crate) fn split_faces(body: &Body, faces: &[usize], tools: &[&Spec]) -> Resu
         a.refresh_cached_topology();
         // The cut's new edges own their curves under the kernel's identities (it records them),
         // not the copy's Notify ones, and the check reads the owners by the body's naming.
-        a.set_naming(solidcore::topology::NamingScheme::Caller);
+        a.set_naming(sketcore::topology::NamingScheme::Caller);
         Ok(match cut? {
             Err(e) => Err(e),
             Ok(0) => Ok(None),
@@ -387,7 +387,7 @@ pub(crate) fn split_faces(body: &Body, faces: &[usize], tools: &[&Spec]) -> Resu
 
 /// `slice`: a copy of `body` sliced by `sheet` (SMLib's slice reads the side from the surfaces, not
 /// the faces' uses). `None` when nothing is left.
-fn slice(k: &mut Kernel, body: &Body, sheet: Brep) -> solidcore::Result<Out<Option<Brep>>> {
+fn slice(k: &mut Kernel, body: &Body, sheet: Brep) -> sketcore::Result<Out<Option<Brep>>> {
     let a = {
         let g = body.0.lock().unwrap_or_else(PoisonError::into_inner);
         brep_copy(k, &g)?
@@ -409,8 +409,8 @@ fn both_sides(
     k: &mut Kernel,
     body: &Body,
     whole: bool,
-    mut side: impl FnMut(&mut Kernel, bool) -> solidcore::Result<Out<Brep>>,
-) -> solidcore::Result<Out<Option<(Brep, Brep)>>> {
+    mut side: impl FnMut(&mut Kernel, bool) -> sketcore::Result<Out<Brep>>,
+) -> sketcore::Result<Out<Option<(Brep, Brep)>>> {
     let solid = {
         let g = body.0.lock().unwrap_or_else(PoisonError::into_inner);
         is_manifold_solid(&g)?
@@ -437,7 +437,7 @@ fn both_sides(
 }
 
 /// One side of `smlib_split_body`: a one-face sheet on the tool's surface, turned over with `flip`.
-fn side(k: &mut Kernel, body: &Body, spec: &Spec, flip: bool) -> solidcore::Result<Out<Brep>> {
+fn side(k: &mut Kernel, body: &Body, spec: &Spec, flip: bool) -> sketcore::Result<Out<Brep>> {
     let tolerance = body.0.lock().unwrap_or_else(PoisonError::into_inner).tolerance();
     let t = match tool(k, spec)? {
         Ok(t) => t,

@@ -10,7 +10,7 @@ use std::path::{Path, PathBuf};
 use egui::RichText;
 use serde::Deserialize;
 
-use crate::SolveApp;
+use crate::SketApp;
 use crate::ui_kit::BackingTooltipExt as _;
 
 /// How many turned-off ids a preferences file may name.
@@ -127,7 +127,7 @@ pub fn scan(dir: &Path) -> (Vec<Plugin>, Vec<Skipped>) {
 }
 
 /// Whether an installed plugin is offered. Unknown ids are on; an id in `disabled_plugins` is off.
-pub fn enabled(app: &SolveApp, id: &str) -> bool {
+pub fn enabled(app: &SketApp, id: &str) -> bool {
     !app.preferences.disabled_plugins.contains(id)
 }
 
@@ -143,12 +143,12 @@ fn matches_query(plugin: &Plugin, query: &str) -> bool {
 }
 
 /// The Plugins page. Desktop only: the browser build has no per-user plugin folder.
-pub fn page(app: &mut SolveApp, ui: &mut egui::Ui) {
+pub fn page(app: &mut SketApp, ui: &mut egui::Ui) {
     let dir = if cfg!(target_arch = "wasm32") { None } else { plugins_dir() };
     page_in_dir(app, ui, dir.as_deref());
 }
 
-fn page_in_dir(app: &mut SolveApp, ui: &mut egui::Ui, dir: Option<&Path>) {
+fn page_in_dir(app: &mut SketApp, ui: &mut egui::Ui, dir: Option<&Path>) {
     crate::ui_kit::settings_page(ui, |ui| {
         crate::ui_kit::settings_heading(ui, crate::i18n::tr("ui.plugins"), crate::i18n::tr("prefs.plugins_intro"));
         let Some(dir) = dir else {
@@ -233,7 +233,7 @@ fn page_in_dir(app: &mut SolveApp, ui: &mut egui::Ui, dir: Option<&Path>) {
     });
 }
 
-fn plugin_card(app: &mut SolveApp, ui: &mut egui::Ui, dir: &Path, plugin: &Plugin) {
+fn plugin_card(app: &mut SketApp, ui: &mut egui::Ui, dir: &Path, plugin: &Plugin) {
     use crate::ui_kit;
     let mut on = enabled(app, &plugin.id);
     let was_on = on;
@@ -269,7 +269,7 @@ fn plugin_card(app: &mut SolveApp, ui: &mut egui::Ui, dir: &Path, plugin: &Plugi
 mod tests {
     use super::*;
 
-    fn page_frame(app: &mut SolveApp, ctx: &egui::Context, dir: &Path, events: Vec<egui::Event>) {
+    fn page_frame(app: &mut SketApp, ctx: &egui::Context, dir: &Path, events: Vec<egui::Event>) {
         crate::scenario::clear_handles();
         let mut output = crate::test_support::frame(
             ctx,
@@ -284,7 +284,7 @@ mod tests {
         output.textures_delta.clear();
     }
 
-    fn click_page(app: &mut SolveApp, ctx: &egui::Context, dir: &Path, handle: &str) {
+    fn click_page(app: &mut SketApp, ctx: &egui::Context, dir: &Path, handle: &str) {
         let at = crate::scenario::handle_at(handle).unwrap();
         page_frame(app, ctx, dir, crate::test_support::pointer(at, true));
         page_frame(app, ctx, dir, crate::test_support::pointer(at, false));
@@ -521,14 +521,14 @@ mod tests {
     #[test]
     fn turning_a_plugin_off_is_saved_and_restore_defaults_turns_it_back_on() {
         use serde_json::json;
-        let mut app = crate::SolveApp::new(sketcraft_engine::Session::default(), crate::Services::default());
+        let mut app = crate::SketApp::new(sketcraft_engine::Session::default(), crate::Services::default());
         assert!(enabled(&app, "ftc-frc-parts"));
         crate::prefs::set(&mut app, &json!({"disabled_plugins": ["ftc-frc-parts"]})).unwrap();
         assert!(!enabled(&app, "ftc-frc-parts"));
         let err = crate::prefs::set(&mut app, &json!({"disabled_plugins": ["Bad Id"]})).unwrap_err();
         assert!(err.contains("disabled_plugins"), "{err}");
         assert!(!enabled(&app, "ftc-frc-parts"), "a refused list leaves the previous choice");
-        let mut other = crate::SolveApp::new(sketcraft_engine::Session::default(), crate::Services::default());
+        let mut other = crate::SketApp::new(sketcraft_engine::Session::default(), crate::Services::default());
         other.load_prefs(&app.prefs());
         assert!(!enabled(&other, "ftc-frc-parts"));
         crate::prefs::control(&mut app, &json!({"open": "Plugins", "button": "defaults"})).unwrap();

@@ -11,7 +11,7 @@ mod projection;
 pub(super) mod sketch;
 
 use serde_json::{Value, json};
-use solidcore_record::Vec2;
+use sketcore_record::Vec2;
 use sketcraft_io::{DxfEntity, DxfLayer, DxfLinetype, DxfShape};
 use sketcraft_render::Camera;
 

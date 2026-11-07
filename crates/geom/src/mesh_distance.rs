@@ -6,7 +6,7 @@
 use crate::compare::closest_on_triangle;
 use crate::prelude::*;
 use crate::{Aabb3, Bvh, Mesh};
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 
 /// A mesh's triangles with their B-rep faces, indexed for distance queries.
 #[derive(Clone, Debug, Default)]

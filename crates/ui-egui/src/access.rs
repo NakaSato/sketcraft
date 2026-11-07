@@ -5,7 +5,7 @@ use std::cell::RefCell;
 
 use sketcraft_engine::SurfaceAnalysis;
 
-use crate::SolveApp;
+use crate::SketApp;
 use crate::gpu::AccessMap;
 
 thread_local! {
@@ -15,7 +15,7 @@ thread_local! {
 }
 
 /// The depth map for the active Accessibility Analysis, if any.
-pub fn map(app: &SolveApp) -> Option<AccessMap> {
+pub fn map(app: &SketApp) -> Option<AccessMap> {
     let Some(SurfaceAnalysis::Access { dir }) = app.session.analysis else { return None };
     let key = (app.session.revision, [dir.x.to_bits(), dir.y.to_bits(), dir.z.to_bits()]);
     if let Some(m) = CACHE.with(|c| c.borrow().as_ref().filter(|(k, _)| *k == key).map(|(_, m)| m.clone())) {

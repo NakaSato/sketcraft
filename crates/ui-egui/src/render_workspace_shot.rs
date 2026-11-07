@@ -1,6 +1,6 @@
 //! Standalone Shot editor and transient frame composition. Commands own every edit.
 use super::{RenderSelection, Stage, inspector};
-use crate::{SolveApp, theme::Tokens, ui_kit};
+use crate::{SketApp, theme::Tokens, ui_kit};
 use egui::{Rect, pos2, vec2};
 use serde_json::{Value, json};
 use sketcraft_engine::doc::render_settings::{RenderSettings, RenderSetup};
@@ -13,7 +13,7 @@ pub(crate) struct Frame {
     exposure: Option<(String, f64, f64)>,
 }
 
-pub(crate) fn apply_frame(app: &mut SolveApp, request: &Value) {
+pub(crate) fn apply_frame(app: &mut SketApp, request: &Value) {
     let frame = &mut app.render_workspace.view.frame;
     if let Some(aspect) = request.get("aspect").and_then(Value::as_str) {
         frame.aspect = Some(aspect.into());
@@ -27,7 +27,7 @@ pub(crate) fn apply_frame(app: &mut SolveApp, request: &Value) {
     }
 }
 
-pub(super) fn selected(app: &SolveApp) -> Option<&str> {
+pub(super) fn selected(app: &SketApp) -> Option<&str> {
     match &app.render_workspace.view.selection {
         RenderSelection::Shot(name) if app.session.doc.render.setups.contains_key(name) => Some(name),
         _ => None,
@@ -43,22 +43,22 @@ const ASPECTS: [(&str, u32, u32, &str); 6] = [
     ("custom", 0, 0, "render.frame_custom"),
 ];
 
-fn target(app: &SolveApp) -> String {
+fn target(app: &SketApp) -> String {
     selected(app).unwrap_or(&app.render_workspace.view.name).to_owned()
 }
 
-fn setup(app: &SolveApp, name: &str) -> RenderSetup {
+fn setup(app: &SketApp, name: &str) -> RenderSetup {
     app.session.doc.render.setups.get(name).cloned().unwrap_or_else(|| app.render_workspace.view.draft.clone())
 }
 
-pub(super) fn aspect_label(app: &SolveApp, setup: &RenderSetup) -> String {
+pub(super) fn aspect_label(app: &SketApp, setup: &RenderSetup) -> String {
     ASPECTS.get(aspect_index(app, setup)).map_or_else(
         || app.tr("render.frame_custom").to_string(),
         |(key, ..)| if *key == "custom" { app.tr("render.frame_custom").to_string() } else { (*key).into() },
     )
 }
 
-fn aspect_index(app: &SolveApp, setup: &RenderSetup) -> usize {
+fn aspect_index(app: &SketApp, setup: &RenderSetup) -> usize {
     if let Some(aspect) = &app.render_workspace.view.frame.aspect
         && let Some(index) = ASPECTS.iter().position(|(key, ..)| *key == aspect)
     {
@@ -68,7 +68,7 @@ fn aspect_index(app: &SolveApp, setup: &RenderSetup) -> usize {
 }
 
 /// Patch only the requested saved fields; unrelated live drafts and the live camera survive.
-pub(super) fn edit_settings(app: &mut SolveApp, name: &str, patch: Value) -> Result<(), String> {
+pub(super) fn edit_settings(app: &mut SketApp, name: &str, patch: Value) -> Result<(), String> {
     app.run("render.settings.set", json!({"name":name,"set":patch}))?;
     if name == app.render_workspace.view.name {
         let saved = setup(app, name);
@@ -95,7 +95,7 @@ pub(super) fn edit_settings(app: &mut SolveApp, name: &str, patch: Value) -> Res
     Ok(())
 }
 
-pub(super) fn choose_aspect(app: &mut SolveApp, name: &str, index: usize) -> Result<(), String> {
+pub(super) fn choose_aspect(app: &mut SketApp, name: &str, index: usize) -> Result<(), String> {
     let Some((aspect, width, height, _)) = ASPECTS.get(index) else { return Err(app.tr("render.frame_invalid_aspect").into()) };
     if *width > 0 {
         edit_settings(app, name, json!({"width":width,"height":height}))?;
@@ -104,13 +104,13 @@ pub(super) fn choose_aspect(app: &mut SolveApp, name: &str, index: usize) -> Res
     Ok(())
 }
 
-fn result(app: &mut SolveApp, action: Result<(), String>) {
+fn result(app: &mut SketApp, action: Result<(), String>) {
     if let Err(error) = action {
         app.set_status(error, true);
     }
 }
 
-fn guides(app: &mut SolveApp, ui: &mut egui::Ui, editor: bool) {
+fn guides(app: &mut SketApp, ui: &mut egui::Ui, editor: bool) {
     let current = app.render_workspace.view.frame.guides;
     for (key, label, mut checked) in [
         ("thirds", if editor { "render.frame_rule_thirds" } else { "render.frame_thirds" }, current.thirds),
@@ -125,7 +125,7 @@ fn guides(app: &mut SolveApp, ui: &mut egui::Ui, editor: bool) {
     }
 }
 
-pub(super) fn presets(app: &mut SolveApp, ui: &mut egui::Ui) {
+pub(super) fn presets(app: &mut SketApp, ui: &mut egui::Ui) {
     let name = target(app);
     let current = setup(app, &name);
     let selected = aspect_index(app, &current);
@@ -151,7 +151,7 @@ pub(super) fn presets(app: &mut SolveApp, ui: &mut egui::Ui) {
     ui_kit::section(ui, "render_frame_guides", &title, true, |ui| guides(app, ui, false));
 }
 
-pub(super) fn rename(app: &mut SolveApp, name: &str, new_name: &str) -> Result<(), String> {
+pub(super) fn rename(app: &mut SketApp, name: &str, new_name: &str) -> Result<(), String> {
     app.run("render.shot.rename", json!({"name":name,"new_name":new_name,"expected_revision":app.session.revision}))?;
     if app.render_workspace.view.name == name {
         app.render_workspace.view.name = new_name.into();
@@ -160,7 +160,7 @@ pub(super) fn rename(app: &mut SolveApp, name: &str, new_name: &str) -> Result<(
     Ok(())
 }
 
-pub(super) fn duplicate(app: &mut SolveApp, name: &str) -> Result<(), String> {
+pub(super) fn duplicate(app: &mut SketApp, name: &str) -> Result<(), String> {
     for number in 1..=32 {
         let mut prefix = name.to_string();
         let mut destination = crate::i18n::format("render.frame_copy_name", &[("name", &prefix), ("number", &number.to_string())]);
@@ -175,12 +175,12 @@ pub(super) fn duplicate(app: &mut SolveApp, name: &str) -> Result<(), String> {
     Err(app.tr("render.frame_copy_limit").into())
 }
 
-pub(super) fn revert(app: &mut SolveApp, name: &str) -> Result<(), String> {
+pub(super) fn revert(app: &mut SketApp, name: &str) -> Result<(), String> {
     inspector::restore_saved_camera(app, name)
 }
 
 /// E7: saved camera, lens, exposure and frame in approved order.
-pub(super) fn editor(app: &mut SolveApp, ui: &mut egui::Ui, shot: &str) {
+pub(super) fn editor(app: &mut SketApp, ui: &mut egui::Ui, shot: &str) {
     let Some(saved) = app.session.doc.render.setups.get(shot).cloned() else { return };
     if app.render_workspace.view.frame.name.as_ref().is_none_or(|(name, _)| name != shot) {
         app.render_workspace.view.frame.name = Some((shot.into(), shot.into()));
@@ -270,7 +270,7 @@ pub(super) fn editor(app: &mut SolveApp, ui: &mut egui::Ui, shot: &str) {
 }
 
 /// Controls save immediately; navigation alone keeps Update/Revert.
-pub(super) fn set_camera(app: &mut SolveApp, shot: &str, camera: sketcraft_engine::render::Camera) -> Result<(), String> {
+pub(super) fn set_camera(app: &mut SketApp, shot: &str, camera: sketcraft_engine::render::Camera) -> Result<(), String> {
     if !camera.is_valid() {
         return Err(app.tr("render.shot_invalid_camera").into());
     }
@@ -278,7 +278,7 @@ pub(super) fn set_camera(app: &mut SolveApp, shot: &str, camera: sketcraft_engin
     inspector::apply_camera_draft(app, camera)
 }
 
-fn camera(app: &mut SolveApp, ui: &mut egui::Ui, shot: &str) {
+fn camera(app: &mut SketApp, ui: &mut egui::Ui, shot: &str) {
     let mut camera = app.cam;
     let mut projection = usize::from(camera.fov == 0.0);
     // This short label can use the kit's base column, leaving both projection names visible.
@@ -319,7 +319,7 @@ fn camera(app: &mut SolveApp, ui: &mut egui::Ui, shot: &str) {
     ui_kit::row(ui, app.tr("render.shot_target"), |ui| {
         ui_kit::number_fields(ui, &mut target, -1e9..=1e9, 0.1, "");
     });
-    camera.target = solidcore_record::Vec3::new(target[0], target[1], target[2]);
+    camera.target = sketcore_record::Vec3::new(target[0], target[1], target[2]);
     for (key, value) in [("camera.shot_yaw", &mut camera.yaw), ("camera.shot_pitch", &mut camera.pitch), ("camera.shot_roll", &mut camera.roll)] {
         let mut degrees = value.to_degrees();
         if ui_kit::row(ui, app.tr(key), |ui| ui_kit::number_field(ui, &mut degrees, (-1e6f64).to_degrees()..=1e6f64.to_degrees(), 0.5, "°")).changed()
@@ -352,13 +352,13 @@ fn camera(app: &mut SolveApp, ui: &mut egui::Ui, shot: &str) {
     }
 }
 
-pub(super) fn look_at_selection(app: &mut SolveApp, shot: &str) -> Result<(), String> {
+pub(super) fn look_at_selection(app: &mut SketApp, shot: &str) -> Result<(), String> {
     let bounds = crate::viewport::selection_bounds(app).ok_or_else(|| app.tr("render.shot_selection_reason").to_string())?;
     set_camera(app, shot, sketcraft_engine::render::Camera { target: bounds.center(), ..app.cam })
 }
 
 /// Change only saved lens intent. Camera updates keep their explicit Update shot action.
-pub(super) fn set_lens(app: &mut SolveApp, shot: &str, lens: Option<sketcraft_engine::render::job::ThinLens>) -> Result<(), String> {
+pub(super) fn set_lens(app: &mut SketApp, shot: &str, lens: Option<sketcraft_engine::render::job::ThinLens>) -> Result<(), String> {
     use sketcraft_engine::doc::render_settings::RenderJob;
     let saved = app.session.doc.render.setups.get(shot).ok_or_else(|| app.tr("render.ribbon_no_saved_camera").to_string())?;
     let active = app.render_workspace.view.name == shot;
@@ -413,7 +413,7 @@ pub(super) fn set_lens(app: &mut SolveApp, shot: &str, lens: Option<sketcraft_en
     Ok(())
 }
 
-fn lens(app: &mut SolveApp, ui: &mut egui::Ui, shot: &str, saved: &RenderSetup) {
+fn lens(app: &mut SketApp, ui: &mut egui::Ui, shot: &str, saved: &RenderSetup) {
     use sketcraft_engine::doc::render_settings::RenderJob;
     // A fresh native CPU default is transient until the first numerical edit.
     // Read its visible method here; opening Frame must not write that job to Studio.
@@ -467,7 +467,7 @@ fn lens(app: &mut SolveApp, ui: &mut egui::Ui, shot: &str, saved: &RenderSetup) 
     }
 }
 
-fn exposure(app: &mut SolveApp, ui: &mut egui::Ui, shot: &str, saved: &RenderSetup) {
+fn exposure(app: &mut SketApp, ui: &mut egui::Ui, shot: &str, saved: &RenderSetup) {
     let limit = if matches!(saved.job, Some(sketcraft_engine::doc::render_settings::RenderJob::CpuRaytrace { .. })) { 16.0 } else { 32.0 };
     let enabled = !matches!(saved.job, None | Some(sketcraft_engine::doc::render_settings::RenderJob::Raster { .. }));
     if !enabled {
@@ -505,13 +505,13 @@ pub(super) fn frame_rect(aspect: f64, viewport: Rect) -> Option<Rect> {
     (frame.is_finite() && frame.is_positive()).then_some(frame)
 }
 
-pub(crate) fn overlay_visible(app: &SolveApp) -> bool {
+pub(crate) fn overlay_visible(app: &SketApp) -> bool {
     !app.render_workspace.view.result && (app.render_workspace.view.stage == Stage::Frame || selected(app).is_some())
 }
 
 /// Actual output-camera frame, independent of inspector focus and transient guides.
 /// Retained result/compare views use their captured image dimensions separately.
-pub(crate) fn render_rect(app: &SolveApp, viewport: Rect) -> Rect {
+pub(crate) fn render_rect(app: &SketApp, viewport: Rect) -> Rect {
     if app.preferences.render_legacy_image_defaults {
         return preview_rect(app, viewport).unwrap_or(viewport);
     }
@@ -524,7 +524,7 @@ pub(crate) fn render_rect(app: &SolveApp, viewport: Rect) -> Rect {
 
 /// Contextual composition guides may preview a transient/selected-shot aspect.
 /// Their visibility/aspect must never choose the nonlegacy rendered projection.
-pub(crate) fn preview_rect(app: &SolveApp, viewport: Rect) -> Option<Rect> {
+pub(crate) fn preview_rect(app: &SketApp, viewport: Rect) -> Option<Rect> {
     if !overlay_visible(app) {
         return None;
     }
@@ -538,7 +538,7 @@ pub(crate) fn preview_rect(app: &SolveApp, viewport: Rect) -> Option<Rect> {
     frame_rect(aspect, free.shrink(Tokens::get().space_8))
 }
 
-pub(crate) fn overlay(app: &mut SolveApp, ui: &mut egui::Ui, viewport: Rect) {
+pub(crate) fn overlay(app: &mut SketApp, ui: &mut egui::Ui, viewport: Rect) {
     if !overlay_visible(app) {
         return;
     }

@@ -1,7 +1,7 @@
 //! Real 3D drawing and triad input in a rotated second component occurrence.
 
 use serde_json::json;
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 use sketcraft_engine::geom::prelude::*;
 
 #[test]
@@ -83,7 +83,7 @@ fn sketch_tools_never_pick_another_sketchs_point() {
         );
         let (at, id) = crate::viewport::sketch_point_at(&h.app, &proj, pos).unwrap();
         assert!(id.is_none(), "sketch_3d={sketch_3d}: snapped to foreign point id {id:?}");
-        assert!(at.dist(solidcore_record::Vec2::new(10.0, 20.0)) < 0.5, "{at:?}");
+        assert!(at.dist(sketcore_record::Vec2::new(10.0, 20.0)) < 0.5, "{at:?}");
         if !sketch_3d {
             let before = h.app.session.world_state().unwrap().sketch(other).unwrap().sketch.clone();
             // A real 2D line click there creates nothing tied to the other sketch's point.

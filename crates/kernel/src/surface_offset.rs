@@ -41,7 +41,7 @@ pub fn offset_surface(body: &Body, faces: &[usize], distance: f64, tolerance: f6
 mod tests {
     use super::*;
     use crate::{box_solid, cylinder, measure, sphere};
-    use solidcore_record::Vec3;
+    use sketcore_record::Vec3;
     use sketcraft_geom::prelude::*;
 
     fn rel(a: f64, b: f64) -> f64 {

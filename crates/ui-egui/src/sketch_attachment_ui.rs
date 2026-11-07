@@ -3,13 +3,13 @@
 use crate::ui_kit::BackingTooltipExt as _;
 use egui::RichText;
 use serde_json::{Value, json};
-use solidcore_record::{Plane, Vec3};
+use sketcore_record::{Plane, Vec3};
 use sketcraft_engine::Sel;
 use sketcraft_engine::doc::face_anchor::plane_face_anchor;
 use sketcraft_engine::doc::{EmbossFace, FaceAttachmentStatus, FeatureKind, PlaneRef, mat_inverse};
 use sketcraft_engine::geom::prelude::*;
 
-use crate::SolveApp;
+use crate::SketApp;
 use crate::theme::Tokens;
 use crate::ui_kit;
 
@@ -23,7 +23,7 @@ pub struct Draft {
 }
 
 impl Draft {
-    pub fn new(app: &SolveApp, sketch: u64) -> Self {
+    pub fn new(app: &SketApp, sketch: u64) -> Self {
         let author_path = app.session.doc.feature(sketch).and_then(|feature| match &feature.kind {
             FeatureKind::Sketch { plane, .. } if plane_face_anchor(plane).is_some() => {
                 plane_face_anchor(plane).map(|anchor| anchor.author_path.clone())
@@ -48,7 +48,7 @@ impl Draft {
         Some(vec![("sketch.redefine".into(), params)])
     }
 
-    pub fn choose_saved_fixed(&mut self, app: &SolveApp, world: Plane) -> Result<(), String> {
+    pub fn choose_saved_fixed(&mut self, app: &SketApp, world: Plane) -> Result<(), String> {
         let doc = app.session.placed_document();
         let owner = doc.feature(self.sketch).ok_or("Sketch no longer exists")?.component;
         let path = self.author_path.clone().unwrap_or_else(|| doc.first_path(owner));
@@ -72,18 +72,18 @@ impl Draft {
     }
 }
 
-pub fn clear(app: &mut SolveApp) {
+pub fn clear(app: &mut SketApp) {
     app.viewport.dialog_rect = None;
     app.tree.redefine = None;
     app.tree.redefine_draft = None;
 }
 
-pub fn commands(app: &SolveApp) -> Option<Vec<(String, Value)>> {
+pub fn commands(app: &SketApp) -> Option<Vec<(String, Value)>> {
     let draft = app.tree.redefine_draft.as_ref()?;
     (app.tree.redefine == Some(draft.sketch)).then(|| draft.commands()).flatten()
 }
 
-fn attachment(app: &SolveApp, sketch: u64) -> FaceAttachmentStatus {
+fn attachment(app: &SketApp, sketch: u64) -> FaceAttachmentStatus {
     app.session.placed_document().sketch_face_attachment(sketch, &app.session.model)
 }
 
@@ -91,7 +91,7 @@ fn fixed_plane(plane: Plane) -> Value {
     json!({"origin":plane.origin,"x_dir":plane.x,"y_dir":plane.y})
 }
 
-pub fn face_plane(app: &SolveApp, selection: &Sel) -> Option<Value> {
+pub fn face_plane(app: &SketApp, selection: &Sel) -> Option<Value> {
     match selection {
         Sel::Face { body, index, point } => {
             let doc = app.session.placed_document();
@@ -123,7 +123,7 @@ pub(crate) fn plane_description(doc: &sketcraft_engine::doc::Document, plane: &P
     describe(doc, plane, 0)
 }
 
-fn face_label(app: &SolveApp, selection: &Sel) -> String {
+fn face_label(app: &SketApp, selection: &Sel) -> String {
     let Sel::Face { body, .. } = selection else { return String::new() };
     let placed = app.session.placed_document();
     if let Some((_, source, _, path, _)) =
@@ -135,7 +135,7 @@ fn face_label(app: &SolveApp, selection: &Sel) -> String {
     }
 }
 
-fn path_label(app: &SolveApp, path: &[u64]) -> String {
+fn path_label(app: &SketApp, path: &[u64]) -> String {
     if path.is_empty() {
         return "Root".into();
     }
@@ -145,7 +145,7 @@ fn path_label(app: &SolveApp, path: &[u64]) -> String {
         .join(" / ")
 }
 
-pub fn panel(app: &mut SolveApp, ctx: &egui::Context) {
+pub fn panel(app: &mut SketApp, ctx: &egui::Context) {
     let Some(sketch) = app.tree.redefine else { return };
     if app.session.doc.feature(sketch).is_none() {
         clear(app);
@@ -364,14 +364,14 @@ pub fn panel(app: &mut SolveApp, ctx: &egui::Context) {
 
 /// Only a lost reference's explicit saved author frame supplies a guide. It is
 /// absent from ModelState, selection, snapping and all downstream evaluation.
-pub fn lost_guide(app: &SolveApp) -> Option<(Plane, &sketcraft_engine::sketch::Sketch)> {
+pub fn lost_guide(app: &SketApp) -> Option<(Plane, &sketcraft_engine::sketch::Sketch)> {
     let sketch = app.tree.redefine?;
     let FaceAttachmentStatus::Lost { repair_plane: Some(plane), .. } = attachment(app, sketch) else { return None };
     let FeatureKind::Sketch { sketch, .. } = &app.session.doc.feature(sketch)?.kind else { return None };
     Some((plane, sketch))
 }
 
-pub fn guide_lines(app: &SolveApp) -> Vec<Vec<Vec3>> {
+pub fn guide_lines(app: &SketApp) -> Vec<Vec<Vec3>> {
     let Some((plane, sketch)) = lost_guide(app) else { return Vec::new() };
     (0..sketch.curves.len())
         .flat_map(|index| sketch.segs(index))
@@ -379,7 +379,7 @@ pub fn guide_lines(app: &SolveApp) -> Vec<Vec<Vec3>> {
         .collect()
 }
 
-pub fn display_guide_lines(app: &SolveApp, proj: &crate::viewport::Proj) -> Vec<Vec<Vec3>> {
+pub fn display_guide_lines(app: &SketApp, proj: &crate::viewport::Proj) -> Vec<Vec<Vec3>> {
     let Some((plane, sketch)) = lost_guide(app) else { return Vec::new() };
     let mut budget = sketcraft_engine::render::SamplingBudget::new(65_536, 262_144);
     (0..sketch.curves.len())

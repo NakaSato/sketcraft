@@ -2,7 +2,7 @@
 //! positive side is hidden). It changes no geometry and is not an undo step.
 
 use serde_json::Value;
-use solidcore_record::{Plane, Vec3};
+use sketcore_record::{Plane, Vec3};
 use sketcraft_geom::prelude::*;
 
 use super::CommandSpec;

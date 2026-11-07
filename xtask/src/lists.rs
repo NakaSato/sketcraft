@@ -8,7 +8,7 @@
 //! - `tests/KNOWN_FAILING_TESTS`: one test a line with its cause, sorted, each test once
 //!   (checked only; `cargo xtask known-failing` reads it).
 //! - `tests/kernel-cases/CASES`: every kernel rig case, sorted; it only shrinks, since new kernel
-//!   cases go to solidcore's corpus (checked only).
+//!   cases go to sketcore's corpus (checked only).
 //! - Growing Rust lists: no written array lengths on more than ten lines of entries.
 
 use std::path::Path;
@@ -81,8 +81,6 @@ const FIXED_ARRAYS: &[(&str, &str)] = &[
     ("crates/engine/src/cmd/parts.rs", "WASHER"),            // ISO 7089 plain washer dimensions.
     ("crates/ui-egui/src/dialogs_assembly.rs", "TYPES"),     // Joint types; TYPE_LABELS must stay the same length.
     ("crates/ui-egui/src/dialogs_assembly.rs", "TYPE_LABELS"), // Labels for TYPES, index for index.
-    ("crates/ui-egui/src/space_mouse_calibration.rs", "STEP_PROMPTS"), // Labels for the twelve fixed calibration motions.
-    ("crates/ui-egui/src/space_mouse_calibration.rs", "TRACKBALL_PROMPTS"), // Trackball labels indexed by the same twelve motions.
 ];
 
 fn test_only(attrs: &[syn::Attribute]) -> bool {

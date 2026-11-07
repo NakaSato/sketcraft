@@ -2,17 +2,17 @@ use egui::{Rect, pos2, vec2};
 use serde_json::json;
 use sketcraft_engine::geom::prelude::*;
 
-use crate::SolveApp;
+use crate::SketApp;
 use crate::viewport::{Hit, pick, pick_all, projection};
 
 /// Overlapping bodies with flat and curved faces, filleted edges and seams.
-fn assembly() -> SolveApp {
+fn assembly() -> SketApp {
     let mut s = sketcraft_engine::Session::default();
     s.execute("solid.box", &json!({"length": 40, "width": 30, "height": 20})).unwrap();
     s.execute("solid.fillet", &json!({"edges": [[40, 15, 20]], "radius": 4})).unwrap();
     s.execute("solid.cylinder", &json!({"radius": 8, "height": 35, "base": [10, 10, 0], "operation": "new_body"})).unwrap();
     s.execute("solid.sphere", &json!({"radius": 9, "center": [30, 25, 22]})).unwrap();
-    let mut app = SolveApp::new(s, crate::Services::default());
+    let mut app = SketApp::new(s, crate::Services::default());
     app.set_origin_shown(false);
     app
 }
@@ -28,7 +28,7 @@ fn indexed_picks_match_the_full_scan() {
         app.ui.perspective = perspective;
         app.cam.yaw = yaw;
         app.cam.pitch = pitch;
-        app.cam.target = solidcore_record::Vec3::new(20.0, 15.0, 12.0);
+        app.cam.target = sketcore_record::Vec3::new(20.0, 15.0, 12.0);
         app.cam.distance = 110.0;
         let proj = projection(&app, rect);
         for j in 0..48 {
@@ -55,9 +55,9 @@ fn indexed_picks_match_the_full_scan() {
 fn indexes_follow_the_model_state() {
     let mut app = assembly();
     let rect = Rect::from_min_size(pos2(0.0, 0.0), vec2(640.0, 480.0));
-    app.cam.target = solidcore_record::Vec3::new(20.0, 15.0, 12.0);
+    app.cam.target = sketcore_record::Vec3::new(20.0, 15.0, 12.0);
     let proj = projection(&app, rect);
-    let centre = proj.to_screen(solidcore_record::Vec3::new(20.0, 15.0, 10.0)).unwrap();
+    let centre = proj.to_screen(sketcore_record::Vec3::new(20.0, 15.0, 10.0)).unwrap();
     pick(&app, &proj, centre);
     assert!(app.viewport.pick_index.len() >= 1);
     app.session.execute("solid.box", &json!({"length": 5, "width": 5, "height": 5, "corner": [-20, -20, 0], "operation": "new_body"})).unwrap();
@@ -102,13 +102,11 @@ fn pick_timing_on_curved_models() {
             }
         }
     }
-    let mut scenes = vec![
-        ("many bodies", SolveApp::new(many, crate::Services::default()), 0.6),
-        ("one body", SolveApp::new(one, crate::Services::default()), 0.6),
-    ];
-    scenes.push(("eight layers", SolveApp::new(deep, crate::Services::default()), 1.2));
+    let mut scenes =
+        vec![("many bodies", SketApp::new(many, crate::Services::default()), 0.6), ("one body", SketApp::new(one, crate::Services::default()), 0.6)];
+    scenes.push(("eight layers", SketApp::new(deep, crate::Services::default()), 1.2));
     if let Some(path) = std::env::var_os("SKETCRAFT_BENCH_MESH") {
-        let mut app = SolveApp::new(sketcraft_engine::Session::default(), crate::Services::default());
+        let mut app = SketApp::new(sketcraft_engine::Session::default(), crate::Services::default());
         let component = app.run("file.insert_mesh", json!({"path": path.to_string_lossy()})).unwrap()["component"].clone();
         app.run("component.activate", json!({"component":"root"})).unwrap();
         let size = crate::open_meshing::session_world(&app.session).bodies[0].mesh_bounds().size();
@@ -183,7 +181,7 @@ fn sketch_hover_timing() {
         began.elapsed().as_secs_f64()
     );
     // Points on the lines (where Trim and Extend show something), then a grid over the sketch.
-    let mut at: Vec<(String, solidcore_record::Vec2)> = Vec::new();
+    let mut at: Vec<(String, sketcore_record::Vec2)> = Vec::new();
     for c in &ss.sketch.curves {
         if let sketcraft_engine::sketch::CurveKind::Line { a, b } = c.kind
             && at.len() < 60
@@ -198,7 +196,7 @@ fn sketch_hover_timing() {
     for j in 0..6 {
         for i in 0..10 {
             let size = bounds.max - bounds.min;
-            let r = solidcore_record::Vec2::new(size.x * (f64::from(i) + 0.5) / 10.0, size.y * (f64::from(j) + 0.5) / 6.0);
+            let r = sketcore_record::Vec2::new(size.x * (f64::from(i) + 0.5) / 10.0, size.y * (f64::from(j) + 0.5) / 6.0);
             at.push((String::new(), bounds.min + r));
         }
     }

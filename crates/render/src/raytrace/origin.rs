@@ -6,7 +6,7 @@ use super::{
     glass_mesh,
 };
 use crate::job::{self, CancelToken, DielectricBoundary, DielectricOptions};
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 use sketcraft_geom::prelude::*;
 fn invalid(message: &str) -> job::JobError {
     job::JobError::new(job::ErrorCode::InvalidScene, message)

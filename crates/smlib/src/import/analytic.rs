@@ -17,8 +17,8 @@ use sketcraft_geom::prelude::*;
 use std::borrow::Cow;
 use std::f64::consts::{FRAC_PI_2, TAU};
 
-use solidcore_record::Vec3;
-use solidcore_record::brep as b;
+use sketcore_record::Vec3;
+use sketcore_record::brep as b;
 use sketcraft_geom::brep::eval::{CurveEval, SurfaceEval};
 
 use super::{R, Unsupported};

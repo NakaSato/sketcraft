@@ -9,7 +9,7 @@
 use super::{CompletePass, MAX_BYTES, invalid, limit};
 use crate::job::encoding::PngEncoding;
 use crate::job::{CancelToken, CpuHost, ErrorCode, JobError, Phase, Progress, Reservation, Result};
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 use sketcraft_geom::srgb::encode8;
 
 /// Encoded bytes retain the actual existing host lease. No detached byte getter.

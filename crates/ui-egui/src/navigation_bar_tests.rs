@@ -84,7 +84,7 @@ fn default_slots_and_canvas_availability_preserve_navigation() {
             assert!(shown.contains(&id), "{caps:?}: {id}");
         }
     }
-    let mut app = crate::SolveApp::new(Default::default(), Default::default());
+    let mut app = crate::SketApp::new(Default::default(), Default::default());
     app.run("sketch.create", json!({"plane":"XY"})).unwrap();
     assert!(find("visual_style").unwrap().available(canvas_caps(&app)), "the previous bar kept style available in a sketch");
 }
@@ -374,7 +374,7 @@ fn navigation_menu_value_width_is_independent_of_global_button_labels() {
 #[test]
 fn navigation_preview_and_viewport_share_the_row_painter() {
     let ctx = crate::fonts::test_context();
-    let app = crate::SolveApp::new(Default::default(), Default::default());
+    let app = crate::SketApp::new(Default::default(), Default::default());
     let content = Rect::from_min_size(egui::Pos2::ZERO, vec2(800.0, 200.0));
     let bar = measure(content, &app.preferences.navigation_bar, NavCaps::MODEL, |_| 0.0);
     let paint = |editing| {
@@ -416,11 +416,11 @@ fn navigation_preview_and_viewport_share_the_row_painter() {
 
 #[test]
 fn navigation_profile_export_import_preserves_menu_options_and_legacy_profiles() {
-    let mut source = crate::SolveApp::new(Default::default(), Default::default());
+    let mut source = crate::SketApp::new(Default::default(), Default::default());
     source.preferences.navigation_bar.slots = vec!["visual_style".into()];
     source.preferences.navigation_bar.slot_options.insert("visual_style".into(), SlotOptions { shows: MenuDisplay::IconAndValue });
     let profile = crate::toolbar_custom::export(&source);
-    let mut dest = crate::SolveApp::new(Default::default(), Default::default());
+    let mut dest = crate::SketApp::new(Default::default(), Default::default());
     crate::toolbar_custom::import(&mut dest, &profile).unwrap();
     assert_eq!(source.preferences.navigation_bar, dest.preferences.navigation_bar);
     let before = dest.preferences.navigation_bar.clone();

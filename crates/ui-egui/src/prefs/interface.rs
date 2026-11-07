@@ -1,7 +1,7 @@
 //! Appearance and Layout settings composition, using shared controls and previews.
 use super::*;
 
-pub(super) fn appearance(app: &mut SolveApp, ui: &mut egui::Ui, t: &Tokens) {
+pub(super) fn appearance(app: &mut SketApp, ui: &mut egui::Ui, t: &Tokens) {
     ui_kit::settings_page(ui, |ui| {
         ui_kit::settings_heading_with_tag(
             ui,
@@ -24,7 +24,7 @@ pub(super) fn appearance(app: &mut SolveApp, ui: &mut egui::Ui, t: &Tokens) {
                 let label_width = (t.space_24 * 6.0 + t.space_6).min(ui.available_width() * 0.6);
                 let available = (ui.available_width() - label_width - t.space_14).max(0.0);
                 let narrow = available < segments_width + t.control_height + t.space_6 + t.space_24 * 4.0 + ui.spacing().item_spacing.x * 2.0;
-                let colour_controls = |ui: &mut egui::Ui, app: &mut SolveApp| {
+                let colour_controls = |ui: &mut egui::Ui, app: &mut SketApp| {
                     let enabled = app.preferences.viewport_background.is_some();
                     let mut rgb = app.preferences.viewport_background.unwrap_or([255, 255, 255]);
                     ui.add_enabled_ui(enabled, |ui| {
@@ -212,7 +212,7 @@ pub(super) fn appearance(app: &mut SolveApp, ui: &mut egui::Ui, t: &Tokens) {
     });
 }
 
-pub(super) fn layout(app: &mut SolveApp, ui: &mut egui::Ui) {
+pub(super) fn layout(app: &mut SketApp, ui: &mut egui::Ui) {
     let t = Tokens::get();
     ui_kit::settings_page(ui, |ui| {
         ui_kit::settings_heading_with_tag(
@@ -614,7 +614,7 @@ pub(super) fn layout(app: &mut SolveApp, ui: &mut egui::Ui) {
     });
 }
 
-fn history_choice(app: &SolveApp) -> usize {
+fn history_choice(app: &SketApp) -> usize {
     if app.preferences.history_in_browser {
         3
     } else if app.preferences.timeline_left {
@@ -643,7 +643,7 @@ fn layout_check(ui: &mut egui::Ui, label: &str, help: &str, value: &mut bool, ke
     });
 }
 
-fn browser_visibility(app: &mut SolveApp, ui: &mut egui::Ui) {
+fn browser_visibility(app: &mut SketApp, ui: &mut egui::Ui) {
     use crate::browser::BrowserShow;
     ui_kit::settings_form(ui, 0.0, |ui| {
         ui_kit::row(ui, app.tr("prefs.browser_shown"), |ui| {

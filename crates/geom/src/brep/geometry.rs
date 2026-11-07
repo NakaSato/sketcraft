@@ -13,8 +13,8 @@
 //! its surface. A point that cannot be evaluated is an error, never a panic.
 use super::eval::{CurveEval, SurfaceEval};
 use crate::prelude::*;
-use solidcore_record::Vec3;
-use solidcore_record::brep::{Brep, Curve2, Loop};
+use sketcore_record::Vec3;
+use sketcore_record::brep::{Brep, Curve2, Loop};
 
 /// Where a record disagrees with itself.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]

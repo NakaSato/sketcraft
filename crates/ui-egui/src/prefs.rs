@@ -8,7 +8,7 @@ use std::collections::BTreeMap;
 use egui::{Modifiers, Pos2};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 pub use sketcraft_engine::doc::display_units::{format_length, length_number, length_precision, unit_scale};
 use sketcraft_engine::render::Camera;
 
@@ -27,14 +27,13 @@ mod design;
 mod general;
 mod graphics;
 mod interface;
-mod mouse3d;
 mod navbar;
 mod navigation;
 mod sketch;
 mod theme_picker;
 mod tools;
 
-use crate::SolveApp;
+use crate::SketApp;
 use crate::theme::Tokens;
 use crate::tool_modifiers::ModifierCombo;
 use crate::ui_kit;
@@ -324,7 +323,7 @@ pub fn choose_nav_preset(prefs: &mut Prefs, preset: &NavPreset) {
 }
 /// Stable control-channel names; presentation labels may be shorter.
 pub const PAGES: &[&str] =
-    &["General", "Appearance", "Layout", "Graphics", "Design", "Sketch", "Tools", "Navigation", "3D mouse", "Shortcuts", "Assistant", "Plugins"];
+    &["General", "Appearance", "Layout", "Graphics", "Design", "Sketch", "Tools", "Navigation", "Shortcuts", "Assistant", "Plugins"];
 pub const PAGE_GENERAL: usize = 0;
 pub const PAGE_APPEARANCE: usize = 1;
 pub const PAGE_LAYOUT: usize = 2;
@@ -333,13 +332,12 @@ pub const PAGE_DESIGN: usize = 4;
 pub const PAGE_SKETCH: usize = 5;
 pub const PAGE_TOOLS: usize = 6;
 pub const PAGE_NAVIGATION: usize = 7;
-pub const PAGE_MOUSE3D: usize = 8;
-pub const PAGE_SHORTCUTS: usize = 9;
-pub const PAGE_ASSISTANT: usize = 10;
-pub const PAGE_PLUGINS: usize = 11;
+pub const PAGE_SHORTCUTS: usize = 8;
+pub const PAGE_ASSISTANT: usize = 9;
+pub const PAGE_PLUGINS: usize = 10;
 /// What Preferences accepts for `parameter_list_rows`: `parameters.complete` answers at most 200.
 pub const PARAMETER_LIST_ROWS: std::ops::RangeInclusive<u16> = 5..=200;
-const WINDOW_PAGES: &[ui_kit::WindowPage<SolveApp>] = &[
+const WINDOW_PAGES: &[ui_kit::WindowPage<SketApp>] = &[
     ui_kit::WindowPage {
         icon: "prefs_general",
         label: "ui.general",
@@ -405,14 +403,6 @@ const WINDOW_PAGES: &[ui_kit::WindowPage<SolveApp>] = &[
         draw: window_page::<PAGE_NAVIGATION>,
     },
     ui_kit::WindowPage {
-        icon: "prefs_mouse3d",
-        label: "prefs.structure.mouse3d",
-        group: None,
-        handle: "prefs:page:3D mouse",
-        scroll: true,
-        draw: window_page::<PAGE_MOUSE3D>,
-    },
-    ui_kit::WindowPage {
         icon: "prefs_shortcuts",
         label: "prefs.shortcuts",
         group: None,
@@ -458,7 +448,7 @@ fn page_path(index: usize) -> String {
     }
 }
 
-fn search_header(ui: &mut egui::Ui, app: &mut SolveApp) {
+fn search_header(ui: &mut egui::Ui, app: &mut SketApp) {
     let typed = drive_search(ui, app);
     let field = ui_kit::preferences_search_field(ui, egui::Id::unique("prefs_search"), &mut app.prefs_window.filter, crate::i18n::tr("prefs.search"));
     if typed {
@@ -474,7 +464,7 @@ fn search_header(ui: &mut egui::Ui, app: &mut SolveApp) {
 }
 
 /// Keys for the search field. Shortcut capture keeps the key for itself.
-fn drive_search(ui: &mut egui::Ui, app: &mut SolveApp) -> bool {
+fn drive_search(ui: &mut egui::Ui, app: &mut SketApp) -> bool {
     let ctx = ui.ctx().clone();
     if crate::keymap::capturing(app) {
         return false;
@@ -539,7 +529,7 @@ fn place_search_cursor(ctx: &egui::Context, id: egui::Id, chars: usize) {
     state.store(ctx, id);
 }
 
-fn open_result(app: &mut SolveApp, page: usize, label: &str) {
+fn open_result(app: &mut SketApp, page: usize, label: &str) {
     if page == PAGE_SHORTCUTS {
         crate::keymap::reveal(app);
     }
@@ -554,7 +544,7 @@ fn open_result(app: &mut SolveApp, page: usize, label: &str) {
 }
 
 /// An empty field returns to the page that was up when the search started.
-fn settle_search(app: &mut SolveApp) {
+fn settle_search(app: &mut SketApp) {
     if app.prefs_window.filter.trim().is_empty() {
         if app.prefs_window.reveal.is_none()
             && let Some(page) = app.prefs_window.search_from.take()
@@ -568,13 +558,13 @@ fn settle_search(app: &mut SolveApp) {
 }
 
 /// A page tab leaves search and shows that page on its own.
-fn clear_search(app: &mut SolveApp) {
+fn clear_search(app: &mut SketApp) {
     app.prefs_window.filter.clear();
     app.prefs_window.search_from = None;
     app.prefs_window.reveal = None;
 }
 
-fn window_page<const INDEX: usize>(ui: &mut egui::Ui, app: &mut SolveApp) {
+fn window_page<const INDEX: usize>(ui: &mut egui::Ui, app: &mut SketApp) {
     for (alias, index) in PAGE_ALIASES {
         if let Some(page) = WINDOW_PAGES.get(*index)
             && let Some(rect) = crate::scenario::rect_of(page.handle)
@@ -844,55 +834,6 @@ impl StandUpUnknown {
     }
 }
 
-/// Which program reads the 3D mouse on Linux when both spacenavd and the device itself (hidraw)
-/// are there (Preferences: "3D mouse driver"). Read by the app's reader, not by this crate.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "snake_case")]
-pub enum SpaceMouseDriver {
-    /// The device itself (hidraw) when it opens, else spacenavd. Spacenavd has been a known source of
-    /// trouble, and a device read directly keeps its settings across a replug.
-    #[default]
-    Automatic,
-    Spacenavd,
-    /// The hidraw device, bypassing spacenavd's settings.
-    Direct,
-}
-
-/// Where the small 3D mouse picture sits in the 3D view (Preferences: "Position").
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "snake_case")]
-pub enum SpaceMouseGhost {
-    /// The lower left corner of the viewport area, right of the browser (how it was first made).
-    /// Saved as `current` by the first build, which is still read.
-    #[default]
-    #[serde(alias = "current")]
-    LeftViewport,
-    /// The lower right corner of the viewport area. Saved as `right` by the first build.
-    #[serde(alias = "right")]
-    RightViewport,
-    /// The lower left corner of the whole window, under the browser. Saved as `left` by the first build.
-    #[serde(alias = "left")]
-    LeftWindow,
-}
-
-impl SpaceMouseGhost {
-    pub const ALL: [Self; 3] = [Self::LeftViewport, Self::RightViewport, Self::LeftWindow];
-}
-
-impl SpaceMouseDriver {
-    pub const ALL: [Self; 3] = [Self::Automatic, Self::Spacenavd, Self::Direct];
-
-    /// The choice as the reader thread shares it (an `AtomicU8`).
-    pub fn to_u8(self) -> u8 {
-        self as u8
-    }
-
-    /// Back from [`Self::to_u8`]; anything else reads as Automatic.
-    pub fn from_u8(value: u8) -> Self {
-        Self::ALL.into_iter().find(|driver| driver.to_u8() == value).unwrap_or_default()
-    }
-}
-
 /// The default largest STEP/import file, in MB (`sketcraft_io::MAX_STEP_BYTES`).
 pub const DEFAULT_STEP_MB: u64 = sketcraft_engine::io::limits::FileLimits::DEFAULT.step / sketcraft_engine::io::limits::MB;
 /// The default largest design file, in MB (`sketcraft_io::MAX_DESIGN_BYTES`).
@@ -928,7 +869,7 @@ pub fn perspective_fov(p: &Prefs) -> f64 {
 /// after `ui.prefs`, so every way the angle changes (the slider, Cancel, Restore Defaults, a script)
 /// goes through it. A parallel view keeps the last perspective angle, and while Render is open the
 /// camera is Render's own, so the change waits until the design view is back.
-pub(crate) fn follow_view_fov(app: &mut SolveApp) {
+pub(crate) fn follow_view_fov(app: &mut SketApp) {
     let fov = app.view_fov();
     if fov <= 0.0 || crate::render_workspace::active(app) {
         return;
@@ -1009,7 +950,7 @@ macro_rules! preference_settings {
 
         mod setting {
             use super::*;
-            $($(pub(super) fn $field(app: &mut SolveApp, ui: &mut egui::Ui) -> egui::Response {
+            $($(pub(super) fn $field(app: &mut SketApp, ui: &mut egui::Ui) -> egui::Response {
                 preference_settings!(@control app, ui, $field, $control($($args)*))
             })?)*
         }
@@ -1092,59 +1033,6 @@ preference_settings! {
     /// under the cursor). [`migrate`] folds it into `orbit_around` when saved preferences are
     /// read, so an existing choice survives the upgrade; this version only writes `false`.
     orbit_cursor: bool = false, PAGE_NAVIGATION;
-    /// Whether a connected 3D mouse moves the view.
-    space_mouse_enabled: bool = true, PAGE_MOUSE3D => check("Navigate with the 3D mouse");
-    /// Whether a picture of the connected 3D mouse, moving as it does, sits in the 3D view's lower
-    /// left corner. Off by default.
-    space_mouse_in_view: bool = false, PAGE_MOUSE3D => check_id("ui.3d_mouse_show_in_view");
-    /// 3D mouse orbit: traced (on) turns the view around the model in the middle of the view when
-    /// the turn begins (else the middle of the bodies in view), marked by a faint ball; classic
-    /// (off, the default) turns it around the view's centre, as it did before.
-    space_mouse_model_pivot: bool = false, PAGE_MOUSE3D;
-    /// Whether the 3D mouse also turns the view while a sketch is edited and still seen square on
-    /// (#2227), as the mouse can. Off (the default): the cap pans and zooms a square-on sketch and
-    /// turns it only after the view is tilted away from it.
-    space_mouse_sketch_orbit: bool = false, PAGE_MOUSE3D => check_id("ui.3d_mouse_sketch_orbit");
-    /// Speed multiplier for 3D mouse navigation.
-    space_mouse_speed: f32 = 1.0, PAGE_MOUSE3D;
-    /// Per physical axis of the cap (push X, Y, Z, then tilt X, Y, Z), whether it moves the view
-    /// the other way.
-    space_mouse_reverse: [bool; 6] = [false; 6], PAGE_MOUSE3D;
-    /// Per physical axis of the cap, a multiplier on top of `space_mouse_speed`; 0 switches it off.
-    space_mouse_axis_speed: [f32; 6] = [1.0; 6], PAGE_MOUSE3D;
-    /// Per physical axis of the cap, which of its motions drives it (`space_mouse::reassigned`),
-    /// applied after calibration; each motion drives exactly one axis.
-    space_mouse_axis_source: [usize; 6] = crate::space_mouse::SAME_AXES, PAGE_MOUSE3D;
-    /// Which program reads the 3D mouse when spacenavd and the device itself are both there (Linux).
-    space_mouse_driver: SpaceMouseDriver = SpaceMouseDriver::default(), PAGE_MOUSE3D;
-    /// Where the 3D mouse picture sits in the 3D view, when it is shown there (`space_mouse_in_view`).
-    space_mouse_ghost_position: SpaceMouseGhost = SpaceMouseGhost::default(), PAGE_MOUSE3D;
-    /// The user turned the calibration offer off for good ("Never show again"). Unlike closing the
-    /// card, which only records that device, this stops every offer, for every device: it is one flag,
-    /// not kept per device key. Like the settings beside it, the dialog's Restore Defaults puts it back
-    /// (the 3D mouse section's own restore leaves it).
-    space_mouse_offer_never: bool = false, PAGE_MOUSE3D;
-    /// Per 3D mouse (`space_mouse::Input::device`), the calibration that puts its axes on
-    /// 3Dconnexion's. A device without one is read as it reports. Page resets keep calibrations.
-    #[serde(deserialize_with = "calibrations_that_read")]
-    space_mouse_calibrations: std::collections::BTreeMap<String, sketcraft_space_mouse::Calibration> = Default::default();
-    /// Per 3D mouse, what each of its buttons does, by number from 1, once the user has changed
-    /// any of them; until then a measured device has its printed keys' jobs
-    /// (`space_mouse::default_button_jobs`). Kept, like calibrations, when settings are reset.
-    #[serde(deserialize_with = "button_jobs_that_read")]
-    space_mouse_buttons: std::collections::BTreeMap<String, std::collections::BTreeMap<u8, crate::space_mouse::ButtonJob>> = Default::default();
-    /// The 3D mice (`space_mouse::Input::device`) whose calibration has been offered and dismissed, so
-    /// the offer (`space_mouse_offer`) is made once per device. A saved entry that is not text is dropped.
-    /// Kept when settings are reset, like the calibrations and button mappings it goes with: resetting
-    /// the page would otherwise bring the offer back for every device.
-    #[serde(deserialize_with = "devices_that_read")]
-    space_mouse_offered: std::collections::BTreeSet<String> = Default::default();
-    /// A device's own app on this computer moves the view (the navigation bridge, docs/3d-mouse.md):
-    /// the desktop app connects to it on `nav_bridge_port`. Off unless asked for, so the app
-    /// doesn't connect to whatever else listens on that port.
-    nav_bridge_enabled: bool = false, PAGE_MOUSE3D;
-    /// The loopback port the device app listens on (0: none).
-    nav_bridge_port: u16 = 8765, PAGE_MOUSE3D;
     /// Anti-aliasing samples (applies on restart).
     msaa: u32 = 4, PAGE_GRAPHICS;
     /// Share shading and Continuity; false preserves their independent legacy behavior.
@@ -1443,9 +1331,9 @@ preference_settings! {
     browser_rows_start_closed: bool = false, PAGE_LAYOUT;
     /// The wheel zooms toward the point under the cursor (else toward the view's centre).
     zoom_to_cursor: bool = true, PAGE_NAVIGATION => check("Zoom to the cursor", "The wheel zooms toward the point under the cursor (off: toward the view's center)");
-    /// Speed multiplier for wheel zoom, independent of the 3D mouse.
+    /// Speed multiplier for wheel zoom.
     wheel_zoom_speed: f32 = 1.0, PAGE_NAVIGATION, accept(0.25..=4.0) => slider("ui.wheel_zoom_speed", 0.25..=4.0, 0.05, |v| format!("{v:.2}×"), "prefs:wheel_zoom_speed");
-    /// Opt-in surface anchoring for the 3D mouse, navigation bridge and drag-zoom. The wheel
+    /// Opt-in surface anchoring for drag-zoom. The wheel
     /// and pinch retain their independent `zoom_to_cursor` preference.
     zoom_stop_at_model: bool = false, PAGE_NAVIGATION => check_id("prefs.zoom_stop_at_model");
     /// Spread discrete wheel input across frames (off: apply each event immediately).
@@ -1743,7 +1631,7 @@ impl MiddleDoubleClick {
         [(MiddleDoubleClick::Home, "home", "Home"), (MiddleDoubleClick::Fit, "fit", "Fit"), (MiddleDoubleClick::Off, "off", "Off")];
 
     /// The preference's setting (Home for an unknown one).
-    pub fn of(app: &SolveApp) -> MiddleDoubleClick {
+    pub fn of(app: &SketApp) -> MiddleDoubleClick {
         Self::parse(&app.preferences.middle_double_click).unwrap_or(MiddleDoubleClick::Home)
     }
 
@@ -1801,7 +1689,7 @@ pub struct PrefsWindow {
 const FOLLOW_AVAILABLE: bool = cfg!(not(target_arch = "wasm32"));
 
 /// Follow `path` as the theme for this run (the `--theme-file` launch flag), without saving it.
-pub fn follow_theme_file_for_run(app: &mut SolveApp, path: &str) -> Result<(), String> {
+pub fn follow_theme_file_for_run(app: &mut SketApp, path: &str) -> Result<(), String> {
     if !FOLLOW_AVAILABLE {
         return Err(FOLLOW_UNAVAILABLE.into());
     }
@@ -1814,7 +1702,7 @@ const FOLLOW_UNAVAILABLE: &str = "`theme_follow` is not available in the browser
 
 /// Stop following a theme file: the preference and this run's launch flag. The chosen theme
 /// takes over again, with its own dark or light.
-fn stop_following(app: &mut SolveApp) {
+fn stop_following(app: &mut SketApp) {
     let following = !app.prefs_window.follow.path(&app.preferences.theme_follow).is_empty();
     app.preferences.theme_follow.clear();
     app.prefs_window.follow.launch = None;
@@ -1826,7 +1714,7 @@ fn stop_following(app: &mut SolveApp) {
 
 /// Look at the followed theme file (#7573): every second while the app runs and whenever the
 /// window gains the focus. A new failure is reported once in the status bar; a recovery too.
-fn follow_theme_file(app: &mut SolveApp, ctx: &egui::Context) {
+fn follow_theme_file(app: &mut SketApp, ctx: &egui::Context) {
     if !FOLLOW_AVAILABLE {
         return;
     }
@@ -1852,7 +1740,7 @@ fn follow_theme_file(app: &mut SolveApp, ctx: &egui::Context) {
 
 /// `ui.prefs` `theme_follow`: a path follows that file (read at once, so the reply has any
 /// error), `""` stops following.
-fn set_theme_follow(app: &mut SolveApp, value: &serde_json::Value, available: bool) -> Result<(), String> {
+fn set_theme_follow(app: &mut SketApp, value: &serde_json::Value, available: bool) -> Result<(), String> {
     if !available {
         return Err(FOLLOW_UNAVAILABLE.into());
     }
@@ -1870,14 +1758,14 @@ fn set_theme_follow(app: &mut SolveApp, value: &serde_json::Value, available: bo
 }
 
 /// Open the dialog at a page.
-pub fn open_at(app: &mut SolveApp, page: usize) {
+pub fn open_at(app: &mut SketApp, page: usize) {
     app.prefs_window.open = true;
     app.prefs_window.section = page.min(PAGES.len() - 1);
 }
 
 /// The sidebar is drawn before the selected page: defer its Profiles action until that page
 /// callback, and leave any search before showing General's existing profile controls.
-pub(crate) fn open_profiles(app: &mut SolveApp) {
+pub(crate) fn open_profiles(app: &mut SketApp) {
     clear_search(app);
     open_at(app, PAGE_GENERAL);
     app.prefs_window.land_on = Some(PAGE_GENERAL);
@@ -1907,7 +1795,7 @@ struct Snapshot {
 }
 
 impl Snapshot {
-    fn take(app: &SolveApp) -> Snapshot {
+    fn take(app: &SketApp) -> Snapshot {
         Snapshot {
             prefs: app.preferences.clone(),
             dark: app.ui.dark,
@@ -1928,7 +1816,7 @@ impl Snapshot {
             profile: app.settings_profiles.active.clone(),
         }
     }
-    fn restore(self, app: &mut SolveApp) {
+    fn restore(self, app: &mut SketApp) {
         let graphics = (app.preferences.msaa, app.preferences.window_system.clone(), app.preferences.graphics_adapter.clone());
         let units_changed = app.preferences.default_units != self.prefs.default_units;
         // Update bookkeeping isn't a setting: a check that finished while the dialog was open stays.
@@ -1963,7 +1851,7 @@ impl Snapshot {
 
     /// Whether everything is as in the snapshot: nothing Cancel would put back. Destructured, so
     /// a setting added to the snapshot can't be left out of the comparison.
-    fn matches(&self, app: &SolveApp) -> bool {
+    fn matches(&self, app: &SketApp) -> bool {
         let Snapshot {
             prefs,
             dark,
@@ -2005,7 +1893,7 @@ impl Snapshot {
 
 /// Whether Apply has anything to do (#8561): something changed since the dialog opened or since
 /// the last Apply. False while the dialog is closed.
-fn apply_pending(app: &mut SolveApp) -> bool {
+fn apply_pending(app: &mut SketApp) -> bool {
     let Some(snapshot) = app.prefs_window.snapshot.as_mut() else {
         return false;
     };
@@ -2014,11 +1902,11 @@ fn apply_pending(app: &mut SolveApp) -> bool {
     app.prefs_window.snapshot.as_ref().is_some_and(|s| !s.matches(app))
 }
 
-/// The saved-settings keys whose values the snapshot holds, as [`SolveApp::prefs`] writes them.
+/// The saved-settings keys whose values the snapshot holds, as [`SketApp::prefs`] writes them.
 /// While the dialog is open every writer of the settings file saves these instead of the live
 /// values, so a change that was never applied can't reach disk through the periodic save, a
 /// quit or a window close (#9730). Keys the dialog can't change keep their live values.
-pub(crate) fn held_overlay(app: &SolveApp) -> Option<serde_json::Map<String, serde_json::Value>> {
+pub(crate) fn held_overlay(app: &SketApp) -> Option<serde_json::Map<String, serde_json::Value>> {
     let s = app.prefs_window.snapshot.as_ref()?;
     let mut prefs = s.prefs.clone();
     // Same bookkeeping rule as `restore`: a check that finished while the dialog was open stays.
@@ -2065,11 +1953,11 @@ pub(crate) fn held_overlay(app: &SolveApp) -> Option<serde_json::Map<String, ser
 /// The colour theme (#2255): Dark, Light, System, the built-in theme files and the imported
 /// ones, with Import…, Export… (the theme on now as a complete file, to start a new one from)
 /// and Remove (an imported theme). Like the other preferences, a choice applies at once.
-fn theme_row(app: &mut SolveApp, ui: &mut egui::Ui) {
+fn theme_row(app: &mut SketApp, ui: &mut egui::Ui) {
     theme_picker::row(app, ui);
 }
 
-fn theme_action(app: &mut SolveApp, ui: &mut egui::Ui, action: Option<&str>, action_theme: Option<String>) {
+fn theme_action(app: &mut SketApp, ui: &mut egui::Ui, action: Option<&str>, action_theme: Option<String>) {
     match action {
         Some("import") => app.pick_open_for(&["json"], |app, path| {
             let Some(path) = path else { return };
@@ -2112,7 +2000,7 @@ fn theme_action(app: &mut SolveApp, ui: &mut egui::Ui, action: Option<&str>, act
 
 /// Settings › Interface › Theme: a theme file to follow (#7573), chosen with the file picker,
 /// and why its last read was not applied. The desktop app only.
-fn follow_row(app: &mut SolveApp, ui: &mut egui::Ui) {
+fn follow_row(app: &mut SketApp, ui: &mut egui::Ui) {
     let path = app.prefs_window.follow.path(&app.preferences.theme_follow).to_string();
     let launch = app.prefs_window.follow.launch.is_some();
     let error = app.prefs_window.follow.error().map(str::to_string);
@@ -2159,7 +2047,7 @@ fn follow_row(app: &mut SolveApp, ui: &mut egui::Ui) {
 
 /// The interface font (#1290): the built-in font first, then the installed families, with a
 /// search box. The choice applies at once, like the other preferences.
-fn ui_font_row(app: &mut SolveApp, ui: &mut egui::Ui) {
+fn ui_font_row(app: &mut SketApp, ui: &mut egui::Ui) {
     let builtin = crate::i18n::format("sketch_text.builtin_font", &[("family", "IBM Plex Sans")]);
     let current = if app.preferences.ui_font.trim().is_empty() { builtin.clone() } else { app.preferences.ui_font.clone() };
     let families = crate::sketch_text::families(ui.ctx());
@@ -2195,7 +2083,7 @@ fn ui_font_row(app: &mut SolveApp, ui: &mut egui::Ui) {
 }
 
 /// Restore Defaults for one page.
-fn defaults(app: &mut SolveApp, page: usize) {
+fn defaults(app: &mut SketApp, page: usize) {
     let (msaa, window_system, adapter) = (app.preferences.msaa, app.preferences.window_system.clone(), app.preferences.graphics_adapter.clone());
     let units = app.preferences.default_units.clone();
     reset_preferences(&mut app.preferences, page);
@@ -2244,7 +2132,7 @@ fn defaults(app: &mut SolveApp, page: usize) {
 /// The host's own reading of the desktop (`Services::desktop_dark`, the freedesktop setting on
 /// Linux, #7944) comes first, as the window toolkit does not report it on every desktop
 /// (GNOME on Wayland), nor its changes; then the window toolkit's.
-pub(crate) fn system_dark(app: &SolveApp, ctx: &egui::Context) -> Option<bool> {
+pub(crate) fn system_dark(app: &SketApp, ctx: &egui::Context) -> Option<bool> {
     app.services.desktop_dark.as_ref().and_then(|f| f()).or_else(|| ctx.system_theme().map(|t| t == egui::Theme::Dark))
 }
 
@@ -2280,7 +2168,7 @@ pub fn desktop_prefers_dark(appearance: Option<u32>, gnome: Option<&str>, gtk_th
 /// (`Options::sync_window_theme`) went by the egui theme, which [`crate::theme::apply`] always
 /// sets to light or dark. A macOS window told to be light stays light and no longer reports the
 /// system appearance changing, so a theme following the system never turned with it.
-fn sync_window_theme(app: &mut SolveApp, ctx: &egui::Context, follows_system: bool) {
+fn sync_window_theme(app: &mut SketApp, ctx: &egui::Context, follows_system: bool) {
     let window = if follows_system {
         egui::SystemTheme::SystemDefault
     } else if app.ui.dark {
@@ -2295,7 +2183,7 @@ fn sync_window_theme(app: &mut SolveApp, ctx: &egui::Context, follows_system: bo
     }
 }
 
-pub fn apply(app: &mut SolveApp, ctx: &egui::Context) {
+pub fn apply(app: &mut SketApp, ctx: &egui::Context) {
     sync_surface_analysis(app);
     apply_network(&app.preferences);
     // The features computed from now on are checked as the preference says.
@@ -2368,7 +2256,7 @@ pub fn apply(app: &mut SolveApp, ctx: &egui::Context) {
 }
 
 /// The user's analysis policy applies immediately to every open design, without document edits.
-pub(crate) fn sync_surface_analysis(app: &mut SolveApp) {
+pub(crate) fn sync_surface_analysis(app: &mut SketApp) {
     let single = app.preferences.single_surface_analysis;
     app.session.set_single_surface_analysis(single);
     for slot in app.docs.background_mut() {
@@ -2387,19 +2275,19 @@ pub fn apply_network(p: &Prefs) {
 /// A new, empty design takes the preferred units (not an undo step, not a change to save).
 /// Callers: a launch with no file, New on a design that is already empty, `file.new`, and the
 /// blank design left when the last tab closes. A design that already has features is unchanged.
-pub fn apply_new_design(app: &mut SolveApp) {
+pub fn apply_new_design(app: &mut SketApp) {
     apply_new_design_units(app, &app.preferences.default_units.clone());
 }
 
 /// The new-design preference also applies to the blank, unsaved design already open.
-fn default_units_changed(app: &mut SolveApp) {
+fn default_units_changed(app: &mut SketApp) {
     if crate::documents::active_is_blank(app) {
         apply_new_design(app);
     }
 }
 
 /// Explicit units for a new-design tile; the user's default preference stays unchanged.
-pub(crate) fn apply_new_design_units(app: &mut SolveApp, units: &str) {
+pub(crate) fn apply_new_design_units(app: &mut SketApp, units: &str) {
     if app.session.doc.features.is_empty() && app.session.doc.units != units {
         let saved = !app.session.is_dirty();
         if app.session.execute("document.units", &json!({ "units": units })).is_ok() {
@@ -2412,7 +2300,7 @@ pub(crate) fn apply_new_design_units(app: &mut SolveApp, units: &str) {
 }
 
 /// The autosave interval follows `app.autosave_minutes` (0: off).
-pub fn set_autosave(app: &mut SolveApp) {
+pub fn set_autosave(app: &mut SketApp) {
     let m = app.autosave_minutes;
     if let Some(a) = app.autosave.as_mut() {
         a.interval = if m > 0.0 { std::time::Duration::from_secs_f64(m * 60.0) } else { std::time::Duration::from_secs(u64::MAX / 4) };
@@ -2420,7 +2308,7 @@ pub fn set_autosave(app: &mut SolveApp) {
 }
 
 /// Which navigation dragging `button` with `mods` held does under the preset.
-pub fn nav_mode(app: &SolveApp, button: NavButton, mods: Modifiers) -> Option<NavMode> {
+pub fn nav_mode(app: &SketApp, button: NavButton, mods: Modifiers) -> Option<NavMode> {
     // With mouse gestures on, the right button opens the ring of tools instead of orbiting.
     if button == NavButton::Right && crate::mouse_gesture::active(app) {
         return None;
@@ -2434,22 +2322,22 @@ pub fn nav_mode(app: &SolveApp, button: NavButton, mods: Modifiers) -> Option<Na
 }
 
 /// +1, or −1 when horizontal scrolling pans the other way (#2007).
-pub fn pan_sign_x(app: &SolveApp) -> f32 {
+pub fn pan_sign_x(app: &SketApp) -> f32 {
     if app.preferences.pan_reverse_x { -1.0 } else { 1.0 }
 }
 
 /// +1, or −1 when vertical scrolling pans the other way.
-pub fn pan_sign_y(app: &SolveApp) -> f32 {
+pub fn pan_sign_y(app: &SketApp) -> f32 {
     if app.preferences.pan_reverse_y { -1.0 } else { 1.0 }
 }
 
 /// +1, or −1 when Shift with two-finger scrolling orbits the other way (#8410).
-pub fn orbit_sign(app: &SolveApp) -> f64 {
+pub fn orbit_sign(app: &SketApp) -> f64 {
     if app.preferences.orbit_reverse { -1.0 } else { 1.0 }
 }
 
 /// Whether the configured suppress-snap chord is held.
-pub fn suppress_sketch_snap_held(app: &SolveApp, m: Modifiers) -> bool {
+pub fn suppress_sketch_snap_held(app: &SketApp, m: Modifiers) -> bool {
     let c = app.preferences.suppress_sketch_snap;
     let held = crate::tool_modifiers::Held::from_modifiers(m);
     // Classic default (`CTRL_ALT`): Ctrl/Cmd **or** Alt/Option each suppress snap.
@@ -2461,14 +2349,14 @@ pub fn suppress_sketch_snap_held(app: &SolveApp, m: Modifiers) -> bool {
 }
 
 /// Primary always frees manipulator arrows; Alt/Option also frees when `manipulator_free_alt` is on.
-pub fn manipulator_free_held(app: &SolveApp, m: Modifiers) -> bool {
+pub fn manipulator_free_held(app: &SketApp, m: Modifiers) -> bool {
     use crate::tool_modifiers::Held;
     let held = Held::from_modifiers(m);
     held.primary || (app.preferences.manipulator_free_alt && held.alt)
 }
 
 /// +1, or −1 when the wheel zooms the other way.
-pub fn zoom_sign(app: &SolveApp) -> f64 {
+pub fn zoom_sign(app: &SketApp) -> f64 {
     if app.preferences.zoom_reverse { -1.0 } else { 1.0 }
 }
 
@@ -2476,7 +2364,7 @@ pub fn zoom_sign(app: &SolveApp) -> f64 {
 /// the cursor is on (on an edge or a curve too, not its middle, which can be far off along a long
 /// one). Over empty space: the centre of the visible bodies and sketches (what Fit frames), or
 /// the view's centre when nothing is visible.
-pub(crate) fn pivot_under(app: &SolveApp, proj: &crate::viewport::Proj, at: Pos2) -> Vec3 {
+pub(crate) fn pivot_under(app: &SketApp, proj: &crate::viewport::Proj, at: Pos2) -> Vec3 {
     use crate::viewport::Hit;
     for h in crate::viewport::pick(app, proj, at) {
         match h {
@@ -2521,7 +2409,7 @@ pub fn parse_length_mm(text: &str, scale: f64) -> Option<f64> {
 
 /// A length, area (`power` 2) or volume (3) given in millimetres, shown in the design's units
 /// with the length precision.
-pub fn show_mm(app: &SolveApp, v: f64, power: i32) -> String {
+pub fn show_mm(app: &SketApp, v: f64, power: i32) -> String {
     let (k, u) = unit_scale(&app.session.doc.units);
     let sup = match power {
         2 => "²",
@@ -2533,7 +2421,7 @@ pub fn show_mm(app: &SolveApp, v: f64, power: i32) -> String {
 }
 
 /// Numbers in millimetres, in the design's units without the unit name.
-pub fn show_mm_bare(app: &SolveApp, v: f64) -> String {
+pub fn show_mm_bare(app: &SketApp, v: f64) -> String {
     length_number(v, &app.session.doc.units, app.preferences.length_decimals)
 }
 
@@ -2546,7 +2434,7 @@ pub const WAYLAND_DROP_ISSUE: &str = "https://github.com/rust-windowing/winit/is
 /// which one is running now, and when native Wayland is in use or chosen, that some features are
 /// limited there, linking to [`WAYLAND_DROP_ISSUE`].
 #[cfg(target_os = "linux")]
-fn window_system_row(app: &mut SolveApp, ui: &mut egui::Ui, label_width: f32) {
+fn window_system_row(app: &mut SketApp, ui: &mut egui::Ui, label_width: f32) {
     let t = Tokens::get();
     let label = |id: &str| crate::i18n::tr(&format!("ui.window_system_{id}")).to_string();
     let labels: Vec<_> = WINDOW_SYSTEMS.iter().copied().map(label).collect();
@@ -2592,7 +2480,7 @@ fn window_system_row(app: &mut SolveApp, ui: &mut egui::Ui, label_width: f32) {
 
 /// Write the anti-aliasing and window system settings where the host reads them at start (neither
 /// can change while the window is open).
-fn save_graphics(app: &SolveApp) {
+fn save_graphics(app: &SketApp) {
     if let Some(path) = &app.services.graphics_path {
         // Other settings in the file (the graphics `backend`) stay as they are.
         let mut graphics = std::fs::read_to_string(path)
@@ -2610,7 +2498,7 @@ fn save_graphics(app: &SolveApp) {
 /// At start, reflect a confirmed startup fallback in Graphics, or reset an unsupported
 /// saved count to the supported default. The compatibility hint keeps higher choices
 /// available for another try; a probe result alone does not overwrite the saved choice.
-pub fn check_msaa(app: &mut SolveApp, requested: u32) {
+pub fn check_msaa(app: &mut SketApp, requested: u32) {
     if app.msaa_compatibility {
         app.preferences.msaa = 1;
         return;
@@ -2662,7 +2550,7 @@ fn unfold(ctx: &egui::Context) {
     }
 }
 
-pub fn show(app: &mut SolveApp, ctx: &egui::Context) {
+pub fn show(app: &mut SketApp, ctx: &egui::Context) {
     crate::settings_profiles::rename_popup(app, ctx);
     // File › Keyboard Shortcuts and Help › Keyboard Shortcuts open this dialog at that page.
     if app.keymap.open {
@@ -2677,10 +2565,6 @@ pub fn show(app: &mut SolveApp, ctx: &egui::Context) {
         app.prefs_window.reveal = None;
         crate::prefs_search::set_reveal(ctx, None);
         app.prefs_window.snapshot = None;
-        // A question left up when the dialog closed is not still asked when it opens again.
-        app.space_mouse.restore_pending = false;
-        // Calibration opens from here and ends with it, so the cap moves the view again.
-        app.space_mouse.calibrating = None;
         return;
     }
     if app.prefs_window.snapshot.is_none() {
@@ -2739,7 +2623,6 @@ pub fn show(app: &mut SolveApp, ctx: &egui::Context) {
             crate::scenario::publish_target(&format!("prefs:{name}"), rect);
         }
     }
-    crate::space_mouse_calibration::show(app, ctx);
     if let Some(rect) = crate::scenario::rect_of("dialog:footer:actions") {
         crate::scenario::publish_rect("prefs:actions", rect);
     }
@@ -2774,7 +2657,7 @@ pub fn show(app: &mut SolveApp, ctx: &egui::Context) {
 }
 
 /// Close the dialog; `revert`: put back what was there when it opened (Cancel, Esc, ×).
-pub(crate) fn close(app: &mut SolveApp, revert: bool) {
+pub(crate) fn close(app: &mut SketApp, revert: bool) {
     if let Some(s) = app.prefs_window.snapshot.take()
         && revert
     {
@@ -2794,7 +2677,7 @@ pub(crate) fn close(app: &mut SolveApp, revert: bool) {
 }
 
 /// The default orientation changed: the view turns to match.
-fn up_axis_changed(app: &mut SolveApp) {
+fn up_axis_changed(app: &mut SketApp) {
     use sketcraft_engine::render::UpAxis;
     app.prefs_window.applied_up = Some(app.preferences.up_axis.clone());
     let up = if app.preferences.up_axis.eq_ignore_ascii_case("y") { UpAxis::Y } else { UpAxis::Z };
@@ -2805,10 +2688,10 @@ fn up_axis_changed(app: &mut SolveApp) {
 
 /// One page of the dialog. Inputs share the kit's aligned rows and tokenised controls.
 /// A search draws every page and keeps the controls that match.
-fn page(app: &mut SolveApp, ui: &mut egui::Ui, t: &Tokens) {
+fn page(app: &mut SketApp, ui: &mut egui::Ui, t: &Tokens) {
     let _search = crate::prefs_search::begin(ui, &app.prefs_window.filter);
     if crate::prefs_search::querying(ui) {
-        // Paint only the pages that match. A first pass is invisible, so the 3D mouse rows and the
+        // Paint only the pages that match. A first pass is invisible, so the
         // agent list cannot draw on top of the setting that did match.
         let mut keep = vec![false; WINDOW_PAGES.len()];
         for (index, _) in WINDOW_PAGES.iter().enumerate() {
@@ -2840,7 +2723,7 @@ fn page(app: &mut SolveApp, ui: &mut egui::Ui, t: &Tokens) {
     crate::prefs_search::store_nav(ui);
 }
 
-fn draw_page(app: &mut SolveApp, ui: &mut egui::Ui, index: usize, t: &Tokens) {
+fn draw_page(app: &mut SketApp, ui: &mut egui::Ui, index: usize, t: &Tokens) {
     match index {
         PAGE_SHORTCUTS => {
             let read_only = app.keymap.read_only;
@@ -2865,9 +2748,6 @@ fn draw_page(app: &mut SolveApp, ui: &mut egui::Ui, index: usize, t: &Tokens) {
         PAGE_APPEARANCE => interface::appearance(app, ui, t),
         PAGE_LAYOUT => interface::layout(app, ui),
         PAGE_TOOLS => tools::show(app, ui),
-        PAGE_MOUSE3D => {
-            space_mouse_section(app, ui);
-        }
         PAGE_DESIGN => design::show(app, ui),
         PAGE_NAVIGATION => navigation::show(app, ui, t),
         PAGE_GRAPHICS => graphics::show(app, ui),
@@ -2883,247 +2763,6 @@ fn page_index(name: &str) -> Option<usize> {
         .or_else(|| PAGE_ALIASES.iter().find_map(|(alias, page)| alias.eq_ignore_ascii_case(name).then_some(*page)))
 }
 
-/// The 3D mouse page's settings, drawn with the same settings kit as the sections above
-/// it: whether it moves the view and shows in it, where the picture goes, its speed, the driver and
-/// calibration, each axis, the picture with its dead zone, and what its buttons do. A section like the
-/// others, with independent, searchable sections.
-fn space_mouse_section(app: &mut SolveApp, ui: &mut egui::Ui) {
-    mouse3d::show(app, ui);
-}
-
-/// A device's own app on this computer driving the view (the navigation bridge): on or off, its
-/// port, and whether an app is connected. Part of the 3D mouse Advanced section.
-fn nav_bridge(app: &mut SolveApp, ui: &mut egui::Ui) {
-    let (label, tip, port) = (app.tr("ui.nav_bridge").to_owned(), app.tr("ui.nav_bridge_tip").to_owned(), app.tr("ui.nav_bridge_port").to_owned());
-    let status = match (&app.space_mouse.bridge, app.preferences.nav_bridge_enabled) {
-        (_, false) => None,
-        (Some(name), true) => Some((format!("{} · {name}", app.tr("ui.nav_bridge_connected")), false)),
-        (None, true) => Some((app.tr("ui.nav_bridge_waiting").to_owned(), true)),
-    };
-    ui.with_layout(egui::Layout::left_to_right(egui::Align::Min).with_main_wrap(true), |ui| {
-        ui_kit::checkbox(ui, &label, &mut app.preferences.nav_bridge_enabled).backing_on_hover_text(&tip);
-        if let Some((status, waiting)) = &status {
-            ui_kit::settings_state_badge(ui, status, if *waiting { ui_kit::SettingsBadgeTone::Warning } else { ui_kit::SettingsBadgeTone::Success });
-        }
-    });
-    ui_kit::settings_form(ui, ui_kit::ContentWidth::label(ui, &port), |ui| {
-        ui_kit::row(ui, &port, |ui| {
-            ui.add_enabled_ui(app.preferences.nav_bridge_enabled, |ui| {
-                ui_kit::settings_control_width(ui, Tokens::get().space_24 * 3.0 + Tokens::get().space_8, |ui| {
-                    ui_kit::number_field(ui, &mut app.preferences.nav_bridge_port, 1..=u16::MAX, 1.0, "");
-                });
-            });
-        });
-    });
-}
-
-/// Legacy label alignment for the 3D mouse's supplemental controls.
-const FORM_LABEL_WIDTH: f32 = 150.0;
-
-/// A hint in the control column of the forms above and below it, as the form rows' controls are,
-/// not at the section's left edge.
-fn hint_under_controls(ui: &mut egui::Ui, text: &str, key: &str) {
-    let indent = FORM_LABEL_WIDTH.min(ui.available_width() * 0.6) + Tokens::get().space_14;
-    ui.horizontal_top(|ui| {
-        ui.spacing_mut().item_spacing.x = 0.0;
-        ui.add_space(indent);
-        ui_kit::text(ui, text, ui_kit::Text::Hint(key));
-    });
-}
-
-/// Where the motion that drives view axis `axis` sits, as a share of its full travel (calibrated
-/// when the device has a calibration, else the raw reading over full scale), and the share of that
-/// travel which reads as no motion on each side, for the live meter in its row.
-fn axis_meter(calibration: Option<&sketcraft_space_mouse::Calibration>, raw: [i16; 6], source: [usize; 6], axis: usize) -> (f32, [f32; 2]) {
-    let from = source.get(axis).copied().unwrap_or(axis);
-    match calibration {
-        Some(calibration) => {
-            (calibration.travel(raw).get(from).copied().unwrap_or(0.0), calibration.dead_zone_shares().get(from).copied().unwrap_or_default())
-        }
-        None => (f32::from(raw.get(from).copied().unwrap_or(0)) / f32::from(crate::space_mouse::FULL_SCALE), [0.0; 2]),
-    }
-}
-
-/// Whether a reader is reachable (spacenavd's socket, or a 3D mouse hidraw lists) that has not yet
-/// sent a record: the device is not confirmed until it does, so Preferences asks for a movement
-/// instead of saying none was found. Nothing reachable at all is "none found".
-fn waiting_for_a_record(drivers: Option<crate::space_mouse::DriversPresent>) -> bool {
-    drivers.is_some_and(|present| present.spacenavd || (present.direct && !present.denied))
-}
-
-/// A 3D mouse is there but may not be opened, and nothing else is reachable (no spacenavd): asking for
-/// a movement would wait forever, so Preferences says what is wrong instead.
-fn found_but_not_allowed(drivers: Option<crate::space_mouse::DriversPresent>) -> bool {
-    drivers.is_some_and(|present| present.denied && !present.spacenavd)
-}
-
-/// Puts this section's settings back: the driver choice, the speed, each axis's invert and speed and
-/// assignment, where the picture goes and whether it shows, and what the view turns around. Not
-/// the calibration (it has its own Forget), the button mapping, the offered set, "never show
-/// again", "Navigate with the 3D mouse" or the test model.
-pub fn restore_space_mouse_defaults(app: &mut SolveApp) {
-    let d = Prefs::default();
-    let p = &mut app.preferences;
-    p.space_mouse_driver = d.space_mouse_driver;
-    p.space_mouse_speed = d.space_mouse_speed;
-    p.space_mouse_reverse = d.space_mouse_reverse;
-    p.space_mouse_axis_speed = d.space_mouse_axis_speed;
-    p.space_mouse_axis_source = d.space_mouse_axis_source;
-    p.space_mouse_ghost_position = d.space_mouse_ghost_position;
-    p.space_mouse_in_view = d.space_mouse_in_view;
-    p.space_mouse_model_pivot = d.space_mouse_model_pivot;
-    p.space_mouse_sketch_orbit = d.space_mouse_sketch_orbit;
-}
-
-/// The device's picture with the coordinate circles under it, and a box with a small model that
-/// moves with the 3D mouse as the view does and a Reset button: to the right of the picture where
-/// there is room, else under the circles. All stay inside the section at any width.
-fn picture_and_boat(
-    ui: &mut egui::Ui,
-    boat: &mut Option<crate::test_boat::Boat>,
-    motion: Option<crate::space_mouse::DeviceMotion>,
-    free_orbit: bool,
-    has_picture: bool,
-    picture: impl FnOnce(&mut egui::Ui),
-    pads: impl FnOnce(&mut egui::Ui),
-) {
-    const PICTURE_WIDTH: f32 = 200.0;
-    const BOAT_HEIGHT: f32 = 150.0;
-    const BOAT_MIN: f32 = 120.0;
-    const BOAT_MAX: f32 = 260.0;
-    let gap = Tokens::get().space_12;
-    let room = ui.available_width();
-    let beside = has_picture && ui_kit::fits_steadily(ui, "boat_beside", PICTURE_WIDTH + gap + BOAT_MIN, room);
-    let width = if beside { (room - PICTURE_WIDTH - gap).min(BOAT_MAX) } else { room.min(BOAT_MAX) };
-    let mut boat_and_reset = |ui: &mut egui::Ui| {
-        ui.vertical(|ui| {
-            crate::test_boat::show(ui, boat, motion, free_orbit, egui::vec2(width.max(0.0), BOAT_HEIGHT));
-            if ui_kit::button(ui, crate::i18n::tr("ui.3d_mouse_reset_view"), ui_kit::Button::Normal).clicked() {
-                crate::test_boat::reset(boat);
-            }
-        });
-    };
-    // The coordinate circles stay under the device's picture, from its left edge; the test model is
-    // beside the picture where there is room, else under the circles.
-    if beside {
-        ui.horizontal_top(|ui| {
-            picture(ui);
-            boat_and_reset(ui);
-        });
-        pads(ui);
-    } else {
-        picture(ui);
-        pads(ui);
-        boat_and_reset(ui);
-    }
-}
-
-/// The 3D mouse's buttons, each with what it does: those that do something and any pressed since
-/// the app started. A pressed one is marked in its row; Preferences doesn't run them.
-fn space_mouse_buttons(app: &mut SolveApp, ui: &mut egui::Ui) {
-    let Some(device) = app.space_mouse.device.clone() else {
-        ui_kit::settings_form(ui, FORM_LABEL_WIDTH, |ui| {
-            hint_under_controls(ui, crate::i18n::tr("ui.3d_mouse_buttons_no_device"), "space_mouse_buttons");
-        });
-        return;
-    };
-    let mut jobs = crate::space_mouse::button_jobs(app, &device);
-    let bit = |number: u8| number.checked_sub(1).and_then(|index| 1_u32.checked_shl(u32::from(index))).unwrap_or(0);
-    let mut numbers: std::collections::BTreeSet<u8> = jobs.keys().copied().collect();
-    numbers.extend((1..=32).filter(|&number| app.space_mouse.seen & bit(number) != 0));
-    let mut changed = false;
-    ui_kit::settings_form(ui, FORM_LABEL_WIDTH, |ui| {
-        hint_under_controls(ui, crate::i18n::tr("ui.3d_mouse_buttons_hint"), "space_mouse_buttons");
-        for number in numbers {
-            let mut name = crate::i18n::format("ui.3d_mouse_button", &[("number", &number.to_string())]);
-            if app.space_mouse.buttons & bit(number) != 0 {
-                name.push_str("  ●");
-            }
-            let current = jobs.get(&number).cloned();
-            if let Some(choice) = ui_kit::row(ui, &name, |ui| button_job_picker(app, ui, number, current.as_ref())) {
-                changed = true;
-                match choice {
-                    Some(job) => jobs.insert(number, job),
-                    None => jobs.remove(&number),
-                };
-            }
-        }
-    });
-    if changed {
-        app.preferences.space_mouse_buttons.insert(device.clone(), jobs);
-    }
-    if app.preferences.space_mouse_buttons.contains_key(&device) {
-        ui_kit::settings_form(ui, FORM_LABEL_WIDTH, |ui| {
-            ui_kit::row(ui, "", |ui| {
-                if ui_kit::button(ui, crate::i18n::tr("ui.3d_mouse_buttons_reset"), ui_kit::Button::Normal).clicked() {
-                    app.preferences.space_mouse_buttons.remove(&device);
-                }
-            });
-        });
-    }
-}
-
-/// What a button job is called in its picker.
-fn button_job_label(app: &SolveApp, job: Option<&crate::space_mouse::ButtonJob>) -> String {
-    use crate::space_mouse::{ButtonJob, ButtonKey};
-    match job {
-        None => crate::i18n::tr("ui.3d_mouse_button_nothing").to_string(),
-        Some(ButtonJob::Settings) => crate::i18n::tr("ui.3d_mouse_button_settings").to_string(),
-        Some(ButtonJob::View(view)) => {
-            let mut name = view.clone();
-            if let Some(first) = name.get_mut(0..1) {
-                first.make_ascii_uppercase();
-            }
-            app.tr_label(&name).to_string()
-        }
-        Some(ButtonJob::Key(key)) => match key {
-            ButtonKey::Esc => "Esc",
-            ButtonKey::Shift => "Shift",
-            ButtonKey::Ctrl => "Ctrl",
-            ButtonKey::Alt => "Alt",
-        }
-        .to_string(),
-        Some(ButtonJob::Command(id)) => sketcraft_engine::find_command(id).map_or_else(|| id.clone(), |c| app.tr_label(c.label).to_string()),
-    }
-}
-
-/// A job as the picker's value: what it is and, for a view, key or command, which.
-fn button_job_value(job: Option<&crate::space_mouse::ButtonJob>) -> String {
-    use crate::space_mouse::ButtonJob;
-    match job {
-        None => "none".into(),
-        Some(ButtonJob::Settings) => "settings".into(),
-        Some(ButtonJob::View(view)) => format!("view:{view}"),
-        Some(ButtonJob::Key(key)) => format!("key:{key:?}"),
-        Some(ButtonJob::Command(id)) => format!("cmd:{id}"),
-    }
-}
-
-/// A button's job, chosen from nothing, the 3D mouse settings, the views, the keys, then any
-/// command, in the kit's searchable dropdown. `Some` with the new job when one is picked.
-fn button_job_picker(
-    app: &SolveApp,
-    ui: &mut egui::Ui,
-    number: u8,
-    current: Option<&crate::space_mouse::ButtonJob>,
-) -> Option<Option<crate::space_mouse::ButtonJob>> {
-    use crate::space_mouse::{ButtonJob, ButtonKey};
-    let views = ["home", "fit", "top", "front", "right", "left", "back", "bottom"].map(|view| ButtonJob::View(view.into()));
-    let keys = [ButtonKey::Esc, ButtonKey::Shift, ButtonKey::Ctrl, ButtonKey::Alt].map(ButtonJob::Key);
-    let commands = sketcraft_engine::command_specs().into_iter().map(|spec| ButtonJob::Command(spec.id.into()));
-    let jobs: Vec<Option<ButtonJob>> =
-        [None, Some(ButtonJob::Settings)].into_iter().chain(views.into_iter().chain(keys).chain(commands).map(Some)).collect();
-    let entries: Vec<(String, String)> = jobs.iter().map(|job| (button_job_value(job.as_ref()), button_job_label(app, job.as_ref()))).collect();
-    let options: Vec<_> = entries.iter().map(|(value, label)| ui_kit::SearchOption { value, label, handle: None }).collect();
-    let filter_id = egui::Id::unique(("sc_space_mouse_button_filter", number));
-    let mut filter: String = ui.data_mut(|data| data.get_temp(filter_id).unwrap_or_default());
-    let id = format!("sc_space_mouse_button_{number}");
-    let chosen = ui_kit::searchable_dropdown(ui, &id, &button_job_label(app, current), &mut filter, &options, None, None);
-    ui.data_mut(|data| data.insert_temp(filter_id, filter));
-    let chosen = chosen?;
-    jobs.into_iter().find(|job| button_job_value(job.as_ref()) == chosen)
-}
-
 /// The control channel's `ui.prefs`: `open` (a page name) opens the dialog there, `button`
 /// presses OK, Cancel, Apply or Restore Defaults, `stand_up: true` answers the stand-up offer,
 /// dialog or note (`false` leaves the file as it is, like "Leave it"), `theme_import` (a theme file's JSON or
@@ -3133,7 +2772,7 @@ fn button_job_picker(
 /// `open: "Interface/Navigation bar"` opens Interface and scrolls to its bar editor.
 /// Returns them all, the open page, the offer (and whether it is the note), the theme ids and the
 /// followed file (`theme_followed`, `theme_follow_error`).
-pub fn control(app: &mut SolveApp, p: &serde_json::Value) -> Result<serde_json::Value, String> {
+pub fn control(app: &mut SketApp, p: &serde_json::Value) -> Result<serde_json::Value, String> {
     // Stage every fallible preference operation before dialogs, document actions or writes.
     let mut rest = p.as_object().cloned().ok_or("preferences must be an object")?;
     let page = rest
@@ -3283,64 +2922,9 @@ fn themes_that_read<'de, D: serde::Deserializer<'de>>(saved: D) -> Result<Vec<cr
     Vec::<serde_json::Value>::deserialize(saved)?.iter().map(|value| theme_from_preferences(value, false).map_err(serde::de::Error::custom)).collect()
 }
 
-/// The saved 3D mouse calibrations that still read. One this version can't read (a hand edit, a
-/// format from another release) is dropped on its own, with a log line, not with all the others.
-fn calibrations_that_read<'de, D: serde::Deserializer<'de>>(
-    saved: D,
-) -> Result<std::collections::BTreeMap<String, sketcraft_space_mouse::Calibration>, D::Error> {
-    let saved = std::collections::BTreeMap::<String, serde_json::Value>::deserialize(saved)?;
-    Ok(saved
-        .into_iter()
-        .filter_map(|(device, calibration)| match serde_json::from_value(calibration) {
-            Ok(calibration) => Some((device, calibration)),
-            Err(error) => {
-                log::warn!("preferences: the 3D mouse calibration for `{device}` can't be read ({error}); reading the device as it reports");
-                None
-            }
-        })
-        .collect())
-}
-
-/// The saved set of devices that read as text; anything else in it is dropped, not the whole set.
-fn devices_that_read<'de, D: serde::Deserializer<'de>>(saved: D) -> Result<std::collections::BTreeSet<String>, D::Error> {
-    let saved = Vec::<serde_json::Value>::deserialize(saved)?;
-    Ok(saved.into_iter().filter_map(|device| device.as_str().map(str::to_owned)).collect())
-}
-
-/// The saved button jobs that still read. A job this version doesn't know (from a newer release)
-/// drops that button only, with a log line, not its device's other buttons or the other devices.
-fn button_jobs_that_read<'de, D: serde::Deserializer<'de>>(
-    saved: D,
-) -> Result<std::collections::BTreeMap<String, std::collections::BTreeMap<u8, crate::space_mouse::ButtonJob>>, D::Error> {
-    let saved = std::collections::BTreeMap::<String, serde_json::Value>::deserialize(saved)?;
-    Ok(saved
-        .into_iter()
-        .filter_map(|(device, jobs)| {
-            let jobs = match jobs {
-                serde_json::Value::Object(jobs) => jobs,
-                _ => {
-                    log::warn!("preferences: the 3D mouse buttons for `{device}` can't be read; using the defaults");
-                    return None;
-                }
-            };
-            let jobs = jobs
-                .into_iter()
-                .filter_map(|(number, job)| {
-                    let read = number.parse::<u8>().ok().and_then(|number| Some((number, serde_json::from_value(job).ok()?)));
-                    if read.is_none() {
-                        log::warn!("preferences: button {number} of the 3D mouse `{device}` can't be read; leaving it empty");
-                    }
-                    read
-                })
-                .collect();
-            Some((device, jobs))
-        })
-        .collect())
-}
-
 /// Every theme the Theme list offers, as (id, name): the modes, the built-in theme files, then
 /// the imported ones.
-fn theme_choices(app: &SolveApp) -> Vec<(String, String)> {
+fn theme_choices(app: &SketApp) -> Vec<(String, String)> {
     let modes = THEMES.iter().filter(|(id, _)| *id != "system").map(|(id, label)| ((*id).to_string(), crate::i18n::tr_label(label).to_string()));
     let files = crate::theme_files::builtin().iter().chain(&app.preferences.custom_themes).map(|t| (t.id.clone(), t.name.clone()));
     let mut choices: Vec<_> = modes.chain(files).collect();
@@ -3353,7 +2937,7 @@ fn theme_choices(app: &SolveApp) -> Vec<(String, String)> {
 }
 
 /// Turn a theme on (a mode or a theme file's id); dark follows it.
-fn select_theme(app: &mut SolveApp, id: &str) {
+fn select_theme(app: &mut SketApp, id: &str) {
     app.preferences.theme = id.to_string();
     match crate::theme_files::find(id, &app.preferences.custom_themes) {
         Some(f) => app.ui.dark = f.base.is_dark(),
@@ -3365,7 +2949,7 @@ fn select_theme(app: &mut SolveApp, id: &str) {
 /// Import a theme file (its text, or its JSON) into the preferences and turn it on; returns
 /// the id it is kept under.
 /// Import a theme file's text, from a file, a paste or a drop, and say what happened in the status bar.
-fn import_theme_text(app: &mut SolveApp, text: Result<String, String>) {
+fn import_theme_text(app: &mut SketApp, text: Result<String, String>) {
     match text.and_then(|text| import_theme(app, &serde_json::Value::String(text))) {
         Ok(id) => {
             let name = crate::theme_files::find(&id, &app.preferences.custom_themes).map(|t| t.name.clone()).unwrap_or(id);
@@ -3384,7 +2968,7 @@ fn looks_like_theme(text: &str) -> bool {
 /// Ctrl/Cmd+V on the Appearance page with a theme file's text on the clipboard imports it, like
 /// Import… with a file (#8226). Called before the global Copy and Paste shortcuts, which would
 /// otherwise paste copied components; the paste is taken out of the input once it is a theme's.
-pub fn take_theme_paste(app: &mut SolveApp, ctx: &egui::Context) {
+pub fn take_theme_paste(app: &mut SketApp, ctx: &egui::Context) {
     if !app.prefs_window.open || app.prefs_window.section != PAGE_APPEARANCE {
         return;
     }
@@ -3403,7 +2987,7 @@ pub fn take_theme_paste(app: &mut SolveApp, ctx: &egui::Context) {
 }
 
 /// Files dropped on the theme Import tile are themes to import, not designs to open (#8226).
-pub fn take_theme_drops(app: &mut SolveApp, ctx: &egui::Context) {
+pub fn take_theme_drops(app: &mut SketApp, ctx: &egui::Context) {
     if !theme_drop_target(app, ctx) || !ctx.input(|i| !i.raw.dropped_files.is_empty()) {
         return;
     }
@@ -3423,7 +3007,7 @@ pub fn take_theme_drops(app: &mut SolveApp, ctx: &egui::Context) {
 
 /// Whether files dropped now land on the Import tile: the Preferences window is open and the
 /// pointer was last seen over the tile.
-pub fn theme_drop_target(app: &SolveApp, ctx: &egui::Context) -> bool {
+pub fn theme_drop_target(app: &SketApp, ctx: &egui::Context) -> bool {
     app.prefs_window
         .import_tile
         .filter(|_| app.prefs_window.open)
@@ -3432,7 +3016,7 @@ pub fn theme_drop_target(app: &SolveApp, ctx: &egui::Context) -> bool {
 
 /// A file dropped on the Import tile, as bytes: imported when it is a theme, refused with the reason
 /// otherwise.
-pub fn import_theme_bytes(app: &mut SolveApp, bytes: Vec<u8>) {
+pub fn import_theme_bytes(app: &mut SketApp, bytes: Vec<u8>) {
     let text = if bytes.len() > crate::theme_files::MAX_BYTES {
         Err("the file is too large for a theme".to_string())
     } else {
@@ -3441,7 +3025,7 @@ pub fn import_theme_bytes(app: &mut SolveApp, bytes: Vec<u8>) {
     import_theme_text(app, text);
 }
 
-pub fn import_theme(app: &mut SolveApp, v: &serde_json::Value) -> Result<String, String> {
+pub fn import_theme(app: &mut SketApp, v: &serde_json::Value) -> Result<String, String> {
     let theme = match v {
         serde_json::Value::String(text) => crate::theme_files::parse(text)?,
         other => crate::theme_files::from_value(other)?,
@@ -3456,7 +3040,7 @@ pub fn import_theme(app: &mut SolveApp, v: &serde_json::Value) -> Result<String,
 }
 
 /// Remove an imported theme; when it is on, its base (dark or light) takes over.
-fn remove_theme(app: &mut SolveApp, id: &str) -> Result<(), String> {
+fn remove_theme(app: &mut SketApp, id: &str) -> Result<(), String> {
     let Some(i) = app.preferences.custom_themes.iter().position(|t| t.id == id) else {
         return Err(format!("no imported theme `{id}`"));
     };
@@ -3469,14 +3053,14 @@ fn remove_theme(app: &mut SolveApp, id: &str) -> Result<(), String> {
 }
 
 /// The theme on now as a complete theme file, a starting point for a new one.
-fn current_theme_file(app: &SolveApp) -> serde_json::Value {
+fn current_theme_file(app: &SketApp) -> serde_json::Value {
     match active_theme_file(app) {
         Some(f) => export_theme_file(f),
         None => theme_file(app, &app.preferences.theme, app.prefs_window.system_theme_dark.unwrap_or(app.ui.dark)),
     }
 }
 
-fn active_theme_file(app: &SolveApp) -> Option<&crate::theme_files::ThemeFile> {
+fn active_theme_file(app: &SketApp) -> Option<&crate::theme_files::ThemeFile> {
     followed_theme(&app.preferences, &app.prefs_window.follow).or_else(|| {
         crate::theme_files::find(
             theme_picker::active_id(&app.preferences, app.prefs_window.system_theme_dark.unwrap_or(app.ui.dark)),
@@ -3487,11 +3071,11 @@ fn active_theme_file(app: &SolveApp) -> Option<&crate::theme_files::ThemeFile> {
 
 /// The single runtime decision used by controls, ui.prefs and renderer activation. It never
 /// changes saved intent or caches accessibility/hardware state in palette tokens.
-pub(crate) fn blur_availability(app: &SolveApp) -> crate::theme_options::Availability {
+pub(crate) fn blur_availability(app: &SketApp) -> crate::theme_options::Availability {
     blur_availability_for(app, active_theme_file(app).is_some_and(crate::theme_options::declares_blur))
 }
 
-fn blur_availability_for(app: &SolveApp, offered: bool) -> crate::theme_options::Availability {
+fn blur_availability_for(app: &SketApp, offered: bool) -> crate::theme_options::Availability {
     use crate::theme_options::Availability::{Available, Unavailable};
     let reduced = app.services.reduce_transparency.as_ref().and_then(|read| read(offered));
     if !offered && app.blur_session.harness_radius.is_none() {
@@ -3521,7 +3105,7 @@ fn blur_availability_for(app: &SolveApp, offered: bool) -> crate::theme_options:
     }
 }
 
-pub(crate) fn prepare_blur(app: &mut SolveApp, ctx: &egui::Context) {
+pub(crate) fn prepare_blur(app: &mut SketApp, ctx: &egui::Context) {
     if ctx.viewport_id() != egui::ViewportId::ROOT {
         return;
     }
@@ -3645,7 +3229,7 @@ fn theme_option_rows<'a>(
         .collect()
 }
 
-fn theme_options_row(app: &mut SolveApp, ui: &mut egui::Ui) {
+fn theme_options_row(app: &mut SketApp, ui: &mut egui::Ui) {
     let availability = blur_availability(app);
     let Some(file) = active_theme_file(app).cloned() else { return };
     let (mut values, notices) = effective_theme_options(&app.preferences, &file);
@@ -3754,7 +3338,7 @@ fn merge_theme_options(prefs: &mut Prefs, followed: Option<&crate::theme_files::
     Ok(())
 }
 
-fn theme_options_reply(app: &SolveApp) -> sketcraft_engine::schema::ui_prefs::ThemeOptionsReply {
+fn theme_options_reply(app: &SketApp) -> sketcraft_engine::schema::ui_prefs::ThemeOptionsReply {
     use crate::theme_files::{OptionKind, OptionValue};
     use sketcraft_engine::schema::ui_prefs::{ThemeChoice, ThemeOptionDef, ThemeOptionKind, ThemeOptionValue, ThemeOptionsReply};
     let Some(file) = active_theme_file(app) else { return ThemeOptionsReply::default() };
@@ -3819,7 +3403,7 @@ fn theme_options_reply(app: &SolveApp) -> sketcraft_engine::schema::ui_prefs::Th
 }
 
 /// Export the tile the user chose, without applying it or changing the dialog snapshot.
-fn theme_file(app: &SolveApp, id: &str, system_dark: bool) -> serde_json::Value {
+fn theme_file(app: &SketApp, id: &str, system_dark: bool) -> serde_json::Value {
     use crate::theme_files::{Base, export, find};
     let id = if id == "system" { theme_picker::slot_id(&app.preferences, system_dark) } else { id };
     match find(id, &app.preferences.custom_themes) {
@@ -3830,9 +3414,7 @@ fn theme_file(app: &SolveApp, id: &str, system_dark: bool) -> serde_json::Value 
 }
 
 /// Fold a setting an older release kept in its own field into the one this version reads.
-/// `orbit_cursor` (`true` = the point under the cursor) became `orbit_around`. A 3D mouse
-/// calibration that can't be used as it is (a hand edit) is dropped, so the device is read as it
-/// reports rather than spinning the view.
+/// `orbit_cursor` (`true` = the point under the cursor) became `orbit_around`.
 pub fn migrate(mut p: Prefs) -> Prefs {
     migrate_gruvbox(&mut p);
     // Every saved file carries the old default limit; it reads as no limit.
@@ -3858,17 +3440,6 @@ pub fn migrate(mut p: Prefs) -> Prefs {
         p.orbit_around = OrbitAround::Cursor;
         p.orbit_cursor = false;
     }
-    if !crate::space_mouse::drives_each_once(p.space_mouse_axis_source) {
-        log::warn!("preferences: the 3D mouse axis assignment {:?} doesn't drive each axis once; using the default", p.space_mouse_axis_source);
-        p.space_mouse_axis_source = crate::space_mouse::SAME_AXES;
-    }
-    p.space_mouse_calibrations.retain(|device, calibration| {
-        let usable = calibration.is_usable();
-        if !usable {
-            log::warn!("preferences: the 3D mouse calibration for `{device}` can't be used as it is; reading the device as it reports");
-        }
-        usable
-    });
     p
 }
 
@@ -3948,7 +3519,7 @@ pub fn lenient(saved: &serde_json::Value) -> Prefs {
 
 /// Validate a proposed preference state without applying it or performing writes.
 fn prepare_preferences(
-    app: &SolveApp,
+    app: &SketApp,
     base: &Prefs,
     followed: Option<&crate::theme_files::ThemeFile>,
     p: &serde_json::Value,
@@ -4123,13 +3694,13 @@ fn prepare_preferences(
 }
 
 /// Set preferences from JSON (control channel); returns them all.
-pub fn set(app: &mut SolveApp, p: &serde_json::Value) -> Result<serde_json::Value, String> {
+pub fn set(app: &mut SketApp, p: &serde_json::Value) -> Result<serde_json::Value, String> {
     let new = prepare_preferences(app, &app.preferences, followed_theme(&app.preferences, &app.prefs_window.follow), p)?;
     apply_preferences(app, new, p)
 }
 
 /// All fallible preference checks finish before any application or file write.
-fn apply_preferences(app: &mut SolveApp, new: Prefs, p: &serde_json::Value) -> Result<serde_json::Value, String> {
+fn apply_preferences(app: &mut SketApp, new: Prefs, p: &serde_json::Value) -> Result<serde_json::Value, String> {
     let file = crate::theme_files::find(&new.theme, &new.custom_themes);
     if (new.theme != app.preferences.theme || new.custom_themes != app.preferences.custom_themes) && new.theme != "system" {
         app.ui.dark = file.map_or(new.theme == "dark", |f| f.base.is_dark());
@@ -4267,7 +3838,7 @@ mod ambient_occlusion_tests {
         let checkbox = crate::scenario::handle_at("view:ambient_occlusion").unwrap();
         h.call("ui.click", json!({"x":checkbox.x,"y":checkbox.y}));
         assert!(h.app.preferences.ambient_occlusion);
-        let mut restored = SolveApp::new(sketcraft_engine::Session::default(), Default::default());
+        let mut restored = SketApp::new(sketcraft_engine::Session::default(), Default::default());
         restored.load_prefs(&h.app.prefs());
         assert!(!restored.preferences.ambient_occlusion, "a change that was not applied is not saved (#9730)");
         h.call("ui.prefs", json!({"button":"cancel"}));
@@ -4307,7 +3878,7 @@ mod ambient_occlusion_tests {
         h.call("ui.click", json!({"x":checkbox.x,"y":checkbox.y}));
         assert!(h.app.preferences.dark_parts_shading);
         h.call("ui.prefs", json!({"button":"apply"}));
-        let mut restored = SolveApp::new(sketcraft_engine::Session::default(), Default::default());
+        let mut restored = SketApp::new(sketcraft_engine::Session::default(), Default::default());
         restored.load_prefs(&h.app.prefs());
         assert!(restored.preferences.dark_parts_shading);
         h.call("ui.prefs", json!({"button":"defaults"}));

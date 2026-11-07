@@ -12,8 +12,8 @@
 //! outward normal and the edge, so a tool can keep the point by name and turn a frame to the face.
 
 use serde::Serialize;
-use solidcore_record::Vec3;
-use solidcore_record::brep::{Brep, Curve, Loop};
+use sketcore_record::Vec3;
+use sketcore_record::brep::{Brep, Curve, Loop};
 use sketcraft_geom::UnitVec3;
 use sketcraft_geom::brep::eval::CurveEval;
 use sketcraft_geom::prelude::*;

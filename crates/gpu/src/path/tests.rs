@@ -1851,8 +1851,7 @@ fn glass_transport_evidence() {
         background: [236, 240, 245],
         transparent_background: false,
     };
-    let lens =
-        std::env::var_os("SKETCRAFT_GLASS_DOF").map(|_| sketcraft_render::job::ThinLens { aperture_radius_mm: 0.5, focus_distance_mm: 12.0 });
+    let lens = std::env::var_os("SKETCRAFT_GLASS_DOF").map(|_| sketcraft_render::job::ThinLens { aperture_radius_mm: 0.5, focus_distance_mm: 12.0 });
     let options = JobOptions { samples: 256, max_depth: 16, seed: 1948, lens, ..Default::default() };
     let mut task = Task::new(executor.context.clone(), ProductScene { meshes, bounds }, request, options, CancelToken::default()).unwrap();
     task.environment = 1.0;

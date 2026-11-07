@@ -5,7 +5,7 @@
 
 use crate::prelude::*;
 use crate::{Aabb3, Mesh};
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 
 /// Most items in a leaf.
 const LEAF: usize = 4;

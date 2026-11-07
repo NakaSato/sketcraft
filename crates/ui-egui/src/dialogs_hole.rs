@@ -529,7 +529,7 @@ mod tests {
 
     #[test]
     fn every_dropdown_option_previews_a_different_hole() {
-        let app = crate::SolveApp::new(sketcraft_engine::Session::default(), crate::Services::default());
+        let app = crate::SketApp::new(sketcraft_engine::Session::default(), crate::Services::default());
         let form = crate::dialogs::Dialog::for_command(&app, "solid.hole").unwrap().kind;
         let ctx = crate::fonts::test_context();
         let drawn = |choice: Choice| {
@@ -561,7 +561,7 @@ mod tests {
     fn partial_tapping_fields_do_not_overlap_on_narrow_forms() {
         for width in [220.0, 280.0, 360.0] {
             let ctx = crate::fonts::test_context();
-            let app = crate::SolveApp::new(sketcraft_engine::Session::default(), crate::Services::default());
+            let app = crate::SketApp::new(sketcraft_engine::Session::default(), crate::Services::default());
             let mut kind = crate::dialogs::Dialog::for_command(&app, "solid.hole").unwrap().kind;
             if let Kind::Hole { kind, opts, .. } = &mut kind {
                 *kind = 1;

@@ -12,7 +12,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use serde_json::json;
 use sketcraft_engine::io::design_lock::{self, Lock};
 
-use crate::SolveApp;
+use crate::SketApp;
 use crate::file_load::Request;
 use crate::ui_kit;
 
@@ -32,7 +32,7 @@ pub struct LockPrompt {
 }
 
 /// Keep lock files for the designs this app opens (the desktop app; never the browser or tests).
-pub fn start(app: &mut SolveApp) {
+pub fn start(app: &mut SketApp) {
     if !cfg!(target_arch = "wasm32") {
         app.locks = Some(Locks::default());
     }
@@ -40,7 +40,7 @@ pub fn start(app: &mut SolveApp) {
 
 /// The design files open in this app that it should hold a lock on: every tab's file, except
 /// a design opened read-only (whoever has it open is the one writing it).
-fn wanted(app: &SolveApp) -> BTreeSet<String> {
+fn wanted(app: &SketApp) -> BTreeSet<String> {
     std::iter::once(&app.session)
         .chain(app.docs.background())
         .filter(|s| !s.read_only)
@@ -52,7 +52,7 @@ fn wanted(app: &SolveApp) -> BTreeSet<String> {
 /// Take a lock for each design just opened or saved under a new name, drop the ones no longer
 /// open, and write them all again every [`design_lock::REFRESH_SECS`]. A lock that can't be
 /// written (a read-only folder) is no reason to stop anything: the design stays open without one.
-pub fn tick(app: &mut SolveApp, ctx: &egui::Context) {
+pub fn tick(app: &mut SketApp, ctx: &egui::Context) {
     if app.locks.is_none() {
         return;
     }
@@ -87,7 +87,7 @@ pub fn tick(app: &mut SolveApp, ctx: &egui::Context) {
 }
 
 /// The app is closing: its locks go.
-pub fn close(app: &mut SolveApp) {
+pub fn close(app: &mut SketApp) {
     if let Some(locks) = app.locks.take() {
         for path in locks.held.keys() {
             design_lock::remove(std::path::Path::new(path));
@@ -98,7 +98,7 @@ pub fn close(app: &mut SolveApp) {
 /// Before an interactive Open of a design: when another SketCraft has it open, hold the request
 /// and ask (`None`); otherwise hand it back to be opened.
 #[cfg_attr(target_arch = "wasm32", allow(dead_code))]
-pub(crate) fn check_open(app: &mut SolveApp, request: Request) -> Option<Request> {
+pub(crate) fn check_open(app: &mut SketApp, request: Request) -> Option<Request> {
     if app.locks.is_none() || request.reply.is_some() || !sketcraft_engine::io::is_design_path(&request.path) {
         return Some(request);
     }
@@ -114,7 +114,7 @@ pub(crate) fn check_open(app: &mut SolveApp, request: Request) -> Option<Request
 /// Save to the design's own file, unless it was opened read-only (Save As instead) or something
 /// else changed the file since it was opened or saved (ask first). `false`: Save As or the
 /// question is under way instead.
-pub(crate) fn check_save(app: &mut SolveApp) -> bool {
+pub(crate) fn check_save(app: &mut SketApp) -> bool {
     if app.session.read_only {
         app.set_status(crate::i18n::tr("document.read_only_save"), false);
         crate::toolbar::save_copy(app);
@@ -133,13 +133,13 @@ fn file_name(path: &str) -> String {
 }
 
 /// The "open elsewhere" and "changed on disk" questions, when one is waiting.
-pub fn show(app: &mut SolveApp, ctx: &egui::Context) {
+pub fn show(app: &mut SketApp, ctx: &egui::Context) {
     let _language = crate::i18n::scope(&app.preferences.language);
     show_lock_prompt(app, ctx);
     show_disk_prompt(app, ctx);
 }
 
-fn show_lock_prompt(app: &mut SolveApp, ctx: &egui::Context) {
+fn show_lock_prompt(app: &mut SketApp, ctx: &egui::Context) {
     let Some(prompt) = app.lock_prompts.first() else { return };
     let name = file_name(&prompt.request.path);
     let lock = &prompt.lock;
@@ -181,7 +181,7 @@ pub enum LockAnswer {
 }
 
 /// Act on the "open elsewhere" answer.
-pub fn answer_lock(app: &mut SolveApp, answer: LockAnswer) {
+pub fn answer_lock(app: &mut SketApp, answer: LockAnswer) {
     if app.lock_prompts.is_empty() {
         return;
     }
@@ -197,7 +197,7 @@ pub fn answer_lock(app: &mut SolveApp, answer: LockAnswer) {
 }
 
 /// Open the held request now that it is answered (without asking again).
-fn reopen(app: &mut SolveApp, request: Request) {
+fn reopen(app: &mut SketApp, request: Request) {
     #[cfg(not(target_arch = "wasm32"))]
     let _ = crate::file_load::queue(app, request);
     #[cfg(target_arch = "wasm32")]
@@ -212,7 +212,7 @@ pub enum DiskAnswer {
     Cancel,
 }
 
-fn show_disk_prompt(app: &mut SolveApp, ctx: &egui::Context) {
+fn show_disk_prompt(app: &mut SketApp, ctx: &egui::Context) {
     if !app.disk_prompt {
         return;
     }
@@ -244,7 +244,7 @@ fn show_disk_prompt(app: &mut SolveApp, ctx: &egui::Context) {
 
 /// Act on the "changed on disk" answer. A Save answering "save changes?" on close or quit goes on
 /// from here as it would have from the Save.
-pub fn answer_disk(app: &mut SolveApp, answer: DiskAnswer) {
+pub fn answer_disk(app: &mut SketApp, answer: DiskAnswer) {
     if !std::mem::take(&mut app.disk_prompt) {
         return;
     }

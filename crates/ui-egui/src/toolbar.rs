@@ -8,7 +8,7 @@ use egui::{Align2, Color32, FontId, Rect, Sense, Stroke, pos2, vec2};
 use serde_json::json;
 
 use crate::theme::Tokens;
-use crate::{SolveApp, icons};
+use crate::{SketApp, icons};
 
 pub use crate::workspace::TABS;
 
@@ -234,7 +234,7 @@ fn help_x(report: Rect) -> f32 {
 }
 
 /// The command whose tool or dialog is open right now, shown pressed in the toolbar.
-fn running_command(app: &SolveApp) -> Option<String> {
+fn running_command(app: &SketApp) -> Option<String> {
     match (&app.tool, &app.dialog) {
         (Some(tool), _) => Some(tool.cmd.to_string()),
         // Create Sketch never lands in last_command (it is not repeatable).
@@ -246,13 +246,13 @@ fn running_command(app: &SolveApp) -> Option<String> {
 
 /// Whether the toolbar shows command `id` pressed: its tool or dialog is open, or it turned on
 /// the view analysis on now (one at a time, `Session::active_analysis`), its tool running or not.
-pub(crate) fn shows_pressed(app: &SolveApp, id: &str) -> bool {
+pub(crate) fn shows_pressed(app: &SketApp, id: &str) -> bool {
     running_command(app).as_deref() == Some(id) || app.session.active_analysis() == Some(id)
 }
 
 /// [`shows_pressed`] for a ribbon button: a command with a persistent effect is pressed only while
 /// its tool runs, since `persistent_ribbon_pressed` alone decides how its effect is shown.
-fn ribbon_shows_pressed(app: &SolveApp, id: &str) -> bool {
+fn ribbon_shows_pressed(app: &SketApp, id: &str) -> bool {
     if persistent_available(app, id) { running_command(app).as_deref() == Some(id) } else { shows_pressed(app, id) }
 }
 
@@ -342,7 +342,7 @@ const REPORT_TEXT_X: f32 = 29.0;
 pub const APP_BAR_HEIGHT: f32 = 34.0;
 
 /// Where the application bar puts command search, Report a bug and the version: chosen by the
-/// app that hosts the UI ([`SolveApp::header`]) before the first frame. The default is the
+/// app that hosts the UI ([`SketApp::header`]) before the first frame. The default is the
 /// desktop layout.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub struct HeaderLayout {
@@ -392,14 +392,14 @@ pub enum VersionPlace {
 }
 
 /// The closed search field goes in the application bar rather than the ribbon.
-pub(crate) fn search_in_header(app: &SolveApp) -> bool {
+pub(crate) fn search_in_header(app: &SketApp) -> bool {
     app.header.search == SearchPlace::Header && !app.embedded && !app.embed_editor
 }
 
 /// Space between the header search field and Settings.
 const HEADER_SEARCH_GAP: f32 = 4.0;
 
-pub fn app_bar(app: &mut SolveApp, ui: &mut egui::Ui) {
+pub fn app_bar(app: &mut SketApp, ui: &mut egui::Ui) {
     let t = Tokens::get();
     let app_bar = Container::new(ui.ctx(), Surface::ApplicationBar).edge("sc_appbar", Edge::Top);
     let frame = Container::new(ui.ctx(), Surface::ApplicationBar).edge_frame(t.app_bar);
@@ -683,7 +683,7 @@ pub enum FileAction {
 
 impl FileAction {
     /// Whether this action is available in the current document, picker and report state.
-    pub fn enabled(&self, app: &SolveApp) -> bool {
+    pub fn enabled(&self, app: &SketApp) -> bool {
         let needs_design = matches!(self, Self::Save | Self::SaveAs | Self::Undo | Self::Redo | Self::ExportMesh(_) | Self::Command(_))
             || matches!(self, Self::Export(extension) if *extension != "json");
         // An open bug report describes the designs as they are, and a window opened behind it
@@ -702,12 +702,12 @@ impl FileAction {
 
     /// Whether the native menu offers this action: while a widget has keyboard focus (a report's
     /// text field too), its Undo and Redo go to that widget instead of the design.
-    pub fn menu_enabled(&self, app: &SolveApp, keyboard_focus: bool) -> bool {
+    pub fn menu_enabled(&self, app: &SketApp, keyboard_focus: bool) -> bool {
         self.enabled(app) || (matches!(self, Self::Undo | Self::Redo) && keyboard_focus && !app.file_picker_busy() && !app.file_load.busy())
     }
 
     /// Execute through the same document, save-job and preferences paths as the toolbar.
-    pub fn run(&self, app: &mut SolveApp) {
+    pub fn run(&self, app: &mut SketApp) {
         if !self.enabled(app) {
             return;
         }
@@ -742,7 +742,7 @@ impl FileAction {
     }
 }
 
-fn file_menu(app: &mut SolveApp, ctx: &egui::Context) {
+fn file_menu(app: &mut SketApp, ctx: &egui::Context) {
     let id = egui::Id::unique("sc_file_menu");
     if !ctx.data(|d| d.get_temp::<bool>(id).unwrap_or(false)) {
         return;
@@ -789,9 +789,8 @@ fn file_menu(app: &mut SolveApp, ctx: &egui::Context) {
                         ui.close();
                     }
                 });
-                let import_key = crate::keymap::display_for(app, "file.insert_mesh").unwrap_or_else(|| {
-                    if cfg!(target_os = "macos") { "Cmd+I".into() } else { "Ctrl+I".into() }
-                });
+                let import_key = crate::keymap::display_for(app, "file.insert_mesh")
+                    .unwrap_or_else(|| if cfg!(target_os = "macos") { "Cmd+I".into() } else { "Ctrl+I".into() });
                 if item_if(ui, "Import 3D Model…", &import_key, "import", shown) {
                     FileAction::Command("file.insert_mesh").run(app);
                     close = true;
@@ -911,11 +910,11 @@ fn file_menu(app: &mut SolveApp, ctx: &egui::Context) {
 
 /// Whether the design is on screen: viewport/menu editing stays disabled behind File.
 /// File owns its explicit Save/Save As/export actions and returns to the design before dispatch.
-pub fn design_shown(app: &SolveApp) -> bool {
+pub fn design_shown(app: &SketApp) -> bool {
     !app.home.open
 }
 
-pub fn save(app: &mut SolveApp) {
+pub fn save(app: &mut SketApp) {
     if crate::browser::needs_capture(app, crate::browser::SAVE) {
         app.tree.capture_prompt = Some(crate::browser::SAVE.into());
         return;
@@ -930,23 +929,23 @@ pub fn save(app: &mut SolveApp) {
     }
 }
 
-pub(crate) fn save_as(app: &mut SolveApp) {
+pub(crate) fn save_as(app: &mut SketApp) {
     save_as_with_extension(app, sketcraft_engine::io::DESIGN_EXT);
 }
 
 /// Save As offering a copy's name ("Bracket copy"), so the file it is a copy of is kept.
-pub(crate) fn save_copy(app: &mut SolveApp) {
+pub(crate) fn save_copy(app: &mut SketApp) {
     let name = crate::i18n::format("document.copy_name", &[("name", &app.session.save_as_name())]);
     save_as_named(app, &name, sketcraft_engine::io::DESIGN_EXT);
 }
 
 /// Save As offers the open file's own name, not the name stored in the design (#8329).
-fn save_as_with_extension(app: &mut SolveApp, extension: &str) {
+fn save_as_with_extension(app: &mut SketApp, extension: &str) {
     let name = app.session.save_as_name();
     save_as_named(app, &name, extension);
 }
 
-pub(crate) fn save_as_named(app: &mut SolveApp, name: &str, extension: &str) {
+pub(crate) fn save_as_named(app: &mut SketApp, name: &str, extension: &str) {
     // The Capture Position question first, as Save asks it: the file can't hold a move not
     // captured yet (#9736).
     if crate::browser::needs_capture(app, crate::browser::SAVE) {
@@ -966,7 +965,7 @@ pub(crate) fn save_as_named(app: &mut SolveApp, name: &str, extension: &str) {
 }
 
 /// File > Download design (browser build): the open design as a `.sc` file download.
-pub(crate) fn download_design(app: &mut SolveApp) {
+pub(crate) fn download_design(app: &mut SketApp) {
     if crate::browser::needs_capture(app, crate::browser::SAVE) {
         app.tree.capture_prompt = Some(crate::browser::DOWNLOAD.into());
         return;
@@ -983,14 +982,14 @@ pub(crate) fn download_design(app: &mut SolveApp) {
     }
 }
 
-pub(crate) fn export(app: &mut SolveApp, ext: &str) {
+pub(crate) fn export(app: &mut SketApp, ext: &str) {
     export_as(app, ext, None);
 }
 
 /// Each format's own export command, started from its key, command search or the File menu,
 /// does what that File › Export item does: STEP, OBJ and URDF ask where to save, STL and 3MF
 /// open the mesh dialog with the format chosen. `false`: `id` is no such command.
-pub(crate) fn start_export(app: &mut SolveApp, id: &str) -> bool {
+pub(crate) fn start_export(app: &mut SketApp, id: &str) -> bool {
     let (extension, mesh) = match id {
         "file.export_step" => ("step", false),
         "file.export_obj" => ("obj", false),
@@ -1012,7 +1011,7 @@ pub(crate) fn start_export(app: &mut SolveApp, id: &str) -> bool {
 }
 
 /// Export to a file with extension `ext`, in `format` when the extension alone doesn't name it.
-fn export_as(app: &mut SolveApp, ext: &str, format: Option<&str>) {
+fn export_as(app: &mut SketApp, ext: &str, format: Option<&str>) {
     let name = format!("{}.{ext}", app.session.doc.name);
     let format = format.map(str::to_string);
     app.pick_save(&name, &[ext], move |app, path| {
@@ -1178,11 +1177,11 @@ fn persistent_command(id: &str) -> bool {
     PERSISTENT_COMMANDS.contains(&id) || id == COMPONENT_COLORS
 }
 
-fn persistent_available(app: &SolveApp, id: &str) -> bool {
+fn persistent_available(app: &SketApp, id: &str) -> bool {
     persistent_command(id) && (id != "inspect.section" || app.preferences.viewport_section_status)
 }
 
-pub(crate) fn persistent_pressed(app: &SolveApp, id: &str) -> bool {
+pub(crate) fn persistent_pressed(app: &SketApp, id: &str) -> bool {
     app.preferences.persistent_ribbon_pressed
         && persistent_available(app, id)
         && if id == COMPONENT_COLORS {
@@ -1192,13 +1191,13 @@ pub(crate) fn persistent_pressed(app: &SolveApp, id: &str) -> bool {
         }
 }
 
-pub(crate) fn persistent_button_name(app: &SolveApp, command: &sketcraft_engine::CommandSpec) -> String {
+pub(crate) fn persistent_button_name(app: &SketApp, command: &sketcraft_engine::CommandSpec) -> String {
     let info = crate::render_workspace::interactive_command_info(app, command);
     let label = crate::workspace::ribbon_button_label(command);
     app.tr_label(if label == command.label { info.label } else { label }).to_string()
 }
 
-fn persistent_hint(app: &SolveApp, command: &sketcraft_engine::CommandSpec, enabled: bool) -> Option<String> {
+fn persistent_hint(app: &SketApp, command: &sketcraft_engine::CommandSpec, enabled: bool) -> Option<String> {
     (enabled && command.id != COMPONENT_COLORS && persistent_pressed(app, command.id)).then(|| {
         let name = persistent_button_name(app, command);
         crate::i18n::Locale::for_language(&app.preferences.language).format("ui.viewport_status_clear_hint", &[("name", &name)])
@@ -1221,7 +1220,7 @@ struct PersistentRibbonPaint {
     disabled: Option<String>,
 }
 
-fn paint_persistent_ribbon(app: &SolveApp, ui: &egui::Ui, paints: Vec<PersistentRibbonPaint>, tab: &str, namespace: &str) {
+fn paint_persistent_ribbon(app: &SketApp, ui: &egui::Ui, paints: Vec<PersistentRibbonPaint>, tab: &str, namespace: &str) {
     let t = Tokens::get();
     let mut count = 0;
     for paint in paints {
@@ -1311,7 +1310,7 @@ fn ribbon_label_top(whole: Rect, height: f32) -> f32 {
 }
 
 /// Ribbon headings use the translated labels, with normal word casing instead of registry caps.
-pub(crate) fn ribbon_label(app: &SolveApp, label: &str) -> String {
+pub(crate) fn ribbon_label(app: &SketApp, label: &str) -> String {
     let label = crate::workspace::word_cased(app.tr_label(crate::workspace::tab_label(label)));
     // Partial catalogs may already translate the word-cased name (for example "Model").
     app.tr_label(&label).to_string()
@@ -1334,7 +1333,7 @@ fn ribbon_galley(ui: &egui::Ui, at: egui::Pos2, galley: std::sync::Arc<egui::Gal
 /// SKETCH while editing a sketch and SHEET METAL while a sheet body is active take the contextual
 /// tab style; SHEET METAL is an ordinary tab otherwise. WELDMENTS selects itself on a frame member
 /// but keeps the ordinary tab look, as MODEL has when selected.
-pub(crate) fn contextual_tab(app: &SolveApp, tab: &str) -> bool {
+pub(crate) fn contextual_tab(app: &SketApp, tab: &str) -> bool {
     tab == "SKETCH" || (tab == "SHEET METAL" && crate::workspace::sheet_body(app).is_some())
 }
 
@@ -1365,7 +1364,7 @@ fn ribbon_tab_style(t: &Tokens, tab: &str, contextual: bool, active: bool, hover
 }
 
 /// Returns `Some(already shown)` when a tab was clicked.
-fn ribbon_tabs(app: &mut SolveApp, ui: &mut egui::Ui, row: Rect) -> Option<bool> {
+fn ribbon_tabs(app: &mut SketApp, ui: &mut egui::Ui, row: Rect) -> Option<bool> {
     let t = Tokens::get();
     let tabs = crate::workspace::visible_tabs(app);
     let widths: Vec<_> = tabs
@@ -1527,11 +1526,11 @@ fn dropdown_arrow(painter: &egui::Painter, at: egui::Pos2, ink: Color32) {
     crate::ui_kit::dropdown_indicator(painter, Rect::from_center_size(at, vec2(10.0, 10.0)), ink);
 }
 
-pub(crate) fn shell_layout(app: &SolveApp) -> crate::shell::LayoutMode {
+pub(crate) fn shell_layout(app: &SketApp) -> crate::shell::LayoutMode {
     if crate::render_workspace::active(app) { crate::shell::LayoutMode::Floating } else { app.ui.layout }
 }
 
-pub(crate) fn shell_cards(app: &SolveApp, available: Rect) -> crate::shell::Cards {
+pub(crate) fn shell_cards(app: &SketApp, available: Rect) -> crate::shell::Cards {
     if crate::render_workspace::active(app) {
         crate::ui_kit::StageBar::cards(available)
     } else {
@@ -1541,13 +1540,13 @@ pub(crate) fn shell_cards(app: &SolveApp, available: Rect) -> crate::shell::Card
 
 /// The ribbon is folded to its tab row (`ribbon_tabs_only`, #10112). The Render workspace keeps
 /// its own stage bar whole.
-pub(crate) fn tabs_only(app: &SolveApp) -> bool {
+pub(crate) fn tabs_only(app: &SketApp) -> bool {
     app.preferences.ribbon_tabs_only && !crate::render_workspace::active(app)
 }
 
 /// The height the ribbon keeps from the view: the tab row alone while it is folded, whose panels
 /// then open over the view.
-pub(crate) fn reserved_height(app: &SolveApp) -> f32 {
+pub(crate) fn reserved_height(app: &SketApp) -> f32 {
     if tabs_only(app) { TAB_ROW_HEIGHT + 1.0 } else { ribbon_height(app.preferences.ribbon_labels) }
 }
 
@@ -1562,7 +1561,7 @@ struct RibbonShape {
     folded: bool,
 }
 
-pub fn toolbar(app: &mut SolveApp, ui: &mut egui::Ui) {
+pub fn toolbar(app: &mut SketApp, ui: &mut egui::Ui) {
     let t = Tokens::get();
     crate::workspace::sync_context(app);
     let layout = shell_layout(app);
@@ -1599,9 +1598,9 @@ pub fn toolbar(app: &mut SolveApp, ui: &mut egui::Ui) {
 }
 
 /// The folded ribbon's tab, clicked: its panels open over the view, as the whole ribbon would
-/// show them, until a command starts (`SolveApp::start` closes it), the pointer leaves them,
+/// show them, until a command starts (`SketApp::start` closes it), the pointer leaves them,
 /// Escape is pressed or the open tab is clicked again (#10112).
-fn open_ribbon(app: &mut SolveApp, ui: &mut egui::Ui, available: Rect, folded: Rect) {
+fn open_ribbon(app: &mut SketApp, ui: &mut egui::Ui, available: Rect, folded: Rect) {
     let t = Tokens::get();
     let layout = shell_layout(app);
     let floating = Container::for_layout(layout, Surface::Panel).floating();
@@ -1649,7 +1648,7 @@ fn open_ribbon(app: &mut SolveApp, ui: &mut egui::Ui, available: Rect, folded: R
 }
 
 /// One pass of the ribbon in `shape`. Returns `Some(already shown)` when a tab was clicked.
-fn ribbon_contents(app: &mut SolveApp, ui: &mut egui::Ui, shape: RibbonShape) -> Option<bool> {
+fn ribbon_contents(app: &mut SketApp, ui: &mut egui::Ui, shape: RibbonShape) -> Option<bool> {
     let t = Tokens::get();
     let layout = shell_layout(app);
     let host = Container::for_layout(layout, Surface::Chrome);
@@ -2457,7 +2456,7 @@ struct QuickAccessDrag(String);
 /// Redo, each with its own icon. A click starts the command as its ribbon button does, a
 /// right-click opens the command's menu (Remove from Quick Access), and a drag along the bar
 /// reorders the buttons. Draws nothing while it is empty. Returns where the next control goes.
-fn quick_access_bar(app: &mut SolveApp, ui: &mut egui::Ui, bar: Rect, mut x: f32, step: f32, shown: bool) -> f32 {
+fn quick_access_bar(app: &mut SketApp, ui: &mut egui::Ui, bar: Rect, mut x: f32, step: f32, shown: bool) -> f32 {
     let t = Tokens::get();
     let ids: Vec<&'static sketcraft_engine::CommandSpec> =
         app.toolbar_custom.quick_access.iter().filter_map(|id| sketcraft_engine::find_command(id)).collect();
@@ -2538,7 +2537,7 @@ fn app_bar_separator(ui: &egui::Ui, bar: Rect, x: f32, group: &str) {
 }
 
 /// The chat panel's compact entry point. State stays in agent_chat; the bar only paints it.
-fn assistant_button(app: &mut SolveApp, ui: &mut egui::Ui, at: Rect) {
+fn assistant_button(app: &mut SketApp, ui: &mut egui::Ui, at: Rect) {
     use crate::agent_chat::AssistantMark;
     let resp = ui.interact(at, ui.scope_id().with("assistant_button"), Sense::click());
     crate::scenario::publish_target("titlebar:assistant", at);
@@ -2573,7 +2572,7 @@ const CONSTRAINT_GRID_WIDTH: f32 = 82.0;
 
 /// Registry parameter syntax is not a user-facing description. Reuse existing catalog prose
 /// where present; other commands intentionally show only their name and registered shortcut.
-fn ribbon_tooltip(app: &SolveApp, response: egui::Response, command: &sketcraft_engine::CommandSpec, disabled: Option<&str>) -> egui::Response {
+fn ribbon_tooltip(app: &SketApp, response: egui::Response, command: &sketcraft_engine::CommandSpec, disabled: Option<&str>) -> egui::Response {
     if let Some(hint) = persistent_hint(app, command, disabled.is_none() && response.enabled() && command.info(&app.session).enabled) {
         return response.backing_on_hover_text(hint);
     }
@@ -2650,7 +2649,7 @@ fn paint_reveal(painter: &egui::Painter, rect: Rect, accent: &crate::theme::TabA
 }
 
 /// A revealed command's tooltip, open without the pointer on it (#7287).
-fn reveal_tooltip(app: &SolveApp, ui: &egui::Ui, rect: Rect, command: &sketcraft_engine::CommandSpec, align: egui::RectAlign) {
+fn reveal_tooltip(app: &SketApp, ui: &egui::Ui, rect: Rect, command: &sketcraft_engine::CommandSpec, align: egui::RectAlign) {
     let mut tip = egui::Tooltip::always_open(ui.ctx().clone(), ui.layer_id(), egui::Id::unique(("ribbon_reveal", command.id)), rect);
     tip.popup = tip.popup.align(align);
     // The same text as a drop-down row's own tooltip: name and shortcut, its help, and why it is
@@ -2709,7 +2708,7 @@ fn dropdown_row_id(id: &str) -> egui::Id {
 }
 
 /// How wide a panel drop-down's rows are: the widest label and shortcut, at least 200.
-fn dropdown_width(app: &SolveApp, ui: &egui::Ui, cmds: &[&'static sketcraft_engine::CommandSpec]) -> f32 {
+fn dropdown_width(app: &SketApp, ui: &egui::Ui, cmds: &[&'static sketcraft_engine::CommandSpec]) -> f32 {
     let t = Tokens::get();
     let font = FontId::proportional(t.font_button);
     cmds.iter()
@@ -2847,7 +2846,7 @@ mod dropdown_tip_tests {
 /// under the pointer or keyboard focus (like every menu).
 /// `revealed` is the pulse strength when the command search points this row out (#7287).
 fn dropdown_row(
-    app: &SolveApp,
+    app: &SketApp,
     ui: &mut egui::Ui,
     c: &'static sketcraft_engine::CommandSpec,
     width: f32,
@@ -2952,7 +2951,7 @@ fn dropdown_row(
 /// Take up what was done in a grid drop-down, as for a list row: start the command (and close
 /// the drop-down), open its menu, or pin or unpin it.
 fn grid_action(
-    app: &mut SolveApp,
+    app: &mut SketApp,
     ui: &egui::Ui,
     action: Option<(&'static str, RowAction)>,
     menu: &mut Option<(egui::Pos2, &'static str)>,
@@ -3134,7 +3133,7 @@ fn grid_step(cells: &[(usize, usize)], enabled: &[usize], at: Option<usize>, key
 }
 
 /// Arrow keys move the keyboard focus through a grid drop-down's enabled icons ([`grid_step`]).
-fn grid_keys(app: &SolveApp, ui: &egui::Ui, cmds: &[&'static sketcraft_engine::CommandSpec], cells: &[(usize, usize)]) {
+fn grid_keys(app: &SketApp, ui: &egui::Ui, cmds: &[&'static sketcraft_engine::CommandSpec], cells: &[(usize, usize)]) {
     let key = ui.input(|i| {
         [
             (egui::Key::ArrowLeft, GridKey::Left),
@@ -3162,7 +3161,7 @@ fn grid_keys(app: &SolveApp, ui: &egui::Ui, cmds: &[&'static sketcraft_engine::C
 /// the same commands, headings and actions as the list, the names in the tooltips. Returns the
 /// command acted on, and how.
 fn dropdown_grid(
-    app: &SolveApp,
+    app: &SketApp,
     ui: &mut egui::Ui,
     tab: &str,
     grouped: &[(Option<&'static str>, &'static sketcraft_engine::CommandSpec)],
@@ -3245,7 +3244,7 @@ fn pin_armed(ui: &egui::Ui, id: &'static str, on: bool) -> bool {
 /// like a list row; its tooltip is a ribbon button's (name, shortcut, help, why it is off), and a
 /// pin in its corner says it is on the ribbon.
 fn dropdown_cell(
-    app: &SolveApp,
+    app: &SketApp,
     ui: &mut egui::Ui,
     c: &'static sketcraft_engine::CommandSpec,
     rect: Rect,
@@ -3336,7 +3335,7 @@ fn dropdown_cell(
 /// Creation menus keep related variants together, including collapsed and overflow panels.
 /// The plain rows are `width` wide, the width the menu gives its family rows.
 fn sketch_create_menu(
-    app: &mut SolveApp,
+    app: &mut SketApp,
     ui: &mut egui::Ui,
     cmds: &[&'static sketcraft_engine::CommandSpec],
     width: f32,
@@ -3367,7 +3366,7 @@ fn sketch_create_menu(
 }
 
 /// Family popups use the same ordered arrow-key navigation as a panel's command list.
-fn dropdown_keys(app: &SolveApp, ui: &egui::Ui, cmds: &[&'static sketcraft_engine::CommandSpec]) {
+fn dropdown_keys(app: &SketApp, ui: &egui::Ui, cmds: &[&'static sketcraft_engine::CommandSpec]) {
     let (down, up) = ui.input(|i| (i.key_pressed(egui::Key::ArrowDown), i.key_pressed(egui::Key::ArrowUp)));
     if !down && !up {
         return;
@@ -3402,7 +3401,7 @@ fn dropdown_keys(app: &SolveApp, ui: &egui::Ui, cmds: &[&'static sketcraft_engin
 }
 
 fn sketch_menu_rows(
-    app: &mut SolveApp,
+    app: &mut SketApp,
     ui: &mut egui::Ui,
     cmds: &[&'static sketcraft_engine::CommandSpec],
     width: f32,
@@ -3429,7 +3428,7 @@ fn sketch_menu_rows(
 type ToolbarDrag = ui_kit::ReorderPayload<&'static str>;
 
 /// The dragged command's icon under the pointer, crossed out when releasing removes it.
-fn drag_ghost(app: &SolveApp, ctx: &egui::Context, id: &str, at: egui::Pos2, removing: bool) {
+fn drag_ghost(app: &SketApp, ctx: &egui::Context, id: &str, at: egui::Pos2, removing: bool) {
     let t = Tokens::get();
     let Some(c) = sketcraft_engine::find_command(id) else { return };
     let p = ctx.layer_painter(egui::LayerId::new(egui::Order::Tooltip, egui::Id::unique("sc_toolbar_drag")));
@@ -3447,7 +3446,7 @@ fn drag_ghost(app: &SolveApp, ctx: &egui::Context, id: &str, at: egui::Pos2, rem
 }
 
 /// The SELECT panel: what a click in the view picks.
-pub(crate) fn selection_filter(app: &mut SolveApp, ui: &mut egui::Ui) {
+pub(crate) fn selection_filter(app: &mut SketApp, ui: &mut egui::Ui) {
     let t = Tokens::get();
     ui.label(egui::RichText::new(crate::i18n::tr_label("Selection filter")).color(t.text_dim).size(t.font_small));
     for (mode, label) in [("body", app.tr_label("Select bodies (a face picks its body)")), ("component", app.tr("ui.select_components_by_face"))] {
@@ -3486,7 +3485,7 @@ pub(crate) fn selection_filter(app: &mut SolveApp, ui: &mut egui::Ui) {
 /// so clicks in the view select again (#10151). With Preferences › Sketch "Clicking the running
 /// tool's button ends it" off, the click starts the tool again, as it did before. Returns whether
 /// the tool was ended. A persistent analysis button already turns its analysis off its own way.
-fn end_running_tool(app: &mut SolveApp, id: &str) -> bool {
+fn end_running_tool(app: &mut SketApp, id: &str) -> bool {
     if !app.preferences.ribbon_click_ends_tool || persistent_available(app, id) || !app.tool.as_ref().is_some_and(|t| t.cmd == id) {
         return false;
     }
@@ -3499,7 +3498,7 @@ fn end_running_tool(app: &mut SolveApp, id: &str) -> bool {
 pub const ESCAPE_TWICE_S: f64 = 0.4;
 
 /// Whether `cancel_unfinished` has something to cancel.
-pub(crate) fn unfinished(app: &SolveApp) -> bool {
+pub(crate) fn unfinished(app: &SketApp) -> bool {
     app.tool.is_some()
         || crate::select_other::is_open(app)
         || app.menu.joint_move_warning.is_some()
@@ -3511,7 +3510,7 @@ pub(crate) fn unfinished(app: &SolveApp) -> bool {
 /// Cancels what one Esc cancels before it reaches the dialog, the selection or the sketch:
 /// a drag, the Select Other list, or the active tool's points and then the tool. The view's
 /// corner Cancel (#6709) takes this step first too. Returns whether anything was cancelled.
-pub(crate) fn cancel_unfinished(app: &mut SolveApp) -> bool {
+pub(crate) fn cancel_unfinished(app: &mut SketApp) -> bool {
     if crate::joint_handles::cancel(app) || crate::sketch_text_move::cancel_drag(app) || crate::occurrence_drag::cancel(app) {
         return true;
     }
@@ -3526,7 +3525,7 @@ pub(crate) fn cancel_unfinished(app: &mut SolveApp) -> bool {
 }
 
 /// Global keyboard shortcuts (when no text field has focus).
-pub fn shortcuts(app: &mut SolveApp, ctx: &egui::Context) {
+pub fn shortcuts(app: &mut SketApp, ctx: &egui::Context) {
     crate::viewport_status::reconcile(app, ctx);
     crate::browser::update_folder_pick(app, ctx);
     let chat_owner = crate::agent_chat::owns_keyboard_input(app, ctx);
@@ -3753,11 +3752,16 @@ pub fn shortcuts(app: &mut SolveApp, ctx: &egui::Context) {
                 // second press finishes it (above).
             }
             Key::S if !mods.shift && !mods.alt && !mods.command && app.session.active_sketch.is_none() => {
-                let bodies: Vec<String> = app.session.selection.iter().filter_map(|s| match s {
-                    sketcraft_engine::Sel::Body { name } => Some(name.clone()),
-                    sketcraft_engine::Sel::Face { body, .. } => Some(body.clone()),
-                    _ => None,
-                }).collect();
+                let bodies: Vec<String> = app
+                    .session
+                    .selection
+                    .iter()
+                    .filter_map(|s| match s {
+                        sketcraft_engine::Sel::Body { name } => Some(name.clone()),
+                        sketcraft_engine::Sel::Face { body, .. } => Some(body.clone()),
+                        _ => None,
+                    })
+                    .collect();
                 if !bodies.is_empty() {
                     app.start("solid.scale");
                 } else {
@@ -3810,11 +3814,16 @@ pub fn shortcuts(app: &mut SolveApp, ctx: &egui::Context) {
                 app.start("inspect.measure");
             }
             Key::G if !mods.shift && !mods.alt && !mods.command && app.session.active_sketch.is_none() => {
-                let bodies: Vec<String> = app.session.selection.iter().filter_map(|s| match s {
-                    sketcraft_engine::Sel::Body { name } => Some(name.clone()),
-                    sketcraft_engine::Sel::Face { body, .. } => Some(body.clone()),
-                    _ => None,
-                }).collect();
+                let bodies: Vec<String> = app
+                    .session
+                    .selection
+                    .iter()
+                    .filter_map(|s| match s {
+                        sketcraft_engine::Sel::Body { name } => Some(name.clone()),
+                        sketcraft_engine::Sel::Face { body, .. } => Some(body.clone()),
+                        _ => None,
+                    })
+                    .collect();
                 if !bodies.is_empty() {
                     let _ = app.run("component.from_bodies", json!({ "bodies": bodies }));
                 } else {

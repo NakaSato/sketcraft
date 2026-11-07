@@ -1,6 +1,6 @@
 # CLAUDE.md — sketcraft-gpu
 
-GPU rendering with wgpu: the viewport's render pipelines, offscreen captures (headless pictures), display tessellation plans evaluated in a compute shader, and the native progressive path tracer. It is layer L5, so it may use `wgpu`. Within L5, `ui-egui` and `mcp` may use it (`INTRA_LAYER_ORDER` in `xtask/src/layers.rs`). Its normal dependencies are `geom`, `render` and `solidcore-record`. See the root CLAUDE.md.
+GPU rendering with wgpu: the viewport's render pipelines, offscreen captures (headless pictures), display tessellation plans evaluated in a compute shader, and the native progressive path tracer. It is layer L5, so it may use `wgpu`. Within L5, `ui-egui` and `mcp` may use it (`INTRA_LAYER_ORDER` in `xtask/src/layers.rs`). Its normal dependencies are `geom`, `render` and `sketcore-record`. See the root CLAUDE.md.
 
 ## Commands
 

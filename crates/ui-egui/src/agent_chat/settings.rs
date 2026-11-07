@@ -167,7 +167,7 @@ struct ModelListing {
 /// List an endpoint's models in the background, one listing at a time; a finished one stays until
 /// it is asked for again. `secret` runs on that thread too: a keychain may take its time to answer.
 #[cfg(not(target_arch = "wasm32"))]
-fn start_listing(app: &mut SolveApp, ctx: &egui::Context, key: ListingKey, secret: impl FnOnce() -> Result<Option<String>, String> + Send + 'static) {
+fn start_listing(app: &mut SketApp, ctx: &egui::Context, key: ListingKey, secret: impl FnOnce() -> Result<Option<String>, String> + Send + 'static) {
     let state = &mut app.agent_chat.settings;
     if state.listing.is_some() || state.endpoint_models.contains_key(&key) {
         return;
@@ -202,7 +202,7 @@ fn start_listing(app: &mut SolveApp, ctx: &egui::Context, key: ListingKey, secre
 
 /// Take in a finished listing, and start the one an agent card asked for.
 #[cfg(not(target_arch = "wasm32"))]
-pub(super) fn poll_listing(app: &mut SolveApp, ctx: &egui::Context) {
+pub(super) fn poll_listing(app: &mut SketApp, ctx: &egui::Context) {
     use std::sync::mpsc::TryRecvError;
     let state = &mut app.agent_chat.settings;
     if let Some(listing) = &state.listing {
@@ -224,7 +224,7 @@ pub(super) fn poll_listing(app: &mut SolveApp, ctx: &egui::Context) {
 
 /// The Add dialog's listing, of what its fields said when last left, never of a half-typed address.
 #[cfg(not(target_arch = "wasm32"))]
-fn list_for_dialog(app: &mut SolveApp, ctx: &egui::Context) {
+fn list_for_dialog(app: &mut SketApp, ctx: &egui::Context) {
     let state = &mut app.agent_chat.settings;
     let Some(s) = state.add.as_mut().filter(|s| s.kind == AddKind::Api) else { return };
     let typed = Some(s.key.trim().to_string()).filter(|typed| !typed.is_empty());
@@ -259,7 +259,7 @@ struct CapabilityCheck {
 
 /// Poll one bounded background probe at a time. Failures are cached too.
 #[cfg(not(target_arch = "wasm32"))]
-pub(super) fn poll_capabilities(app: &mut SolveApp, ctx: &egui::Context) {
+pub(super) fn poll_capabilities(app: &mut SketApp, ctx: &egui::Context) {
     use std::sync::mpsc::TryRecvError;
     let state = &mut app.agent_chat.settings;
     if let Some(check) = &state.checking {
@@ -305,7 +305,7 @@ pub(super) fn poll_capabilities(app: &mut SolveApp, ctx: &egui::Context) {
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-fn capability_selection(app: &SolveApp) -> Option<((String, String), bool)> {
+fn capability_selection(app: &SketApp) -> Option<((String, String), bool)> {
     let entry = agents::current(app)?;
     if entry.kind != Kind::Api {
         return None;
@@ -319,7 +319,7 @@ fn capability_selection(app: &SolveApp) -> Option<((String, String), bool)> {
 }
 
 /// The same advisory text is used by the panel and the control channel.
-pub(super) fn model_warning(app: &SolveApp) -> Option<String> {
+pub(super) fn model_warning(app: &SketApp) -> Option<String> {
     #[cfg(not(target_arch = "wasm32"))]
     if let Some((key, _)) = capability_selection(app) {
         return capability_warning(&key.1, app.agent_chat.settings.capabilities.get(&key).copied().flatten());
@@ -334,7 +334,7 @@ fn capability_warning(model: &str, tools: Option<bool>) -> Option<String> {
 }
 
 /// Open the Add agent dialog.
-pub fn open_add(app: &mut SolveApp) {
+pub fn open_add(app: &mut SketApp) {
     let preset = agents::OPENAI_PRESETS.first();
     app.agent_chat.settings.add = Some(AddState {
         base_url: preset.map(|p| p.base_url.to_string()).unwrap_or_default(),
@@ -348,7 +348,7 @@ pub fn open_add(app: &mut SolveApp) {
 /// Open the agent dialog on an agent you added, filled with what it holds. The key is never read
 /// back: its field stays empty, and saving with it empty keeps the stored key. Returns false when
 /// `id` is not an added agent (found agents have nothing of yours to edit).
-pub fn open_edit(app: &mut SolveApp, id: &str) -> bool {
+pub fn open_edit(app: &mut SketApp, id: &str) -> bool {
     let Some(c) = app.preferences.agents.iter().find(|c| c.id == id) else { return false };
     let mut s = AddState {
         name: c.name.clone(),
@@ -402,7 +402,7 @@ pub(super) fn choose_preset(s: &mut AddState, protocol: Protocol, index: usize) 
 /// Run a connection test in the background (it starts the agent briefly, or asks the endpoint
 /// for its models).
 #[cfg(not(target_arch = "wasm32"))]
-fn start_test(app: &SolveApp, e: &agents::Entry, key: Option<String>) -> Test {
+fn start_test(app: &SketApp, e: &agents::Entry, key: Option<String>) -> Test {
     let (tx, rx) = std::sync::mpsc::channel();
     match e.kind {
         Kind::Acp => {
@@ -469,7 +469,7 @@ fn test_line(ui: &mut egui::Ui, test: &Option<&Test>) {
 
 /// The Assistant page of Settings. Copy stays close to its control; full security details
 /// remain accessible on hover, and high-risk permissions always retain a visible warning.
-pub fn page(app: &mut SolveApp, ui: &mut egui::Ui) {
+pub fn page(app: &mut SketApp, ui: &mut egui::Ui) {
     ui_kit::settings_page(ui, |ui| {
         ui_kit::settings_heading(ui, tr("prefs.assistant"), tr("ai.prefs.intro"));
         ui_kit::settings_section(ui, "assistant_availability", tr("ai.prefs.availability"), |ui| {
@@ -508,7 +508,7 @@ pub fn page(app: &mut SolveApp, ui: &mut egui::Ui) {
     });
 }
 
-fn connecting_section(app: &mut SolveApp, ui: &mut egui::Ui) {
+fn connecting_section(app: &mut SketApp, ui: &mut egui::Ui) {
     ui_kit::settings_section(ui, "assistant_connecting", tr("prefs.assistant_connecting"), |ui| {
         for (label, help, handle, value) in [
             ("ai.prefs.allow_control", "ai.prefs.allow_control_note", "agent_control", &mut app.preferences.agent_control),
@@ -527,7 +527,7 @@ fn connecting_section(app: &mut SolveApp, ui: &mut egui::Ui) {
 }
 
 /// Custom instructions (#8220): text every new chat's system note carries.
-fn instructions_section(app: &mut SolveApp, ui: &mut egui::Ui) {
+fn instructions_section(app: &mut SketApp, ui: &mut egui::Ui) {
     ui_kit::settings_section(ui, "instructions", tr("ai.prefs.instructions"), |ui| {
         let id = egui::Id::unique("prefs_agent_instructions");
         let text = &mut app.preferences.agent_instructions;
@@ -541,7 +541,7 @@ fn instructions_section(app: &mut SolveApp, ui: &mut egui::Ui) {
     });
 }
 
-fn permissions_section(app: &mut SolveApp, ui: &mut egui::Ui) {
+fn permissions_section(app: &mut SketApp, ui: &mut egui::Ui) {
     ui_kit::settings_section(ui, "permissions", tr("ui.ai_permissions"), |ui| {
         let mut selected = Mode::ALL.iter().position(|mode| *mode == app.preferences.ai_permissions).unwrap_or(0);
         let all_help = format!("{}\n\n{}", tr("prefs.assistant_use_care"), tr("ui.ai_mode_all_note"));
@@ -607,7 +607,7 @@ fn permissions_section(app: &mut SolveApp, ui: &mut egui::Ui) {
     });
 }
 
-fn panel_section(app: &mut SolveApp, ui: &mut egui::Ui) {
+fn panel_section(app: &mut SketApp, ui: &mut egui::Ui) {
     let t = crate::theme::Tokens::get();
     ui_kit::settings_section(ui, "panel", tr("ui.ai_panel"), |ui| {
         let label_width = [tr("ui.agent_chat_side"), tr("ui.agent_chat_turn_limit")]
@@ -666,7 +666,7 @@ fn panel_section(app: &mut SolveApp, ui: &mut egui::Ui) {
     });
 }
 
-fn pointer_section(app: &mut SolveApp, ui: &mut egui::Ui) {
+fn pointer_section(app: &mut SketApp, ui: &mut egui::Ui) {
     ui_kit::settings_section(ui, "agent_pointer", tr("ui.agent_cursor"), |ui| {
         ui_kit::settings_pair(
             ui,
@@ -714,7 +714,7 @@ fn pointer_section(app: &mut SolveApp, ui: &mut egui::Ui) {
 
 /// The AI page's section for agents outside the app, which reach it through the MCP server
 /// whether or not the chat is on: shown below the chat's settings, with the chat off too.
-fn mcp_section(app: &mut SolveApp, ui: &mut egui::Ui) {
+fn mcp_section(app: &mut SketApp, ui: &mut egui::Ui) {
     if cfg!(target_arch = "wasm32") {
         return;
     }
@@ -730,7 +730,7 @@ fn mcp_section(app: &mut SolveApp, ui: &mut egui::Ui) {
 
 /// The agents: found and added, with Test, Default, a permission override and Remove.
 #[cfg(not(target_arch = "wasm32"))]
-fn agents_section(app: &mut SolveApp, ui: &mut egui::Ui) {
+fn agents_section(app: &mut SketApp, ui: &mut egui::Ui) {
     let all = agents::entries(app);
     let d = &app.preferences.agent_default;
     let default = if all.iter().any(|e| &e.id == d) { Some(d.clone()) } else { all.first().map(|e| e.id.clone()) };
@@ -1033,7 +1033,7 @@ fn agents_section(app: &mut SolveApp, ui: &mut egui::Ui) {
 }
 
 /// The Add agent dialog (drawn every frame while it is open).
-pub fn dialog(app: &mut SolveApp, ctx: &egui::Context) {
+pub fn dialog(app: &mut SketApp, ctx: &egui::Context) {
     if app.agent_chat.settings.add.is_none() {
         return;
     }
@@ -1318,7 +1318,7 @@ pub fn dialog(app: &mut SolveApp, ctx: &egui::Context) {
 }
 
 /// Add what the dialog holds, or save it over the agent being edited; its key goes to the keychain.
-fn add_agent(app: &mut SolveApp) -> Result<(), String> {
+fn add_agent(app: &mut SketApp) -> Result<(), String> {
     let Some(s) = app.agent_chat.settings.add.as_ref() else { return Ok(()) };
     // The agent being edited must still be there (it may have been removed meanwhile).
     let editing = match &s.editing {
@@ -1708,12 +1708,7 @@ mod card_tests {
         }));
         // An ACP default keeps the API fixture noncurrent; baseline capability polling is unchanged.
         h.app.preferences.agents = vec![
-            AgentConfig {
-                id: "acp-public".into(),
-                name: "Public ACP".into(),
-                command: "sketcraft-fixture-agent --acp".into(),
-                ..Default::default()
-            },
+            AgentConfig { id: "acp-public".into(), name: "Public ACP".into(), command: "sketcraft-fixture-agent --acp".into(), ..Default::default() },
             AgentConfig {
                 id: "api-public".into(),
                 name: "Public endpoint".into(),

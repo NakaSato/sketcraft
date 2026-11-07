@@ -3,7 +3,7 @@
 //! (#1167): the history is rolled back, the view of it is not. A body the sketch is built on stays.
 
 use serde_json::{Value, json};
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 use sketcraft_geom::prelude::*;
 use sketcraft_sketch::LinkSource;
 

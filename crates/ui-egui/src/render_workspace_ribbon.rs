@@ -1,7 +1,7 @@
 //! Interactive adapters for existing registered commands, shared by ribbon,
 //! menus, search and pinned job controls. Direct engine JSON APIs are unchanged.
 use super::{cpu, inspector, library, setups, studio};
-use crate::SolveApp;
+use crate::SketApp;
 use serde_json::json;
 use sketcraft_engine::render::job::Phase;
 use sketcraft_engine::{CommandInfo, CommandSpec};
@@ -57,7 +57,7 @@ fn handled(id: &str) -> bool {
         )
 }
 
-pub(super) fn busy(app: &SolveApp) -> bool {
+pub(super) fn busy(app: &SketApp) -> bool {
     if super::prepare::busy(app) {
         return true;
     }
@@ -78,7 +78,7 @@ pub(super) fn busy(app: &SolveApp) -> bool {
 
 /// Reads only current host/job metadata and the numerical draft. No preflight,
 /// scene preparation, device discovery, resource IO or rendering during painting.
-pub(super) fn action_ready(app: &SolveApp, id: &str) -> Result<(), String> {
+pub(super) fn action_ready(app: &SketApp, id: &str) -> Result<(), String> {
     if app.file_load.busy() || app.file_picker.is_some() || inspector::confirmation_open(app) {
         return Err(app.tr("render.ribbon_finish_dialog").into());
     }
@@ -136,7 +136,7 @@ pub(super) fn action_ready(app: &SolveApp, id: &str) -> Result<(), String> {
     }
 }
 
-pub(super) fn command_info(app: &SolveApp, command: &CommandSpec) -> CommandInfo {
+pub(super) fn command_info(app: &SketApp, command: &CommandSpec) -> CommandInfo {
     // Play History swaps to Stop History while it runs, wherever the command is shown.
     if command.id == "timeline.play" {
         return crate::timeline::playback_command_info(app, command);
@@ -155,7 +155,7 @@ pub(super) fn command_info(app: &SolveApp, command: &CommandSpec) -> CommandInfo
 
 /// Execute the same explicit request from either the ribbon or the sticky footer.
 /// No action falls back to a default executor, saved shot or a different result.
-pub(super) fn perform_job(app: &mut SolveApp, id: &str) -> Result<(), String> {
+pub(super) fn perform_job(app: &mut SketApp, id: &str) -> Result<(), String> {
     action_ready(app, id)?;
     if matches!(id, "render.start" | "render.batch" | "render.result.regrade") {
         let params = match id {
@@ -242,13 +242,13 @@ pub(super) struct PendingFinal {
     shot: String,
     visual: serde_json::Value,
 }
-pub(super) fn final_visual(app: &SolveApp) -> serde_json::Value {
+pub(super) fn final_visual(app: &SketApp) -> serde_json::Value {
     json!({"request":super::image_request(app).ok(),"presentation":presentation(app),
         "hidden_bodies":app.session.visibility.hidden_bodies,"hidden_occurrences":app.session.visibility.hidden_occurrences})
 }
 /// Submit the exact click-time request only after live capture/work has released its leases.
 /// This bypasses the pending action's own busy flag, never its captured source guard.
-pub(super) fn submit_deferred(app: &mut SolveApp, pending: PendingFinal) -> Result<(), String> {
+pub(super) fn submit_deferred(app: &mut SketApp, pending: PendingFinal) -> Result<(), String> {
     // A command or automation may have submitted an original-session job while the
     // live job drained. Never preempt it or bypass normal final-job priority.
     if busy(app) {
@@ -292,7 +292,7 @@ pub(super) fn submit_deferred(app: &mut SolveApp, pending: PendingFinal) -> Resu
 
 /// The explicit Render click follows its newly minted real-session job. The
 /// asynchronous preparation path reuses this after the same command post-hooks.
-pub(super) fn follow_started(app: &mut SolveApp, reply: &serde_json::Value) -> Result<(), String> {
+pub(super) fn follow_started(app: &mut SketApp, reply: &serde_json::Value) -> Result<(), String> {
     let job =
         serde_json::from_value(reply["job"].clone()).map_err(|e| crate::i18n::format("render.error_job_identity", &[("error", &e.to_string())]))?;
     app.render_workspace.view.job = Some(job);
@@ -317,7 +317,7 @@ pub(super) fn follow_started(app: &mut SolveApp, reply: &serde_json::Value) -> R
     Ok(())
 }
 
-pub(super) fn presentation(app: &SolveApp) -> sketcraft_engine::render::job::presentation::Presentation {
+pub(super) fn presentation(app: &SketApp) -> sketcraft_engine::render::job::presentation::Presentation {
     let view = &app.render_workspace.view;
     sketcraft_engine::render::job::presentation::Presentation {
         exposure_ev: view.draft.exposure_ev,
@@ -329,7 +329,7 @@ pub(super) fn presentation(app: &SolveApp) -> sketcraft_engine::render::job::pre
     }
 }
 
-fn focus(app: &mut SolveApp, selection: super::RenderSelection, category: Option<&str>) {
+fn focus(app: &mut SketApp, selection: super::RenderSelection, category: Option<&str>) {
     use super::RenderSelection;
     if matches!(selection, RenderSelection::Object(_)) {
         // Object shortcuts keep the shared modelling selection.
@@ -361,7 +361,7 @@ fn focus(app: &mut SolveApp, selection: super::RenderSelection, category: Option
 
 /// Parameterless command activation opens the already implemented editor. The
 /// engine's explicit resolve/apply methods still require their original params.
-pub(super) fn start(app: &mut SolveApp, id: &str) -> bool {
+pub(super) fn start(app: &mut SketApp, id: &str) -> bool {
     if !handled(id) {
         return false;
     }
@@ -383,7 +383,7 @@ pub(super) fn start(app: &mut SolveApp, id: &str) -> bool {
     true
 }
 
-fn navigate(app: &mut SolveApp, id: &str) -> Result<(), String> {
+fn navigate(app: &mut SketApp, id: &str) -> Result<(), String> {
     action_ready(app, id)?;
     use super::RenderSelection;
     let object = super::object_selection(app);

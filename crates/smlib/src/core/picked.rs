@@ -6,10 +6,10 @@
 
 use std::sync::PoisonError;
 
-use solidcore::geom::vector3d::Vec3;
-use solidcore::topology::brep::p1 as brep_p1;
-use solidcore::topology::brep::p3::brep_copy;
-use solidcore::topology::{edge, vertex};
+use sketcore::geom::vector3d::Vec3;
+use sketcore::topology::brep::p1 as brep_p1;
+use sketcore::topology::brep::p3::brep_copy;
+use sketcore::topology::{edge, vertex};
 
 use super::Body;
 use super::blend::{Miss, pick_edges, pick_vertices};
@@ -83,7 +83,7 @@ pub(crate) fn picks(body: &Body, kind: PickKind, points: &[[f64; 3]], tolerance:
 }
 
 /// Edge `e`'s end points.
-fn ends(b: &solidcore::topology::Brep, e: solidcore::topology::EdgeId) -> solidcore::Result<Vec<[f64; 3]>> {
+fn ends(b: &sketcore::topology::Brep, e: sketcore::topology::EdgeId) -> sketcore::Result<Vec<[f64; 3]>> {
     let mut out = Vec::with_capacity(2);
     for v in [edge::start_vertex(b, e)?, edge::end_vertex(b, e)?].into_iter().flatten() {
         let q = vertex::point(b, v)?;

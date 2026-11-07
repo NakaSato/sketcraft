@@ -2,7 +2,7 @@
 use serde_json::{Value, json};
 use sketcraft_engine::doc::physical_material::{Family, MaterialCard, PropertyData, admit_card};
 
-use crate::{SolveApp, i18n::tr, ui_kit};
+use crate::{SketApp, i18n::tr, ui_kit};
 
 const MAX_BYTES: usize = 256 * 1024;
 const KINDS: &[&str] = &[
@@ -25,7 +25,7 @@ pub struct ReviewWindow {
 }
 
 impl ReviewWindow {
-    fn review(&mut self, app: &mut SolveApp) {
+    fn review(&mut self, app: &mut SketApp) {
         self.reviewed = None;
         let result = (|| {
             if self.input.len() > MAX_BYTES {
@@ -47,7 +47,7 @@ impl ReviewWindow {
 }
 
 /// Open only through ui.start; executing the validator never opens a window.
-pub fn show(app: &mut SolveApp, ctx: &egui::Context) {
+pub fn show(app: &mut SketApp, ctx: &egui::Context) {
     let Some(mut window) = app.material_card_review.take() else { return };
     let viewport = crate::agent_chat::tool_space(app, crate::shell::content_rect(app, app.viewport.rect.unwrap_or_else(|| ctx.content_rect())));
     if !viewport.is_finite() || !viewport.is_positive() {
@@ -298,7 +298,7 @@ mod tests {
 
     #[test]
     fn invalid_and_oversized_candidates_never_keep_a_previous_review() {
-        let mut app = SolveApp::new(sketcraft_engine::Session::default(), crate::Services::default());
+        let mut app = SketApp::new(sketcraft_engine::Session::default(), crate::Services::default());
         let doc = app.session.doc.clone();
         let mut window = ReviewWindow { input: candidate().to_string(), ..Default::default() };
         window.review(&mut app);
@@ -355,7 +355,7 @@ mod tests {
 
     #[test]
     fn executing_json_validation_does_not_open_the_inspector() {
-        let mut app = SolveApp::new(sketcraft_engine::Session::default(), crate::Services::default());
+        let mut app = SketApp::new(sketcraft_engine::Session::default(), crate::Services::default());
         app.run("material.properties.validate", json!({"card":candidate()})).unwrap();
         assert!(app.material_card_review.is_none());
     }

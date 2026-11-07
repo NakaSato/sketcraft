@@ -2,7 +2,7 @@
 //! grid extruded up and down (#679), a pad half past the edge of the face it stands on (#674),
 //! several contact regions, contact beside a shared edge, and random rectangles.
 
-use solidcore_record::{Loop2, Plane, Region2, Vec2, Vec3};
+use sketcore_record::{Loop2, Plane, Region2, Vec2, Vec3};
 
 use crate::*;
 

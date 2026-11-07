@@ -1,6 +1,6 @@
 [package]
 name = "sketcraft-smlib"
-description = "SketCraft: the B-rep kernel, solidcore (tangency-labs/solidcore, the Rust port of NVIDIA's SMLib, Apache-2.0), behind a safe wrapper"
+description = "SketCraft: the B-rep kernel, sketcore (tangency-labs/solidcore, the Rust port of NVIDIA's SMLib, Apache-2.0), behind a safe wrapper"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
@@ -10,12 +10,12 @@ publish = false
 workspace = true
 
 [dependencies]
-solidcore-record = { workspace = true }
+sketcore-record = { workspace = true }
 log = { workspace = true }
 serde_json = { workspace = true }
 sketcraft-geom = { workspace = true }
 sketcraft-profile = { workspace = true }
-solidcore = { workspace = true }
+sketcore = { workspace = true }
 
 [dev-dependencies]
 sketcraft-profile = { workspace = true, features = ["enabled"] }

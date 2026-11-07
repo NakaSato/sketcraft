@@ -2,7 +2,7 @@
 //! case gives an error or a result, never a panic, within the time budget and the reader's own
 //! caps. The mutations and the check are `sketcraft_testkit`'s.
 
-use solidcore_record::{Vec2, Vec3};
+use sketcore_record::{Vec2, Vec3};
 use sketcraft_geom::Mesh;
 use sketcraft_testkit::{mutations, survives};
 
@@ -272,7 +272,7 @@ fn drawings_survive_mutation() {
 /// never a panic.
 #[test]
 fn paper_scenes_survive_mutation_into_svg() {
-    use solidcore_record::{Loop2, Region2, Seg2, Vec2};
+    use sketcore_record::{Loop2, Region2, Seg2, Vec2};
     use sketcraft_geom::paper::{Group, Item, ObjectKind, Scene};
     let p = Vec2::new;
     let border = Loop2::polygon(&[p(20.0, 10.0), p(410.0, 10.0), p(410.0, 287.0), p(20.0, 287.0)]);

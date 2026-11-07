@@ -3,7 +3,7 @@ use sketcraft_engine::{Session, geom::Aabb3, render::UpAxis};
 
 #[test]
 fn ground_ao_shares_the_selected_ground_plane_in_both_up_axes() {
-    let mut app = SolveApp::new(Session::default(), crate::Services::default());
+    let mut app = SketApp::new(Session::default(), crate::Services::default());
     for up in [UpAxis::Z, UpAxis::Y] {
         let cam = Camera { up, ..Default::default() };
         app.cam = cam;
@@ -33,7 +33,7 @@ fn ground_ao_shares_the_selected_ground_plane_in_both_up_axes() {
 fn ground_ao_is_independent_of_the_ellipse_and_respects_visibility_and_view_style() {
     let mut session = Session::default();
     session.execute("solid.box", &json!({"length":3,"width":4,"height":12,"corner":[0,0,-20],"body_name":"Foot"})).unwrap();
-    let mut app = SolveApp::new(session, crate::Services::default());
+    let mut app = SketApp::new(session, crate::Services::default());
     app.ui.ground_shadow = false;
     app.cam.pitch = 0.6;
     let key = scene_key(&app);
@@ -69,7 +69,7 @@ fn ground_ao_is_independent_of_the_ellipse_and_respects_visibility_and_view_styl
 fn ground_ao_covers_a_live_preview_without_moving_the_existing_plane() {
     let mut session = Session::default();
     session.execute("solid.box", &json!({"length":3,"width":4,"height":12,"corner":[0,0,-20]})).unwrap();
-    let mut app = SolveApp::new(session, crate::Services::default());
+    let mut app = SketApp::new(session, crate::Services::default());
     app.preferences.ambient_occlusion = true;
     app.cam.pitch = 0.5;
     let before = scene_key(&app);
@@ -101,7 +101,7 @@ fn ground_ao_covers_a_live_preview_without_moving_the_existing_plane() {
 fn ground_ao_draws_contact_pixels_without_an_ellipse_and_disappears_when_disabled() {
     let mut session = Session::default();
     session.execute("solid.box", &json!({"length":10,"width":10,"height":20,"corner":[-5,-5,0]})).unwrap();
-    let mut app = SolveApp::new(session, crate::Services::default());
+    let mut app = SketApp::new(session, crate::Services::default());
     app.preferences.ambient_occlusion = true;
     app.ui.ground_shadow = false;
     app.cam = Camera { target: Vec3::new(0.0, 0.0, 5.0), distance: 70.0, pitch: 0.6, yaw: 0.5, fov: 0.0, ..Default::default() };

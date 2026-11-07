@@ -28,13 +28,13 @@ use sketcraft_engine::doc::expr::{Kind, unit_info};
 const AREA: &str = "sc_dim_window";
 
 /// The window is on (Preferences › Sketch).
-pub(super) fn on(app: &SolveApp) -> bool {
+pub(super) fn on(app: &SketApp) -> bool {
     app.preferences.dimension_input == DimensionInput::Window
 }
 
 /// What a step adds to a length (millimetres) and to an angle (degrees). A saved value outside
 /// what Preferences accepts (a hand edit) steps by the default.
-fn steps(app: &SolveApp) -> (f64, f64) {
+fn steps(app: &SketApp) -> (f64, f64) {
     let or_default = |value: f64, accepted: std::ops::RangeInclusive<f64>| if accepted.contains(&value) { value } else { 1.0 };
     (or_default(app.preferences.dimension_step_mm, DIMENSION_STEP_MM), or_default(app.preferences.dimension_step_deg, DIMENSION_STEP_DEG))
 }
@@ -109,7 +109,7 @@ pub(super) fn forget() {
     EXISTING.with(|e| *e.borrow_mut() = None);
 }
 
-fn existing(app: &SolveApp, param: &str, expr: &str) -> (Option<Arc<sketcraft_engine::doc::SolvedSketch>>, Option<String>) {
+fn existing(app: &SketApp, param: &str, expr: &str) -> (Option<Arc<sketcraft_engine::doc::SolvedSketch>>, Option<String>) {
     EXISTING.with(|cell| {
         let mut cell = cell.borrow_mut();
         let current = cell.as_ref().is_some_and(|x| Arc::ptr_eq(&x.doc, &app.session.doc) && x.param == param && x.expr == expr);
@@ -130,7 +130,7 @@ fn existing(app: &SolveApp, param: &str, expr: &str) -> (Option<Arc<sketcraft_en
 
 /// Draw what the open window's value moves in the sketch, in the preview colour, over the sketch
 /// as it is. A value OK would refuse shows nothing.
-pub(super) fn paint(app: &SolveApp, painter: &egui::Painter, proj: &Proj) {
+pub(super) fn paint(app: &SketApp, painter: &egui::Painter, proj: &Proj) {
     if !on(app) {
         return;
     }
@@ -158,7 +158,7 @@ pub(super) fn paint(app: &SolveApp, painter: &egui::Painter, proj: &Proj) {
 /// Where the window goes: where it already is while it stays open, else under the dimension's
 /// text `at` (over it where the view has no room below); always inside the view's free area.
 /// `size` is the window's as drawn last frame.
-fn place(app: &SolveApp, ctx: &egui::Context, param: &str, at: Pos2, size: egui::Vec2) -> Pos2 {
+fn place(app: &SketApp, ctx: &egui::Context, param: &str, at: Pos2, size: egui::Vec2) -> Pos2 {
     let frame = ctx.cumulative_frame_nr();
     let view = app.viewport.layout.as_ref().map(|layout| layout.drawable).filter(|r| r.is_finite() && r.is_positive());
     ANCHOR.with(|anchor| {
@@ -197,7 +197,7 @@ fn button(ui: &mut egui::Ui, rect: Rect, key: &str, tip: &str, icon: &str) -> bo
 /// Draw the window for the open edit `e` at its dimension's text `at` (screen) and answer it:
 /// `Some(true)` applies it (the check, Enter), `Some(false)` drops it; the second value says
 /// whether a new dimension's picks go too (the cross, Esc), as Esc in the box does.
-pub(super) fn show(app: &mut SolveApp, ctx: &egui::Context, e: &mut Edit, at: Pos2) -> (Option<bool>, bool) {
+pub(super) fn show(app: &mut SketApp, ctx: &egui::Context, e: &mut Edit, at: Pos2) -> (Option<bool>, bool) {
     let t = Tokens::get();
     let id = egui::Id::unique("sc_dim_edit");
     let area = egui::Id::unique(AREA);

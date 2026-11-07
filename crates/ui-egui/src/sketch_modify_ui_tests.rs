@@ -764,11 +764,11 @@ fn the_spacing_gets_a_canvas_arrow_along_the_pattern_direction() {
     h.app.dialog.as_mut().unwrap().inputs[0].items = vec![Sel::SketchCurve { id, sketch: None }];
     let d = h.app.dialog.clone().unwrap();
     let (_, dir) = crate::canvas::anchor(&h.app, &d).expect("an anchor on the picked curve");
-    assert_eq!(dir, Some(solidcore_record::Vec3::X));
+    assert_eq!(dir, Some(sketcore_record::Vec3::X));
     h.app.dialog.as_mut().unwrap().inputs[1].items = vec![Sel::Axis { name: "Y".into() }];
     let d = h.app.dialog.clone().unwrap();
     let (_, dir) = crate::canvas::anchor(&h.app, &d).expect("an anchor on the picked curve");
-    assert_eq!(dir, Some(solidcore_record::Vec3::Y));
+    assert_eq!(dir, Some(sketcore_record::Vec3::Y));
 }
 
 /// Dragging a spacing arrow past its start flips the direction, as typing a negative spacing does

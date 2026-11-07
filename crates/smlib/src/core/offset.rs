@@ -1,4 +1,4 @@
-//! Shells, face offsets, thickening, sheet offsets and drafts on solidcore: the C API's logic
+//! Shells, face offsets, thickening, sheet offsets and drafts on sketcore: the C API's logic
 //! round SMLib's offset executive, ported from the fork's `capi/src/smlib_ops.cpp`
 //! (`smlib_shell`, `smlib_offset_faces`, `smlib_thicken`, `smlib_draft`, `leaves_cavity`,
 //! `FaceSet`, `outer_faceuse`, `move_faces`, `draft_faces`), `capi/src/smlib_sheets.cpp`
@@ -10,35 +10,35 @@
 //! solid as the capi does since tangency-labs/smlib#17.
 //!
 //! A draft tilts planes and, since tangency-labs/smlib#27, turns a cylinder about the pull into
-//! a cone (solidcore's `Cone::lean_cylinder`, solidcore#1545), and since smlib#53 a cone about the
-//! pull into the cone its generators turned make. A draft's tilted faces go in through solidcore's
+//! a cone (sketcore's `Cone::lean_cylinder`, solidcore#1545), and since smlib#53 a cone about the
+//! pull into the cone its generators turned make. A draft's tilted faces go in through sketcore's
 //! `SmBrep::LocalOperation` ([`local_operation`]). The capi's check that it moved some face
-//! (`moved_faces`) marks the replacement surfaces; solidcore names a surface by its owning face, so
+//! (`moved_faces`) marks the replacement surfaces; sketcore names a surface by its owning face, so
 //! the mark goes on the picked faces, which it stays with through the operation (solidcore#1875).
 
-use solidcore::EntityRef;
-use solidcore::SolidError;
-use solidcore::geom::attribute::{Attribute, Behavior, ids};
-use solidcore::geom::axis2_placement::Axis2Placement;
-use solidcore::geom::object::Shape;
-use solidcore::geom::vector3d::{Point3, Vec3};
-use solidcore::intersect::point_class::PointClassType;
-use solidcore::kernel::Kernel;
-use solidcore::math::Point2;
-use solidcore::nurbs::b_spline_curve::ControlPointForm;
-use solidcore::nurbs::b_spline_surface::p1::SurfParamType;
-use solidcore::nurbs::b_spline_surface_n_lib::p2::OrientType;
-use solidcore::nurbs::knots::Side;
-use solidcore::offset::construction::ShellRefusal;
-use solidcore::offset::offset_executive::p2::{OffsetOptions, ShellOptions, local_operation_simple, offset_brep_simple, shell_brep_simple};
-use solidcore::offset::offset_faces::{OffsetFacesExecutive, OffsetFacesRefusal};
-use solidcore::query::api_queries::{face_bounding_box, face_classify_uv, face_closest_point_in_shape, face_internal_point};
-use solidcore::query::brep::{BrepIdentity, BrepQuery, LiveBrepObjects};
-use solidcore::surface::cone::Cone;
-use solidcore::surface::surface::{Surface, SurfaceKind};
-use solidcore::topology::brep::{p1 as brep_p1, p2 as brep_p2};
-use solidcore::topology::face::p2 as face_p2;
-use solidcore::topology::{Brep, BrepId, FaceId, FaceuseId};
+use sketcore::EntityRef;
+use sketcore::SolidError;
+use sketcore::geom::attribute::{Attribute, Behavior, ids};
+use sketcore::geom::axis2_placement::Axis2Placement;
+use sketcore::geom::object::Shape;
+use sketcore::geom::vector3d::{Point3, Vec3};
+use sketcore::intersect::point_class::PointClassType;
+use sketcore::kernel::Kernel;
+use sketcore::math::Point2;
+use sketcore::nurbs::b_spline_curve::ControlPointForm;
+use sketcore::nurbs::b_spline_surface::p1::SurfParamType;
+use sketcore::nurbs::b_spline_surface_n_lib::p2::OrientType;
+use sketcore::nurbs::knots::Side;
+use sketcore::offset::construction::ShellRefusal;
+use sketcore::offset::offset_executive::p2::{OffsetOptions, ShellOptions, local_operation_simple, offset_brep_simple, shell_brep_simple};
+use sketcore::offset::offset_faces::{OffsetFacesExecutive, OffsetFacesRefusal};
+use sketcore::query::api_queries::{face_bounding_box, face_classify_uv, face_closest_point_in_shape, face_internal_point};
+use sketcore::query::brep::{BrepIdentity, BrepQuery, LiveBrepObjects};
+use sketcore::surface::cone::Cone;
+use sketcore::surface::surface::{Surface, SurfaceKind};
+use sketcore::topology::brep::{p1 as brep_p1, p2 as brep_p2};
+use sketcore::topology::face::p2 as face_p2;
+use sketcore::topology::{Brep, BrepId, FaceId, FaceuseId};
 
 use super::blend::{Miss, on_copy, p3, pick, points_ok, status as blend_status, tolerance_ok};
 use super::{Body, answer};
@@ -56,7 +56,7 @@ const OFFSET_WALLS_TOUCH: i32 = 1042;
 
 /// `status` (smlib_shim.h): an offset whose walls touch is [`Error::WallsTouch`]; a vertex moved
 /// past an edge's other end (`SM_ERR_OFFSET_EDGE_VANISHES`, fork 34318f4) is
-/// `SMLIB_ERR_UNSUPPORTED`; a wall whose face's offset folds, which solidcore's one construction
+/// `SMLIB_ERR_UNSUPPORTED`; a wall whose face's offset folds, which sketcore's one construction
 /// refuses (`fixes.shell_one_construction`, solidcore#2367), is [`Error::WallFolds`] with the
 /// largest wall it names; any other status as the blends pass it on.
 fn status(e: SolidError) -> Error {
@@ -91,7 +91,7 @@ impl FaceSet {
     }
 
     /// `add`: false when the face's box cannot be measured.
-    fn add(&mut self, k: &mut Kernel, b: &Brep, f: FaceId) -> solidcore::Result<bool> {
+    fn add(&mut self, k: &mut Kernel, b: &Brep, f: FaceId) -> sketcore::Result<bool> {
         let Some(bx) = answer(face_bounding_box(k, b, f, false))? else { return Ok(false) };
         let Some(shape) = answer(Shape::new(k, &(ONE, b), &[], &[(ONE, f)], &[], &[]))? else { return Ok(false) };
         self.faces.push(f);
@@ -102,7 +102,7 @@ impl FaceSet {
 
     /// `nearest`: the distance from `p` to the nearest face, with the nearest point; infinite
     /// when none answers. A face whose box is farther than the nearest face so far is skipped.
-    fn nearest(&self, k: &Kernel, live: &LiveBrepObjects<'_, '_>, p: Point3) -> solidcore::Result<(f64, Option<Point3>)> {
+    fn nearest(&self, k: &Kernel, live: &LiveBrepObjects<'_, '_>, p: Point3) -> sketcore::Result<(f64, Option<Point3>)> {
         let (mut best, mut at) = (f64::INFINITY, None);
         for ((&f, (lo, hi)), shape) in self.faces.iter().zip(&self.boxes).zip(&self.shapes) {
             let mut bx = 0.0;
@@ -127,13 +127,13 @@ impl FaceSet {
 
 /// The live view of `b` the closest-point solves read, under `identity`: `query`'s effective
 /// identity ([`BrepQuery::effective_identity`]).
-fn live<'a, 'i>(b: &'a mut Brep, identity: &'a BrepIdentity<'i>) -> solidcore::Result<LiveBrepObjects<'a, 'i>> {
+fn live<'a, 'i>(b: &'a mut Brep, identity: &'a BrepIdentity<'i>) -> sketcore::Result<LiveBrepObjects<'a, 'i>> {
     LiveBrepObjects::new(b, identity, None)
 }
 
 /// `pick_faces` (`face_distance`: `SmApiFaceClosestPoint`; a face whose query returns a status
 /// other than success is skipped, [`answer`]).
-pub(super) fn pick_faces(k: &mut Kernel, b: &mut Brep, points: &[[f64; 3]], tol: f64) -> solidcore::Result<std::result::Result<Vec<FaceId>, Miss>> {
+pub(super) fn pick_faces(k: &mut Kernel, b: &mut Brep, points: &[[f64; 3]], tol: f64) -> sketcore::Result<std::result::Result<Vec<FaceId>, Miss>> {
     let all = brep_p1::faces(b, None)?;
     let model_tol = b.tolerance();
     let mut shapes = Vec::with_capacity(all.len());
@@ -162,7 +162,7 @@ pub(super) fn face_miss(m: Miss) -> Error {
 
 /// `outer_faceuse`: the faceuse of `f` on the outside of its body, the one bounding the infinite
 /// region (for a sheet, both do; then the upward one).
-fn outer_faceuse(b: &Brep, f: FaceId) -> solidcore::Result<Option<FaceuseId>> {
+fn outer_faceuse(b: &Brep, f: FaceId) -> sketcore::Result<Option<FaceuseId>> {
     let Some(fu) = face_p2::upward_faceuse(b, f)? else { return Ok(None) };
     let use_ = b.faceuse(fu)?;
     let outside = match use_.shell {
@@ -178,7 +178,7 @@ fn outer_faceuse(b: &Brep, f: FaceId) -> solidcore::Result<Option<FaceuseId>> {
 /// face sample by stepping inward along the normal, then from ball to ball. The capi refuses a
 /// wall this finds no room for before SMLib sees it (C++ SMLib corrupts memory there,
 /// solidcore#380); the same refusal here keeps the C++ path's answer.
-fn leaves_cavity(k: &mut Kernel, b: &mut Brep, open: &[FaceId], wall: f64) -> solidcore::Result<bool> {
+fn leaves_cavity(k: &mut Kernel, b: &mut Brep, open: &[FaceId], wall: f64) -> sketcore::Result<bool> {
     let list = brep_p1::faces(b, None)?;
     let (mut all, mut walls) = (FaceSet::new(), FaceSet::new());
     for &f in &list {
@@ -231,7 +231,7 @@ fn leaves_cavity(k: &mut Kernel, b: &mut Brep, open: &[FaceId], wall: f64) -> so
     let k: &Kernel = k;
     // A step of `h` inward from a sample ends at a ball's centre when no face is nearer to it
     // than `h` (the step crossed none, and the ball touches only the sample's face).
-    let ball = |s: Point3, n: Vec3, h: f64| -> solidcore::Result<(bool, Point3, f64)> {
+    let ball = |s: Point3, n: Vec3, h: f64| -> sketcore::Result<(bool, Point3, f64)> {
         let c = s + n * h;
         let (r, _) = all.nearest(k, &objects, c)?;
         Ok((r.is_finite() && r >= h * (1.0 - 1e-9), c, r))
@@ -273,7 +273,7 @@ fn leaves_cavity(k: &mut Kernel, b: &mut Brep, open: &[FaceId], wall: f64) -> so
 /// `SmApiShellBrepFull(b, distance, TRUE, TRUE, TRUE, open, r)`: convex edges extended, results
 /// merged, side walls made at a sheet's edges, and (as the fork does, 5448b9a) a thickened
 /// sheet's coplanar side walls one face.
-fn shell_brep_full(k: &mut Kernel, b: &Brep, distance: f64, open: &[FaceId]) -> solidcore::Result<Brep> {
+fn shell_brep_full(k: &mut Kernel, b: &Brep, distance: f64, open: &[FaceId]) -> sketcore::Result<Brep> {
     let options = ShellOptions {
         offset: OffsetOptions { distance, extend_convex_edges: true, merge_results: true },
         create_offset_solid: true,
@@ -283,12 +283,12 @@ fn shell_brep_full(k: &mut Kernel, b: &Brep, distance: f64, open: &[FaceId]) -> 
 }
 
 /// `SmApiOffsetBrepFull(b, distance, TRUE, TRUE, r)`.
-fn offset_brep_full(k: &mut Kernel, b: &mut Brep, distance: f64) -> solidcore::Result<Brep> {
+fn offset_brep_full(k: &mut Kernel, b: &mut Brep, distance: f64) -> sketcore::Result<Brep> {
     offset_brep_simple(k, b, OffsetOptions { distance, extend_convex_edges: true, merge_results: true })
 }
 
 /// `finish`: the result must have faces, and a solid input must give a closed manifold solid.
-fn finish(b: Brep, solid_in: bool) -> solidcore::Result<Out<Brep>> {
+fn finish(b: Brep, solid_in: bool) -> sketcore::Result<Out<Brep>> {
     if b.face_list().is_empty() {
         return Ok(Err(Error::Empty));
     }
@@ -299,7 +299,7 @@ fn finish(b: Brep, solid_in: bool) -> solidcore::Result<Out<Brep>> {
 }
 
 /// An SMLib call's own status passed on (`status(...)` in the capi), else the value.
-fn called<T>(r: solidcore::Result<T>) -> solidcore::Result<Out<T>> {
+fn called<T>(r: sketcore::Result<T>) -> sketcore::Result<Out<T>> {
     match r {
         Ok(v) => Ok(Ok(v)),
         Err(e) => Ok(Err(status(e))),
@@ -372,7 +372,7 @@ fn move_faces(k: &mut Kernel, b: &mut Brep, picked: &[FaceId], distance: f64) ->
         OffsetFacesRefusal::NotExact => Error::NotExact,
         OffsetFacesRefusal::NoEffect => Error::NoEffect,
         // Not in the fork (solidcore#2020, #2027): the blends cannot be put back, the fillet's
-        // status kept. SketCraft has no such error: a move solidcore does not make.
+        // status kept. SketCraft has no such error: a move sketcore does not make.
         OffsetFacesRefusal::NotPutBack => Error::Unsupported,
         OffsetFacesRefusal::None => status(e),
     })
@@ -431,9 +431,9 @@ fn unit(v: [f64; 3]) -> Option<Vec3> {
 /// `outward_normal`: the outward normal of face `f` (its outer faceuse `fu`) at `at`, a point on
 /// it: its surface's normal there, turned with the outer faceuse. `None` where SMLib cannot place
 /// the point on the surface (the capi's `STEPInversionAnswered` also takes a point outside the
-/// domain or off the surface by more than its tolerance; solidcore's inversion answers those with
+/// domain or off the surface by more than its tolerance; sketcore's inversion answers those with
 /// a status, so they are `None` here: the face's own internal point is neither).
-fn outward_normal(k: &Kernel, b: &Brep, f: FaceId, fu: FaceuseId, at: Point3) -> solidcore::Result<Option<Vec3>> {
+fn outward_normal(k: &Kernel, b: &Brep, f: FaceId, fu: FaceuseId, at: Point3) -> sketcore::Result<Option<Vec3>> {
     let Some(surf) = b.face(f)?.surface.as_ref() else { return Ok(None) };
     let Some((step, _)) = answer(surf.step_inversion(k, &surf.step_uv_domain(), at, 1e6, None))? else { return Ok(None) };
     let Some(nurb) = answer(surf.convert_uv_from_step_to_nurbs(k, step))? else { return Ok(None) };
@@ -453,7 +453,7 @@ fn outward_normal(k: &Kernel, b: &Brep, f: FaceId, fu: FaceuseId, at: Point3) ->
 /// where the face looks away from the axis (a pin), -1 where it looks towards it (a hole). It is
 /// the surface's own NURB with each control point moved radially by the new radius over the old at
 /// its height, so it keeps the surface's parameters and the face's UV trims stay valid: for a
-/// cylinder solidcore's `Cone::lean_cylinder` (solidcore#1545), for a cone the same edit on
+/// cylinder sketcore's `Cone::lean_cylinder` (solidcore#1545), for a cone the same edit on
 /// [`Cone::base_mut`]. [`Error::Unsupported`] when the pull does not run along the axis, the axis
 /// lies in the neutral plane, or the cone would close within the face's span.
 #[allow(clippy::too_many_arguments)] // the capi's drafted_cone
@@ -466,7 +466,7 @@ fn drafted_cone(
     normal: Vec3,
     pull: Vec3,
     angle: f64,
-) -> solidcore::Result<Out<Cone>> {
+) -> sketcore::Result<Out<Cone>> {
     let frame = cyl.canonical().origin;
     let z = frame.x_axis().cross(frame.y_axis());
     let len = z.length();
@@ -531,10 +531,10 @@ const MOVED_MARK: u64 = ids::USER_1 + 8;
 /// `Before::mark` on each replacement surface. A surface has no identity apart from its owning
 /// face here, and `faces[i]`'s offset face takes `surfaces[i]`, so the mark goes on the picked face
 /// and travels as the surface's does (Copy behaviour; solidcore#1875). The one difference, recorded
-/// in solidcore's `topology.brep_local_operation--1875-face-mark-for-surface-mark` finding: a merge
+/// in sketcore's `topology.brep_local_operation--1875-face-mark-for-surface-mark` finding: a merge
 /// keeping an unpicked face over a picked one hands that survivor the mark, where SMLib's survivor
 /// keeps its own unmarked surface.
-pub(super) fn mark_moved(w: &mut Brep, picked: &[FaceId]) -> solidcore::Result<()> {
+pub(super) fn mark_moved(w: &mut Brep, picked: &[FaceId]) -> sketcore::Result<()> {
     for &f in picked {
         w.add_attribute(EntityRef::Face(f), Attribute::long(MOVED_MARK, 0, Behavior::Copy))?;
     }
@@ -543,7 +543,7 @@ pub(super) fn mark_moved(w: &mut Brep, picked: &[FaceId]) -> solidcore::Result<(
 
 /// `moved_faces`'s reading (`read_marks`): whether any face of `w` carries the mark, every mark
 /// removed.
-pub(super) fn moved_faces(w: &mut Brep) -> solidcore::Result<bool> {
+pub(super) fn moved_faces(w: &mut Brep) -> sketcore::Result<bool> {
     let mut moved = false;
     for f in w.face_list().to_vec() {
         let e = EntityRef::Face(f);

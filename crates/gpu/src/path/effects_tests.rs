@@ -364,7 +364,7 @@ fn scratch_world_reference(@builtin(global_invocation_id) gid:vec3<u32>){{
             cache: None,
         });
         let mut req = request(4);
-        req.camera.target = solidcore_record::Vec3::new(0.0, target_y, 0.0);
+        req.camera.target = sketcore_record::Vec3::new(0.0, target_y, 0.0);
         let mut task =
             Task::new(context.clone(), sphere(white()), req, JobOptions { aging: stack, ..Default::default() }, CancelToken::default()).unwrap();
         context.queue.write_buffer(&task.uniform, 0, &task.parameters(16).unwrap());

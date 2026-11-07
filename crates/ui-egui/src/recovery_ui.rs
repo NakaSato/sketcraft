@@ -6,7 +6,7 @@ use sketcraft_engine::{Result, Session};
 use std::path::{Path, PathBuf};
 use std::time::{Duration, Instant};
 
-use crate::SolveApp;
+use crate::SketApp;
 use crate::ui_kit;
 
 /// A command that ran at least this long counts as a big operation: autosave right after it.
@@ -58,7 +58,7 @@ fn save_slot(dir: &Path, slot: &mut Option<Autosaver>, session: &Session, due: b
 }
 
 /// Autosave every open design on the shared cadence, or a tab after its big operation.
-pub fn tick(app: &mut SolveApp) {
+pub fn tick(app: &mut SketApp) {
     let big = std::mem::take(&mut app.big_operation);
     let Some(a) = app.autosave.as_mut() else { return };
     let due = a.last_at.elapsed() >= a.interval;
@@ -85,7 +85,7 @@ pub fn tick(app: &mut SolveApp) {
 }
 
 /// Start autosaving into `dir` and queue the designs that crashed apps left there.
-pub fn start(app: &mut SolveApp, dir: &std::path::Path, interval: std::time::Duration) {
+pub fn start(app: &mut SketApp, dir: &std::path::Path, interval: std::time::Duration) {
     match Autosaver::new(dir, SHARED_CADENCE) {
         Ok(a) => {
             app.recoverable = recovery::orphans(dir);
@@ -96,7 +96,7 @@ pub fn start(app: &mut SolveApp, dir: &std::path::Path, interval: std::time::Dur
 }
 
 /// The app is closing: keep unsaved work for the next launch, drop everything else.
-pub fn close(app: &mut SolveApp) {
+pub fn close(app: &mut SketApp) {
     if let Some(mut a) = app.autosave.take() {
         for slot in app.docs.background_mut() {
             let _ = save_slot(&a.dir, &mut slot.autosave, &slot.session, true, true);
@@ -128,7 +128,7 @@ pub fn ago_between(now: u64, secs: u64) -> String {
     }
 }
 
-pub fn show(app: &mut SolveApp, ctx: &egui::Context) {
+pub fn show(app: &mut SketApp, ctx: &egui::Context) {
     // File view presents the same entries inline, without a second window covering them.
     if app.home.open || app.recoverable.is_empty() {
         app.recovery_discard_all = false;
@@ -242,7 +242,7 @@ pub fn browser_copies_window(ctx: &egui::Context, language: &str, copies: &[Brow
 }
 
 /// Discard all asks first; Cancel (or the close button) goes back to the list unchanged.
-fn confirm_discard_all(app: &mut SolveApp, ctx: &egui::Context) {
+fn confirm_discard_all(app: &mut SketApp, ctx: &egui::Context) {
     let count = app.recoverable.len();
     let title = if count == 1 {
         crate::i18n::tr("recovery.discard_all_title_one").to_string()
@@ -267,14 +267,14 @@ fn confirm_discard_all(app: &mut SolveApp, ctx: &egui::Context) {
 }
 
 /// Discard every listed autosave, each the way its own Discard button does.
-fn discard_all(app: &mut SolveApp) {
+fn discard_all(app: &mut SketApp) {
     for entry in std::mem::take(&mut app.recoverable) {
         apply(app, entry, false);
     }
 }
 
 /// Shared recovery action for the launch prompt and File view; dirty work is never replaced.
-pub(crate) fn apply(app: &mut SolveApp, entry: Entry, recover: bool) {
+pub(crate) fn apply(app: &mut SketApp, entry: Entry, recover: bool) {
     let dir_s = app.autosave.as_ref().map(|a| a.dir.clone()).or_else(recovery::default_dir).map(|d| d.to_string_lossy().to_string());
     app.recoverable.retain(|x| x.id != entry.id);
     if recover {
@@ -298,15 +298,15 @@ mod tests {
     use crate::{Services, documents};
     use std::fs;
 
-    fn app(tag: &str, interval: Duration) -> (SolveApp, PathBuf) {
+    fn app(tag: &str, interval: Duration) -> (SketApp, PathBuf) {
         let dir = std::env::temp_dir().join(format!("sketcraft-recovery-tabs-{tag}-{}", std::process::id()));
         let _ = fs::remove_dir_all(&dir);
-        let mut app = SolveApp::new(Session::default(), Services::default());
+        let mut app = SketApp::new(Session::default(), Services::default());
         start(&mut app, &dir, interval);
         (app, dir)
     }
 
-    fn edit(app: &mut SolveApp) {
+    fn edit(app: &mut SketApp) {
         app.run("solid.box", json!({"length": 10, "width": 10, "height": 10})).unwrap();
         // Tests control the cadence without relying on how long the command took.
         app.big_operation = false;
@@ -325,7 +325,7 @@ mod tests {
 
     /// A tick, then wait for the writes it started on worker threads. Waiting writes nothing
     /// new: every design it would write was just written.
-    fn tick_and_wait(app: &mut SolveApp) {
+    fn tick_and_wait(app: &mut SketApp) {
         tick(app);
         let Some(a) = app.autosave.as_mut() else { return };
         for slot in app.docs.background_mut() {
@@ -338,7 +338,7 @@ mod tests {
         }
     }
 
-    fn name(app: &mut SolveApp, name: &str) {
+    fn name(app: &mut SketApp, name: &str) {
         app.run("file.new", json!({"name": name})).unwrap();
     }
 
@@ -363,8 +363,8 @@ mod tests {
         fs::remove_dir_all(dir).unwrap();
     }
 
-    fn restart(dir: &Path) -> SolveApp {
-        let mut app = SolveApp::new(Session::default(), Services::default());
+    fn restart(dir: &Path) -> SketApp {
+        let mut app = SketApp::new(Session::default(), Services::default());
         start(&mut app, dir, Duration::ZERO);
         app
     }
@@ -522,7 +522,7 @@ mod tests {
         name(&mut app, "B");
         edit(&mut app);
         // The writes run on worker threads: a failure is reported by a later tick.
-        let failed = |app: &SolveApp| app.status.as_ref().is_some_and(|(message, _, error)| *error && message.contains("autosave failed"));
+        let failed = |app: &SketApp| app.status.as_ref().is_some_and(|(message, _, error)| *error && message.contains("autosave failed"));
         let deadline = Instant::now() + Duration::from_secs(60);
         tick(&mut app);
         while !failed(&app) && Instant::now() < deadline {

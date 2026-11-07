@@ -160,14 +160,8 @@ fn generated_feature_parameter_dependencies_are_independent() {
     let result = copy(&mut s, part);
     let clone = result["component"].as_u64().unwrap();
     near(volume(&mut s, clone), 16.0);
-    let clone_names = s
-        .doc
-        .features
-        .iter()
-        .find(|f| f.component == clone && matches!(f.kind, sketcraft_doc::FeatureKind::Box { .. }))
-        .unwrap()
-        .param_names
-        .clone();
+    let clone_names =
+        s.doc.features.iter().find(|f| f.component == clone && matches!(f.kind, sketcraft_doc::FeatureKind::Box { .. })).unwrap().param_names.clone();
     assert_ne!(clone_names, source_names);
     run(&mut s, "parameters.change", json!({"name":source_names[0],"expression":"3 mm"}));
     near(volume(&mut s, part), 36.0);
@@ -257,7 +251,7 @@ fn configuration_rows_follow_copied_parameters_material_and_strict_face_lineage(
         body: "Cube".into(),
         origin_feature: source,
         name: format!("F{source}:+z"),
-        point: solidcore_record::Vec3::new(1.0, 1.0, 2.0),
+        point: sketcore_record::Vec3::new(1.0, 1.0, 2.0),
         certificate: None,
     };
     run(&mut s, "config.configure", json!({"params":[length],"materials":["Cube"],"component_appearances":[part],"face_appearances":[target]}));
@@ -295,7 +289,7 @@ fn configured_extrude_cap_copy_keeps_independent_semantic_lineage() {
         body: body_name,
         origin_feature: feature,
         name: format!("F{feature}:top"),
-        point: solidcore_record::Vec3::new(1.0, 1.0, 2.0),
+        point: sketcore_record::Vec3::new(1.0, 1.0, 2.0),
         certificate: None,
     };
     run(&mut s, "config.configure", json!({"face_appearances":[target]}));
@@ -359,7 +353,7 @@ fn reassigned_sample_plate_paste_new_preserves_complex_frozen_geometry() {
     run(&mut s, "occurrence.ground", json!({"occurrence":occurrence,"grounded":true}));
     let original_volume = volume(&mut s, part);
     let source_mesh = s.model.state().body(&body).unwrap().mesh();
-    let boss_probe = solidcore_record::Vec3::new(40.0, 35.0, 12.0);
+    let boss_probe = sketcore_record::Vec3::new(40.0, 35.0, 12.0);
     let source_boss = source_mesh.contains(boss_probe);
     let copied = run(&mut s, "component.paste_new", json!({"component":part,"translate":[10,10,0]}));
     assert_eq!(s.doc.components.len(), 2);
@@ -374,7 +368,7 @@ fn reassigned_sample_plate_paste_new_preserves_complex_frozen_geometry() {
     for (point, expected) in
         [([5.0, 25.0, 4.0], true), ([12.0, 25.0, 4.0], false), ([68.0, 25.0, 4.0], false), ([40.0, 25.0, 12.0], false), ([0.0, 0.0, 4.0], false)]
     {
-        assert_eq!(mesh.contains(solidcore_record::Vec3::new(point[0], point[1], point[2])), expected, "{point:?}");
+        assert_eq!(mesh.contains(sketcore_record::Vec3::new(point[0], point[1], point[2])), expected, "{point:?}");
     }
     assert_eq!(mesh.contains(boss_probe), source_boss);
     assert_eq!(state.body(&body).unwrap().mesh().contains(boss_probe), source_boss);
@@ -474,7 +468,7 @@ fn transferred_frozen_face_paint_ignores_consumed_legacy_offset() {
     run(&mut s, "appearance.assign", json!({"body":"Foreign","faces":[[1,1,2]],"color":"#00ff00"}));
     s.doc_mut().body_offsets.insert(
         "Foreign".into(),
-        sketcraft_doc::rigid(solidcore_record::Vec3::new(7.0, 0.0, 0.0), solidcore_record::Vec3::ZERO, solidcore_record::Vec3::Z, 0.0),
+        sketcraft_doc::rigid(sketcore_record::Vec3::new(7.0, 0.0, 0.0), sketcore_record::Vec3::ZERO, sketcore_record::Vec3::Z, 0.0),
     );
     s.refresh();
     let part = component(&mut s, "Part");
@@ -488,7 +482,7 @@ fn transferred_frozen_face_paint_ignores_consumed_legacy_offset() {
 
 #[test]
 fn boundary_material_proof_requires_resolvable_stock_and_void() {
-    use solidcore_record::Vec3;
+    use sketcore_record::Vec3;
     let a = sketcraft_kernel::box_solid(Vec3::ZERO, Vec3::new(10., 10., 10.)).unwrap().mesh(&sketcraft_kernel::MeshTolerance::chord(1e-3)).unwrap();
     let b = sketcraft_kernel::box_solid(Vec3::new(1e-5, 0., 0.), Vec3::new(10.00001, 10., 10.))
         .unwrap()
@@ -517,7 +511,7 @@ fn boundary_material_proof_requires_resolvable_stock_and_void() {
 
 #[test]
 fn frozen_bore_boundary_copy_preserves_stock_void_and_reopen() {
-    use solidcore_record::Vec3;
+    use sketcore_record::Vec3;
     let bore = |center: f64| {
         let mut s = Session::default();
         run(&mut s, "solid.box", json!({"length":30,"width":20,"height":10,"body_name":"Drilled"}));
@@ -553,7 +547,7 @@ fn frozen_bore_boundary_copy_preserves_stock_void_and_reopen() {
 
 #[test]
 fn frozen_r6_bore_copy_uses_current_geometry_despite_mesh_measure_bias() {
-    use solidcore_record::Vec3;
+    use sketcore_record::Vec3;
     let mut s = Session::default();
     run(&mut s, "solid.box", json!({"length":20,"width":20,"height":10,"body_name":"Drilled"}));
     run(&mut s, "solid.cylinder", json!({"base":[10,10,0],"radius":6,"height":10,"operation":"cut"}));

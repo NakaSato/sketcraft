@@ -487,9 +487,7 @@ fn import(s: &mut Session, p: &Value) -> Result<Value> {
     let cmd = "parameters.import";
     let text = match (str_(p, "text"), str_(p, "path")) {
         (Some(t), _) => t.to_string(),
-        (None, Some(path)) => {
-            sketcraft_io::vfs::read_to_string(path, MAX_PARAMETER_BYTES).map_err(|e| EngineError::Other(format!("{path}: {e}")))?
-        }
+        (None, Some(path)) => sketcraft_io::vfs::read_to_string(path, MAX_PARAMETER_BYTES).map_err(|e| EngineError::Other(format!("{path}: {e}")))?,
         _ => return Err(bad(cmd, "give `text` or `path`")),
     };
     let solved = s.solved_sketches();

@@ -1,8 +1,8 @@
 //! #1038: a small hole on a large curved face cuts cleanly, its rim on the face an intersection
 //! edge.
 
-use solidcore_record::brep::Curve;
-use solidcore_record::{Loop2, Plane, Region2, Seg2, Vec2, Vec3};
+use sketcore_record::brep::Curve;
+use sketcore_record::{Loop2, Plane, Region2, Seg2, Vec2, Vec3};
 use sketcraft_geom::prelude::*;
 
 use crate::{Body, BoolOp, build::extrude, cylinder, ops::boolean};

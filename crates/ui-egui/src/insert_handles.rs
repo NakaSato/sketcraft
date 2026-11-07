@@ -4,10 +4,10 @@
 //! the window shows.
 
 use egui::{Pos2, Sense, Stroke, Vec2 as Screen, vec2};
-use solidcore_record::{Plane, Vec2};
+use sketcore_record::{Plane, Vec2};
 use sketcraft_engine::geom::prelude::*;
 
-use crate::SolveApp;
+use crate::SketApp;
 use crate::dialogs::Kind;
 use crate::dialogs_insert_drawing::{MAX_SCALE, Place};
 use crate::viewport::Proj;
@@ -63,7 +63,7 @@ fn pointer_on_sketch(plane: &Plane, proj: &Proj, at: Pos2) -> Option<Vec2> {
     plane.intersect_ray(o, d).map(|w| plane.to_local(w))
 }
 
-fn place_of(app: &SolveApp) -> Option<Place> {
+fn place_of(app: &SketApp) -> Option<Place> {
     match app.dialog.as_ref().map(|d| &d.kind) {
         Some(Kind::InsertDrawing(p)) => Some(p.clone()),
         _ => None,
@@ -71,7 +71,7 @@ fn place_of(app: &SolveApp) -> Option<Place> {
 }
 
 /// The placement window's drawing, with its handles. A drag on them edits the window's values.
-pub fn show(app: &mut SolveApp, ui: &mut egui::Ui, proj: &Proj) {
+pub fn show(app: &mut SketApp, ui: &mut egui::Ui, proj: &Proj) {
     let Some(place) = place_of(app) else {
         app.viewport.insert_drag = None;
         return;

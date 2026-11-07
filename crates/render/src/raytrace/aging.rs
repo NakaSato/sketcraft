@@ -8,7 +8,7 @@ use crate::{
     surface::{OpaqueSurface, srgb8_to_linear},
     surface_patterns::ShadingSurface,
 };
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 use sketcraft_geom::prelude::*;
 
 fn invalid(message: &'static str) -> job::JobError {

@@ -582,7 +582,7 @@ fn the_cylinder_dialog_takes_its_base_point() {
 
 #[test]
 fn a_point_picked_in_the_box_dialog_becomes_its_corner_or_centre() {
-    use solidcore_record::Vec3;
+    use sketcore_record::Vec3;
     use sketcraft_engine::Sel;
     let mut h = design("mm");
     // The box made here overlaps Base, which the window would join or cut (#6901): this test is
@@ -622,7 +622,7 @@ fn a_point_picked_in_the_box_dialog_becomes_its_corner_or_centre() {
 
 #[test]
 fn a_point_picked_in_the_box_dialog_reads_in_the_design_unit() {
-    use solidcore_record::Vec3;
+    use sketcore_record::Vec3;
     use sketcraft_engine::Sel;
     let mut h = design("in");
     h.app.preferences.auto_operation = false;
@@ -750,7 +750,7 @@ fn editing_a_sphere_torus_or_cone_shows_its_placement_and_keeps_it() {
 
 #[test]
 fn a_point_picked_in_the_sphere_or_torus_dialog_becomes_its_centre() {
-    use solidcore_record::Vec3;
+    use sketcore_record::Vec3;
     use sketcraft_engine::Sel;
     let mut h = design("mm");
     h.app.run("solid.box", json!({"length": 40, "width": 30, "height": 20, "body_name": "Base"})).unwrap();

@@ -22,7 +22,7 @@ use std::io::{Cursor, Read, Write};
 
 use quick_xml::Reader;
 use quick_xml::events::{BytesStart, Event};
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 
 use crate::{IoError, Result};
 

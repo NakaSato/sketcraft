@@ -40,8 +40,8 @@ use std::f64::consts::TAU;
 
 use std::collections::HashMap;
 
-use solidcore_record::Vec3;
-use solidcore_record::brep as b;
+use sketcore_record::Vec3;
+use sketcore_record::brep as b;
 
 use crate::flat::{self, *};
 use crate::history::{Order, Piece};

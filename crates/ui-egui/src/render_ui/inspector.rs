@@ -1,11 +1,11 @@
 //! One floating editor for the selected Render item.
 use super::{RenderSelection, environment, inspector, library, light, setups, shot, wear};
 use crate::ui_kit::BackingTooltipExt as _;
-use crate::{SolveApp, ui_kit};
+use crate::{SketApp, ui_kit};
 use inspector::selection_appearance;
 use serde_json::json;
 
-pub(crate) fn panel(app: &mut SolveApp, ui: &mut egui::Ui) {
+pub(crate) fn panel(app: &mut SketApp, ui: &mut egui::Ui) {
     // Reviews belong to the workspace, including when their originating editor closes.
     inspector::confirmation(app, ui.ctx());
     library::review::dialog(app, ui.ctx());
@@ -119,7 +119,7 @@ pub(crate) fn panel(app: &mut SolveApp, ui: &mut egui::Ui) {
     }
 }
 
-pub(super) fn output_actions(app: &mut SolveApp, ui: &mut egui::Ui) {
+pub(super) fn output_actions(app: &mut SketApp, ui: &mut egui::Ui) {
     ui.horizontal_wrapped(|ui| {
         for (id, label, target) in [
             ("render.start", app.tr("cmd.render_start").to_owned(), "render:output:render"),
@@ -156,7 +156,7 @@ fn kind(selection: &RenderSelection) -> &'static str {
     }
 }
 
-fn title(app: &SolveApp, selection: &RenderSelection) -> (String, &'static str) {
+fn title(app: &SketApp, selection: &RenderSelection) -> (String, &'static str) {
     let (key, icon) = match selection {
         RenderSelection::Nothing => ("render.page_scene", "render_scene"),
         RenderSelection::Object(items) => {

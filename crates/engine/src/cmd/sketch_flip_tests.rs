@@ -2,7 +2,7 @@
 //! sketch keeps the plane's own side, and older designs open, rebuild and save as before.
 
 use serde_json::{Value, json};
-use solidcore_record::{Plane, Vec2, Vec3};
+use sketcore_record::{Plane, Vec2, Vec3};
 use sketcraft_doc::{FeatureKind, PlaneRef};
 use sketcraft_geom::prelude::*;
 

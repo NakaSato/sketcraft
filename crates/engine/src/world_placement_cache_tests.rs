@@ -1,7 +1,7 @@
 //! Placement-cache changes must retain physical picking, pending positions and named joints.
 use crate::Session;
 use serde_json::{Value, json};
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 use sketcraft_geom::prelude::*;
 use std::sync::Arc;
 

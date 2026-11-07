@@ -2934,8 +2934,8 @@ mod tests {
         }
         let green = builtin().iter().find(|t| t.id == "green-phosphor").unwrap();
         assert_ne!(resolve(green).file_rail, Tokens::dark().file_rail, "Green Phosphor's rail isn't Dark's blue");
-        let own = parse(r##"{"format":"sketcraft-theme/1","name":"Own rail","base":"dark","colors":{"accent":"#ff0000","file_rail":"#102030"}}"##)
-            .unwrap();
+        let own =
+            parse(r##"{"format":"sketcraft-theme/1","name":"Own rail","base":"dark","colors":{"accent":"#ff0000","file_rail":"#102030"}}"##).unwrap();
         assert_eq!(resolve(&own).file_rail, Color32::from_rgb(0x10, 0x20, 0x30));
     }
 
@@ -2954,8 +2954,8 @@ mod tests {
 
     #[test]
     fn a_short_file_sets_only_its_colours() {
-        let t = parse(r##"{"format":"sketcraft-theme/1","name":"My Theme!","base":"light","colors":{"panel":"#102030","axis_z":"#0000ff80"}}"##)
-            .unwrap();
+        let t =
+            parse(r##"{"format":"sketcraft-theme/1","name":"My Theme!","base":"light","colors":{"panel":"#102030","axis_z":"#0000ff80"}}"##).unwrap();
         assert_eq!((t.id.as_str(), t.name.as_str(), t.base), ("my-theme", "My Theme!", Base::Light));
         let p = resolve(&t);
         assert_eq!(p.panel, Color32::from_rgb(0x10, 0x20, 0x30));
@@ -2988,9 +2988,8 @@ mod tests {
     /// Move gizmo lists colour every axis, the triad over the gizmo and `axis_*` over both.
     #[test]
     fn older_triad_and_gizmo_keys_colour_every_axis() {
-        let file = |colors: &str| {
-            resolve(&parse(&format!(r#"{{"format":"sketcraft-theme/1","name":"Old","base":"dark","colors":{{{colors}}}}}"#)).unwrap())
-        };
+        let file =
+            |colors: &str| resolve(&parse(&format!(r#"{{"format":"sketcraft-theme/1","name":"Old","base":"dark","colors":{{{colors}}}}}"#)).unwrap());
         let (r, g, b, w) =
             (Color32::from_rgb(0xfb, 0x49, 0x34), Color32::from_rgb(0xb8, 0xbb, 0x26), Color32::from_rgb(0x83, 0xa5, 0x98), Color32::WHITE);
         let triad = r##""triad":["#fb4934","#b8bb26","#83a598"]"##;

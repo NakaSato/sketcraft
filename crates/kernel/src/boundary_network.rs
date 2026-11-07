@@ -11,8 +11,8 @@
 //! The two-curve bridge with G0–G3 against a sketch's plane is [`crate::boundary`]; this is the
 //! general case: three or four sides, interior curves, 3D curves and edges.
 
-use solidcore_record::brep::Brep;
-use solidcore_record::{Plane, Seg2, Vec3};
+use sketcore_record::brep::Brep;
+use sketcore_record::{Plane, Seg2, Vec3};
 use sketcraft_geom::brep::eval::{CurveEval, SurfaceEval};
 use sketcraft_geom::bspline::{CurveN, NurbsSurface, SplineError};
 use sketcraft_geom::network::{self, CrossFace, FaceFrame, NetCurve, NetworkCurve, PointCurve, Tolerances};
@@ -337,7 +337,7 @@ impl EdgeFaces {
             // How the face's loop (counter-clockwise about its surface's natural normal) runs the edge.
             let face = r.faces.get(u.face as usize).ok_or_else(|| KernelError::Failed("boundary surface: an edge's face".into()))?;
             let in_loop = match face.loops.get(u.r#loop as usize) {
-                Some(solidcore_record::brep::Loop::Edges { edges }) => edges.get(u.position as usize).map(|x| x.forward),
+                Some(sketcore_record::brep::Loop::Edges { edges }) => edges.get(u.position as usize).map(|x| x.forward),
                 _ => None,
             };
             let in_loop = in_loop.ok_or_else(|| KernelError::Failed("boundary surface: an edge's face".into()))?;
@@ -432,7 +432,7 @@ fn face_of(s: &NurbsSurface, corners: &[Vec3]) -> Result<Body> {
     }
     let tolerance = (size * 1e-6).max(1e-5);
     let mut parts = Parts { tolerance, ..Parts::default() };
-    parts.vertices = c.iter().map(|p| solidcore_record::brep::Vertex { point: [p.x, p.y, p.z], tolerance }).collect();
+    parts.vertices = c.iter().map(|p| sketcore_record::brep::Vertex { point: [p.x, p.y, p.z], tolerance }).collect();
     let mut uses = Vec::new();
     for (k, (ctrl, knots, [a, z], forward, fixed)) in sides.into_iter().enumerate() {
         if collapsed.get(k).copied().unwrap_or(false) {
@@ -447,7 +447,7 @@ fn face_of(s: &NurbsSurface, corners: &[Vec3]) -> Result<Body> {
         let mut ends = vec![vertex_of[a]];
         for (_, p) in &cuts {
             ends.push(parts.vertices.len());
-            parts.vertices.push(solidcore_record::brep::Vertex { point: [p.x, p.y, p.z], tolerance });
+            parts.vertices.push(sketcore_record::brep::Vertex { point: [p.x, p.y, p.z], tolerance });
         }
         ends.push(vertex_of[z]);
         let uv = |t: f64| [fixed[0].unwrap_or(t), fixed[1].unwrap_or(t)];
@@ -456,19 +456,19 @@ fn face_of(s: &NurbsSurface, corners: &[Vec3]) -> Result<Body> {
             let interval = [w[0], w[1]];
             let edge = index(parts.edges.len())?;
             let vertices = [index(e[0])?, index(e[1])?];
-            parts.edges.push(solidcore_record::brep::Edge { nurbs: None, curve: curve.clone(), interval, vertices, tolerance, uses: Vec::new() });
-            pieces.push(solidcore_record::brep::OrientedEdge { edge, forward, pcurve: uv_line(uv(w[0]), uv(w[1]), interval) });
+            parts.edges.push(sketcore_record::brep::Edge { nurbs: None, curve: curve.clone(), interval, vertices, tolerance, uses: Vec::new() });
+            pieces.push(sketcore_record::brep::OrientedEdge { edge, forward, pcurve: uv_line(uv(w[0]), uv(w[1]), interval) });
         }
         if !forward {
             pieces.reverse();
         }
         uses.extend(pieces);
     }
-    let face = solidcore_record::brep::Face {
+    let face = sketcore_record::brep::Face {
         nurbs: None,
         surface: spline_surface(s),
         domain: s.domain(),
-        loops: vec![solidcore_record::brep::Loop::Edges { edges: uses }],
+        loops: vec![sketcore_record::brep::Loop::Edges { edges: uses }],
     };
     parts.faces.push((face, true));
     let body = surface_body(&parts.canonical()?.brep)?;
@@ -514,7 +514,7 @@ fn index(i: usize) -> Result<u32> {
 mod tests {
     use super::*;
     use crate::patch_region;
-    use solidcore_record::{Loop2, Region2, Vec2};
+    use sketcore_record::{Loop2, Region2, Vec2};
 
     fn sketch(label: &str, plane: Plane, segs: Vec<Seg2>) -> BoundaryCurve<'static> {
         BoundaryCurve { label: label.into(), source: CurveSource::Sketch { plane, segs }, continuity: Continuity::G0 }

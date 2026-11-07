@@ -1,15 +1,15 @@
 //! Stopping the kernel calls of work nobody waits for any more: the jobs of a design that closed.
 //! Work runs [`Stop::within`] its design's token; once the token is stopped, each operation under
-//! it refuses to start, and one running stops when solidcore next checks ([`solidcore::kernel::Kernel::cancel`]).
+//! it refuses to start, and one running stops when sketcore next checks ([`sketcore::kernel::Kernel::cancel`]).
 //!
 //! A stopped operation is an error like any other, and the caller's bodies are as they were: only
 //! operations that build on copies stop. Calls that answer from a body itself ([`crate::core::with_body`],
-//! measuring, say) always run to their end, since solidcore may leave what a stopped call borrows
+//! measuring, say) always run to their end, since sketcore may leave what a stopped call borrows
 //! half-changed.
 
 use std::cell::RefCell;
 
-use solidcore::kernel::CancelToken;
+use sketcore::kernel::CancelToken;
 
 thread_local! {
     static CURRENT: RefCell<Option<Stop>> = const { RefCell::new(None) };
@@ -65,7 +65,7 @@ pub fn unstoppable<R>(f: impl FnOnce() -> R) -> R {
     scoped(None, f)
 }
 
-/// solidcore's token of the work on this thread.
+/// sketcore's token of the work on this thread.
 pub(crate) fn token() -> Option<CancelToken> {
     CURRENT.with(|c| c.borrow().as_ref().map(|s| s.0.clone()))
 }

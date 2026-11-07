@@ -1,7 +1,7 @@
 //! Sketch and selection preferences with shared figures and the live modifier legend.
 use super::*;
 
-pub(super) fn show(app: &mut SolveApp, ui: &mut egui::Ui) {
+pub(super) fn show(app: &mut SketApp, ui: &mut egui::Ui) {
     ui_kit::settings_page(ui, |ui| {
         ui.style_mut().wrap_mode = Some(egui::TextWrapMode::Wrap);
         ui_kit::settings_heading_with_tag(ui, app.tr("prefs.structure.sketch"), app.tr("prefs.sketch.note"), Some(crate::settings_profiles::tag));
@@ -13,7 +13,7 @@ pub(super) fn show(app: &mut SolveApp, ui: &mut egui::Ui) {
     });
 }
 
-fn snapping(app: &mut SolveApp, ui: &mut egui::Ui) {
+fn snapping(app: &mut SketApp, ui: &mut egui::Ui) {
     let t = Tokens::get();
     ui_kit::settings_section(ui, "sketch", app.tr("prefs.sketch.snapping_guides"), |ui| {
         let available = ui.available_width();
@@ -82,7 +82,7 @@ fn snapping(app: &mut SolveApp, ui: &mut egui::Ui) {
     });
 }
 
-fn drawing(app: &mut SolveApp, ui: &mut egui::Ui) {
+fn drawing(app: &mut SketApp, ui: &mut egui::Ui) {
     let t = Tokens::get();
     ui_kit::settings_section(ui, "drawing", app.tr("prefs.sketch.drawing"), |ui| {
         let left_labels = [
@@ -188,7 +188,7 @@ fn drawing(app: &mut SolveApp, ui: &mut egui::Ui) {
     });
 }
 
-fn opening(app: &mut SolveApp, ui: &mut egui::Ui) {
+fn opening(app: &mut SketApp, ui: &mut egui::Ui) {
     let t = Tokens::get();
     ui_kit::settings_section(ui, "opening_closing", app.tr("prefs.sketch.opening_closing"), |ui| {
         check(
@@ -277,7 +277,7 @@ fn opening(app: &mut SolveApp, ui: &mut egui::Ui) {
     });
 }
 
-fn marks(app: &mut SolveApp, ui: &mut egui::Ui) {
+fn marks(app: &mut SketApp, ui: &mut egui::Ui) {
     let t = Tokens::get();
     ui_kit::settings_section(ui, "marks", app.tr("prefs.sketch.marks"), |ui| {
         ui.with_layout(egui::Layout::left_to_right(egui::Align::Min).with_main_wrap(true), |ui| {
@@ -337,7 +337,7 @@ fn marks(app: &mut SolveApp, ui: &mut egui::Ui) {
     });
 }
 
-fn selecting(app: &mut SolveApp, ui: &mut egui::Ui) {
+fn selecting(app: &mut SketApp, ui: &mut egui::Ui) {
     let t = Tokens::get();
     ui_kit::settings_section(ui, "selection", app.tr("prefs.selecting"), |ui| {
         picture_group(ui, app.tr("prefs.sketch.click_selects"), |ui| {
@@ -511,7 +511,7 @@ fn targets(key: &str, response: &egui::Response) {
 
 /// Where a dimension's value is typed, and what the window's arrows step lengths and angles by
 /// (#7246). The steps only matter in the window, so they wait for it.
-fn dimension_values(app: &mut SolveApp, ui: &mut egui::Ui, label_width: f32) {
+fn dimension_values(app: &mut SketApp, ui: &mut egui::Ui, label_width: f32) {
     let label = app.tr("prefs.dimension_values").to_string();
     ui_kit::settings_block_hint(ui, &label, app.tr("prefs.dimension_values_note"), label_width, |ui| {
         let options = [app.tr("prefs.dimension_values_view"), app.tr("prefs.dimension_values_window")];

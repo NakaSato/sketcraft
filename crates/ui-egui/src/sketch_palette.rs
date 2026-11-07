@@ -18,7 +18,7 @@ use std::cell::Cell;
 use serde_json::{Value, json};
 use sketcraft_engine::Sel;
 
-use crate::SolveApp;
+use crate::SketApp;
 use crate::theme::Tokens;
 
 thread_local! {
@@ -77,13 +77,13 @@ pub fn dof_text(dof: usize, ok: bool, has_geometry: bool) -> String {
 
 /// The line type new curves get in the sketch being edited (0 normal, 1 construction,
 /// 2 centerline, 3 infinite); a new sketch starts normal.
-pub fn mode(app: &SolveApp) -> u8 {
+pub fn mode(app: &SketApp) -> u8 {
     let (m, sk) = MODE.with(Cell::get);
     if sk.is_some() && sk == app.session.active_sketch { m } else { 0 }
 }
 
 /// Switch the drawing line type (with a status hint).
-pub fn set_mode(app: &mut SolveApp, m: u8) {
+pub fn set_mode(app: &mut SketApp, m: u8) {
     MODE.with(|c| c.set((m, app.session.active_sketch)));
     let hint = match m {
         1 => "Construction mode: new curves are construction geometry (X or the palette's Normal to leave)",
@@ -96,7 +96,7 @@ pub fn set_mode(app: &mut SolveApp, m: u8) {
 
 /// X / the toolbar's Construction: convert the selected curves, or with nothing selected
 /// switch construction mode on or off.
-pub fn toggle_construction(app: &mut SolveApp) {
+pub fn toggle_construction(app: &mut SketApp) {
     let curves = selected_curves(app);
     if curves.is_empty() && app.session.active_sketch.is_none() {
         app.set_status("Construction mode is for drawing in a sketch: edit a sketch first", false);
@@ -109,7 +109,7 @@ pub fn toggle_construction(app: &mut SolveApp) {
 }
 
 /// Curves a drawing command just made take the drawing line type.
-pub fn apply_mode(app: &mut SolveApp, id: &str, result: &Value) {
+pub fn apply_mode(app: &mut SketApp, id: &str, result: &Value) {
     if sketcraft_engine::cmd::construction_line_mode(id).is_some() {
         return;
     }
@@ -159,14 +159,14 @@ pub fn apply_mode(app: &mut SolveApp, id: &str, result: &Value) {
 }
 
 /// Selected curves of the active sketch.
-fn selected_curves(app: &SolveApp) -> Vec<String> {
+fn selected_curves(app: &SketApp) -> Vec<String> {
     app.session.selection.iter().filter_map(|s| if let Sel::SketchCurve { id, .. } = s { Some(id.clone()) } else { None }).collect()
 }
 
 /// The line types among the selected curves of the active sketch, indexed like the palette's
 /// buttons (0 normal, 1 construction, 2 centerline, 3 infinite); a mixed selection marks each of
 /// its types.
-fn selected_linetypes(app: &SolveApp) -> [bool; 4] {
+fn selected_linetypes(app: &SketApp) -> [bool; 4] {
     let mut types = [false; 4];
     let curves = selected_curves(app);
     if curves.is_empty() {
@@ -193,7 +193,7 @@ fn selected_linetypes(app: &SolveApp) -> [bool; 4] {
 
 /// Set the line type of the selected curves: 0 normal, 1 construction, 2 centerline, 3 infinite
 /// (the last two for lines).
-pub fn set_linetype(app: &mut SolveApp, kind: u8) {
+pub fn set_linetype(app: &mut SketApp, kind: u8) {
     let curves = selected_curves(app);
     if curves.is_empty() {
         app.set_status("Select sketch curves first", false);
@@ -251,18 +251,18 @@ fn width(vp: egui::Rect) -> f32 {
 }
 
 /// The viewport the palette docks into.
-fn viewport(app: &SolveApp, ctx: &egui::Context) -> egui::Rect {
+fn viewport(app: &SketApp, ctx: &egui::Context) -> egui::Rect {
     crate::agent_chat::tool_space(app, crate::shell::content_rect(app, app.viewport.rect.unwrap_or_else(|| ctx.content_rect())))
 }
 
 /// Is a sketch being edited? That is the palette's own condition.
-pub fn editing(app: &SolveApp) -> bool {
+pub fn editing(app: &SketApp) -> bool {
     app.session.active_sketch.and_then(|s| crate::open_meshing::session_world(&app.session).sketch(s).map(|_| ())).is_some()
 }
 
 /// Has the viewport room for the palette and a command dialog side by side? A narrow view has
 /// not, and there the dialog keeps the right edge on its own.
-pub fn fits_beside_a_dialog(app: &SolveApp, ctx: &egui::Context) -> bool {
+pub fn fits_beside_a_dialog(app: &SketApp, ctx: &egui::Context) -> bool {
     let vp = viewport(app, ctx);
     vp.width() >= width(vp) + crate::frame::DIALOG_MIN_W + 40.0
 }
@@ -278,7 +278,7 @@ pub fn docked(ctx: &egui::Context) -> bool {
 /// The width a command dialog docked at the left edge of `vp` may take without covering the
 /// palette. A palette dragged to where it leaves less than a dialog's width gives up its claim:
 /// the dialog then takes the whole viewport and the two may overlap, as the user put them.
-pub fn room_left_of(app: &SolveApp, ctx: &egui::Context, vp: egui::Rect) -> f32 {
+pub fn room_left_of(app: &SketApp, ctx: &egui::Context, vp: egui::Rect) -> f32 {
     let space = Tokens::get().space_8;
     match app.viewport.palette_rect.filter(|r| r.is_finite() && r.is_positive()) {
         Some(r) if docked(ctx) || r.left() - vp.left() - space >= crate::frame::DIALOG_MIN_W => (r.left() - vp.left() - space).max(0.0),
@@ -289,7 +289,7 @@ pub fn room_left_of(app: &SolveApp, ctx: &egui::Context, vp: egui::Rect) -> f32 
 /// Is the palette on screen? It stays for as long as a sketch is being edited, a command dialog
 /// open or not: the dialog takes the left edge of the viewport (or the left column) and the
 /// palette keeps the right.
-pub fn visible(app: &SolveApp, ctx: &egui::Context) -> bool {
+pub fn visible(app: &SketApp, ctx: &egui::Context) -> bool {
     editing(app) && ((app.dialog.is_none() && app.tree.redefine.is_none()) || fits_beside_a_dialog(app, ctx) || crate::dialog_column::holds(app))
 }
 
@@ -305,7 +305,7 @@ pub fn visible(app: &SolveApp, ctx: &egui::Context) -> bool {
 /// A tool outside a family has nothing to switch to, so the section stays hidden rather than
 /// showing a single button that does nothing. The palette's vertical space is already budgeted
 /// down to the footer, so an inert row would cost the Options list real height.
-fn active_feature(app: &SolveApp) -> Option<(&'static crate::sketch_families::Family, &'static str)> {
+fn active_feature(app: &SketApp) -> Option<(&'static crate::sketch_families::Family, &'static str)> {
     let id = app.tool.as_ref()?.cmd;
     let family = crate::sketch_families::family(id)?;
     (family.commands.len() > 1).then_some((family, id))
@@ -345,7 +345,7 @@ fn constrained_fraction(remaining: usize, total: usize, solved: bool) -> f32 {
 }
 
 /// Draw the sketch options card, retaining the command paths used by the original palette.
-pub fn show(app: &mut SolveApp, ctx: &egui::Context) {
+pub fn show(app: &mut SketApp, ctx: &egui::Context) {
     app.viewport.palette_rect = None;
     let _language = crate::i18n::scope(&app.preferences.language);
     if !visible(app, ctx) {

@@ -2,7 +2,7 @@ use sketcraft_geom::prelude::*;
 use std::f64::consts::FRAC_PI_2;
 
 use serde_json::{Value, json};
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 
 use crate::Session;
 
@@ -2095,9 +2095,9 @@ fn associative_trace_follows_a_resized_picked_face_and_keeps_downstream_paths_cu
     run(&mut s, "solid.pipe", json!({"path_sketch":id,"path":r["curves"],"diameter":1,"operation":"new","body_name":"TracePipe"}));
     let pipe_before = s.model.state().body("TracePipe").unwrap().outline_bounds();
     let comp = s.doc.find_component("B").unwrap();
-    let height =
-        s.doc.features.iter().find(|f| f.component == comp && matches!(f.kind, sketcraft_doc::FeatureKind::Box { .. })).unwrap().param_names[2]
-            .clone();
+    let height = s.doc.features.iter().find(|f| f.component == comp && matches!(f.kind, sketcraft_doc::FeatureKind::Box { .. })).unwrap().param_names
+        [2]
+    .clone();
     let count = s.motion_traces.recomputations;
     run(&mut s, "parameters.change", json!({"name":height,"expression":"15 mm"}));
     let updated = kept_trace_fit(&s, id);

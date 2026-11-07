@@ -3,8 +3,8 @@
 use sketcraft_geom::prelude::*;
 use std::f64::consts::{FRAC_PI_3, PI};
 
-use solidcore_record::brep;
-use solidcore_record::{Seg2, Vec2, Vec3};
+use sketcore_record::brep;
+use sketcore_record::{Seg2, Vec2, Vec3};
 use sketcraft_geom::hlr::{Line, Options, Placement, Source, View, Visibility, hidden_lines, prepare};
 use sketcraft_kernel::*;
 

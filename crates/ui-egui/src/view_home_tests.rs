@@ -1,7 +1,7 @@
 // Home and Fit frame what is shown now, and a middle-button double-click goes Home.
 use crate::scenario::Harness;
 use serde_json::json;
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 use sketcraft_engine::geom::Aabb3;
 use sketcraft_engine::geom::prelude::*;
 use sketcraft_engine::render::StandardView;
@@ -165,7 +165,7 @@ fn view_bar_json_commands_apply_ui_state_without_dialogs_or_undo() {
     }
     for id in ["view.tool.zoom", "view.spin", "view.grid", "view.ground_shadow", "view.navigation_bar"] {
         let key = if id == "view.navigation_bar" { "visible" } else { "on" };
-        let state = |app: &crate::SolveApp| match id {
+        let state = |app: &crate::SketApp| match id {
             "view.tool.zoom" => app.viewport.nav == Some(NavMode::Zoom),
             "view.spin" => app.viewport.spin,
             "view.grid" => app.ui.show_grid,
@@ -268,10 +268,10 @@ fn navigation_bar_visibility_defaults_and_round_trips() {
     assert!(!h.app.ui.show_navigation_bar);
     assert!(!h.app.viewport.layout.as_ref().unwrap().navigation.is_positive());
     assert!(crate::scenario::rect_of("nav:outer").is_none());
-    let mut restored = crate::SolveApp::new(Default::default(), Default::default());
+    let mut restored = crate::SketApp::new(Default::default(), Default::default());
     restored.load_prefs(&h.app.prefs());
     assert!(!restored.ui.show_navigation_bar);
-    let mut old = crate::SolveApp::new(Default::default(), Default::default());
+    let mut old = crate::SketApp::new(Default::default(), Default::default());
     old.load_prefs("{\"grid\":false}");
     assert!(old.ui.show_navigation_bar);
     h.app.start("view.navigation_bar");
@@ -423,7 +423,7 @@ fn navigation_bar_toggle_slots_apply_commands_and_projection_compatibility() {
     let design = h.app.session.doc.to_json();
     let undo = h.app.session.undo.len();
     for slot in ["grid", "ground_shadow", "ambient_occlusion", "projection"] {
-        let value = |app: &crate::SolveApp| match slot {
+        let value = |app: &crate::SketApp| match slot {
             "grid" => app.ui.show_grid,
             "ground_shadow" => app.ui.ground_shadow,
             "ambient_occlusion" => app.preferences.ambient_occlusion,

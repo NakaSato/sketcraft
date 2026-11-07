@@ -1,5 +1,5 @@
 use super::*;
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 use sketcraft_doc::{Document, FeatureKind, MeshData};
 
 fn imported_box() -> Session {

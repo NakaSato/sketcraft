@@ -7,7 +7,7 @@ use std::collections::VecDeque;
 
 use egui::{Align2, Color32, FontId, Rect, Sense, Stroke, pos2, vec2};
 
-use crate::SolveApp;
+use crate::SketApp;
 use crate::i18n::tr;
 use crate::theme::Tokens;
 
@@ -162,7 +162,7 @@ fn beside_panes(mut readout: Rect, view: Rect, panes: &[Rect]) -> Rect {
 /// that redrew every frame kept the GPU busy on an untouched window); the details show the frames
 /// the view drew. Once the frames stop, one more frame a little over [`IDLE_AFTER`] later shows the
 /// view idle.
-pub(crate) fn paint(app: &mut SolveApp, ui: &egui::Ui, painter: &egui::Painter, rect: Rect) {
+pub(crate) fn paint(app: &mut SketApp, ui: &egui::Ui, painter: &egui::Painter, rect: Rect) {
     if !app.preferences.show_frame_rate {
         app.frame_rate = FrameRate::default();
         return;
@@ -207,7 +207,7 @@ pub(crate) fn paint(app: &mut SolveApp, ui: &egui::Ui, painter: &egui::Painter, 
 
 /// The details above the readout `below`, flush with its right edge: the frame-time graph with the
 /// triangles over it, the histogram and what the GPU drew.
-fn details(app: &SolveApp, painter: &egui::Painter, view: Rect, below: Rect, drawn: crate::gpu::DrawStats, font: &FontId) {
+fn details(app: &SketApp, painter: &egui::Painter, view: Rect, below: Rect, drawn: crate::gpu::DrawStats, font: &FontId) {
     let t = Tokens::get();
     let (pad, row, label_h, graph_h, hist_h) = (8.0, 16.0, 12.0, 56.0, 40.0);
     let lines = 7.0 + 0.8; // seven rows and the adapter's name
@@ -354,7 +354,7 @@ mod tests {
     /// next one only after the idle gap (to show 0 FPS), and the idle frame asks for none.
     #[test]
     fn the_readout_asks_for_no_frames_of_its_own() {
-        let mut app = crate::SolveApp::new(sketcraft_engine::Session::default(), crate::Services::default());
+        let mut app = crate::SketApp::new(sketcraft_engine::Session::default(), crate::Services::default());
         app.preferences.show_frame_rate = true;
         let ctx = crate::fonts::test_context();
         let mut frame = |time: f64| {

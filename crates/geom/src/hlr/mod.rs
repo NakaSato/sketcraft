@@ -24,8 +24,8 @@ use serde::Serialize;
 
 use crate::section::CurveAccuracy;
 use curve::{C3, as_circle};
-use solidcore_record::brep::Brep;
-use solidcore_record::{Seg2, Vec2, Vec3};
+use sketcore_record::brep::Brep;
+use sketcore_record::{Seg2, Vec2, Vec3};
 use surface::{Analytic, Hit, S3};
 use trim::Trim;
 
@@ -209,14 +209,14 @@ pub fn prepare_cancellable(b: &Brep, opts: &Options, cancel: &dyn Fn() -> bool) 
         }
         let (c, acc) = C3::of_edge(e)?;
         let record = match &e.curve {
-            solidcore_record::brep::Curve::Line { .. } => "line",
-            solidcore_record::brep::Curve::Circle { .. } => "circle_arc",
-            solidcore_record::brep::Curve::Ellipse { .. } => "ellipse_arc",
-            solidcore_record::brep::Curve::Polyline { .. } => "polyline",
-            solidcore_record::brep::Curve::Spline { .. } => "spline",
-            solidcore_record::brep::Curve::RationalSpline { .. } => "rational_spline",
+            sketcore_record::brep::Curve::Line { .. } => "line",
+            sketcore_record::brep::Curve::Circle { .. } => "circle_arc",
+            sketcore_record::brep::Curve::Ellipse { .. } => "ellipse_arc",
+            sketcore_record::brep::Curve::Polyline { .. } => "polyline",
+            sketcore_record::brep::Curve::Spline { .. } => "spline",
+            sketcore_record::brep::Curve::RationalSpline { .. } => "rational_spline",
             // Only one with a spline to follow gets here: what was an `intersection` record.
-            solidcore_record::brep::Curve::SurfaceIntersection { .. } => "intersection",
+            sketcore_record::brep::Curve::SurfaceIntersection { .. } => "intersection",
         };
         let shape = if matches!(c, C3::Line { .. }) {
             "line"

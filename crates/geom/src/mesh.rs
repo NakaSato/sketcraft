@@ -1,7 +1,7 @@
 use crate::prelude::*;
 use serde::{Deserialize, Serialize};
 
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 
 #[cfg(test)]
 thread_local! {

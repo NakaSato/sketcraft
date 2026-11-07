@@ -14,8 +14,8 @@
 //! display-only: the edge keeps its identity, stays pickable and stays in the wireframe, and its
 //! faces stay apart (pieces of one surface are [`crate::topo::seam_flags`]'s business). Unknown
 //! geometry (a station that does not evaluate) keeps its existing presentation.
-use solidcore_record::Vec3;
-use solidcore_record::brep::{Brep, Loop, Shell};
+use sketcore_record::Vec3;
+use sketcore_record::brep::{Brep, Loop, Shell};
 use sketcraft_geom::Mesh;
 use sketcraft_geom::brep::eval::{CurveEval, SurfaceEval};
 use sketcraft_geom::prelude::*;
@@ -165,7 +165,7 @@ fn join(record: &Brep, faces: &[Option<FaceEval>], e: usize, length: f64, work: 
     let unknown = Join::default();
     let Some(edge) = record.edges.get(e) else { return unknown };
     let [a, b] = edge.uses.as_slice() else { return unknown };
-    let side = |u: &solidcore_record::brep::EdgeUseRef| {
+    let side = |u: &sketcore_record::brep::EdgeUseRef| {
         let face = faces.get(u.face as usize)?.as_ref()?;
         let Loop::Edges { edges } = record.faces.get(u.face as usize)?.loops.get(u.r#loop as usize)? else { return None };
         let used = edges.get(u.position as usize)?;
@@ -346,8 +346,8 @@ fn whole_joins(record: &Brep, measured: &[usize], smooth: &mut [bool], mut work:
 #[allow(clippy::unwrap_used)]
 mod tests {
     use super::*;
-    use solidcore_record::brep::Surface;
-    use solidcore_record::{Loop2, Plane, Region2, Seg2, Vec2};
+    use sketcore_record::brep::Surface;
+    use sketcore_record::{Loop2, Plane, Region2, Seg2, Vec2};
 
     fn circle(radius: f64, count: usize) -> Loop2 {
         let step = std::f64::consts::TAU / count as f64;
@@ -586,7 +586,7 @@ mod tests {
     fn a_degenerate_normal_says_nothing() {
         let face = FaceEval {
             surface: SurfaceEval::new(&Surface::Sphere {
-                frame: solidcore_record::brep::Frame { origin: [0.; 3], x_axis: [1., 0., 0.], y_axis: [0., 1., 0.] },
+                frame: sketcore_record::brep::Frame { origin: [0.; 3], x_axis: [1., 0., 0.], y_axis: [0., 1., 0.] },
                 radius: 2.,
             })
             .unwrap(),

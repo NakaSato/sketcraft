@@ -13,14 +13,14 @@ pub(super) struct View {
     pub dragging: bool,
 }
 
-fn side_value(app: &SolveApp, side: Option<JobId>) -> Option<serde_json::Value> {
+fn side_value(app: &SketApp, side: Option<JobId>) -> Option<serde_json::Value> {
     match side {
         None => Some(json!("live")),
         Some(job) => app.render_workspace.view.retained.iter().position(|result| result.frame.job == job).map(|index| json!(index)),
     }
 }
 
-pub(super) fn apply(app: &mut SolveApp, reply: &serde_json::Value) -> Result<(), String> {
+pub(super) fn apply(app: &mut SketApp, reply: &serde_json::Value) -> Result<(), String> {
     if reply.get("off").and_then(serde_json::Value::as_bool) == Some(true) {
         app.render_workspace.view.compare = None;
         app.render_workspace.comparison_images.clear();
@@ -53,7 +53,7 @@ pub(super) fn apply(app: &mut SolveApp, reply: &serde_json::Value) -> Result<(),
     Ok(())
 }
 
-pub(super) fn start_default(app: &mut SolveApp) -> Result<(), String> {
+pub(super) fn start_default(app: &mut SketApp) -> Result<(), String> {
     sync_results(app);
     if app.render_workspace.view.compare.is_some() {
         app.run("render.compare", json!({"off":true}))?;
@@ -70,7 +70,7 @@ pub(super) fn start_default(app: &mut SolveApp) -> Result<(), String> {
     Ok(())
 }
 
-pub(super) fn controls(app: &mut SolveApp, ui: &mut egui::Ui) {
+pub(super) fn controls(app: &mut SketApp, ui: &mut egui::Ui) {
     let results = &app.render_workspace.view.retained;
     if results.is_empty() {
         return;
@@ -126,7 +126,7 @@ pub(super) fn controls(app: &mut SolveApp, ui: &mut egui::Ui) {
     }
 }
 
-fn choose_single(app: &mut SolveApp, side: Option<JobId>) {
+fn choose_single(app: &mut SketApp, side: Option<JobId>) {
     match side {
         None => {
             let _ = app.run("render.result.view", json!({"view":"model"}));
@@ -139,7 +139,7 @@ fn choose_single(app: &mut SolveApp, side: Option<JobId>) {
     }
 }
 
-fn texture(app: &mut SolveApp, ctx: &egui::Context, job: JobId) -> Result<egui::TextureHandle, String> {
+fn texture(app: &mut SketApp, ctx: &egui::Context, job: JobId) -> Result<egui::TextureHandle, String> {
     if let Some((_, image)) = app.render_workspace.comparison_images.iter().find(|(id, _)| *id == job) {
         return image.clone();
     }
@@ -166,7 +166,7 @@ fn texture(app: &mut SolveApp, ctx: &egui::Context, job: JobId) -> Result<egui::
     image
 }
 
-fn label(app: &SolveApp, side: Option<JobId>) -> String {
+fn label(app: &SketApp, side: Option<JobId>) -> String {
     side.and_then(|job| app.render_workspace.view.retained.iter().find(|result| result.frame.job == job)).map_or_else(
         || app.tr("render.compare_live_preview").to_owned(),
         |result| {
@@ -181,7 +181,7 @@ fn label(app: &SolveApp, side: Option<JobId>) -> String {
     )
 }
 
-pub(super) fn summary(app: &SolveApp, ui: &mut egui::Ui) {
+pub(super) fn summary(app: &SketApp, ui: &mut egui::Ui) {
     let Some(view) = &app.render_workspace.view.compare else { return };
     let Some(reference) = app.render_workspace.view.retained.iter().find(|result| result.frame.job == view.reference) else { return };
     let stale = app.render_workspace.view.retained.iter().any(|result| [view.left, view.right].contains(&Some(result.frame.job)) && result.stale);
@@ -200,7 +200,7 @@ pub(super) fn summary(app: &SolveApp, ui: &mut egui::Ui) {
     ui_kit::text(ui, &summary, ui_kit::Text::Inline);
 }
 
-pub(super) fn show(app: &mut SolveApp, ui: &mut egui::Ui) {
+pub(super) fn show(app: &mut SketApp, ui: &mut egui::Ui) {
     cache_render_images(app, ui.ctx());
     if app.render_workspace.view.compare.is_none() {
         show_result(app, ui);

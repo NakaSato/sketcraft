@@ -17,7 +17,7 @@ use std::collections::{HashMap, HashSet};
 use std::sync::OnceLock;
 
 use crate::{Aabb3, Mesh};
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 
 /// Runs a job for every index below `n`: the jobs are independent, so any order and any number
 /// of threads will do. [`serial`] runs them one after another; a caller with threads passes one

@@ -6,7 +6,7 @@
 //! the two cuts a − b and b − a that lie there, as `inspect.measure` measures a body.
 
 use serde_json::Value;
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 use sketcraft_geom::Aabb3;
 use sketcraft_geom::compare::{self, CompareOptions, Side};
 use sketcraft_geom::prelude::*;
@@ -195,12 +195,7 @@ fn overlap(piece: &Aabb3, region: &Aabb3, pad: f64) -> f64 {
 /// most of it, summed. A piece by no region is thinner than the tolerance or in a region not
 /// listed. `None` for a region whose cut could not be made or that no piece fell to; the second
 /// value says why, once per side.
-fn exact_regions(
-    a: &sketcraft_kernel::Body,
-    b: &sketcraft_kernel::Body,
-    c: &compare::Comparison,
-    pad: f64,
-) -> (Vec<Option<Measured>>, Vec<String>) {
+fn exact_regions(a: &sketcraft_kernel::Body, b: &sketcraft_kernel::Body, c: &compare::Comparison, pad: f64) -> (Vec<Option<Measured>>, Vec<String>) {
     let sides = [Side::OnlyInA, Side::OnlyInB];
     let wanted: Vec<Side> = sides.into_iter().filter(|side| c.regions.iter().any(|r| r.side == *side)).collect();
     let cuts = sketcraft_kernel::map_on_threads(&wanted, 2, |side| match side {

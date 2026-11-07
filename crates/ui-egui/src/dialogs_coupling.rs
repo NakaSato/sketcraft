@@ -12,7 +12,7 @@ use sketcraft_engine::Sel;
 use sketcraft_engine::Session;
 use sketcraft_engine::doc::expr::Kind as ValueKind;
 
-use crate::SolveApp;
+use crate::SketApp;
 use crate::dialogs::{field, form_row};
 use crate::dialogs_assembly::Asm;
 use crate::selection::{EDGES, FACES, SelInput};
@@ -60,7 +60,7 @@ fn roles(command: &str) -> ([&'static str; 2], bool) {
     }
 }
 
-pub fn start(app: &SolveApp, id: &str) -> Option<(Asm, Vec<SelInput>)> {
+pub fn start(app: &SketApp, id: &str) -> Option<(Asm, Vec<SelInput>)> {
     let s = &app.session;
     let (_, turn_b) = roles(id);
     let (turns, b_list) = (joints_that(s, true), joints_that(s, turn_b));
@@ -98,7 +98,7 @@ fn occurrence(s: &Session, body: &str) -> Option<u64> {
     s.doc.body_frames(&s.model.state()).into_iter().find(|f| f.0 == body).map(|(_, _, path, _)| path.last().copied().unwrap_or(0))
 }
 
-fn pick(inputs: &[SelInput], i: usize) -> Option<(&str, solidcore_record::Vec3)> {
+fn pick(inputs: &[SelInput], i: usize) -> Option<(&str, sketcore_record::Vec3)> {
     match inputs.get(i)?.items.first()? {
         Sel::Face { body, point, .. } | Sel::Edge { body, point, .. } => Some((body.as_str(), *point)),
         _ => None,
@@ -128,7 +128,7 @@ fn joint_row(ui: &mut egui::Ui, label: &str, salt: &str, list: &[(u64, String)],
 }
 
 /// The dialog's rows; true when Enter was pressed in a value.
-pub fn rows(app: &mut SolveApp, ui: &mut egui::Ui, f: &mut CouplingForm, inputs: &[SelInput]) -> bool {
+pub fn rows(app: &mut SketApp, ui: &mut egui::Ui, f: &mut CouplingForm, inputs: &[SelInput]) -> bool {
     let t = Tokens::get();
     let s = &app.session;
     let ([role_a, role_b], turn_b) = roles(f.command);
@@ -230,7 +230,7 @@ pub(crate) fn trim(v: f64) -> String {
 }
 
 /// The command OK runs.
-pub fn commands(app: &SolveApp, f: &CouplingForm, inputs: &[SelInput]) -> Result<Vec<(String, Value)>, String> {
+pub fn commands(app: &SketApp, f: &CouplingForm, inputs: &[SelInput]) -> Result<Vec<(String, Value)>, String> {
     let s = &app.session;
     let joint = |id: u64| s.doc.assembly.joints.iter().find(|j| j.id == id).map(|j| j.id).ok_or_else(|| "choose the joints to couple".to_string());
     let (a, b) = (joint(f.a)?, joint(f.b)?);

@@ -5,17 +5,17 @@
 use serde_json::json;
 use sketcraft_engine::Sel;
 
-use crate::SolveApp;
+use crate::SketApp;
 
 /// Whether face `index` of `body` (as the viewport names it) is that body's print face now.
-pub(crate) fn is_print_face(app: &SolveApp, body: &str, index: usize) -> bool {
+pub(crate) fn is_print_face(app: &SketApp, body: &str, index: usize) -> bool {
     let world = crate::open_meshing::session_world(&app.session);
     world.body(body).and_then(|b| app.session.doc.print_face(&world, b)).and_then(Result::ok).is_some_and(|f| f.index == index)
 }
 
 /// `body`'s print face as a face pick, for the Send to Slicer window; `None` when it has none,
 /// or it can't be found.
-pub(crate) fn current(app: &SolveApp, body: &str) -> Option<Sel> {
+pub(crate) fn current(app: &SketApp, body: &str) -> Option<Sel> {
     let world = crate::open_meshing::session_world(&app.session);
     let b = world.body(body)?;
     let face = app.session.doc.print_face(&world, b)?.ok()?;
@@ -24,7 +24,7 @@ pub(crate) fn current(app: &SolveApp, body: &str) -> Option<Sel> {
 }
 
 /// Mark face `face` as its body's print face (a face pick), or clear `body`'s with none.
-pub(crate) fn set(app: &mut SolveApp, body: &str, face: Option<&Sel>) -> bool {
+pub(crate) fn set(app: &mut SketApp, body: &str, face: Option<&Sel>) -> bool {
     let params = match face {
         Some(Sel::Face { body, point, .. }) => json!({"body": body, "point": [point.x, point.y, point.z]}),
         _ => json!({"body": body}),
@@ -34,7 +34,7 @@ pub(crate) fn set(app: &mut SolveApp, body: &str, face: Option<&Sel>) -> bool {
 
 /// Ctrl+B and the face menu: the one selected face becomes its body's print face, or stops being
 /// it when it already is.
-pub(crate) fn toggle(app: &mut SolveApp) {
+pub(crate) fn toggle(app: &mut SketApp) {
     let picked = match app.session.selection.as_slice() {
         [face @ Sel::Face { body, index, .. }] => Some((face.clone(), body.clone(), *index)),
         _ => None,
@@ -55,17 +55,17 @@ mod tests {
     use serde_json::json;
     use sketcraft_engine::Sel;
 
-    fn app() -> crate::SolveApp {
-        let mut app = crate::SolveApp::new(sketcraft_engine::Session::default(), crate::Services::default());
+    fn app() -> crate::SketApp {
+        let mut app = crate::SketApp::new(sketcraft_engine::Session::default(), crate::Services::default());
         app.run("solid.box", json!({"length": 20, "width": 10, "height": 5, "corner": [0, 0, 0], "body_name": "Block"})).unwrap();
         app
     }
 
     /// Select the face of Block at `point`; its index.
-    fn select_face(app: &mut crate::SolveApp, point: [f64; 3]) -> usize {
+    fn select_face(app: &mut crate::SketApp, point: [f64; 3]) -> usize {
         let world = crate::open_meshing::session_world(&app.session);
         let body = world.body("Block").unwrap();
-        let p = solidcore_record::Vec3::new(point[0], point[1], point[2]);
+        let p = sketcore_record::Vec3::new(point[0], point[1], point[2]);
         let index = sketcraft_engine::doc::appearance::face_index_at(body, p).unwrap();
         app.session.selection = vec![Sel::Face { body: "Block".into(), index, point: p }];
         index

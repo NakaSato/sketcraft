@@ -5,7 +5,7 @@ use egui::{Context, Painter, Rect};
 use serde::Serialize;
 use sketcraft_engine::render::job::{FrameInfo, JobId, PreviewInfo, adaptive::AdaptivePreview};
 
-use crate::SolveApp;
+use crate::SketApp;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "snake_case")]
@@ -83,15 +83,15 @@ impl State {
     }
 }
 
-pub(crate) fn begin(app: &mut SolveApp) {
+pub(crate) fn begin(app: &mut SketApp) {
     app.render_workspace.displayed.begin();
 }
 
-pub(crate) fn finish(app: &mut SolveApp, ctx: &Context) {
+pub(crate) fn finish(app: &mut SketApp, ctx: &Context) {
     app.render_workspace.displayed.finish(ctx);
 }
 
-pub(super) fn inspect(app: &SolveApp) -> Option<Receipt> {
+pub(super) fn inspect(app: &SketApp) -> Option<Receipt> {
     if !super::active(app) || app.home.open || super::comparison_active(app) {
         return None;
     }

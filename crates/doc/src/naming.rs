@@ -18,7 +18,7 @@
 use sketcraft_geom::prelude::*;
 use std::sync::{Arc, OnceLock};
 
-use solidcore_record::{Vec2, Vec3};
+use sketcore_record::{Vec2, Vec3};
 use sketcraft_geom::{Aabb3, Mesh};
 
 use crate::history_names::Names;
@@ -1454,7 +1454,7 @@ mod tests {
         let ss = crate::SolvedSketch {
             feature: 1,
             name: "S".into(),
-            plane: solidcore_record::Plane::XY,
+            plane: sketcore_record::Plane::XY,
             sketch,
             report,
             profiles,

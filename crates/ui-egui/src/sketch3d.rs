@@ -13,9 +13,9 @@ use std::cell::RefCell;
 
 use egui::{Pos2, Rect, Shape, Stroke, vec2};
 use serde_json::{Value, json};
-use solidcore_record::{Vec2, Vec3};
+use sketcore_record::{Vec2, Vec3};
 
-use crate::SolveApp;
+use crate::SketApp;
 use crate::theme::Tokens;
 use crate::tools::Tool;
 use crate::viewport::{Hit, Proj, pick_3d};
@@ -35,7 +35,7 @@ thread_local! {
 const ARROW: f32 = 60.0;
 
 /// Is the sketch being edited a 3D sketch?
-pub fn active(app: &SolveApp) -> bool {
+pub fn active(app: &SketApp) -> bool {
     let st = crate::open_meshing::session_world(&app.session);
     app.session.active_sketch.and_then(|s| st.sketch(s)).is_some_and(|ss| ss.sketch.view.three_d)
 }
@@ -55,12 +55,12 @@ fn takes(cmd: &str) -> bool {
 }
 
 /// Only 3D point-placing tools broaden sketch-point picking; ordinary selection stays local.
-pub fn drawing(app: &SolveApp) -> bool {
+pub fn drawing(app: &SketApp) -> bool {
     active(app) && app.tool.as_ref().is_some_and(|tool| takes(tool.cmd))
 }
 
 /// Points drawn in 3D: (wire id, fit index, point).
-fn drawn_points(app: &SolveApp) -> Vec<(String, usize, Vec3)> {
+fn drawn_points(app: &SketApp) -> Vec<(String, usize, Vec3)> {
     let st = crate::open_meshing::session_world(&app.session);
     let Some(ss) = app.session.active_sketch.and_then(|s| st.sketch(s)) else { return Vec::new() };
     ss.sketch.wires.iter().flat_map(|w| w.fit.iter().enumerate().map(|(i, p)| (w.id.clone(), i, *p))).collect()
@@ -79,7 +79,7 @@ fn seg_ray_closest(a: Vec3, b: Vec3, o: Vec3, d: Vec3) -> Vec3 {
 
 /// The 3D point under the cursor and what it snapped to: a drawn 3D point, a model vertex, a
 /// point on a model edge or face, a sketch point, or the sketch plane.
-pub fn point_at(app: &SolveApp, proj: &Proj, pos: Pos2) -> Option<(Vec3, &'static str)> {
+pub fn point_at(app: &SketApp, proj: &Proj, pos: Pos2) -> Option<(Vec3, &'static str)> {
     for (_, _, p) in drawn_points(app) {
         if proj.to_screen(p).is_some_and(|s| s.distance(pos) < 8.0) {
             return Some((p, "Pt"));
@@ -114,7 +114,7 @@ pub fn point_at(app: &SolveApp, proj: &Proj, pos: Pos2) -> Option<(Vec3, &'stati
 }
 
 /// The sketch-plane coordinates of `p` when it lies on the plane.
-fn on_plane(app: &SolveApp, p: Vec3) -> Option<Vec2> {
+fn on_plane(app: &SketApp, p: Vec3) -> Option<Vec2> {
     let st = crate::open_meshing::session_world(&app.session);
     let ss = app.session.active_sketch.and_then(|s| st.sketch(s))?;
     let q = ss.plane.to_local(p);
@@ -130,13 +130,13 @@ fn set_chain(cmd: Option<&'static str>, pts: Vec<Vec3>) {
 }
 
 /// The pointer moved: remember where a click would put the point.
-pub fn on_hover(app: &SolveApp, proj: &Proj, pos: Pos2) {
+pub fn on_hover(app: &SketApp, proj: &Proj, pos: Pos2) {
     let h = if app.tool.as_ref().is_some_and(|t| takes(t.cmd)) && active(app) { point_at(app, proj, pos) } else { None };
     HOVER.with(|x| *x.borrow_mut() = h);
 }
 
 /// A click while a drawing tool is active in a 3D sketch (true: handled here).
-pub fn on_click(app: &mut SolveApp, tool: &mut Tool, proj: &Proj, pos: Pos2) -> bool {
+pub fn on_click(app: &mut SketApp, tool: &mut Tool, proj: &Proj, pos: Pos2) -> bool {
     if !takes(tool.cmd) || !active(app) {
         return false;
     }
@@ -195,7 +195,7 @@ pub fn on_click(app: &mut SolveApp, tool: &mut Tool, proj: &Proj, pos: Pos2) -> 
     true
 }
 
-fn report(app: &mut SolveApp, r: Result<Value, String>) {
+fn report(app: &mut SketApp, r: Result<Value, String>) {
     if let Err(e) = r {
         app.set_status(e, true);
     }
@@ -203,7 +203,7 @@ fn report(app: &mut SolveApp, r: Result<Value, String>) {
 
 /// Right-click / Esc while drawing in 3D: a spline is made from its points, a line chain ends
 /// (true: handled here; the tool stays for the next curve).
-pub fn finish(app: &mut SolveApp) -> bool {
+pub fn finish(app: &mut SketApp) -> bool {
     let (cmd, pts) = CHAIN.with(|c| c.borrow().clone());
     let Some(cmd) = cmd.filter(|c| app.tool.as_ref().is_some_and(|t| t.cmd == *c)) else {
         set_chain(None, Vec::new());
@@ -234,7 +234,7 @@ pub fn finish(app: &mut SolveApp) -> bool {
 }
 
 /// Rubber band and snap marker of the curve being drawn in 3D (true: drawn here).
-pub fn preview(app: &SolveApp, t: &Tool, painter: &egui::Painter, proj: &Proj) -> bool {
+pub fn preview(app: &SketApp, t: &Tool, painter: &egui::Painter, proj: &Proj) -> bool {
     if !takes(t.cmd) || !active(app) {
         return false;
     }
@@ -295,7 +295,7 @@ pub fn preview(app: &SolveApp, t: &Tool, painter: &egui::Painter, proj: &Proj) -
 // ---------------------------------------------------------------------------------------------
 // The move triad
 
-fn triad_point(app: &SolveApp) -> Option<(String, usize, Vec3)> {
+fn triad_point(app: &SketApp) -> Option<(String, usize, Vec3)> {
     let (w, i) = TRIAD.with(|t| t.borrow().clone())?;
     drawn_points(app).into_iter().find(|(id, k, _)| *id == w && *k == i)
 }
@@ -305,7 +305,7 @@ fn unit(v: egui::Vec2) -> Option<egui::Vec2> {
 }
 
 /// The triad's handles on screen: (axis or None for the plane square, tip, base).
-fn handles(app: &SolveApp, proj: &Proj) -> Vec<(Option<Vec3>, Pos2, Pos2)> {
+fn handles(app: &SketApp, proj: &Proj) -> Vec<(Option<Vec3>, Pos2, Pos2)> {
     let Some((_, _, p)) = triad_point(app) else { return Vec::new() };
     let Some(base) = proj.to_screen(p) else { return Vec::new() };
     let mut out = Vec::new();
@@ -321,7 +321,7 @@ fn handles(app: &SolveApp, proj: &Proj) -> Vec<(Option<Vec3>, Pos2, Pos2)> {
 }
 
 /// A click without a tool: a drawn 3D point gets the triad (true: handled).
-pub fn click(app: &mut SolveApp, proj: &Proj, pos: Pos2) -> bool {
+pub fn click(app: &mut SketApp, proj: &Proj, pos: Pos2) -> bool {
     if !active(app) {
         TRIAD.with(|t| *t.borrow_mut() = None);
         return false;
@@ -348,7 +348,7 @@ pub fn click(app: &mut SolveApp, proj: &Proj, pos: Pos2) -> bool {
 }
 
 /// The drawn curve or point with the triad, for Delete.
-pub fn delete_selected(app: &mut SolveApp) -> bool {
+pub fn delete_selected(app: &mut SketApp) -> bool {
     let Some((w, _)) = TRIAD.with(|t| t.borrow_mut().take()) else { return false };
     let r = app.run("sketch.delete", json!({ "entities": [w] }));
     report(app, r);
@@ -356,7 +356,7 @@ pub fn delete_selected(app: &mut SolveApp) -> bool {
 }
 
 /// A drag starting on a triad handle (true: the triad took it).
-pub fn drag_start(app: &SolveApp, proj: &Proj, press: Pos2) -> bool {
+pub fn drag_start(app: &SketApp, proj: &Proj, press: Pos2) -> bool {
     let Some((axis, _, _)) = handles(app, proj).into_iter().find(|(_, tip, _)| tip.distance(press) < 9.0) else { return false };
     let Some((_, _, p)) = triad_point(app) else { return false };
     let grab = target(app, proj, press, axis, p).map(|g| p - g).unwrap_or(Vec3::ZERO);
@@ -366,7 +366,7 @@ pub fn drag_start(app: &SolveApp, proj: &Proj, press: Pos2) -> bool {
 
 /// Where the pointer puts the point: along `axis` through `p`, or in the plane through `p`
 /// parallel to the sketch plane.
-fn target(app: &SolveApp, proj: &Proj, pos: Pos2, axis: Option<Vec3>, p: Vec3) -> Option<Vec3> {
+fn target(app: &SketApp, proj: &Proj, pos: Pos2, axis: Option<Vec3>, p: Vec3) -> Option<Vec3> {
     let (o, d) = proj.ray(pos);
     match axis {
         Some(u) => {
@@ -391,7 +391,7 @@ pub fn dragging() -> bool {
     DRAG.with(|d| d.borrow().is_some())
 }
 
-pub fn drag_to(app: &mut SolveApp, proj: &Proj, pos: Pos2) {
+pub fn drag_to(app: &mut SketApp, proj: &Proj, pos: Pos2) {
     let Some((axis, depth, grab)) = DRAG.with(|d| *d.borrow()) else { return };
     let Some((w, i, p)) = triad_point(app) else { return };
     let Some(to) = target(app, proj, pos, axis, p).map(|t| t + grab) else { return };
@@ -405,7 +405,7 @@ pub fn drag_end() {
 }
 
 /// Draw the drawn 3D points and the triad.
-pub fn show(app: &SolveApp, painter: &egui::Painter, proj: &Proj) {
+pub fn show(app: &SketApp, painter: &egui::Painter, proj: &Proj) {
     if app.session.active_sketch.is_none() {
         return;
     }
@@ -448,7 +448,7 @@ pub fn show(app: &SolveApp, painter: &egui::Painter, proj: &Proj) {
 }
 
 /// Test hook: screen positions of the triad handles (axis name or "plane", tip).
-pub fn handle_points(app: &SolveApp, proj: &Proj) -> Vec<(&'static str, Pos2)> {
+pub fn handle_points(app: &SketApp, proj: &Proj) -> Vec<(&'static str, Pos2)> {
     handles(app, proj)
         .into_iter()
         .map(|(a, tip, _)| {

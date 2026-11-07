@@ -6,7 +6,7 @@
 use image::ImageDecoder;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 use sketcraft_geom::prelude::*;
 use sketcraft_render::{
     lighting::{DecodedHdr, HdrDecodeTask, HdrSource, HdrTaskPoll},

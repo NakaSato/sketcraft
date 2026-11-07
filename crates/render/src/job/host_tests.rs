@@ -797,7 +797,7 @@ fn unqualified_executors_refuse_glass_models_and_caustics_before_acquiring_a_lea
         opacity: 1.0,
         surface: None,
         transmission: Some(
-            crate::transmission::Transmission::new(solidcore_record::Vec3::ZERO, None)
+            crate::transmission::Transmission::new(sketcore_record::Vec3::ZERO, None)
                 .unwrap()
                 .with_model(crate::glass_model::GlassModel { roughness: 0.3, ..Default::default() })
                 .unwrap(),
@@ -1390,8 +1390,8 @@ impl ImageExecutor for FailingBeginExecutor {
 fn failed_begin_releases_captured_scene_and_reservation_before_signalling() {
     let host = ImageHost::cooperative_with(Arc::new(FailingBeginExecutor));
     let mesh = Arc::new(Mesh {
-        positions: vec![solidcore_record::Vec3::ZERO, solidcore_record::Vec3::X, solidcore_record::Vec3::Y],
-        normals: vec![solidcore_record::Vec3::Z; 3],
+        positions: vec![sketcore_record::Vec3::ZERO, sketcore_record::Vec3::X, sketcore_record::Vec3::Y],
+        normals: vec![sketcore_record::Vec3::Z; 3],
         triangles: vec![[0, 1, 2]],
         ..Default::default()
     });
@@ -1744,7 +1744,7 @@ fn celestial_cancelled_capture_retains_only_exact_boxes_and_fixed_header_until_l
 mod prepared_optical_submission {
     use super::*;
     use crate::job::{DielectricBoundary, DielectricOptions, RaytraceOptions};
-    use solidcore_record::Vec3;
+    use sketcore_record::Vec3;
 
     fn host(limit: u64) -> CpuHost {
         ImageHost(Arc::new(Owner {
@@ -2248,12 +2248,12 @@ mod capture_credit {
         let maps = Arc::new(RuntimeTextures::new(vec![binding]).unwrap());
         let mesh = Mesh {
             positions: vec![
-                solidcore_record::Vec3::new(-10., -10., 0.),
-                solidcore_record::Vec3::new(10., -10., 0.),
-                solidcore_record::Vec3::new(10., 10., 0.),
-                solidcore_record::Vec3::new(-10., 10., 0.),
+                sketcore_record::Vec3::new(-10., -10., 0.),
+                sketcore_record::Vec3::new(10., -10., 0.),
+                sketcore_record::Vec3::new(10., 10., 0.),
+                sketcore_record::Vec3::new(-10., 10., 0.),
             ],
-            normals: vec![solidcore_record::Vec3::Z; 4],
+            normals: vec![sketcore_record::Vec3::Z; 4],
             triangles: vec![[0, 1, 2], [0, 2, 3]],
             tri_face: vec![0, 0],
             ..Default::default()
@@ -2265,7 +2265,7 @@ mod capture_credit {
                 mesh: Arc::new(mesh),
                 color: [255; 3],
                 opacity: 1.0,
-                surface: Some(OpaqueSurface::new(solidcore_record::Vec3::new(1., 1., 1.), 0., 0.5, 1.).unwrap()),
+                surface: Some(OpaqueSurface::new(sketcore_record::Vec3::new(1., 1., 1.), 0., 0.5, 1.).unwrap()),
                 transmission: None,
                 faces: Vec::new(),
             }],
@@ -2543,7 +2543,7 @@ fn actual_cpu_texture_worker_releases_sources_after_completion_or_cancel_while_s
         );
         let weak = Arc::downgrade(&resources);
         let mesh = Mesh {
-            positions: vec![solidcore_record::Vec3::ZERO, solidcore_record::Vec3::X, solidcore_record::Vec3::Y],
+            positions: vec![sketcore_record::Vec3::ZERO, sketcore_record::Vec3::X, sketcore_record::Vec3::Y],
             triangles: vec![[0, 1, 2]],
             ..Default::default()
         };

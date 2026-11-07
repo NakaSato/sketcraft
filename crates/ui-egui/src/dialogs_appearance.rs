@@ -9,7 +9,7 @@ use serde_json::{Value, json};
 use sketcraft_engine::Sel;
 use sketcraft_engine::doc::pbr_appearance::PbrParameters;
 
-use crate::SolveApp;
+use crate::SketApp;
 use crate::dialogs::{Kind, combo};
 use crate::selection::{BODIES, FACES, SelInput};
 use crate::ui_kit;
@@ -142,7 +142,7 @@ pub(crate) fn builtin() -> Vec<Look> {
 }
 
 /// The library: the engine's when it has one, else the built-in looks.
-pub fn library(app: &mut SolveApp) -> Vec<Look> {
+pub fn library(app: &mut SketApp) -> Vec<Look> {
     let from_engine = app.session.execute("appearance.library", &json!({})).ok().and_then(|v| {
         let list = v.get("appearances").or(v.get("library")).unwrap_or(&v).as_array()?.clone();
         let looks: Vec<Look> = list.iter().filter_map(library_look).collect();
@@ -196,7 +196,7 @@ pub struct Ap {
 }
 
 /// The dialog for the Appearance command.
-pub fn start(app: &SolveApp, id: &str) -> Option<(Kind, Vec<SelInput>)> {
+pub fn start(app: &SketApp, id: &str) -> Option<(Kind, Vec<SelInput>)> {
     (id == "appearance.assign").then(|| {
         let faces = app.session.selection.iter().any(|s| matches!(s, Sel::Face { .. }))
             && !app.session.selection.iter().any(|s| matches!(s, Sel::Body { .. }));
@@ -322,7 +322,7 @@ pub(crate) fn without_look(mut p: Value) -> Value {
 
 /// What a swatch dropped now would land on: the face or body under the cursor in the viewport,
 /// or the bodies of the Browser row under it.
-fn drop_target(app: &SolveApp, faces: bool) -> Vec<Sel> {
+fn drop_target(app: &SketApp, faces: bool) -> Vec<Sel> {
     match &app.viewport.hover {
         Some(Hit::Face { body, index, point }) if faces => vec![Sel::Face { body: body.clone(), index: *index, point: *point }],
         Some(Hit::Face { body, .. } | Hit::Edge { body, .. } | Hit::Vertex { body, .. }) => vec![Sel::Body { name: body.clone() }],
@@ -332,7 +332,7 @@ fn drop_target(app: &SolveApp, faces: bool) -> Vec<Sel> {
 
 /// The looks in this design (colour and how many items wear it): the engine's list when it has
 /// one, else the body colours.
-fn in_design(app: &mut SolveApp) -> Vec<(Look, usize)> {
+fn in_design(app: &mut SketApp) -> Vec<(Look, usize)> {
     if let Ok(v) = app.session.execute("appearance.list", &json!({}))
         && let Some(list) = v.get("in_design").and_then(Value::as_array)
     {
@@ -366,7 +366,7 @@ fn in_design(app: &mut SolveApp) -> Vec<(Look, usize)> {
 }
 
 /// Replacement pickers share the dialog's design looks and admitted library recipes.
-pub(crate) fn replacement_library(app: &mut SolveApp) -> Vec<Look> {
+pub(crate) fn replacement_library(app: &mut SketApp) -> Vec<Look> {
     let mut looks: Vec<_> = in_design(app).into_iter().map(|(look, _)| look).collect();
     for look in library(app).into_iter().filter(preset_available) {
         if !looks.iter().any(|saved| saved.name == look.name && saved.color == look.color && saved.opacity == look.opacity && saved.pbr == look.pbr) {
@@ -381,7 +381,7 @@ fn c32(c: [u8; 3], opacity: f64) -> Color32 {
 }
 
 /// The dialog's rows (after the Objects input); applies drops and Apply at once.
-pub fn rows(app: &mut SolveApp, ui: &mut egui::Ui, k: &mut Ap, inputs: &mut [SelInput]) -> bool {
+pub fn rows(app: &mut SketApp, ui: &mut egui::Ui, k: &mut Ap, inputs: &mut [SelInput]) -> bool {
     // Apply To: bodies or faces (the input follows).
     if let Some(component) = &k.component {
         ui_kit::row(ui, "Apply To", |ui| ui_kit::text(ui, &format!("Component: {component}"), ui_kit::Text::Cell));
@@ -593,18 +593,18 @@ fn target_names(targets: &[Sel]) -> String {
 
 #[cfg(test)]
 mod tests {
-    use solidcore_record::Vec3;
+    use sketcore_record::Vec3;
     use sketcraft_engine::Session;
 
     use super::*;
     use crate::Services;
     use crate::dialogs::apply_commands;
 
-    fn app() -> SolveApp {
+    fn app() -> SketApp {
         let mut s = Session::default();
         s.execute("solid.box", &json!({"length": 10, "width": 10, "height": 10})).unwrap();
         s.execute("solid.box", &json!({"length": 5, "width": 5, "height": 5, "corner": [20, 0, 0]})).unwrap();
-        SolveApp::new(s, Services::default())
+        SketApp::new(s, Services::default())
     }
 
     #[test]

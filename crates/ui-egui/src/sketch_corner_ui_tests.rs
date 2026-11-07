@@ -101,9 +101,7 @@ fn dialog_curves(h: &crate::scenario::Harness) -> Vec<String> {
         .dialog
         .as_ref()
         .and_then(|d| d.inputs.first())
-        .map(|i| {
-            i.items.iter().filter_map(|x| if let sketcraft_engine::Sel::SketchCurve { id, .. } = x { Some(id.clone()) } else { None }).collect()
-        })
+        .map(|i| i.items.iter().filter_map(|x| if let sketcraft_engine::Sel::SketchCurve { id, .. } = x { Some(id.clone()) } else { None }).collect())
         .unwrap_or_default()
 }
 
@@ -274,7 +272,7 @@ fn shift_click(h: &mut crate::scenario::Harness, at: &Value) {
 }
 
 /// The size fields of the open Fillet or Chamfer window, as if they had been typed.
-fn set_size(app: &mut SolveApp, text: &str) {
+fn set_size(app: &mut SketApp, text: &str) {
     match app.dialog.as_mut().map(|d| &mut d.kind) {
         Some(crate::dialogs::Kind::SketchModify(crate::sketch_modify_ui::Mod::Corner { size, distance2, .. })) => {
             *size = text.to_string();
@@ -916,11 +914,7 @@ fn centre_circle_clicked_through_a_line_end_stays_on_it() {
     let sk = h.app.session.model.state().sketch(sid).unwrap().sketch.clone();
     let circle = sk.curves.iter().position(|c| matches!(c.kind, CurveKind::Circle { .. })).unwrap();
     let end = sk.resolve_point("l1.end").unwrap();
-    assert!(
-        sk.constraints.iter().any(|k| matches!(k.kind, sketcraft_engine::sketch::ConstraintKind::Midpoint { l: 0, .. })),
-        "{:?}",
-        sk.constraints
-    );
+    assert!(sk.constraints.iter().any(|k| matches!(k.kind, sketcraft_engine::sketch::ConstraintKind::Midpoint { l: 0, .. })), "{:?}", sk.constraints);
     assert!(
         sk.constraints.iter().any(|k| k.kind == sketcraft_engine::sketch::ConstraintKind::PointOnCurve { p: end, c: circle }),
         "the circle stays on the line's end: {:?}",
@@ -1039,7 +1033,7 @@ fn corner_candidates_agree_with_engine_spatial_curve_filter() {
         for id in [&line, &spline, &linked, &"side".to_owned()] {
             let state = crate::open_meshing::session_world(&h.app.session);
             let sk = &state.sketch(sketch).unwrap().sketch;
-            let hit = Hit::SketchCurve { sketch, id: id.clone(), straight: true, point: solidcore_record::Vec3::ZERO };
+            let hit = Hit::SketchCurve { sketch, id: id.clone(), straight: true, point: sketcore_record::Vec3::ZERO };
             let offered = candidate(h.app.dialog.as_ref().unwrap(), &h.app.session, &hit).is_some();
             assert_eq!(offered, !sk.is_spatial_corner_curve(id), "{cmd}: {id}");
             assert_eq!(offered, id == "side", "{cmd}: {id}");

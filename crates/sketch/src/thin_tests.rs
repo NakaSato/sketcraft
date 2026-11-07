@@ -4,7 +4,7 @@
 use sketcraft_geom::prelude::*;
 use std::f64::consts::PI;
 
-use solidcore_record::{Seg2, Vec2};
+use sketcore_record::{Seg2, Vec2};
 
 use crate::thin_wall_regions;
 
@@ -62,7 +62,7 @@ fn a_straight_wall_takes_its_side_from_the_drawn_direction() {
 
 #[test]
 fn a_circle_makes_an_exact_ring() {
-    let circle = solidcore_record::Loop2::circle(Vec2::new(3.0, 4.0), 10.0).segs;
+    let circle = sketcore_record::Loop2::circle(Vec2::new(3.0, 4.0), 10.0).segs;
     let regions = thin_wall_regions(std::slice::from_ref(&circle), 1.0, 1.0).unwrap();
     assert_eq!(regions.len(), 1);
     assert_eq!(regions[0].holes.len(), 1);
@@ -85,7 +85,7 @@ fn walls_that_cross_or_meet_are_one_region() {
         close(regions[0].area(), 4.0 * 10.0 * 2.0 - 4.0);
     }
     // A ring with a bar across it.
-    let mut ring = vec![solidcore_record::Loop2::circle(Vec2::ZERO, 10.0).segs];
+    let mut ring = vec![sketcore_record::Loop2::circle(Vec2::ZERO, 10.0).segs];
     ring.push(line([-10.0, 0.0], [10.0, 0.0]));
     let regions = thin_wall_regions(&ring, 1.0, 1.0).unwrap();
     assert_eq!(regions.len(), 1);

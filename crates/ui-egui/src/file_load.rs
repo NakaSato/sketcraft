@@ -24,7 +24,7 @@ use std::sync::{
 use serde_json::{Value, json};
 use sketcraft_engine::{Session, doc::Document, doc::progress::Progress};
 
-use crate::SolveApp;
+use crate::SketApp;
 use crate::control::ControlResponse;
 use crate::ui_kit;
 
@@ -287,7 +287,7 @@ impl FileLoad {
     }
 }
 
-pub fn begin(app: &mut SolveApp, path: &str, insert: bool) {
+pub fn begin(app: &mut SketApp, path: &str, insert: bool) {
     // An STL or OBJ file states no unit: ask which, then import (see `crate::mesh_units`).
     if crate::mesh_units::ask(app, path, insert) {
         return;
@@ -298,14 +298,14 @@ pub fn begin(app: &mut SolveApp, path: &str, insert: bool) {
 /// A STEP, IGES, FreeCAD or Rhino file the app opens or inserts gets a `Group #N` history folder
 /// while "Fold the History bar into groups" is on, and none while it is off (#8885), unless the
 /// caller chose (`folder`).
-pub(crate) fn step_folder_option(app: &SolveApp, path: &str, options: &mut serde_json::Map<String, Value>) {
+pub(crate) fn step_folder_option(app: &SketApp, path: &str, options: &mut serde_json::Map<String, Value>) {
     if sketcraft_engine::io::is_step_path(path) {
         options.entry("folder").or_insert(Value::Bool(app.preferences.history_bar_groups));
     }
 }
 
 /// Queue a file operation; on the web (no threads) it runs now.
-pub fn begin_request(app: &mut SolveApp, mut request: Request) -> Result<(), String> {
+pub fn begin_request(app: &mut SketApp, mut request: Request) -> Result<(), String> {
     if crate::control::chat_turn_cancelled(request.chat_turn.as_deref()) {
         request.answer(Err("the agent chat turn ended".into()));
         return Ok(());
@@ -368,7 +368,7 @@ pub fn begin_request(app: &mut SolveApp, mut request: Request) -> Result<(), Str
 
 /// Queue a file operation and start it when nothing runs (the desktop app).
 #[cfg(not(target_arch = "wasm32"))]
-pub(crate) fn queue(app: &mut SolveApp, request: Request) -> Result<(), String> {
+pub(crate) fn queue(app: &mut SketApp, request: Request) -> Result<(), String> {
     if app.file_load.queued.len() >= crate::documents::MAX_OPEN {
         let e = "too many queued files".to_string();
         app.set_status(e.clone(), true);
@@ -382,7 +382,7 @@ pub(crate) fn queue(app: &mut SolveApp, request: Request) -> Result<(), String> 
 
 /// Answer each ordinary open separately, including queued requests for the same file.
 /// Validate the caller's scope before looking at existing sessions or resolving paths.
-fn reuse_open(app: &mut SolveApp, request: &Request) -> bool {
+fn reuse_open(app: &mut SketApp, request: &Request) -> bool {
     if request.kind != Kind::Open {
         return false;
     }
@@ -412,7 +412,7 @@ fn reuse_open(app: &mut SolveApp, request: &Request) -> bool {
 
 /// A control-channel (MCP) `doc.open` or STEP/mesh import runs like File > Open: off the window
 /// thread, answered when the file is in. Other requests come back to be handled now.
-pub fn control(app: &mut SolveApp, req: crate::control::ControlRequest) -> Option<crate::control::ControlRequest> {
+pub fn control(app: &mut SketApp, req: crate::control::ControlRequest) -> Option<crate::control::ControlRequest> {
     if cfg!(target_arch = "wasm32") || !matches!(req.method.as_str(), "engine.execute" | "command") {
         return Some(req);
     }
@@ -486,7 +486,7 @@ pub fn control(app: &mut SolveApp, req: crate::control::ControlRequest) -> Optio
 
 /// An autosave that failed to load goes back in the recovery list, so it can be discarded (or
 /// left for later) instead of coming back unasked.
-fn reoffer(app: &mut SolveApp, id: &str, dir: Option<&str>) {
+fn reoffer(app: &mut SketApp, id: &str, dir: Option<&str>) {
     let dir = dir.map(std::path::PathBuf::from).or_else(|| app.autosave.as_ref().map(|a| a.dir.clone()));
     let Some(dir) = dir else { return };
     if app.recoverable.iter().any(|e| e.id == id) {
@@ -498,7 +498,7 @@ fn reoffer(app: &mut SolveApp, id: &str, dir: Option<&str>) {
 }
 
 /// A recovered design is ours now: autosave it under this app's entry before the old one goes.
-fn recovered(app: &mut SolveApp, request: &Request) {
+fn recovered(app: &mut SketApp, request: &Request) {
     let Kind::Recover { id, dir } = &request.kind else { return };
     let kept = app.autosave.as_mut().map(|a| a.save(&app.session));
     if let Some(Ok(_)) = kept {
@@ -509,7 +509,7 @@ fn recovered(app: &mut SolveApp, request: &Request) {
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-fn start(app: &mut SolveApp) {
+fn start(app: &mut SketApp) {
     if app.file_load.running.is_some() {
         return;
     }
@@ -663,7 +663,7 @@ fn start(app: &mut SolveApp) {
 
 /// Start the next queued STEP file as a [`Staged`] import (see [`step_staged`]).
 #[cfg_attr(not(target_arch = "wasm32"), allow(dead_code))]
-fn start_staged(app: &mut SolveApp) {
+fn start_staged(app: &mut SketApp) {
     if app.file_load.running.is_some() {
         return;
     }
@@ -916,7 +916,7 @@ fn partial_picture(world: &sketcraft_engine::doc::ModelState, stop: &dyn Fn() ->
 
 #[cfg(not(target_arch = "wasm32"))]
 fn saved_picture(preview: sketcraft_engine::io::DesignPreview) -> Option<egui::ColorImage> {
-    use solidcore_record::Vec3;
+    use sketcore_record::Vec3;
     use sketcraft_engine::{
         geom::{Aabb3, Mesh},
         render::{Camera, Rgb, Scene, SceneMesh, StandardView},
@@ -1069,7 +1069,7 @@ fn compute(
     Ok(Made { session, result, thumbnail })
 }
 
-pub fn tick(app: &mut SolveApp, ctx: &egui::Context) {
+pub fn tick(app: &mut SketApp, ctx: &egui::Context) {
     // Stop must release the waiting slot even if the worker has not reached its next check.
     let chat_cancelled = app.file_load.running.as_ref().is_some_and(|r| crate::control::chat_turn_cancelled(r.request.chat_turn.as_deref()));
     if chat_cancelled && let Some(running) = &app.file_load.running {
@@ -1267,7 +1267,7 @@ pub fn tick(app: &mut SolveApp, ctx: &egui::Context) {
 /// its window buttons and the window's resize edges stay live; the design underneath takes no
 /// pointer input until the file is in.
 /// What a file operation under way is doing (for the frame watch), if one is.
-pub(crate) fn phase(app: &SolveApp) -> Option<&'static str> {
+pub(crate) fn phase(app: &SketApp) -> Option<&'static str> {
     let r = app.file_load.running.as_ref()?;
     Some(match (r.staged.is_some(), r.phase.load(Ordering::Relaxed)) {
         (true, 0) => "reading the file (staged)",
@@ -1310,7 +1310,7 @@ fn load_steps(
     (labels, current, detail)
 }
 
-pub fn show(app: &mut SolveApp, ctx: &egui::Context) {
+pub fn show(app: &mut SketApp, ctx: &egui::Context) {
     let Some(r) = &app.file_load.running else { return };
     let cancelled = r.cancelled();
     if cancelled && app.file_load.queued.is_empty() {
@@ -1483,7 +1483,7 @@ mod tests {
         assert_eq!((labels[1], current, detail.as_deref()), ("file_load.step_rebuild", 1, Some("Feature 3 of 5")));
     }
 
-    fn completed_open(app: &mut SolveApp, request: Request, session: Session) {
+    fn completed_open(app: &mut SketApp, request: Request, session: Session) {
         let (tx, rx) = std::sync::mpsc::channel();
         tx.send(Ok(Made { session, result: json!({"loaded": true}), thumbnail: false })).unwrap();
         app.file_load.running = Some(Running {
@@ -1507,8 +1507,8 @@ mod tests {
     #[test]
     fn an_open_names_the_design_and_says_when_it_got_a_new_tab() {
         let ctx = egui::Context::default();
-        let mut app = SolveApp::new(Session::default(), Default::default());
-        let open = |app: &mut SolveApp, name: &str| {
+        let mut app = SketApp::new(Session::default(), Default::default());
+        let open = |app: &mut SketApp, name: &str| {
             let mut part = Session::default();
             part.execute("solid.box", &json!({"length": 10, "width": 10, "height": 10})).unwrap();
             Arc::make_mut(&mut part.doc).name = name.into();
@@ -1552,7 +1552,7 @@ mod tests {
 
     #[test]
     fn repeated_queued_opens_reply_once_and_keep_one_session() {
-        let mut app = SolveApp::new(Session::default(), Default::default());
+        let mut app = SketApp::new(Session::default(), Default::default());
         let mut session = Session::default();
         session.path = Some("queued.sketcraft".into());
         let mut first = Request::new("queued.sketcraft", Kind::Open);
@@ -1588,7 +1588,7 @@ mod tests {
 
     #[test]
     fn finished_open_reuses_existing_dirty_tab_and_scope_still_applies() {
-        let mut app = SolveApp::new(Session::default(), Default::default());
+        let mut app = SketApp::new(Session::default(), Default::default());
         app.session.path = Some("existing.sketcraft".into());
         app.session.execute("solid.box", &json!({"length": 2, "width": 3, "height": 4})).unwrap();
         let dirty = app.session.doc.clone();
@@ -1632,11 +1632,11 @@ mod tests {
     fn drawing_insert_and_drop_reuse_the_active_sketch_or_create_xy() {
         let mut h = crate::scenario::Harness::new();
         let dxf = sketcraft_engine::io::write_dxf(&[
-            sketcraft_engine::io::Geom2::Line(solidcore_record::Vec2::ZERO, solidcore_record::Vec2::new(10.0, 0.0)),
+            sketcraft_engine::io::Geom2::Line(sketcore_record::Vec2::ZERO, sketcore_record::Vec2::new(10.0, 0.0)),
             sketcraft_engine::io::Geom2::Arc {
-                c: solidcore_record::Vec2::ZERO,
-                a: solidcore_record::Vec2::new(5.0, 0.0),
-                b: solidcore_record::Vec2::new(0.0, 5.0),
+                c: sketcore_record::Vec2::ZERO,
+                a: sketcore_record::Vec2::new(5.0, 0.0),
+                b: sketcore_record::Vec2::new(0.0, 5.0),
             },
         ]);
         let svg = r#"<svg xmlns="http://www.w3.org/2000/svg"><path d="M0 0 L10 0 L10 10"/></svg>"#;
@@ -1658,7 +1658,7 @@ mod tests {
             wait(&mut h);
             assert_eq!(h.app.session.doc.features.len(), 2, "{:?}", h.app.status);
             let id = h.app.session.active_sketch.unwrap();
-            assert_eq!(h.app.session.model.state().sketch(id).unwrap().plane, solidcore_record::Plane::XY);
+            assert_eq!(h.app.session.model.state().sketch(id).unwrap().plane, sketcore_record::Plane::XY);
             assert_eq!(h.app.session.doc.sketch(id).unwrap().curves.len(), 2);
             h.app.cam.set_view(sketcraft_engine::render::StandardView::Top);
             h.app.fit_view();
@@ -1767,7 +1767,7 @@ mod tests {
     #[test]
     fn opening_result_and_preview_cannot_overwrite_a_newer_design() {
         for (insert, change_document) in [(false, true), (true, true), (false, false)] {
-            let mut app = SolveApp::new(Session::default(), Default::default());
+            let mut app = SketApp::new(Session::default(), Default::default());
             let base = app.session.doc.clone();
             let (tx, rx) = std::sync::mpsc::channel();
             let (preview_tx, preview_rx) = std::sync::mpsc::channel();
@@ -1836,7 +1836,7 @@ mod tests {
     }
     #[test]
     fn failed_import_keeps_the_current_document() {
-        let mut app = SolveApp::new(Session::default(), Default::default());
+        let mut app = SketApp::new(Session::default(), Default::default());
         let old = app.session.doc.clone();
         let (tx, rx) = std::sync::mpsc::channel();
         tx.send(Err("bad STEP".into())).unwrap();
@@ -1862,7 +1862,7 @@ mod tests {
     #[test]
     fn cancelling_disconnects_late_results_and_answers_queued_callers() {
         for finished in [false, true] {
-            let mut app = SolveApp::new(Session::default(), Default::default());
+            let mut app = SketApp::new(Session::default(), Default::default());
             let old = app.session.doc.clone();
             let (tx, rx) = std::sync::mpsc::channel();
             let (reply_tx, reply_rx) = std::sync::mpsc::channel();
@@ -1928,8 +1928,8 @@ mod tests {
         }
         part.execute("file.export", &serde_json::json!({"path": path})).unwrap();
         let ctx = crate::fonts::test_context();
-        let mut app = SolveApp::new(Session::default(), Default::default());
-        let bodies = |app: &SolveApp| app.session.world_state().unwrap().bodies.len();
+        let mut app = SketApp::new(Session::default(), Default::default());
+        let bodies = |app: &SketApp| app.session.world_state().unwrap().bodies.len();
         assert!(staged_kind(&Request::new(&path, Kind::Insert)) && staged_kind(&Request::new(&path, Kind::Open)));
         assert!(!staged_kind(&Request::new("part.igs", Kind::Insert)) && !staged_kind(&Request::new("part.sketcraft", Kind::Insert)));
         app.file_load.queued.push_back(Request::new(&path, Kind::Insert));
@@ -1991,10 +1991,10 @@ mod tests {
         let names = |s: &Session| s.world_state().unwrap().bodies.iter().map(|b| b.name.clone()).collect::<Vec<_>>();
 
         let ctx = crate::fonts::test_context();
-        let mut app = SolveApp::new(Session::default(), Default::default());
+        let mut app = SketApp::new(Session::default(), Default::default());
         assert!(staged_kind(&Request::new(&path, Kind::Open)) && !staged_kind(&Request::new(&path, Kind::Insert)));
         let opening =
-            |app: &SolveApp| app.file_load.running.as_ref().and_then(|r| r.staged.as_ref()).and_then(|s| s.opening.as_ref()).map(|o| o.progress());
+            |app: &SketApp| app.file_load.running.as_ref().and_then(|r| r.staged.as_ref()).and_then(|s| s.opening.as_ref()).map(|o| o.progress());
         app.file_load.queued.push_back(Request::new(&path, Kind::Open));
         start_staged(&mut app);
         tick(&mut app, &ctx);
@@ -2054,7 +2054,7 @@ mod tests {
         part.execute("file.save", &serde_json::json!({"path": path, "cache": false})).unwrap();
 
         let ctx = crate::fonts::test_context();
-        let mut app = SolveApp::new(Session::default(), Default::default());
+        let mut app = SketApp::new(Session::default(), Default::default());
         app.file_load.queued.push_back(Request::new(&path, Kind::Open));
         start_staged(&mut app);
         tick(&mut app, &ctx);
@@ -2088,8 +2088,8 @@ mod tests {
     /// are left alone.
     #[test]
     fn a_step_open_asks_for_a_history_folder_as_the_bar_groups() {
-        let mut app = SolveApp::new(sketcraft_engine::Session::default(), crate::Services::default());
-        let asked = |app: &SolveApp, path: &str, folder: Option<bool>| {
+        let mut app = SketApp::new(sketcraft_engine::Session::default(), crate::Services::default());
+        let asked = |app: &SketApp, path: &str, folder: Option<bool>| {
             let mut options = serde_json::Map::new();
             if let Some(folder) = folder {
                 options.insert("folder".into(), Value::Bool(folder));

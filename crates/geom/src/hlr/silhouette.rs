@@ -8,7 +8,7 @@ use super::surface::{Analytic, S3};
 use super::trim::Trim;
 use crate::prelude::*;
 use crate::section::CurveAccuracy;
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 
 const TAU: f64 = std::f64::consts::TAU;
 

@@ -15,10 +15,10 @@ use std::collections::{BTreeMap, HashMap};
 use std::sync::Arc;
 
 use serde_json::{Value, json};
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 use sketcraft_engine::geom::{Mesh, Vec3Geom};
 
-use crate::SolveApp;
+use crate::SketApp;
 use crate::context_menu::{Item, act};
 use crate::dialogs::Kind;
 use crate::prefs::{NavigatorStyle, NavigatorTexture};
@@ -344,7 +344,7 @@ fn snapshot(name: &str, mesh: &Mesh, colour: Option<[u8; 3]>, faces: &BTreeMap<u
 
 /// The menu a right-click on the view navigator opens: Axes, Cube and Custom, the current one
 /// marked. Custom opens the Custom View Navigator panel, which sets it on OK.
-pub(crate) fn menu_items(app: &SolveApp) -> Vec<Item> {
+pub(crate) fn menu_items(app: &SketApp) -> Vec<Item> {
     NavigatorStyle::ALL
         .into_iter()
         .map(|style| {
@@ -363,7 +363,7 @@ pub(crate) fn menu_items(app: &SolveApp) -> Vec<Item> {
 }
 
 /// A menu pick: Axes and Cube at once; Custom opens its panel, as the toolbar would.
-pub(crate) fn pick_style(app: &mut SolveApp, style: NavigatorStyle) {
+pub(crate) fn pick_style(app: &mut SketApp, style: NavigatorStyle) {
     if style == NavigatorStyle::Custom {
         app.start("view.navigator");
     } else if let Err(e) = app.run("view.navigator", json!({ "style": style })) {
@@ -372,7 +372,7 @@ pub(crate) fn pick_style(app: &mut SolveApp, style: NavigatorStyle) {
 }
 
 /// Draw body `name` of the open design as the gizmo (`None`: no body, the cube again).
-fn set_body(app: &mut SolveApp, name: Option<&str>) -> Result<(), String> {
+fn set_body(app: &mut SketApp, name: Option<&str>) -> Result<(), String> {
     let shape = match name {
         None => None,
         Some(name) => Some(snapshot_of(&app.session, name).map_err(|reason| crate::i18n::tr(reason).to_string())?),
@@ -393,7 +393,7 @@ fn snapshot_of(session: &sketcraft_engine::Session, name: &str) -> Result<Shape,
 
 /// `view.navigator`, after the engine checked its parameters: set what it names, then reply with
 /// the whole navigator. A refused body changes nothing.
-pub(crate) fn command(app: &mut SolveApp, v: &Value) -> Result<Value, String> {
+pub(crate) fn command(app: &mut SketApp, v: &Value) -> Result<Value, String> {
     let field = |key: &str| v.get(key).filter(|x| !x.is_null()).cloned();
     let style: Option<NavigatorStyle> = field("style").map(serde_json::from_value).transpose().map_err(|e| e.to_string())?;
     let texture: Option<NavigatorTexture> = field("texture").map(serde_json::from_value).transpose().map_err(|e| e.to_string())?;
@@ -426,7 +426,7 @@ pub(crate) fn command(app: &mut SolveApp, v: &Value) -> Result<Value, String> {
 }
 
 /// The custom navigator's texture, arrows and Home, as a settings profile keeps them.
-pub(crate) fn profile_settings(app: &SolveApp) -> Value {
+pub(crate) fn profile_settings(app: &SketApp) -> Value {
     let p = &app.preferences;
     json!({"texture": p.navigator_texture, "arrows": p.navigator_arrows, "home": p.navigator_home})
 }
@@ -446,7 +446,7 @@ pub(crate) fn checked_profile_settings(v: &Value) -> Value {
 }
 
 /// Apply a profile's (checked) navigator settings; a missing one keeps its current value.
-pub(crate) fn apply_profile_settings(app: &mut SolveApp, v: &Value) {
+pub(crate) fn apply_profile_settings(app: &mut SketApp, v: &Value) {
     let p = &mut app.preferences;
     if let Some(t) = v.get("texture").and_then(|t| serde_json::from_value(t.clone()).ok()) {
         p.navigator_texture = t;
@@ -473,7 +473,7 @@ pub struct Form {
 /// The panel opened by `view.navigator` from the toolbar or the navigator's menu, filled with
 /// the navigator as it is (its body picked when the open design has that very body, not just one
 /// of the same name, so OK on a changed texture keeps the body).
-pub(crate) fn start(app: &SolveApp, id: &str) -> Option<(Kind, Vec<SelInput>)> {
+pub(crate) fn start(app: &SketApp, id: &str) -> Option<(Kind, Vec<SelInput>)> {
     (id == "view.navigator").then(|| {
         let mut body = SelInput::new("Body", BODIES, false);
         if let Some(shape) = &app.view_gizmo.shape
@@ -496,7 +496,7 @@ fn picked(inputs: &[SelInput]) -> Option<&str> {
 
 /// The panel's rows under its body input: why a picked body can't be the navigator, the
 /// texture, the arrows and Home.
-pub(crate) fn rows(app: &SolveApp, ui: &mut egui::Ui, form: &mut Form, inputs: &[SelInput]) {
+pub(crate) fn rows(app: &SketApp, ui: &mut egui::Ui, form: &mut Form, inputs: &[SelInput]) {
     let body = picked(inputs);
     if form.preview.as_ref().map(|(name, _)| name.as_str()) != body {
         form.preview = body.map(|name| (name.to_string(), snapshot_of(&app.session, name)));
@@ -524,7 +524,7 @@ pub(crate) fn rows(app: &SolveApp, ui: &mut egui::Ui, form: &mut Form, inputs: &
 }
 
 /// OK: the custom navigator with the panel's body (or the one it has), texture, arrows and Home.
-pub(crate) fn run_dialog(app: &mut SolveApp, form: &Form, inputs: &[SelInput]) -> Result<(), String> {
+pub(crate) fn run_dialog(app: &mut SketApp, form: &Form, inputs: &[SelInput]) -> Result<(), String> {
     if let Some((_, Err(reason))) = &form.preview {
         return Err(crate::i18n::tr(reason).to_string());
     }
@@ -547,11 +547,11 @@ pub(crate) struct Shown {
 
 /// The view navigator is drawn and takes the pointer: not on the SketchUp model screen, which
 /// has none (the navigator preferences are left as they were saved).
-pub(crate) fn visible(app: &SolveApp) -> bool {
+pub(crate) fn visible(app: &SketApp) -> bool {
     !crate::sketchup_screen::on(app)
 }
 
-pub(crate) fn shown(app: &SolveApp) -> Shown {
+pub(crate) fn shown(app: &SketApp) -> Shown {
     let p = &app.preferences;
     match app.dialog.as_ref().map(|d| &d.kind) {
         Some(Kind::ViewNavigator(form)) => Shown {
@@ -838,7 +838,7 @@ mod tests {
         let kept = other.app.view_gizmo.shape.as_ref().expect("the body survives a restart");
         assert_eq!(kept.name, name);
         assert_eq!(kept.mesh.triangles.len(), h.app.view_gizmo.shape.as_ref().unwrap().mesh.triangles.len());
-        let preselected = |app: &SolveApp| start(app, "view.navigator").map(|(_, inputs)| picked(&inputs).map(str::to_owned));
+        let preselected = |app: &SketApp| start(app, "view.navigator").map(|(_, inputs)| picked(&inputs).map(str::to_owned));
         assert_eq!(preselected(&h.app), Some(Some(name.clone())), "the panel picks the kept body in its own design");
         other.app.run("solid.box", json!({"length": 30, "width": 30, "height": 10})).unwrap();
         assert_eq!(other.app.session.world_state().unwrap().bodies[0].name, name);

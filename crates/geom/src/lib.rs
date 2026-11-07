@@ -61,8 +61,8 @@ pub use profile::{Loop2Geom, MAX_DERIVATIVE_ORDER, Region2Geom, Seg2Geom, Simila
 pub use unit_vec3::UnitVec3;
 pub use vec::{Vec2Geom, Vec3Geom};
 
-/// The geometry traits of the record's plain data ([`solidcore_record::Vec3`],
-/// [`solidcore_record::Plane`], the profile types), in scope with `use sketcraft_geom::prelude::*`.
+/// The geometry traits of the record's plain data ([`sketcore_record::Vec3`],
+/// [`sketcore_record::Plane`], the profile types), in scope with `use sketcraft_geom::prelude::*`.
 pub mod prelude {
     pub use crate::{
         Loop2ArcFit as _, Loop2Geom as _, PlaneGeom as _, Region2ArcFit as _, Region2Geom as _, Seg2ArcFit as _, Seg2Geom as _, Vec2Geom as _,

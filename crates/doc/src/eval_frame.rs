@@ -5,7 +5,7 @@ use sketcraft_geom::prelude::*;
 use std::borrow::Cow;
 use std::collections::{BTreeMap, HashSet};
 
-use solidcore_record::{Plane, Region2, Vec2, Vec3};
+use sketcore_record::{Plane, Region2, Vec2, Vec3};
 use sketcraft_geom::{Aabb2, Ring};
 use sketcraft_kernel as kernel;
 use sketcraft_sketch::CurveKind;

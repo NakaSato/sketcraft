@@ -131,7 +131,7 @@ fn strict_face_missing_lineage_never_retargets_and_rolls_back() {
     let look = sketcraft_doc::appearance::library("ABS - Red").unwrap();
     s.doc_mut().appearances.faces.push(sketcraft_doc::appearance::FaceLook {
         body: body.clone(),
-        point: solidcore_record::Vec3::new(5., 5., 10.),
+        point: sketcore_record::Vec3::new(5., 5., 10.),
         name: Some(format!("F{other}:+z")),
         strict_name: true,
         certificate: None,
@@ -151,11 +151,11 @@ fn face_occurrence_pick_uses_definition_identity_and_coordinates() {
     let world = s.world_state().unwrap();
     let placed = world.bodies.iter().find(|body| body.name != body.definition_name()).unwrap();
     let placed_name = placed.name.clone();
-    let point = sketcraft_doc::apply_point(&placed.source_transform, solidcore_record::Vec3::new(5., 5., 10.));
+    let point = sketcraft_doc::apply_point(&placed.source_transform, sketcore_record::Vec3::new(5., 5., 10.));
     let key = face_column(&mut s, &placed_name, json!(point));
     let Column::FaceAppearance(target) = &s.doc.configs.columns[0] else { panic!() };
     assert_eq!(target.body, body);
-    assert!(target.point.dist(solidcore_record::Vec3::new(5., 5., 10.)) < 1e-8);
+    assert!(target.point.dist(sketcore_record::Vec3::new(5., 5., 10.)) < 1e-8);
     run(&mut s, "config.row", json!({"name":"Paint","values":{key:"ABS - Blue"}}));
     run(&mut s, "config.activate", json!({"row":"Paint"}));
     assert!(s.world_state().unwrap().bodies.iter().all(|body| s.doc.face_colors(body).len() == 1));
@@ -217,7 +217,7 @@ fn hostile_and_uncertified_face_targets_are_rejected() {
         body: body.clone(),
         origin_feature: id,
         name: format!("F{id}:face:0"),
-        point: solidcore_record::Vec3::ZERO,
+        point: sketcore_record::Vec3::ZERO,
         certificate: None,
     };
     assert!(s.doc.certify_config_face(&target).is_err());

@@ -3,7 +3,7 @@
 //! whether a face's NURBS form turns its natural normal against its surface's. The record holds
 //! these as data; working them out is the kernel's.
 use crate::prelude::*;
-use solidcore_record::brep::{Curve, Edge, Face, Frame, Natural, Surface, UNBOUNDED, knot_domain};
+use sketcore_record::brep::{Curve, Edge, Face, Frame, Natural, Surface, UNBOUNDED, knot_domain};
 
 use super::eval;
 
@@ -55,8 +55,8 @@ pub fn curve_interval(curve: &Curve, nurbs: Option<&Curve>, interval: [f64; 2]) 
     };
     let eval = eval::CurveEval::new(n).ok()?;
     let [t0, t1] = interval;
-    let o = solidcore_record::Vec3::new(frame.origin[0], frame.origin[1], frame.origin[2]);
-    let (x, y) = (solidcore_record::Vec3::from(frame.x_axis), solidcore_record::Vec3::from(frame.y_axis));
+    let o = sketcore_record::Vec3::new(frame.origin[0], frame.origin[1], frame.origin[2]);
+    let (x, y) = (sketcore_record::Vec3::from(frame.x_axis), sketcore_record::Vec3::from(frame.y_axis));
     let angle = |t: f64| eval.point(t).map(|p| ((p - o).dot(y) / radii[1]).atan2((p - o).dot(x) / radii[0]).rem_euclid(TAU));
     let (a0, a1) = (angle(t0)?, angle(t1)?);
     let sweep = (a1 - a0).rem_euclid(TAU);
@@ -73,7 +73,7 @@ pub fn form_turns(face: &Face) -> Option<bool> {
     let eval = eval::SurfaceEval::new(form).ok()?;
     let [[u0, u1], [v0, v1]] = face.domain;
     let (p, su, sv) = eval.derivs(0.5 * (u0 + u1), 0.5 * (v0 + v1))?;
-    let v3 = |a: [f64; 3]| solidcore_record::Vec3::new(a[0], a[1], a[2]);
+    let v3 = |a: [f64; 3]| sketcore_record::Vec3::new(a[0], a[1], a[2]);
     let radial = |f: &Frame| {
         let (o, z) = (v3(f.origin), v3(f.x_axis).cross(v3(f.y_axis)));
         let d = p - o;

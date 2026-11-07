@@ -7,7 +7,7 @@ use crate::{
     surface::OpaqueSurface,
 };
 use serde::{Deserialize, Serialize};
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 use sketcraft_geom::prelude::*;
 use sketcraft_geom::{Aabb3, Mesh};
 use std::{collections::BTreeSet, fmt, sync::Arc};

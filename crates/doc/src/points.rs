@@ -5,7 +5,7 @@
 use std::ops::{Deref, DerefMut};
 
 use serde::{Deserialize, Serialize};
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 
 macro_rules! point_type {
     ($(#[$doc:meta])* $name:ident) => {

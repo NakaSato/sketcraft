@@ -29,11 +29,11 @@ use egui::{Pos2, vec2};
 use look::{
     CrossStyle, DIM, DIM_S, MARKER_ACTIVE, MARKER_HOT, RING_ACTIVE, RING_OPEN, RING_PX, RingStyle, angle_label, compass, crosshair, footprint, ring,
 };
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 use sketcraft_engine::doc::expr::Kind as ValueKind;
 use sketcraft_engine::geom::prelude::*;
 
-use crate::SolveApp;
+use crate::SketApp;
 use crate::dialogs::Dialog;
 pub(crate) use crate::dialogs::vec3_of;
 use crate::motion;
@@ -53,12 +53,12 @@ pub(crate) struct Spec {
     /// The move marker's tooltip.
     pub move_tip: &'static str,
     /// The place and the direction the feature grows out of its face.
-    pub frame: fn(&SolveApp, &Dialog) -> Option<(Vec3, Vec3)>,
+    pub frame: fn(&SketApp, &Dialog) -> Option<(Vec3, Vec3)>,
     /// Re-place the feature where a click at the pointer would put it; false when nothing there
     /// can take it.
-    pub move_to: fn(&SolveApp, &mut Dialog, &Proj, Pos2) -> bool,
+    pub move_to: fn(&SketApp, &mut Dialog, &Proj, Pos2) -> bool,
     /// The footprint outlined while dragging, in world points (empty: no outline).
-    pub footprint: fn(&SolveApp, &Dialog, Vec3, Vec3) -> Vec<Vec3>,
+    pub footprint: fn(&SketApp, &Dialog, Vec3, Vec3) -> Vec<Vec3>,
     pub turn: Option<Turn>,
 }
 
@@ -67,11 +67,11 @@ pub(crate) struct Turn {
     pub tip: &'static str,
     /// How far the feature reaches from its place along its turn (world); `None` hides the ring
     /// (a round Rest has nothing to turn). The ring's size does not follow it.
-    pub reach: fn(&SolveApp, &Dialog) -> Option<f64>,
+    pub reach: fn(&SketApp, &Dialog) -> Option<f64>,
     /// The current turn about `n`, from [`axes`]'s x towards its y.
-    pub angle: fn(&SolveApp, &Dialog, Vec3) -> f64,
+    pub angle: fn(&SketApp, &Dialog, Vec3) -> f64,
     /// Turn to the pointer's angle (`free` when Alt or Ctrl is held); returns the angle taken.
-    pub set: fn(&SolveApp, &mut Dialog, Vec3, f64, bool) -> f64,
+    pub set: fn(&SketApp, &mut Dialog, Vec3, f64, bool) -> f64,
 }
 
 /// Every tool with handles, one file each under `place_gizmo/`, one per line in name order so
@@ -92,7 +92,7 @@ thread_local! {
 }
 
 /// Is `p` on a placement handle of the open dialog (as drawn last frame)?
-pub(crate) fn contains_pointer(app: &SolveApp, p: Pos2) -> bool {
+pub(crate) fn contains_pointer(app: &SketApp, p: Pos2) -> bool {
     app.dialog.as_ref().is_some_and(|d| spec(app, d).is_some()) && drawn_at(p)
 }
 
@@ -103,7 +103,7 @@ pub(crate) fn drawn_at(p: Pos2) -> bool {
 }
 
 /// The tool whose dialog this is, if it has handles.
-fn spec(app: &SolveApp, d: &Dialog) -> Option<&'static Spec> {
+fn spec(app: &SketApp, d: &Dialog) -> Option<&'static Spec> {
     if !app.preferences.placement_handles {
         return None;
     }
@@ -112,13 +112,13 @@ fn spec(app: &SolveApp, d: &Dialog) -> Option<&'static Spec> {
 
 /// How much of the screen around the base the dialog's drag arrow leaves to the move marker
 /// (pixels): the marker's full reach and a gap, so the arrow stands above it. Zero without handles.
-pub(crate) fn arrow_clearance(app: &SolveApp, d: &Dialog) -> f32 {
+pub(crate) fn arrow_clearance(app: &SketApp, d: &Dialog) -> f32 {
     if spec(app, d).is_some() { look::MARKER_CLEAR } else { 0.0 }
 }
 
 /// Does this command's face place also snap to sketch points on the face, so its marker can be
 /// dragged onto one?
-pub(crate) fn snaps_to_points(app: &SolveApp, id: &str) -> bool {
+pub(crate) fn snaps_to_points(app: &SketApp, id: &str) -> bool {
     app.preferences.placement_handles && TOOLS.iter().any(|s| s.snap_commands.contains(&id))
 }
 
@@ -128,7 +128,7 @@ const REACH: f32 = 18.0;
 const FOOTPRINT_SEGS: usize = 48;
 
 /// A length expression's value (mm), zero when it does not evaluate.
-pub(crate) fn len(app: &SolveApp, e: &str) -> f64 {
+pub(crate) fn len(app: &SketApp, e: &str) -> f64 {
     app.session.doc.eval(e, ValueKind::Length).ok().filter(|v| v.is_finite()).unwrap_or(0.0).abs()
 }
 
@@ -236,7 +236,7 @@ pub(crate) fn marker(ui: &egui::Ui, painter: &egui::Painter, id: egui::Id, c: Po
 
 /// Draw the handles and take their drags (after the dialog's own arrow, so the marker wins
 /// the pointer near the base).
-pub(crate) fn show(app: &mut SolveApp, ui: &mut egui::Ui, painter: &egui::Painter, proj: &Proj, d: &mut Dialog) {
+pub(crate) fn show(app: &mut SketApp, ui: &mut egui::Ui, painter: &egui::Painter, proj: &Proj, d: &mut Dialog) {
     DRAWN.with(|h| h.borrow_mut().clear());
     RING_ABOUT.with(|c| c.set(None));
     let Some(sp) = spec(app, d) else { return };

@@ -1256,7 +1256,7 @@ fn comb_options_draw_the_combs_shown_again() {
     let combs = shown_combs(&h.app);
     assert_eq!(combs.len(), 1, "{:?}", h.app.status);
     assert_eq!(combs[0].len(), 40);
-    let tooth = |c: &[[solidcore_record::Vec3; 2]]| c[0][0].dist(c[0][1]);
+    let tooth = |c: &[[sketcore_record::Vec3; 2]]| c[0][0].dist(c[0][1]);
     let auto = tooth(&combs[0]);
     assert!(auto > 0.0);
     let slider = |name: &str| crate::scenario::rect_of(&format!("dialog:slider_track:{name}")).unwrap_or_else(|| panic!("no slider {name}"));
@@ -1300,7 +1300,7 @@ fn combs_shown_together_share_one_scale() {
     let ratio = |h: &Harness| {
         let combs = shown_combs(&h.app);
         assert_eq!(combs.len(), 2, "{:?}", h.app.status);
-        let tooth = |c: &[[solidcore_record::Vec3; 2]]| c[0][0].dist(c[0][1]);
+        let tooth = |c: &[[sketcore_record::Vec3; 2]]| c[0][0].dist(c[0][1]);
         tooth(&combs[0]) / tooth(&combs[1])
     };
     assert!((ratio(&h) - 2.0).abs() < 1e-9, "{}", ratio(&h));
@@ -1496,7 +1496,7 @@ fn corner_toast_buttons_follow_the_dialogs_and_keep_the_main_action_bottom_right
     assert!(spots.iter().all(|s| s.top() == 0.0), "one row: {spots:?}");
     assert!((spots[0].right() - row_width).abs() < 0.01, "the main action is right-most: {spots:?}");
     assert!(spots[2].right() < spots[1].left() && spots[1].right() < spots[0].left(), "dismiss, alternative, main: {spots:?}");
-    // The 3D mouse offer's four wrap: the main action and its alternative below, the dismissals above.
+    // Four actions wrap: the main action and its alternative below, the dismissals above.
     let four = [(90.0, Primary), (190.0, Secondary), (50.0, Dismiss), (120.0, Dismiss)];
     let spots = toast_action_spots_trailing(&four, row_width, 8.0, 28.0);
     let bottom = spots.iter().map(|s| s.top()).fold(0.0, f32::max);
@@ -1697,7 +1697,7 @@ fn an_open_extrude_keeps_its_taper_limits_while_the_profiles_stay() {
     assert!(crate::canvas::taper_radii_worked_out() > once, "new profiles are worked out");
 }
 
-fn point_overlays(app: &SolveApp) -> Vec<Shape> {
+fn point_overlays(app: &SketApp) -> Vec<Shape> {
     let ctx = egui::Context::default();
     let proj = display_proj(app);
     let mut output = ctx.run_ui(egui::RawInput { screen_rect: Some(proj.rect), ..Default::default() }, |ui| {
@@ -2202,7 +2202,7 @@ fn analysis_status_focused_dialog_and_real_text_popup_preserve_owner_priority_in
     }
 }
 
-fn analysis_escape_relayout_frame(h: &mut Harness, mut first_pass: impl FnMut(&crate::SolveApp)) {
+fn analysis_escape_relayout_frame(h: &mut Harness, mut first_pass: impl FnMut(&crate::SketApp)) {
     let ctx = h.ctx.clone();
     let mut tap = crate::test_support::key(egui::Key::Escape);
     tap.push(egui::Event::Key { key: egui::Key::Escape, physical_key: None, pressed: false, repeat: false, modifiers: Default::default() });

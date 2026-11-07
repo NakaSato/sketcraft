@@ -37,17 +37,14 @@ mod native_crash_macos;
 mod native_frame;
 #[cfg(target_os = "macos")]
 mod native_menu;
-mod nav_bridge;
 #[cfg(target_os = "macos")]
 mod open_documents;
-#[cfg(any(target_os = "windows", target_os = "linux", target_os = "macos"))]
-mod space_mouse;
 mod startup;
 #[cfg(any(target_os = "windows", test))]
 mod window_fit;
 
 use sketcraft_engine::{Session, io};
-use sketcraft_ui_egui::{Services, SolveApp};
+use sketcraft_ui_egui::{Services, SketApp};
 
 /// Windows: put the restored window back inside the monitor's work area if it is out of reach
 /// (a gone monitor, another scale, a taskbar edge). Sizes are in points, the work area in pixels.
@@ -84,7 +81,7 @@ fn mark(step: &str) {
 }
 
 struct App {
-    solve: SolveApp,
+    sket: SketApp,
     /// The settings folder whose start marker the first frame clears (`startup::started`).
     starting: Option<std::path::PathBuf>,
     /// Frames begun; the second one means the first was drawn (startup is over).
@@ -95,12 +92,8 @@ struct App {
     come_forward: come_forward::ComeForward,
     /// The graphics device: lost, it can't draw again (`App::watch_device`, #4172).
     gpu: Option<LostWatch>,
-    #[cfg(any(target_os = "windows", target_os = "linux", target_os = "macos"))]
-    space_mouse: space_mouse::SpaceMouse,
     #[cfg(target_os = "macos")]
     native_menu: Option<native_menu::NativeMenu>,
-    /// A device's own app moving the view (Preferences › Navigation, off by default).
-    nav_bridge: nav_bridge::NavBridge,
     /// Where the next file dialog opens: it follows the open design (#7756).
     dialog_folder: DialogFolder,
     /// Settings go to `app.ron` in the frame they change (#8275).
@@ -212,8 +205,8 @@ impl eframe::App for App {
                 std::thread::spawn(sketcraft_ui_egui::cli_link::install_on_launch);
                 // Automation runs (a control port was asked for) leave the user's AI apps alone.
                 if !self.take_focus_unwanted {
-                    sketcraft_ui_egui::ai_connect::begin(&mut self.solve);
-                    sketcraft_ui_egui::agent_chat::begin(&mut self.solve);
+                    sketcraft_ui_egui::ai_connect::begin(&mut self.sket);
+                    sketcraft_ui_egui::agent_chat::begin(&mut self.sket);
                 }
                 if let Some(dir) = self.starting.take() {
                     startup::started(&dir);
@@ -222,94 +215,78 @@ impl eframe::App for App {
         }
         self.watch_device();
         // The design on screen is the one whose commands a crash report replays.
-        self.solve.session.crash_journal = sketcraft_engine::crash::enabled();
+        self.sket.session.crash_journal = sketcraft_engine::crash::enabled();
         // The OS closing the window (Alt+F4, Cmd+Q, the window manager): ask about unsaved
         // designs first; the window closes once they are answered (`quit_requested`).
-        if ctx.input(|i| i.viewport().close_requested()) && !self.solve.quit_requested {
+        if ctx.input(|i| i.viewport().close_requested()) && !self.sket.quit_requested {
             ctx.send_viewport_cmd(egui::ViewportCommand::CancelClose);
-            sketcraft_ui_egui::documents::request_quit(&mut self.solve);
+            sketcraft_ui_egui::documents::request_quit(&mut self.sket);
             // Closed from the taskbar or a window switcher while another app had the focus: the
             // "save changes?" prompt is only seen once the window comes forward.
-            if !self.solve.quit_requested {
+            if !self.sket.quit_requested {
                 self.come_forward.start(std::time::Instant::now());
             }
         }
         self.come_forward.tick(ctx, _frame);
         #[cfg(target_os = "macos")]
-        for f in if self.solve.file_picker_busy() { Vec::new() } else { open_documents::take() } {
-            self.solve.open_path_async(&f);
+        for f in if self.sket.file_picker_busy() { Vec::new() } else { open_documents::take() } {
+            self.sket.open_path_async(&f);
         }
         #[cfg(target_os = "macos")]
         if let Some(menu) = &mut self.native_menu {
-            menu.tick(&mut self.solve, ctx);
+            menu.tick(&mut self.sket, ctx);
         }
-        self.solve.logic(ctx);
+        self.sket.logic(ctx);
         // The file chooser that opened is not the desktop's own: the user has to be told (#10159).
         #[cfg(target_os = "linux")]
         if let Some(reason) = desktop_chooser::take_reason() {
-            let text = self.solve.tr(reason).to_string();
-            self.solve.set_status(text, false);
+            let text = self.sket.tr(reason).to_string();
+            self.sket.set_status(text, false);
         }
-        self.dialog_folder.design(self.solve.session.path.as_deref());
-        #[cfg(any(target_os = "windows", target_os = "linux", target_os = "macos"))]
-        if !self.solve.file_picker_busy() {
-            self.space_mouse.tick(&mut self.solve, ctx);
-        }
-        // Every frame, so switching the bridge off reaches the reader while a picker is open too.
-        self.nav_bridge.tick(&mut self.solve, ctx);
-        if self.solve.quit_requested {
+        self.dialog_folder.design(self.sket.session.path.as_deref());
+        if self.sket.quit_requested {
             ctx.send_viewport_cmd(egui::ViewportCommand::Close);
         }
     }
     fn raw_input_hook(&mut self, ctx: &egui::Context, raw: &mut egui::RawInput) {
         #[cfg(target_os = "macos")]
         if let Some(menu) = &mut self.native_menu {
-            menu.raw_input_hook(&mut self.solve, ctx, raw);
+            menu.raw_input_hook(&mut self.sket, ctx, raw);
         }
         #[cfg(target_os = "macos")]
         macos_fullscreen_content(ctx, raw);
-        // Before the app's own hook, which adds the control channel's events.
-        #[cfg(any(target_os = "windows", target_os = "linux", target_os = "macos"))]
-        self.space_mouse.raw_input_hook(self.solve.preferences.space_mouse_enabled, raw);
-        // The 3D mouse's buttons, before the app reads the frame: Esc and held modifiers join its input.
-        #[cfg(any(target_os = "windows", target_os = "linux", target_os = "macos"))]
-        sketcraft_ui_egui::space_mouse::buttons_hook(&mut self.solve, ctx, self.space_mouse.buttons(), raw);
-        self.solve.raw_input_hook(raw);
+        self.sket.raw_input_hook(raw);
     }
     fn ui(&mut self, ui: &mut egui::Ui, frame: &mut eframe::Frame) {
-        content_ui(&mut self.solve, ui);
+        content_ui(&mut self.sket, ui);
         // After the frame's UI, so a setting changed in it (Preferences' OK) is written now.
         let now = std::time::Instant::now();
         if self.prefs_writer.due(ui.input(|i| i.events.iter().any(changes_settings)), now)
             && let Some(storage) = frame.storage_mut()
-            && let Some(wait) = self.prefs_writer.store(storage, self.solve.prefs(), now)
+            && let Some(wait) = self.prefs_writer.store(storage, self.sket.prefs(), now)
         {
             ui.ctx().request_repaint_after(wait);
         }
     }
     fn save(&mut self, storage: &mut dyn eframe::Storage) {
-        let prefs = self.solve.prefs();
+        let prefs = self.sket.prefs();
         storage.set_string(sketcraft_ui_egui::prefs::STORAGE_KEY, prefs.clone());
         self.prefs_writer.written = Some(prefs);
     }
     fn on_exit(&mut self) {
         // The agent chat's agent and everything it started end with the app.
-        sketcraft_ui_egui::agent_chat::shutdown(&mut self.solve);
+        sketcraft_ui_egui::agent_chat::shutdown(&mut self.sket);
         // A save still being written ends before the app does.
-        sketcraft_ui_egui::save_job::tick(&mut self.solve, true);
+        sketcraft_ui_egui::save_job::tick(&mut self.sket, true);
         // Pictures still being drawn off the window thread (Home cards, file previews) end
         // before the GPU is torn down: one drawn while the process exits can crash the driver.
         if !sketcraft_engine::capture::close(std::time::Duration::from_secs(5)) {
             log::warn!("a picture was still being drawn as the app closed");
         }
-        sketcraft_ui_egui::recovery_ui::close(&mut self.solve);
+        sketcraft_ui_egui::recovery_ui::close(&mut self.sket);
         // A GPU path tracer setup still running did not stop the app (#9236).
-        sketcraft_ui_egui::render_workspace::close(&mut self.solve);
-        sketcraft_ui_egui::open_elsewhere::close(&mut self.solve);
-        // Before a restart (`Drop for App`) starts the next instance, which would otherwise get
-        // nothing from the 3D mouse driver (`sketcraft_3dx_client::stop`).
-        #[cfg(target_os = "macos")]
-        sketcraft_3dx_client::stop();
+        sketcraft_ui_egui::render_workspace::close(&mut self.sket);
+        sketcraft_ui_egui::open_elsewhere::close(&mut self.sket);
         sketcraft_engine::crash::end_session();
         // The next start (after a lost device, or into an update) begins once the app is dropped
         // (`Drop for App`), when the settings are on disk.
@@ -331,7 +308,7 @@ impl Drop for App {
             device_lost::end();
         }
         // An update asked to restart into the new version or to run its installer.
-        if let Some((program, args)) = sketcraft_ui_egui::update::take_launch(&mut self.solve) {
+        if let Some((program, args)) = sketcraft_ui_egui::update::take_launch(&mut self.sket) {
             let mut command = std::process::Command::new(&program);
             command.args(&args);
             #[cfg(windows)]
@@ -372,7 +349,7 @@ impl App {
         sketcraft_engine::crash::phase(&format!("graphics device lost: {reason}"));
         gpu.lost_at = Some(device_lost::now_secs());
         gpu.reason = reason;
-        self.solve.quit_requested = true;
+        self.sket.quit_requested = true;
     }
 }
 
@@ -450,7 +427,7 @@ fn case_variants(exts: &[&str]) -> Vec<String> {
 
 /// egui's root Ui spans the whole viewport, including native safe areas. Lay out the app
 /// inside the unobscured rectangle so its application bar can receive native pointer input.
-fn content_ui(app: &mut SolveApp, ui: &mut egui::Ui) {
+fn content_ui(app: &mut SketApp, ui: &mut egui::Ui) {
     let content = ui.ctx().content_rect();
     let above = egui::Rect::from_min_max(ui.max_rect().min, egui::pos2(ui.max_rect().right(), content.top()));
     ui.painter().rect_filled(above, 0.0, sketcraft_ui_egui::theme::Tokens::get().app_bar);
@@ -802,7 +779,7 @@ fn graphics() -> Option<serde_json::Value> {
     graphics_path().and_then(|p| std::fs::read_to_string(p).ok()).and_then(|s| serde_json::from_str::<serde_json::Value>(&s).ok())
 }
 
-fn restore_preferences(app: &mut SolveApp, stored_ui: Option<&str>, saved_graphics: Option<&serde_json::Value>, safe_mode: bool) {
+fn restore_preferences(app: &mut SketApp, stored_ui: Option<&str>, saved_graphics: Option<&serde_json::Value>, safe_mode: bool) {
     if let Some(p) = stored_ui.filter(|_| !safe_mode) {
         app.load_prefs(p);
     }
@@ -812,7 +789,7 @@ fn restore_preferences(app: &mut SolveApp, stored_ui: Option<&str>, saved_graphi
 }
 
 /// Restore startup choices after loading the separately saved UI preferences.
-fn restore_graphics_preferences(app: &mut SolveApp, saved: Option<&serde_json::Value>) {
+fn restore_graphics_preferences(app: &mut SketApp, saved: Option<&serde_json::Value>) {
     app.preferences.graphics_adapter = saved.and_then(|v| v.get("adapter").and_then(serde_json::Value::as_str)).unwrap_or_default().to_string();
     // graphics.json chooses the window before app.ron is loaded. Reflect that saved choice,
     // not the current session's window system (which an environment override may change).
@@ -913,18 +890,6 @@ fn app_viewport(custom_titlebar: bool) -> Result<egui::ViewportBuilder, eframe::
 
 /// The window's app id: it names the desktop entry, so it is the packages' reverse-DNS id.
 const APP_ID: &str = sketcraft_engine::io::APP_ID;
-
-/// Disconnects from the 3D mouse driver when dropped, as `main` returns or a panic unwinds out
-/// of it (`sketcraft_3dx_client::stop`).
-#[cfg(target_os = "macos")]
-struct DriverClient;
-
-#[cfg(target_os = "macos")]
-impl Drop for DriverClient {
-    fn drop(&mut self) {
-        sketcraft_3dx_client::stop();
-    }
-}
 
 fn main() -> eframe::Result {
     #[cfg(target_os = "macos")]
@@ -1110,10 +1075,6 @@ fn main() -> eframe::Result {
     let created = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
     let created_in_app = created.clone();
     let starting = settings.clone();
-    // A panic on the window's thread ends the app without `on_exit`; this disconnects from the
-    // 3D mouse driver then too.
-    #[cfg(target_os = "macos")]
-    let _driver_client = DriverClient;
     mark("run_native");
     let result = eframe::run_native(
         "SketCraft",
@@ -1130,7 +1091,7 @@ fn main() -> eframe::Result {
             // now, so the answer is there when a file is opened (#10159).
             #[cfg(target_os = "linux")]
             desktop_chooser::start(&cc.egui_ctx);
-            let mut app = SolveApp::new(Session::default(), services(cc, &dialog_folder));
+            let mut app = SketApp::new(Session::default(), services(cc, &dialog_folder));
             app.apply_off_thread = Some(sketcraft_ui_egui::dialogs::APPLY_AT_ONCE);
             app.custom_titlebar = custom_titlebar;
             #[cfg(target_os = "windows")]
@@ -1284,9 +1245,6 @@ fn main() -> eframe::Result {
             if !notes.is_empty() {
                 app.set_status(notes.join(" "), true);
             }
-            let nav_bridge = nav_bridge::NavBridge::start(&cc.egui_ctx);
-            #[cfg(any(target_os = "windows", target_os = "linux", target_os = "macos"))]
-            let space_mouse = space_mouse::SpaceMouse::start(&cc.egui_ctx, nav_bridge.claim());
             #[cfg(target_os = "macos")]
             let native_menu = match native_menu::NativeMenu::new(&app, &cc.egui_ctx) {
                 Ok(menu) => Some(menu),
@@ -1304,17 +1262,14 @@ fn main() -> eframe::Result {
             Ok(Box::new(App {
                 // Before `app` moves: the settings as read, already on disk.
                 prefs_writer: PrefsWriter::read(app.prefs()),
-                solve: app,
+                sket: app,
                 starting,
                 frames: 0,
                 take_focus_unwanted: control_port.is_some(),
                 come_forward: come_forward::ComeForward::default(),
                 gpu,
-                #[cfg(any(target_os = "windows", target_os = "linux", target_os = "macos"))]
-                space_mouse,
                 #[cfg(target_os = "macos")]
                 native_menu,
-                nav_bridge,
                 dialog_folder,
             }))
         }),
@@ -1609,8 +1564,8 @@ mod prefs_writer_tests {
         }
     }
 
-    fn new_app() -> sketcraft_ui_egui::SolveApp {
-        sketcraft_ui_egui::SolveApp::new(sketcraft_engine::Session::default(), sketcraft_ui_egui::Services::default())
+    fn new_app() -> sketcraft_ui_egui::SketApp {
+        sketcraft_ui_egui::SketApp::new(sketcraft_engine::Session::default(), sketcraft_ui_egui::Services::default())
     }
 
     /// #8275: Preferences' View navigator and Display quality, changed and confirmed, are on disk
@@ -1769,7 +1724,7 @@ mod viewport_tests {
             let ctx = egui::Context::default();
             sketcraft_ui_egui::fonts::setup_bundled_fonts(&ctx);
             ctx.set_zoom_factor(zoom);
-            let mut app = super::SolveApp::new(super::Session::default(), Default::default());
+            let mut app = super::SketApp::new(super::Session::default(), Default::default());
             app.integrated_titlebar = true;
             for (command, params) in [
                 ("sketch.create", json!({"plane":"XY"})),
@@ -1780,7 +1735,7 @@ mod viewport_tests {
                 app.run(command, params).unwrap();
             }
             let mut time = 0.0;
-            let mut frame = |app: &mut super::SolveApp, fullscreen, events| {
+            let mut frame = |app: &mut super::SketApp, fullscreen, events| {
                 time += 0.05;
                 let mut raw = RawInput {
                     screen_rect: Some(Rect::from_min_size(Pos2::ZERO, vec2(1600.0, 1000.0))),
@@ -1881,7 +1836,7 @@ mod msaa_tests {
         use serde_json::json;
 
         for saved in [None, Some(json!(null)), Some(json!({})), Some(json!({"window_system": 7})), Some(json!({"window_system": "unknown"}))] {
-            let mut app = super::SolveApp::new(super::Session::default(), super::Services::default());
+            let mut app = super::SketApp::new(super::Session::default(), super::Services::default());
             app.preferences.window_system = "wayland".into();
             super::restore_graphics_preferences(&mut app, saved.as_ref());
             assert_eq!(app.preferences.window_system, "auto", "{saved:?}");

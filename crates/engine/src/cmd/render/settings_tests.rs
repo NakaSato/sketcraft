@@ -240,7 +240,7 @@ fn light_fixture(s: &mut Session, method: &str) {
 #[test]
 fn render_lights_small_area_pose_and_resize_preserve_aspect_and_emitting_side() {
     use crate::schema::render_lights::Geometry;
-    use solidcore_record::Vec3;
+    use sketcore_record::Vec3;
     let mut s = Session::default();
     save(
         &mut s,

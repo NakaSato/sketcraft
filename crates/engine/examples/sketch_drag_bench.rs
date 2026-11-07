@@ -2,7 +2,7 @@
 use std::{error::Error, io::Write, path::PathBuf, sync::Arc, time::Instant};
 
 use serde_json::{Value, json};
-use solidcore_record::Vec2;
+use sketcore_record::Vec2;
 use sketcraft_engine::Session;
 use sketcraft_sketch::{Analysis, ConstraintKind, Hold, Sketch, profiling::capture, solve_with};
 

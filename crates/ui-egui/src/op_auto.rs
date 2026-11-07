@@ -18,7 +18,7 @@
 use serde_json::Value;
 use sketcraft_engine::Addition;
 
-use crate::SolveApp;
+use crate::SketApp;
 use crate::dialogs::{Dialog, Kind, OPS};
 
 /// Operation indices (see [`OPS`]).
@@ -196,7 +196,7 @@ fn check_commands(cmds: &[(String, Value)], revision: u64) -> (Vec<(String, Valu
 
 /// Bring the window's operation in step with its material (once per frame, after Extrude's own
 /// choice and before the window is drawn).
-pub fn update(app: &mut SolveApp, d: &mut Dialog, ctx: &egui::Context) {
+pub fn update(app: &mut SketApp, d: &mut Dialog, ctx: &egui::Context) {
     d.op_auto.pending = false;
     // A check still running is taken in whatever the window does now, so it never looks busy.
     app.op_check.poll();
@@ -307,7 +307,7 @@ pub fn hold_ok(d: &mut Dialog, ok: bool, again: &mut bool, cancel: bool) -> bool
 /// The shown bodies as the `targets` of a new feature's Join, Cut or Intersect that names none,
 /// when some bodies are hidden: a hidden body is left alone. With none shown, such a feature has
 /// nothing to change.
-pub fn scope_targets(app: &SolveApp, d: &Dialog, cmds: &mut [(String, Value)]) -> Result<(), String> {
+pub fn scope_targets(app: &SketApp, d: &Dialog, cmds: &mut [(String, Value)]) -> Result<(), String> {
     if rule(&d.kind).is_none() || d.editing.is_some() {
         return Ok(());
     }

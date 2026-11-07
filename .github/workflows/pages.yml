@@ -15,7 +15,6 @@ concurrency:
 
 env:
   CARGO_TERM_COLOR: always
-  TRUNK_VERSION: '0.22.0'
 
 jobs:
   build:
@@ -44,11 +43,15 @@ jobs:
         with:
           key: github-pages-wasm
 
-      - name: Install Trunk
-        run: cargo install trunk --locked --version "$TRUNK_VERSION"
+      - name: Install wasm-bindgen and wasm-opt
+        run: |
+          # wasm-bindgen must match the version in Cargo.lock.
+          version="$(grep -A1 '^name = "wasm-bindgen"$' Cargo.lock | sed -n 's/^version = "\(.*\)"$/\1/p')"
+          cargo install wasm-bindgen-cli --locked --version "$version"
+          sudo apt-get update -q && sudo apt-get install -y --no-install-recommends binaryen
 
       - name: Build browser app
-        run: trunk build --release --locked --dist dist/site/play --public-url ./
+        run: python3 scripts/build_web.py --dist dist/site/play
 
       - name: Stage landing page and discovery files
         env:

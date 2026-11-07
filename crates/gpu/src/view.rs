@@ -12,7 +12,7 @@
 use sketcraft_geom::prelude::*;
 use std::sync::{Arc, Mutex};
 
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 
 use crate::pbr;
 use wgpu::util::DeviceExt;
@@ -4615,7 +4615,7 @@ mod tests {
     #[test]
     fn shared_tris_share_each_vertex_once() {
         use super::{SHARED_SIZE, SharedTris};
-        use solidcore_record::Vec3;
+        use sketcore_record::Vec3;
         use sketcraft_geom::Mesh;
         let p = [Vec3::new(0.0, 0.0, 0.0), Vec3::new(1.0, 0.0, 0.0), Vec3::new(1.0, 1.0, 0.0), Vec3::new(0.0, 1.0, 0.0)];
         // Two triangles of a square, each corner its own vertex (as an STL is read).

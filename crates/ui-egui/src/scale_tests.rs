@@ -254,7 +254,7 @@ fn assembly_tree_hover_highlight_cost() {
 /// A frame of the viewport for `app`'s camera, drawing the given model and highlight scenes.
 #[cfg(not(target_arch = "wasm32"))]
 pub(crate) fn view_frame(
-    app: &crate::SolveApp,
+    app: &crate::SketApp,
     size: u32,
     model: (u64, &crate::gpu::SceneSlot),
     highlight: (u64, &crate::gpu::SceneSlot),
@@ -621,7 +621,7 @@ fn zoomed_view_frame_cost() {
 #[test]
 #[ignore = "manual highlight measurement"]
 fn many_selected_bodies_hover_cost() {
-    use solidcore_record::Vec3;
+    use sketcore_record::Vec3;
     let mut h = match std::env::var_os("SKETCRAFT_SCALE_DESIGN") {
         Some(path) => {
             let mut h = Harness::new();

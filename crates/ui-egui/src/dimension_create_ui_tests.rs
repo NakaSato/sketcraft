@@ -12,7 +12,7 @@ fn line(end: [f64; 2]) -> Harness {
     // Leave room around the measured shape while testing the draft itself. Separate Fit
     // tests exercise measured dock occlusion without changing the picking projection.
     h.app.cam.distance = 80.0;
-    h.app.cam.target = solidcore_record::Vec3::new(end[0] * 0.5, end[1] * 0.5, 0.0);
+    h.app.cam.target = sketcore_record::Vec3::new(end[0] * 0.5, end[1] * 0.5, 0.0);
     h.settle();
     h
 }
@@ -357,7 +357,7 @@ fn the_dimension_window_preferences_default_save_and_reset() {
     assert_eq!(old.dimension_input, DimensionInput::View, "saved preferences without it keep the box");
     let read = crate::prefs::lenient(&json!({"dimension_input": "sideways", "dimension_step_mm": 2.0}));
     assert_eq!((read.dimension_input, read.dimension_step_mm), (DimensionInput::View, 2.0), "an unknown choice costs only itself");
-    let mut app = crate::SolveApp::new(sketcraft_engine::Session::default(), Default::default());
+    let mut app = crate::SketApp::new(sketcraft_engine::Session::default(), Default::default());
     for refused in [
         json!({"dimension_input": "sideways"}),
         json!({"dimension_step_mm": 0.0}),
@@ -370,7 +370,7 @@ fn the_dimension_window_preferences_default_save_and_reset() {
     assert_eq!(app.preferences, Prefs::default(), "a refusal changes nothing");
     control(&mut app, &json!({"open": "Sketch", "dimension_input": "window", "dimension_step_mm": 0.5, "dimension_step_deg": 15.0})).unwrap();
     control(&mut app, &json!({"button": "apply"})).unwrap();
-    let mut other = crate::SolveApp::new(sketcraft_engine::Session::default(), Default::default());
+    let mut other = crate::SketApp::new(sketcraft_engine::Session::default(), Default::default());
     other.load_prefs(&app.prefs());
     assert_eq!(
         (other.preferences.dimension_input, other.preferences.dimension_step_mm, other.preferences.dimension_step_deg),
@@ -537,7 +537,7 @@ fn rectangle_side_and_fixed_origin_line_dimensions_preserve_other_constraints() 
         h.app.run("sketch.rectangle.two_point", json!({"p0":[0,0],"p1":[20,10]})).unwrap();
         h.call("ui.view", json!({"view":"top"}));
         h.app.cam.distance = 80.;
-        h.app.cam.target = solidcore_record::Vec3::new(10., 5., 0.);
+        h.app.cam.target = sketcore_record::Vec3::new(10., 5., 0.);
         h.settle();
         let baseline = h.app.session.doc.to_json();
         let undo = h.app.session.undo.len();
@@ -566,7 +566,7 @@ fn the_first_dimension_scales_the_drawing_unless_the_preference_is_off() {
         h.app.run("sketch.rectangle.two_point", json!({"p0":[0,0],"p1":[20,10]})).unwrap();
         h.call("ui.view", json!({"view":"top"}));
         h.app.cam.distance = 80.;
-        h.app.cam.target = solidcore_record::Vec3::new(10., 5., 0.);
+        h.app.cam.target = sketcore_record::Vec3::new(10., 5., 0.);
         h.settle();
         place(&mut h, &[[10., 0.]], [10., -5.]);
         type_value(&mut h, &format!("{side} mm"));
@@ -581,7 +581,7 @@ fn the_first_dimension_scales_the_drawing_unless_the_preference_is_off() {
 
 #[test]
 fn pending_second_nested_plane_uses_world_picks_but_one_local_dimension() {
-    use solidcore_record::Vec2;
+    use sketcore_record::Vec2;
     crate::dim_view::cancel();
     let mut h = Harness::new();
     let parent = h.app.run("component.create", json!({"name":"Assembly"})).unwrap();
@@ -673,7 +673,7 @@ fn dimension_to_fillet_virtual_sharp_keeps_the_arc_and_fixed_origin() {
     let corner = fillet["virtual_corners"][0].as_str().unwrap().to_string();
     h.call("ui.view", json!({"view":"top"}));
     h.app.cam.distance = 90.;
-    h.app.cam.target = solidcore_record::Vec3::new(5., 10., 0.);
+    h.app.cam.target = sketcore_record::Vec3::new(5., 10., 0.);
     h.settle();
     let baseline = h.app.session.doc.to_json();
     let undo = h.app.session.undo.len();
@@ -704,7 +704,7 @@ fn a_committed_dimension_moves_with_the_typed_preview_and_is_picked_where_drawn(
     let width = h.app.run("sketch.dimension", json!({"entities":["l3"],"value":20})).unwrap()["param"].as_str().unwrap().to_string();
     h.call("ui.view", json!({"view":"top"}));
     h.app.cam.distance = 80.;
-    h.app.cam.target = solidcore_record::Vec3::new(10., 5., 0.);
+    h.app.cam.target = sketcore_record::Vec3::new(10., 5., 0.);
     h.settle();
     let at = crate::dim_view::text_at(&width).unwrap();
     let drawn = crate::dim_view::drawn();
@@ -764,7 +764,7 @@ fn inch_dimension_entry_survives_unit_changes_undo_and_reopen() {
 #[test]
 fn placing_a_two_point_dimension_picks_horizontal_vertical_or_aligned() {
     // What each placement fixes at 10 mm: the X span, the Y span, or the length.
-    let spans = |a: solidcore_record::Vec2, b: solidcore_record::Vec2| [(b.x - a.x).abs(), (b.y - a.y).abs(), a.dist(b)];
+    let spans = |a: sketcore_record::Vec2, b: sketcore_record::Vec2| [(b.x - a.x).abs(), (b.y - a.y).abs(), a.dist(b)];
     for (at, measured) in
         [([6., 25.], 0), ([8., 26.], 0), ([-10., 1.], 1), ([22., 14.], 1), ([10., 4.], 2), ([-6., 22.], 2), ([2., 20.], 2), ([15., 4.], 2)]
     {
@@ -837,10 +837,7 @@ fn a_driven_dimension_nothing_fixes_any_more_takes_a_value() {
         sk.constraints
             .iter()
             .find(|c| {
-                matches!(
-                    c.kind,
-                    sketcraft_engine::sketch::ConstraintKind::Diameter { .. } | sketcraft_engine::sketch::ConstraintKind::Radius { .. }
-                )
+                matches!(c.kind, sketcraft_engine::sketch::ConstraintKind::Diameter { .. } | sketcraft_engine::sketch::ConstraintKind::Radius { .. })
             })
             .cloned()
             .unwrap()
@@ -906,7 +903,7 @@ fn sketch_with(setup: &[(&str, serde_json::Value)], centre: [f64; 2]) -> Harness
     }
     h.call("ui.view", json!({"view":"top"}));
     h.app.cam.distance = 80.0;
-    h.app.cam.target = solidcore_record::Vec3::new(centre[0], centre[1], 0.0);
+    h.app.cam.target = sketcore_record::Vec3::new(centre[0], centre[1], 0.0);
     h.settle();
     h.step(&json!({"start":"sketch.dimension"})).unwrap();
     h
@@ -1491,7 +1488,7 @@ fn type_first_switching_between_aligned_horizontal_and_vertical_keeps_the_picked
                 let a = sk.point(sk.resolve_point("l1.start").unwrap()).unwrap();
                 let b = sk.point(sk.resolve_point("l1.end").unwrap()).unwrap();
                 assert!(
-                    a.dist(solidcore_record::Vec2::new(0., 0.)) < 1e-6 && b.dist(solidcore_record::Vec2::new(end[0], end[1])) < 1e-6,
+                    a.dist(sketcore_record::Vec2::new(0., 0.)) < 1e-6 && b.dist(sketcore_record::Vec2::new(end[0], end[1])) < 1e-6,
                     "{ctx}: the preview moved the points to {a:?} {b:?}"
                 );
             }
@@ -1502,7 +1499,7 @@ fn type_first_switching_between_aligned_horizontal_and_vertical_keeps_the_picked
             let a = sk.point(sk.resolve_point("l1.start").unwrap()).unwrap();
             let b = sk.point(sk.resolve_point("l1.end").unwrap()).unwrap();
             assert!(
-                a.dist(solidcore_record::Vec2::new(0., 0.)) < 1e-6 && b.dist(solidcore_record::Vec2::new(end[0], end[1])) < 1e-6,
+                a.dist(sketcore_record::Vec2::new(0., 0.)) < 1e-6 && b.dist(sketcore_record::Vec2::new(end[0], end[1])) < 1e-6,
                 "{picks:?} at {commit_at:?}: {a:?} {b:?}"
             );
             let new = added(&h, 0);
@@ -1563,7 +1560,7 @@ fn midpoint_then_edge_creates_a_distance_in_one_undo_step() {
 
 /// The short sketch edge overlaps a face's automatically projected boundary.
 fn midpoint_face_sketch() -> Harness {
-    use solidcore_record::Vec3;
+    use sketcore_record::Vec3;
     crate::dim_view::cancel();
     let mut h = Harness::new();
     h.app.run("sketch.create", json!({"plane":"XY"})).unwrap();
@@ -1814,7 +1811,7 @@ fn shown_dimensions() -> (Harness, u64) {
     h.app.session.visibility.shown_dimensions.push(sketch);
     h.call("ui.view", json!({"view":"top"}));
     h.app.cam.distance = 80.0;
-    h.app.cam.target = solidcore_record::Vec3::new(10.0, 5.0, 0.0);
+    h.app.cam.target = sketcore_record::Vec3::new(10.0, 5.0, 0.0);
     h.settle();
     (h, sketch)
 }
@@ -2086,7 +2083,7 @@ fn a_circle_centre_is_dimensioned_from_a_sketch_axis() {
         h.app.run("sketch.dimension", json!({"entities":["c1"],"type":"radius","value":"5 mm"})).unwrap();
         h.call("ui.view", json!({"view":"top"}));
         h.app.cam.distance = 80.0;
-        h.app.cam.target = solidcore_record::Vec3::new(15., 10., 0.);
+        h.app.cam.target = sketcore_record::Vec3::new(15., 10., 0.);
         h.settle();
         h.step(&json!({"start":"sketch.dimension"})).unwrap();
         for p in &picks {
@@ -2115,7 +2112,7 @@ fn a_line_is_dimensioned_against_the_sketch_x_axis() {
         h.app.run("sketch.dimension", json!({"entities":["l1"],"type":"length","value":"28.284271247461902 mm"})).unwrap();
         h.call("ui.view", json!({"view":"top"}));
         h.app.cam.distance = 80.0;
-        h.app.cam.target = solidcore_record::Vec3::new(10., 10., 0.);
+        h.app.cam.target = sketcore_record::Vec3::new(10., 10., 0.);
         h.settle();
         h.step(&json!({"start":"sketch.dimension"})).unwrap();
         for p in &picks {

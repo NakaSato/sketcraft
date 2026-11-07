@@ -3,13 +3,13 @@
 use crate::test_support::sample_app;
 use egui::pos2;
 use serde_json::json;
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 use sketcraft_engine::Session;
 use sketcraft_engine::geom::prelude::*;
 
 use crate::context_menu::{self, Item, Target};
 use crate::viewport::Hit;
-use crate::{Services, SolveApp};
+use crate::{Services, SketApp};
 
 #[test]
 fn properties_leave_with_the_document_but_survive_a_failed_open() {
@@ -40,7 +40,7 @@ fn find(items: &[Item], label: &str) -> Item {
 }
 
 /// Run the item labelled `label` of the target's menu or one of its flyouts.
-fn act(app: &mut SolveApp, t: &Target, label: &str) {
+fn act(app: &mut SketApp, t: &Target, label: &str) {
     let item = find(&context_menu::entries(app, t), label);
     context_menu::run_item(app, &item, pos2(0.0, 0.0));
 }
@@ -91,7 +91,7 @@ fn linked_component_opens_its_part_in_a_tab_and_reports_a_missing_source() {
     assert!(h.app.status.as_ref().is_some_and(|(message, _, error)| *error && message.contains("Linked design not found")));
 }
 
-fn body(app: &SolveApp) -> String {
+fn body(app: &SketApp) -> String {
     app.session.model.state().bodies[0].name.clone()
 }
 
@@ -139,7 +139,7 @@ fn appearance_component_action_assigns_an_inherited_look() {
 /// browser row opens, Edit Sketch among it.
 #[test]
 fn a_sketch_curve_in_the_viewport_offers_the_sketch_menu() {
-    let mut app = SolveApp::new(Session::default(), Services::default());
+    let mut app = SketApp::new(Session::default(), Services::default());
     app.run("sketch.create", json!({"plane": "XY", "name": "Base"})).unwrap();
     app.run("sketch.rectangle.two_point", json!({"p0": [0, 0], "p1": [40, 30]})).unwrap();
     app.run("sketch.finish", json!({})).unwrap();
@@ -297,7 +297,7 @@ fn component_properties_measure_one_assembly_placement() {
     session.execute("component.create", &json!({"name": "Block"})).unwrap();
     session.execute("solid.box", &json!({"length": 10, "width": 10, "height": 10})).unwrap();
     session.execute("occurrence.copy", &json!({"component": component, "translate": [100, 0, 0]})).unwrap();
-    let mut app = SolveApp::new(session, Services::default());
+    let mut app = SketApp::new(session, Services::default());
     act(&mut app, &Target::Component { id: component }, "Properties");
     let (title, properties) = app.menu.props.as_ref().unwrap();
     assert_eq!(title, "Subassembly");
@@ -339,7 +339,7 @@ fn a_selected_arc_offers_an_arc_length_dimension() {
         let ss = st.sketch(app.session.active_sketch.unwrap()).unwrap();
         ss.sketch.curves.iter().map(|c| c.id.clone()).collect()
     };
-    let select = |app: &mut SolveApp, id: &str| app.run("select.set", json!({"items": [{"type": "sketch_curve", "id": id}]})).unwrap();
+    let select = |app: &mut SketApp, id: &str| app.run("select.set", json!({"items": [{"type": "sketch_curve", "id": id}]})).unwrap();
     select(&mut app, &ids[1]);
     assert!(!context_menu::items(&app, &Target::Viewport).iter().any(|i| i.label == "Arc Length Dimension"), "a circle has no arc length");
     select(&mut app, &ids[0]);
@@ -502,7 +502,7 @@ fn component_menu_activates_grounds_and_pastes() {
 
 #[test]
 fn move_shortcut_uses_the_selected_nested_instance_and_pending_position() {
-    let mut app = SolveApp::new(Session::default(), Services::default());
+    let mut app = SketApp::new(Session::default(), Services::default());
     let parent = app.run("component.create", json!({"name":"Assembly"})).unwrap()["occurrence"].as_u64().unwrap();
     let child = app.run("component.create", json!({"name":"Carriage"})).unwrap()["occurrence"].as_u64().unwrap();
     app.run("solid.box", json!({"length":30,"width":20,"height":10})).unwrap();
@@ -529,7 +529,7 @@ fn move_shortcut_uses_the_selected_nested_instance_and_pending_position() {
 
 #[test]
 fn move_shortcut_respects_grounding_and_keeps_body_selection_as_a_body_move() {
-    let mut app = SolveApp::new(Session::default(), Services::default());
+    let mut app = SketApp::new(Session::default(), Services::default());
     let occurrence = app.run("component.create", json!({"name":"Carriage"})).unwrap()["occurrence"].as_u64().unwrap();
     app.run("solid.box", json!({"length":30,"width":20,"height":10})).unwrap();
     app.run("occurrence.ground", json!({"occurrence":occurrence,"grounded":true})).unwrap();
@@ -549,7 +549,7 @@ fn move_shortcut_respects_grounding_and_keeps_body_selection_as_a_body_move() {
 
 #[test]
 fn component_and_occurrence_menus_cycle_shared_identification_color() {
-    let mut app = SolveApp::new(Session::default(), Services::default());
+    let mut app = SketApp::new(Session::default(), Services::default());
     let id = app.run("component.create", json!({"name":"Part"})).unwrap()["component"].as_u64().unwrap();
     let original = app.session.doc.component_identification_color(id);
     assert!(app.session.colored_components.is_none());
@@ -689,7 +689,7 @@ fn delete_key_handles_every_kind_and_asks_about_dependents() {
 /// error, and changes nothing; with something selected it deletes it, as the Delete key does.
 #[test]
 fn modify_delete_with_nothing_selected_asks_for_a_pick() {
-    let mut app = SolveApp::new(Session::default(), Services::default());
+    let mut app = SketApp::new(Session::default(), Services::default());
     app.run("solid.box", json!({"length": 10, "width": 10, "height": 10, "body_name": "Box"})).unwrap();
     app.run("construct.plane.offset", json!({"base": "XY", "offset": 10})).unwrap();
     let n = app.session.doc.features.len();
@@ -707,7 +707,7 @@ fn modify_delete_with_nothing_selected_asks_for_a_pick() {
 
 #[test]
 fn browser_feature_menu_deletes_its_target_and_supports_undo() {
-    let mut app = SolveApp::new(Session::default(), Services::default());
+    let mut app = SketApp::new(Session::default(), Services::default());
     for (name, x) in [("Keep", 0), ("Delete", 30)] {
         app.run("solid.box", json!({"length":10,"width":10,"height":10,"corner":[x,0,0],"body_name":name})).unwrap();
     }
@@ -733,7 +733,7 @@ fn browser_feature_menu_deletes_its_target_and_supports_undo() {
 
 #[test]
 fn browser_feature_menu_renames_its_target_and_supports_undo() {
-    let mut app = SolveApp::new(Session::default(), Services::default());
+    let mut app = SketApp::new(Session::default(), Services::default());
     for x in [0, 30] {
         app.run("solid.box", json!({"length":10,"width":10,"height":10,"corner":[x,0,0]})).unwrap();
     }
@@ -805,7 +805,7 @@ fn menu_delete_items_use_the_same_path() {
     let plate = restored.body(&b).unwrap();
     assert_eq!(plate.component, 0);
     assert!((sketcraft_engine::kernel::measure(&plate.body).unwrap().volume - original_volume).abs() < 1e-6);
-    assert!(plate.mesh().contains(solidcore_record::Vec3::new(40.0, 35.0, 12.0)));
+    assert!(plate.mesh().contains(sketcore_record::Vec3::new(40.0, 35.0, 12.0)));
     let mut reopened = sketcraft_engine::Session::new(sketcraft_engine::doc::Document::from_json(&app.session.doc.to_json()).unwrap());
     reopened.refresh();
     let reopened_state = reopened.world_state().unwrap();
@@ -1136,7 +1136,7 @@ fn rename_shows_f2_and_f2_with_a_menu_open_renames_what_the_menu_is_for() {
     png.extend([8, 6, 0, 0, 0, 0, 0, 0, 0]);
     let data = sketcraft_engine::doc::canvas::base64_encode(&png);
     let canvas = h.app.run("canvas.insert", json!({"data": data, "plane": "XY", "width": 80})).unwrap()["canvas"].as_u64().unwrap();
-    let rename_key = |app: &SolveApp, target: &Target| {
+    let rename_key = |app: &SketApp, target: &Target| {
         context_menu::entries(app, target)
             .into_iter()
             .find(|i| i.id == "ui.rename")
@@ -1157,7 +1157,7 @@ fn rename_shows_f2_and_f2_with_a_menu_open_renames_what_the_menu_is_for() {
     }
     assert_eq!(rename_key(&h.app, &Target::NamedView { name: "Top".into() }), "", "F2 does not rename a saved view");
     let sample = sketcraft_engine::sample::samples().into_iter().find(|s| s.name == "Hinge Assembly").unwrap();
-    let mut assembly = SolveApp::new(Session::default(), Services::default());
+    let mut assembly = SketApp::new(Session::default(), Services::default());
     assembly.session.run_script(&(sample.script)()).unwrap();
     let joint = assembly.session.doc.assembly.joints[0].id;
     assert_eq!(rename_key(&assembly, &Target::Joint { id: joint }), "", "F2 does not rename a joint");
@@ -1232,14 +1232,14 @@ fn occurrence_moves_turn_about_their_origin_then_move() {
     let occ = app.session.doc.occurrences[0].id;
     app.run("occurrence.ground", json!({"occurrence": occ, "grounded": false})).unwrap();
     let mut m = crate::browser::OccMove::new(occ);
-    m.pivot = Some(solidcore_record::Vec3::new(5.0, 0.0, 0.0));
+    m.pivot = Some(sketcore_record::Vec3::new(5.0, 0.0, 0.0));
     m.translate = [10.0, 0.0, 0.0];
     m.angles = [0.0, 0.0, 90.0];
     crate::browser::apply_occurrence_move(&mut app, &m);
     let t = *app.session.pending_moves.get(&occ).unwrap();
     // The pivot lands 10 mm along X; X turns into Y.
-    let p = sketcraft_engine::doc::apply_point(&t, solidcore_record::Vec3::new(5.0, 0.0, 0.0));
-    let x = sketcraft_engine::doc::apply_vector(&t, solidcore_record::Vec3::X);
+    let p = sketcraft_engine::doc::apply_point(&t, sketcore_record::Vec3::new(5.0, 0.0, 0.0));
+    let x = sketcraft_engine::doc::apply_vector(&t, sketcore_record::Vec3::X);
     assert!((p.x - 15.0).abs() < 1e-9 && p.y.abs() < 1e-9, "{p:?}");
     assert!((x.y - 1.0).abs() < 1e-9, "{x:?}");
     // Changing the values again starts from where it was, not from the last move.
@@ -1254,7 +1254,7 @@ fn toolbar_pins_removes_reorders_and_keeps_its_layout() {
     use crate::toolbar_custom as tc;
     let mut app = sample_app();
     app.ui.tab = "MODEL".into();
-    let ids = |app: &SolveApp, panel: &str| -> Vec<&'static str> {
+    let ids = |app: &SketApp, panel: &str| -> Vec<&'static str> {
         let lists = tc::panel_lists("MODEL");
         let (_, cmds, n) = lists.iter().find(|(p, ..)| *p == panel).unwrap();
         tc::buttons(app, "MODEL", panel, cmds, *n).iter().map(|c| c.id).collect()
@@ -1344,7 +1344,7 @@ fn construction_plane_row_opens_its_menu() {
 /// starts the sketch on that plane.
 #[test]
 fn right_click_on_a_plane_offers_a_sketch_on_it() {
-    use solidcore_record::Vec3;
+    use sketcore_record::Vec3;
     let normal = |h: &crate::scenario::Harness| h.app.session.world_state().unwrap().sketches.first().map(|s| s.plane.normal()).unwrap_or_default();
     for (plane, axis) in [("XY", Vec3::Z), ("XZ", Vec3::Y), ("YZ", Vec3::X)] {
         let mut h = crate::scenario::Harness::new();
@@ -1446,7 +1446,7 @@ fn empty_space_leads_with_create_sketch() {
 /// Create Sketch from a right-click on empty space sketches on the next plane clicked (#3032).
 #[test]
 fn create_sketch_from_empty_space_sketches_on_the_plane_clicked_next() {
-    use solidcore_record::Vec3;
+    use sketcore_record::Vec3;
     let mut h = crate::scenario::Harness::new();
     h.app.home.open = false;
     h.settle();
@@ -1538,10 +1538,10 @@ fn typing_a_new_body_name_and_enter_renames_it() {
 
 #[test]
 fn contribution_picked_faces_open_their_own_feature_after_later_modifiers() {
-    use solidcore_record::Vec3;
+    use sketcore_record::Vec3;
     use sketcraft_engine::Sel;
     for expected in [1, 2, 3] {
-        let mut app = SolveApp::new(Session::default(), Services::default());
+        let mut app = SketApp::new(Session::default(), Services::default());
         app.run("solid.box", json!({"length":40,"width":30,"height":20,"body_name":"Plate"})).unwrap();
         app.run("solid.hole", json!({"position":[20,15,20],"diameter":8})).unwrap();
         app.run("solid.fillet", json!({"edges":[[0,0,10]],"radius":2})).unwrap();
@@ -1581,9 +1581,9 @@ fn contribution_picked_faces_open_their_own_feature_after_later_modifiers() {
 
 #[test]
 fn contribution_unresolvable_face_does_not_edit_the_body_creator() {
-    let mut app = SolveApp::new(Session::default(), Services::default());
+    let mut app = SketApp::new(Session::default(), Services::default());
     app.run("solid.box", json!({"length":10,"width":10,"height":10,"body_name":"Plate"})).unwrap();
-    app.session.selection = vec![sketcraft_engine::Sel::Face { body: "Plate".into(), index: usize::MAX, point: solidcore_record::Vec3::ZERO }];
+    app.session.selection = vec![sketcraft_engine::Sel::Face { body: "Plate".into(), index: usize::MAX, point: sketcore_record::Vec3::ZERO }];
     let items = context_menu::items(&app, &Target::Viewport);
     assert!(!find(&items, "Edit Feature").enabled);
     assert!(!find(&items, "Find in Timeline").enabled);
@@ -1643,7 +1643,7 @@ fn every_context_target_has_identified_icon_rows_including_submenus() {
         check(&rows);
     }
     let sample = sketcraft_engine::sample::samples().into_iter().find(|s| s.name == "Hinge Assembly").unwrap();
-    let mut assembly = SolveApp::new(Session::default(), Services::default());
+    let mut assembly = SketApp::new(Session::default(), Services::default());
     assembly.session.run_script(&(sample.script)()).unwrap();
     assert!(!assembly.session.doc.assembly.joints.is_empty());
     for joint in &assembly.session.doc.assembly.joints {
@@ -1667,8 +1667,8 @@ fn appearance_submenu_swatches_apply_to_the_clicked_body_and_keep_library_action
     assert_eq!(app.session.doc.appearances.bodies[&name].color, swatch.swatch.unwrap());
 }
 
-fn appearance_selection_app() -> SolveApp {
-    let mut app = SolveApp::new(Session::default(), Services::default());
+fn appearance_selection_app() -> SketApp {
+    let mut app = SketApp::new(Session::default(), Services::default());
     for (name, x) in [("One", 0), ("Two", 20), ("Other", 40)] {
         app.run("solid.box", json!({"body_name":name,"length":10,"width":10,"height":10,"corner":[x,0,0],"operation":"new"})).unwrap();
     }
@@ -2132,8 +2132,8 @@ fn insert_design_offers_the_other_open_designs_then_browse() {
         opened.execute("doc.open", &json!({"path": path})).unwrap();
         opened
     };
-    let linked = |app: &SolveApp, file: &str| app.session.doc.links.values().filter(|l| l.path.ends_with(file)).count();
-    let menu_open = |app: &SolveApp| app.viewport.context_menu.is_some() && app.menu.target == Target::InsertDesign;
+    let linked = |app: &SketApp, file: &str| app.session.doc.links.values().filter(|l| l.path.ends_with(file)).count();
+    let menu_open = |app: &SketApp| app.viewport.context_menu.is_some() && app.menu.target == Target::InsertDesign;
 
     // Alone: the picker, as before.
     h.step(&json!({"choose_file": "none.sketcraft"})).unwrap();

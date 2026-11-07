@@ -7,11 +7,11 @@
 //! way stays a box selection.
 
 use egui::Pos2;
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 use sketcraft_engine::Sel;
 use sketcraft_engine::geom::prelude::*;
 
-use crate::SolveApp;
+use crate::SketApp;
 use crate::dialogs::{Kind, planar_face};
 use crate::viewport::{Hit, Proj};
 
@@ -65,15 +65,14 @@ pub struct State {
 }
 
 /// A pull has started: the box selection stays out of it.
-pub fn started(app: &SolveApp) -> bool {
+pub fn started(app: &SketApp) -> bool {
     app.viewport.drag_extrude.gesture.as_ref().is_some_and(|g| g.started)
 }
 
 /// Note a press at `at` when it is on a planar face or a profile.
-pub fn press(app: &mut SolveApp, proj: &Proj, at: Pos2) {
+pub fn press(app: &mut SketApp, proj: &Proj, at: Pos2) {
     app.viewport.drag_extrude.gesture = None;
-    let push_pull_active = app.dialog.as_ref().is_some_and(|d| d.press_pull)
-        || app.tool.as_ref().is_some_and(|t| t.cmd == "solid.press_pull");
+    let push_pull_active = app.dialog.as_ref().is_some_and(|d| d.press_pull) || app.tool.as_ref().is_some_and(|t| t.cmd == "solid.press_pull");
     if !app.preferences.direct_interaction && !push_pull_active {
         return;
     }
@@ -127,7 +126,7 @@ fn pulls(proj: &Proj, g: &Gesture, p: Pos2) -> bool {
 }
 
 /// The pointer is at `p` with the button down.
-pub fn to(app: &mut SolveApp, proj: &Proj, p: Pos2) {
+pub fn to(app: &mut SketApp, proj: &Proj, p: Pos2) {
     let Some(mut g) = app.viewport.drag_extrude.gesture.clone() else { return };
     if !g.started {
         let press_pull_waiting = app.dialog.as_ref().is_some_and(|d| d.press_pull);
@@ -166,26 +165,26 @@ pub fn to(app: &mut SolveApp, proj: &Proj, p: Pos2) {
 }
 
 /// The button is up: the window stays open for the user to adjust and confirm.
-pub fn end(app: &mut SolveApp) {
+pub fn end(app: &mut SketApp) {
     app.viewport.drag_extrude.gesture = None;
 }
 
 /// Forget the last pull's step once the window is gone.
-pub fn tick(app: &mut SolveApp) {
+pub fn tick(app: &mut SketApp) {
     if app.dialog.is_none() {
         app.viewport.drag_extrude.last_step = None;
     }
 }
 
 /// The step of the last pull, for the value box next to the distance.
-pub fn step_note(app: &SolveApp) -> Option<String> {
+pub fn step_note(app: &SketApp) -> Option<String> {
     let step = app.viewport.drag_extrude.last_step?;
     Some(format!("Step {}", crate::canvas::format_len(&app.session.doc, step)))
 }
 
 /// The ladder of steps beside the pointer while pulling: the one in use between its neighbours.
 /// It sits below the pointer, clear of the distance box at the arrow tip.
-pub fn show(app: &SolveApp, painter: &egui::Painter) {
+pub fn show(app: &SketApp, painter: &egui::Painter) {
     let Some(g) = app.viewport.drag_extrude.gesture.as_ref().filter(|g| g.started) else { return };
     let t = crate::theme::Tokens::get();
     let now = nearest_step(g.step);

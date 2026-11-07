@@ -1,5 +1,5 @@
 //! The window's own title bar on Windows and Linux, where the window has no OS decorations
-//! ([`SolveApp::custom_titlebar`]): empty space in the application bar drags the window and a
+//! ([`SketApp::custom_titlebar`]): empty space in the application bar drags the window and a
 //! double-click there maximizes or restores it, caption buttons at the far right minimize,
 //! maximize/restore and close, and thin invisible zones along the window's edges resize it.
 //! Dragging uses the OS's own move loop, so Windows snapping (to the screen edges and corners)
@@ -10,7 +10,7 @@
 //! the desktop app answers the system's hit test with them (`apps/sketcraft/src/native_frame.rs`),
 //! so the OS shows its resize cursors and resizes from the first frame; elsewhere egui zones above
 //! everything else start an OS resize ([`resize_zones`]). macOS keeps its traffic lights over the bar
-//! ([`SolveApp::integrated_titlebar`]); the web build has neither.
+//! ([`SketApp::integrated_titlebar`]); the web build has neither.
 //!
 //! Adapted from VectorCraft's `crates/ui-egui/src/titlebar.rs` (MIT OR Apache-2.0).
 
@@ -18,7 +18,7 @@ use crate::icons::glyphs::paint_glyph;
 use crate::ui_kit::BackingTooltipExt as _;
 use egui::{Color32, CursorIcon, Id, LayerId, Order, PointerButton, Pos2, Rect, ResizeDirection, Sense, Stroke, Ui, ViewportCommand, pos2, vec2};
 
-use crate::SolveApp;
+use crate::SketApp;
 use crate::theme::Tokens;
 
 /// One caption button: as wide as the native Windows ones.
@@ -55,7 +55,7 @@ pub fn toggle_maximize(ctx: &egui::Context) {
 
 /// Window actions for the control channel (`ui.window`): minimize, maximize, restore, toggle
 /// (maximize or restore), close.
-pub fn window_action(app: &mut SolveApp, ctx: &egui::Context, action: &str) -> Result<(), String> {
+pub fn window_action(app: &mut SketApp, ctx: &egui::Context, action: &str) -> Result<(), String> {
     match action {
         "minimize" => ctx.send_viewport_cmd(ViewportCommand::Minimized(true)),
         "maximize" => ctx.send_viewport_cmd(ViewportCommand::Maximized(true)),
@@ -95,7 +95,7 @@ pub fn drag_area(ui: &Ui, rect: Rect) {
 /// Minimize, Maximize/Restore and Close at the right end of `bar` (the application bar's
 /// rect), full bar height, flush with the window's edge so a maximized window's corner hits
 /// Close.
-pub fn caption_buttons(app: &mut SolveApp, ui: &mut Ui, bar: Rect) {
+pub fn caption_buttons(app: &mut SketApp, ui: &mut Ui, bar: Rect) {
     let t = Tokens::get();
     let max = maximized(ui.ctx());
     let mut clicked = None;
@@ -211,18 +211,18 @@ mod tests {
     /// resize zones.
     struct Win {
         ctx: egui::Context,
-        app: SolveApp,
+        app: SketApp,
         width: f32,
         time: f64,
         maximized: bool,
-        /// Lay out the whole window (`SolveApp::ui`) rather than only the bar and the zones.
+        /// Lay out the whole window (`SketApp::ui`) rather than only the bar and the zones.
         full: bool,
     }
 
     impl Win {
         fn new(width: f32) -> Self {
             let ctx = crate::fonts::test_context();
-            let mut app = SolveApp::new(Session::default(), Default::default());
+            let mut app = SketApp::new(Session::default(), Default::default());
             app.custom_titlebar = true;
             Self { ctx, app, width, time: 0.0, maximized: false, full: false }
         }

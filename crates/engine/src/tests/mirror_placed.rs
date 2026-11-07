@@ -3,7 +3,7 @@
 //! geometry and put the copy in the active component, so the copy lost the placement.
 
 use serde_json::{Value, json};
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 
 use super::run;
 use crate::*;

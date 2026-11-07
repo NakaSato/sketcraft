@@ -1,5 +1,5 @@
-//! Schema 4 records (`solidcore_record::brep::Brep`) into SMLib: the record is laid out as the C
-//! API's flat arrays (`capi/include/smlib.h`, "Flat B-rep arrays"), which solidcore builds into
+//! Schema 4 records (`sketcore_record::brep::Brep`) into SMLib: the record is laid out as the C
+//! API's flat arrays (`capi/include/smlib.h`, "Flat B-rep arrays"), which sketcore builds into
 //! its B-rep ([`crate::core::from_arrays`]).
 //!
 //! The two models differ in four places, and the mapping takes care of each:
@@ -14,7 +14,7 @@
 
 use std::collections::{BTreeMap, HashMap, HashSet};
 
-use solidcore_record::brep as b;
+use sketcore_record::brep as b;
 
 use crate::flat;
 

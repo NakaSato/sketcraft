@@ -5,7 +5,7 @@ use std::collections::BTreeSet;
 
 use super::{Analysis, Held, MAX_LOOP_VALUES, Solution, apply_links, build, joint_values, link_chains, solve_holding_with_analysis};
 use crate::{Document, Mat, ModelState, apply_point, apply_vector, mat_inverse, mat_mul};
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 
 /// A driveable value, expressed as an axis of the selected occurrence in world coordinates.
 #[derive(Clone, Debug)]

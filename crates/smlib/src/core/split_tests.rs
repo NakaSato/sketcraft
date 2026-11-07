@@ -1,8 +1,8 @@
-//! Split Face and Split Body on solidcore, against closed forms: face, edge and vertex counts,
+//! Split Face and Split Body on sketcore, against closed forms: face, edge and vertex counts,
 //! volumes, how many faces each chosen face became, and every result exports to a record that
 //! validates.
 //!
-//! The body is a 10 mm cube [0, 10]^3 on solidcore; the tools are described as
+//! The body is a 10 mm cube [0, 10]^3 on sketcore; the tools are described as
 //! [`crate::ssi::Surface`] describes them.
 
 use super::split::{split_body, split_body_by_sheet, split_faces};
@@ -99,7 +99,7 @@ fn judge(name: &str, who: &str, got: Got) -> Got {
     got
 }
 
-fn solidcore_case(name: &str) -> Got {
+fn sketcore_case(name: &str) -> Got {
     let (op, _) = case(name);
     let got = match &op {
         Op::Faces(faces, tools) => {
@@ -124,7 +124,7 @@ fn solidcore_case(name: &str) -> Got {
             }
         }),
     };
-    judge(name, "solidcore", got)
+    judge(name, "sketcore", got)
 }
 
 macro_rules! cases {
@@ -132,8 +132,8 @@ macro_rules! cases {
         mod $m {
             #[test]
             $(#[$ign])?
-            fn solidcore_matches_the_closed_form() {
-                let _ = super::solidcore_case(stringify!($m));
+            fn sketcore_matches_the_closed_form() {
+                let _ = super::sketcore_case(stringify!($m));
             }
         }
     )*};
@@ -167,10 +167,10 @@ fn hostile_arguments_are_refused() {
 /// A sheet is no solid to split in two (`SMLIB_ERR_NOT_SOLID`).
 #[test]
 fn a_sheet_is_not_split_into_two_bodies() {
-    use solidcore::curve::curve::Curve;
-    use solidcore::geom::vector3d::Vec3;
-    use solidcore::primitive::api_curves::create_line_segment;
-    use solidcore::sweep::api_brep::create_linear_sweep;
+    use sketcore::curve::curve::Curve;
+    use sketcore::geom::vector3d::Vec3;
+    use sketcore::primitive::api_curves::create_line_segment;
+    use sketcore::sweep::api_brep::create_linear_sweep;
     let sheet = super::run("sheet", |k| {
         let c = Curve::from(create_line_segment(Vec3::new(0.0, 0.0, 0.0), Vec3::new(10.0, 0.0, 0.0))?);
         create_linear_sweep(k, &[Some(&c)], Vec3::new(0.0, 1.0, 0.0), 10.0, false)
@@ -184,16 +184,16 @@ fn a_sheet_is_not_split_into_two_bodies() {
 /// Faces of the box -20..5 x -20..20 x -20..5 copied off it into a sheet (`CopyFaces` with merge,
 /// as the capi's test): the top z = 5 and, with `side`, the side x = 5 too.
 fn lid(side: bool) -> Body {
-    use solidcore::EntityRef;
-    use solidcore::geom::tol::USE_DEFAULT;
-    use solidcore::query::api_queries::face_internal_point;
-    use solidcore::topology::brep::p1::faces;
-    use solidcore::topology::brep::p2::ArenaNotifyState;
-    use solidcore::topology::brep::p3::new_brep;
-    use solidcore::topology::brep::p7::copy_faces;
+    use sketcore::EntityRef;
+    use sketcore::geom::tol::USE_DEFAULT;
+    use sketcore::query::api_queries::face_internal_point;
+    use sketcore::topology::brep::p1::faces;
+    use sketcore::topology::brep::p2::ArenaNotifyState;
+    use sketcore::topology::brep::p3::new_brep;
+    use sketcore::topology::brep::p7::copy_faces;
     let slab = make_box([-20.0; 3], [25.0, 40.0, 25.0]).unwrap();
     super::run("sheet", |k| {
-        let mut whole = solidcore::topology::brep::p3::brep_copy(k, &slab.0.lock().unwrap())?;
+        let mut whole = sketcore::topology::brep::p3::brep_copy(k, &slab.0.lock().unwrap())?;
         let mut picked = Vec::new();
         for f in faces(&whole, None)? {
             let p = face_internal_point(k, &mut whole, f)?;
@@ -262,13 +262,13 @@ fn the_body_stays_as_it_was() {
 /// cache. The square comes out as a face of its own, the sheet holed by it.
 #[test]
 fn a_spline_sheet_is_cut_by_strips_inside_it() {
-    use solidcore::geom::tol::USE_DEFAULT;
-    use solidcore::geom::vector3d::Vec3;
-    use solidcore::nurbs::b_spline_curve::p1::KnotType;
-    use solidcore::nurbs::b_spline_surface::p1::{BSplineSurface, BSplineSurfaceForm, CanonicalSurfaceData};
-    use solidcore::surface::surface::Surface;
-    use solidcore::topology::brep::p3::new_brep;
-    use solidcore::topology::brep::p8::create_face_from_surface;
+    use sketcore::geom::tol::USE_DEFAULT;
+    use sketcore::geom::vector3d::Vec3;
+    use sketcore::nurbs::b_spline_curve::p1::KnotType;
+    use sketcore::nurbs::b_spline_surface::p1::{BSplineSurface, BSplineSurfaceForm, CanonicalSurfaceData};
+    use sketcore::surface::surface::Surface;
+    use sketcore::topology::brep::p3::new_brep;
+    use sketcore::topology::brep::p8::create_face_from_surface;
     // Control points u-major: the curve's four, each at y = 0 and y = 40.
     let curve = [[0.0, 0.0], [13.0, -8.0], [27.0, 8.0], [40.0, 0.0]];
     let pts: Vec<Vec3> = curve.iter().flat_map(|[x, z]| [Vec3::new(*x, 0.0, *z), Vec3::new(*x, 40.0, *z)]).collect();

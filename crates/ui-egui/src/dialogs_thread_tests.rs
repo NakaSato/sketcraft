@@ -1,5 +1,5 @@
 use serde_json::json;
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 
 use super::*;
 use crate::dialogs::{Kind, apply_commands, edge_sel};

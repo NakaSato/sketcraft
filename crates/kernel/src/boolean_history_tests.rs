@@ -5,7 +5,7 @@
 use sketcraft_geom::prelude::*;
 use std::collections::BTreeSet;
 
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 use sketcraft_geom::Mesh;
 
 use crate::body::Body;
@@ -349,7 +349,7 @@ fn faceted_tool() {
 /// one face each past the cutter's floor, untouched (Kept).
 #[test]
 fn stepped_cut_keeps_the_stock_walls_whole() {
-    use solidcore_record::{Loop2, Plane, Region2, Vec2};
+    use sketcore_record::{Loop2, Plane, Region2, Vec2};
     for curved in [true, false] {
         let (outer, inner) = if curved {
             (Loop2::circle(Vec2::ZERO, 10.0), Loop2::circle(Vec2::ZERO, 5.0))
@@ -466,7 +466,7 @@ mod smlib {
     /// how the two meet.
     #[test]
     fn cubes_touching_along_an_edge_or_at_a_vertex_unite_into_two_solids() {
-        use solidcore_record::brep::part::{Contact, RegionContact};
+        use sketcore_record::brep::part::{Contact, RegionContact};
         let a = boxed(0.0, 0.0, 0.0, 10.0, 10.0, 10.0);
         for (name, b, contact) in [
             ("edge", boxed(10.0, 10.0, 0.0, 20.0, 20.0, 10.0), Contact::Edge),

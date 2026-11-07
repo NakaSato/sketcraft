@@ -2,7 +2,7 @@
 //!
 //! [`ModifierCombo`] is a serialisable set of modifier keys. Modifier state that
 //! must cross the boundary between the viewport event-loop and rendering helpers
-//! (gizmo, canvas) that do not carry `&SolveApp` is communicated through
+//! (gizmo, canvas) that do not carry `&SketApp` is communicated through
 //! per-frame thread-local flags — the same pattern as [`crate::drag_snap`] —
 //! so that neither gizmo nor canvas needs access to application state.
 //!
@@ -171,7 +171,7 @@ pub fn alt_name_for(platform: Platform) -> &'static str {
 
 thread_local! {
     /// Set once per frame from the viewport event-loop; read by gizmo and canvas
-    /// helpers that do not receive `&SolveApp`. Communicates whether the current
+    /// helpers that do not receive `&SketApp`. Communicates whether the current
     /// modifier state enables free (unsnapped) manipulator drags.
     static MANIPULATOR_FREE: Cell<bool> = const { Cell::new(false) };
     /// Shift while sketching forces midpoint targeting (see [`ModAction::TargetMidpoint`]).

@@ -4,7 +4,7 @@ mod planar_patches;
 use sketcraft_geom::prelude::*;
 use std::collections::HashMap;
 
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 use sketcraft_render::{
     ProductScene,
     job::{CancelToken, ErrorCode, JobError, Result},

@@ -12,7 +12,7 @@ use serde_json::{Value, json};
 use sketcraft_engine::Session;
 use sketcraft_engine::doc::joints::JointKind;
 
-use crate::SolveApp;
+use crate::SketApp;
 use crate::dialogs::{combo, form_row};
 use crate::selection::SelInput;
 use crate::theme::Tokens;
@@ -210,7 +210,7 @@ pub fn collision_bands(v: &Value) -> Vec<[f64; 2]> {
 /// there are none yet), `step` the step shown (a click on the chart or a collision moves it).
 #[allow(clippy::too_many_arguments)]
 pub fn rows(
-    app: &SolveApp,
+    app: &SketApp,
     ui: &mut egui::Ui,
     a: &mut Analysis,
     study: &Result<Value, String>,
@@ -228,7 +228,7 @@ pub fn rows(
 /// The Collisions rows: Check collisions and what it found (a click on a pair shows its first step).
 #[allow(clippy::too_many_arguments)]
 fn collision_rows(
-    app: &SolveApp,
+    app: &SketApp,
     ui: &mut egui::Ui,
     a: &mut Analysis,
     study: &Result<Value, String>,
@@ -327,7 +327,7 @@ fn collision_rows(
 /// The Plot rows: what to chart, and the chart (a click on it moves the step).
 #[allow(clippy::too_many_arguments)]
 fn plot_rows(
-    app: &SolveApp,
+    app: &SketApp,
     ui: &mut egui::Ui,
     a: &mut Analysis,
     study: &Result<Value, String>,

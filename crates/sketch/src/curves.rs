@@ -5,7 +5,7 @@
 use sketcraft_geom::prelude::*;
 use std::f64::consts::TAU;
 
-use solidcore_record::Vec2;
+use sketcore_record::Vec2;
 
 /// Polyline samples per spline span / conic / ellipse quarter.
 const SPAN_SAMPLES: usize = 24;
@@ -19,8 +19,8 @@ const ALONG_SAMPLES: usize = 64;
 /// the first one's start. Lines and arcs are measured exactly; other pieces over
 /// [`ALONG_SAMPLES`] chords each. The point is evaluated on its piece, so it lies on the curve.
 /// `None` without pieces or for a share that is not a number.
-pub fn point_along(segs: &[solidcore_record::Seg2], at: f64) -> Option<Vec2> {
-    use solidcore_record::Seg2;
+pub fn point_along(segs: &[sketcore_record::Seg2], at: f64) -> Option<Vec2> {
+    use sketcore_record::Seg2;
     let first = segs.first()?;
     if !at.is_finite() {
         return None;
@@ -208,7 +208,7 @@ pub fn spline_point(p: &[Vec2], control: bool, degree: u8, t: f64) -> Vec2 {
         return p.first().copied().unwrap_or_default();
     }
     if control {
-        return bspline_at(p, degree.clamp(1, solidcore_record::MAX_BEZIER_DEGREE as u8) as usize, t);
+        return bspline_at(p, degree.clamp(1, sketcore_record::MAX_BEZIER_DEGREE as u8) as usize, t);
     }
     let spans = fit_spans(p);
     let n = spans.len().max(1);
@@ -356,7 +356,7 @@ pub fn spline_polyline(p: &[Vec2], control: bool, degree: u8) -> Vec<Vec2> {
         return p.to_vec();
     }
     if control {
-        return bspline_polyline(p, degree.clamp(1, solidcore_record::MAX_BEZIER_DEGREE as u8) as usize);
+        return bspline_polyline(p, degree.clamp(1, sketcore_record::MAX_BEZIER_DEGREE as u8) as usize);
     }
     let mut out = Vec::new();
     for (p0, p1, t0, t1) in fit_spans(p) {

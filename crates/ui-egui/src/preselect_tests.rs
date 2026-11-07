@@ -3,7 +3,7 @@
 
 use crate::test_support::app_with_script as app_with;
 use serde_json::json;
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 use sketcraft_engine::doc::expr::Kind as ValueKind;
 use sketcraft_engine::geom::prelude::*;
 use sketcraft_engine::{Sel, Session};
@@ -22,7 +22,7 @@ fn material_selector_starts_with_the_assigned_material() {
     assert_eq!(app.session.doc.to_json(), before);
 }
 
-fn material_selector_fixture() -> crate::SolveApp {
+fn material_selector_fixture() -> crate::SketApp {
     app_with(json!([
         {"command":"solid.box","params":{"length":10,"width":10,"height":10,"body_name":"Plate"}},
         {"command":"solid.box","params":{"corner":[30,0,0],"length":10,"width":10,"height":10,"body_name":"Block"}},
@@ -131,7 +131,7 @@ fn confirming_coplanar_body_faces_uses_one_atomic_extrusion() {
     assert!((volume - 11_968.0).abs() < 1e-5, "{volume}");
 }
 
-use crate::SolveApp;
+use crate::SketApp;
 use crate::dialogs::{Dialog, Kind, apply_commands};
 
 #[test]
@@ -684,26 +684,26 @@ fn cylinder_emboss_profile_guide_uses_target_or_unique_foreign_sketch_frame() {
     }
 }
 
-fn boxed() -> SolveApp {
+fn boxed() -> SketApp {
     app_with(json!([{"command": "solid.box", "params": {"length": 40, "width": 30, "height": 20}}]))
 }
 
 /// The face of Body1 whose centre is at `c`.
-fn face(app: &SolveApp, c: Vec3) -> Sel {
+fn face(app: &SketApp, c: Vec3) -> Sel {
     let st = app.session.model.state();
     let b = st.body("Body1").unwrap();
     let f = b.body.faces(0.01).unwrap().into_iter().find(|f| f.centroid.dist(c) < 1e-6).unwrap();
     Sel::Face { body: "Body1".into(), index: f.index, point: c }
 }
 
-fn edge(app: &SolveApp, p: Vec3) -> Sel {
+fn edge(app: &SketApp, p: Vec3) -> Sel {
     let st = app.session.model.state();
     let m = st.body("Body1").unwrap().mesh();
     let i = m.edges.iter().position(|e| e.windows(2).any(|w| p.dist_to_segment(w[0], w[1]) < 1e-9)).unwrap();
     Sel::Edge { body: "Body1".into(), index: i, point: p }
 }
 
-fn start(app: &mut SolveApp, sels: Vec<Sel>, id: &str) -> Dialog {
+fn start(app: &mut SketApp, sels: Vec<Sel>, id: &str) -> Dialog {
     app.session.selection = sels;
     app.start(id);
     app.dialog.clone().unwrap()
@@ -943,7 +943,7 @@ fn fillet_face_then_press_pull_edits_its_fillet() {
     ]);
     // On the front round: its axis runs along X at y 3, z 17.
     let p = Vec3::new(20.0, 3.0 - 3.0 * std::f64::consts::FRAC_1_SQRT_2, 17.0 + 3.0 * std::f64::consts::FRAC_1_SQRT_2);
-    let round = |app: &SolveApp| {
+    let round = |app: &SketApp| {
         let names = sketcraft_engine::doc::naming::face_names_at(&app.session.model.state(), &[p]);
         assert!(names[0].contains("blend"), "{names:?}");
         let st = app.session.model.state();
@@ -979,7 +979,7 @@ fn chamfer_face_then_press_pull_edits_its_chamfer() {
     ]);
     // The middle of the chamfer's face, from (37, 0) to (40, 3).
     let p = Vec3::new(38.5, 1.5, 10.0);
-    let bevel = |app: &SolveApp| {
+    let bevel = |app: &SketApp| {
         let names = sketcraft_engine::doc::naming::face_names_at(&app.session.model.state(), &[p]);
         assert!(names[0].contains("blend"), "{names:?}");
         let st = app.session.model.state();
@@ -1388,7 +1388,7 @@ fn fillet_radius_fit_reduces_and_shows_the_applied_radius() {
 }
 
 /// Apply a dialog's commands to the session; the new feature's id.
-fn apply(app: &mut SolveApp, d: &Dialog) -> u64 {
+fn apply(app: &mut SketApp, d: &Dialog) -> u64 {
     for (id, p) in apply_commands(app, d).unwrap() {
         app.session.execute(&id, &p).unwrap();
     }
@@ -1419,7 +1419,7 @@ fn shell_tangent_chain_highlights_and_counts_faces_without_saving_extra_picks() 
     let top = face(&h.app, Vec3::new(20.0, 17.0, 20.0));
     start(&mut h.app, vec![top.clone()], "solid.shell");
     h.frames(3);
-    let shown = |app: &SolveApp| -> std::collections::BTreeSet<usize> {
+    let shown = |app: &SketApp| -> std::collections::BTreeSet<usize> {
         app.highlighted()
             .into_iter()
             .filter_map(|sel| match sel {
@@ -1491,7 +1491,7 @@ fn variable_fillet_mid_radii_round_trip() {
 
 /// Use an actual mesh point, as a viewport pick does; analytic cylinder points need not lie
 /// on the display mesh's facets.
-pub(crate) fn thread_face(app: &SolveApp, body: &str) -> Sel {
+pub(crate) fn thread_face(app: &SketApp, body: &str) -> Sel {
     let state = app.session.world_state().unwrap();
     let body_state = state.body(body).unwrap();
     let index = sketcraft_engine::doc::naming::face_spots(body_state)
@@ -2012,7 +2012,7 @@ fn align_takes_sketch_frames_and_joint_origins() {
     assert!(p.get("from_face").is_none() && p["angle"] == json!("45"), "{p}");
     // A sketch point is a frame too, and the command runs.
     d.inputs[2].items.clear();
-    let at = solidcore_record::Vec2::new(70.0, 5.0);
+    let at = sketcore_record::Vec2::new(70.0, 5.0);
     let point = d.candidate(&app.session, &crate::viewport::Hit::SketchPoint { sketch, id: "p".into(), at }).unwrap();
     d.pick(&app.session, point);
     assert_eq!(apply_commands(&app, &d).unwrap().remove(0).1["to_frame"], json!({"sketch": sketch, "point": "p"}));
@@ -2510,7 +2510,7 @@ fn trim_dialog_takes_curves_several_keep_points_and_another_surface() {
     assert_eq!(p["curves"]["curves"], json!(["c1"]), "{p}");
     assert_eq!(p["keep"], json!([[1.0, 5.0, 0.0], [-5.0, 5.0, 0.0]]), "{p}");
     app.session.execute(&id, &p).unwrap();
-    let area = |app: &SolveApp, n: &str| app.session.world_state().unwrap().body(n).unwrap().mesh().measure().area;
+    let area = |app: &SketApp, n: &str| app.session.world_state().unwrap().body(n).unwrap().mesh().measure().area;
     assert!((area(&app, "Floor") - 130.0).abs() < 1e-6, "{}", area(&app, "Floor"));
     app.session.execute("edit.undo", &json!({})).unwrap();
     // Mutual: the other surface replaces the tool; stitched into an L.
@@ -2641,7 +2641,7 @@ fn split_body_by_a_curved_face_sends_it_as_a_tool() {
 }
 
 /// Runs a primitive's dialog with `sels` pre-selected and returns the new body's centroid.
-fn primitive_on(app: &mut SolveApp, sels: Vec<Sel>, id: &str, edit: impl FnOnce(&mut Dialog)) -> (serde_json::Value, Vec3) {
+fn primitive_on(app: &mut SketApp, sels: Vec<Sel>, id: &str, edit: impl FnOnce(&mut Dialog)) -> (serde_json::Value, Vec3) {
     let mut d = start(app, sels, id);
     edit(&mut d);
     let (cmd, p) = apply_commands(app, &d).unwrap().remove(0);
@@ -2651,7 +2651,7 @@ fn primitive_on(app: &mut SolveApp, sels: Vec<Sel>, id: &str, edit: impl FnOnce(
 }
 
 /// The face of Body1 whose centre is at `c`, picked at `p`.
-fn picked(app: &SolveApp, c: Vec3, p: Vec3) -> Sel {
+fn picked(app: &SketApp, c: Vec3, p: Vec3) -> Sel {
     let Sel::Face { body, index, .. } = face(app, c) else { panic!("a face") };
     Sel::Face { body, index, point: p }
 }
@@ -3356,7 +3356,7 @@ fn a_pipe_cuts_from_its_window_and_keeps_the_cut_when_edited() {
     *operation = 2;
     let cmds = apply_commands(&app, &d).unwrap();
     assert_eq!(cmds[0].1["operation"], "cut", "{:?}", cmds[0].1);
-    let volume = |app: &SolveApp| {
+    let volume = |app: &SketApp| {
         let st = crate::open_meshing::session_world(&app.session);
         assert_eq!(st.bodies.len(), 1, "one body: {:?}", st.bodies.iter().map(|b| &b.name).collect::<Vec<_>>());
         sketcraft_engine::doc::kernel::measure(&st.bodies[0].body).unwrap().volume

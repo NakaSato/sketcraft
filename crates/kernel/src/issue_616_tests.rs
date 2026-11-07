@@ -1,7 +1,7 @@
 //! Issue #616: small boxes joined flush to the walls and floor of a part never change it away
 //! from the box, and a retry that would is refused.
 
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 use sketcraft_geom::prelude::*;
 use sketcraft_geom::{Aabb3, Mesh};
 

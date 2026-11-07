@@ -5,9 +5,9 @@ use std::sync::Arc;
 
 use serde_json::{Value, json};
 
-use crate::SolveApp;
+use crate::SketApp;
 
-pub(crate) fn start_selected(app: &mut SolveApp) {
+pub(crate) fn start_selected(app: &mut SketApp) {
     let mut components = app.tree.picked_components.clone();
     for selection in &app.session.selection {
         if let sketcraft_engine::Sel::Occurrence { path } = selection
@@ -27,7 +27,7 @@ pub(crate) fn start_selected(app: &mut SolveApp) {
     }
 }
 
-pub(crate) fn start(app: &mut SolveApp, component: u64) {
+pub(crate) fn start(app: &mut SketApp, component: u64) {
     if app.file_picker_busy() || app.file_load.busy() {
         return;
     }
@@ -65,7 +65,7 @@ pub(crate) fn start(app: &mut SolveApp, component: u64) {
 }
 
 /// Ask where the component's design goes, then move its history there and link it.
-pub(crate) fn extract(app: &mut SolveApp, component: u64) {
+pub(crate) fn extract(app: &mut SketApp, component: u64) {
     if app.file_picker_busy() || app.file_load.busy() {
         return;
     }
@@ -97,7 +97,7 @@ pub(crate) fn extract(app: &mut SolveApp, component: u64) {
 }
 
 /// The status line after a command: `done`, then its warnings and notices.
-fn report(app: &mut SolveApp, result: &Value, done: &str) {
+fn report(app: &mut SketApp, result: &Value, done: &str) {
     let notes: Vec<&str> =
         ["warnings", "notices"].iter().flat_map(|k| result[*k].as_array().into_iter().flatten()).filter_map(|w| w.as_str()).collect();
     if notes.is_empty() {
@@ -129,7 +129,7 @@ fn stamp(file: &str) -> Stamp {
 /// The shown design's linked components with their files as they are on disk now: `None` for a
 /// file that is missing, or on a network location not allowed, which is never looked at
 /// (`component.links` reports it unfound). The web build keeps no times, so it looks at nothing.
-fn disk_stamps(app: &mut SolveApp) -> Vec<(u64, Stamp)> {
+fn disk_stamps(app: &mut SketApp) -> Vec<(u64, Stamp)> {
     let on = app.preferences.update_changed_links;
     stamps_of(&mut app.session, on)
 }
@@ -169,7 +169,7 @@ fn changed_since_read(session: &mut sketcraft_engine::Session) -> Vec<u64> {
 /// The links of the shown design it holds no record of yet (it was just opened, a link was just
 /// made) are taken as their files are now, except a file that changed since the design last read
 /// it (#9739): that one counts as not read yet, so [`update_changed`] reads it.
-pub(crate) fn note_unread(app: &mut SolveApp) {
+pub(crate) fn note_unread(app: &mut SketApp) {
     if app.session.doc.links.keys().all(|c| app.docs.link_stamps.iter().any(|(k, _)| k == c)) {
         return;
     }
@@ -186,7 +186,7 @@ pub(crate) fn note_unread(app: &mut SolveApp) {
 /// as Update Links does, the linked designs whose files changed since it last read them. All in
 /// one run, so they come in as one undo step (#9743); one that cannot be read holds up no other,
 /// keeps its bodies and is tried again next time.
-pub(crate) fn update_changed(app: &mut SolveApp) {
+pub(crate) fn update_changed(app: &mut SketApp) {
     let now = disk_stamps(app);
     // Links met here for the first time: those whose files changed since the design last read
     // them (#9739) are read again too.
@@ -214,7 +214,7 @@ pub(crate) fn update_changed(app: &mut SolveApp) {
 
 /// Update Links (`options` as it was asked) read the shown design's links again: those it read
 /// without an error (`result`'s `failed` names the others) are now as their files are.
-pub(crate) fn read_again(app: &mut SolveApp, options: &serde_json::Map<String, Value>, result: &Value) {
+pub(crate) fn read_again(app: &mut SketApp, options: &serde_json::Map<String, Value>, result: &Value) {
     let asked: Option<Vec<u64>> = match (options.get("component"), options.get("components")) {
         (Some(c), _) => Some(c.as_u64().into_iter().collect()),
         (None, Some(list)) => Some(list.as_array().into_iter().flatten().filter_map(Value::as_u64).collect()),
@@ -235,7 +235,7 @@ pub struct Copies {
 }
 
 /// Link the copies too, or leave them as they are (also the card's buttons).
-pub fn link_copies(app: &mut SolveApp, accept: bool) -> bool {
+pub fn link_copies(app: &mut SketApp, accept: bool) -> bool {
     let Some(c) = app.menu.link_copies.take() else { return false };
     // The design changed since they were found: the ids may name something else now
     if accept && Arc::ptr_eq(&c.document, &app.session.doc) {
@@ -248,7 +248,7 @@ pub fn link_copies(app: &mut SolveApp, accept: bool) -> bool {
 }
 
 /// The card offering to link the copies Extract to File found.
-pub fn show_copies(app: &mut SolveApp, ctx: &egui::Context) {
+pub fn show_copies(app: &mut SketApp, ctx: &egui::Context) {
     let Some(c) = app.menu.link_copies.clone() else { return };
     let name = app.session.doc.components.iter().find(|x| x.id == c.linked).map(|x| x.name.clone()).unwrap_or_default();
     let (closed, action) = crate::ui_kit::Confirm::new(egui::Id::unique("sc_link_copies"), "help", crate::i18n::tr_label("Link Identical Copies"))
@@ -276,7 +276,7 @@ mod tests {
     use sketcraft_engine::Session;
     use std::path::PathBuf;
 
-    fn fixture(name: &str) -> (SolveApp, u64, u64, PathBuf, PathBuf) {
+    fn fixture(name: &str) -> (SketApp, u64, u64, PathBuf, PathBuf) {
         let folder = std::env::temp_dir().join(format!("sketcraft-relink-ui-{name}-{}", std::process::id()));
         std::fs::create_dir_all(&folder).unwrap();
         let source = folder.join("source.sketcraft");
@@ -284,7 +284,7 @@ mod tests {
         let mut part = Session::default();
         part.execute("solid.box", &json!({"length": 10, "width": 20, "height": 30})).unwrap();
         part.execute("file.save", &json!({"path": source})).unwrap();
-        let mut app = SolveApp::new(Session::default(), Default::default());
+        let mut app = SketApp::new(Session::default(), Default::default());
         let inserted = app.run("component.insert_design", json!({"path": source})).unwrap();
         let component = inserted["component"].as_u64().unwrap();
         let occurrence = inserted["occurrence"].as_u64().unwrap();
@@ -292,11 +292,11 @@ mod tests {
         (app, component, occurrence, folder, moved)
     }
 
-    fn menu(app: &SolveApp, target: Target) -> Option<context_menu::Item> {
+    fn menu(app: &SketApp, target: Target) -> Option<context_menu::Item> {
         context_menu::entries(app, &target).into_iter().find(|i| i.id == "ui.relinkSource")
     }
 
-    fn answer(app: &mut SolveApp, path: Option<String>) {
+    fn answer(app: &mut SketApp, path: Option<String>) {
         app.services.pick_open = Some(Box::new(move |extensions| {
             assert_eq!(extensions, &["sc", "sketcraft", "solvecraft", "json"], "a design of any release, or a plain JSON design");
             let result = path.clone();
@@ -389,12 +389,11 @@ mod tests {
     fn extract_menu_asks_where_to_save_and_links_the_component_there() {
         let folder = std::env::temp_dir().join(format!("sketcraft-extract-ui-{}", std::process::id()));
         std::fs::create_dir_all(&folder).unwrap();
-        let mut app = SolveApp::new(Session::default(), Default::default());
+        let mut app = SketApp::new(Session::default(), Default::default());
         let made = app.run("component.create", json!({"name": "Bracket", "grounded": false})).unwrap();
         let (component, occurrence) = (made["component"].as_u64().unwrap(), made["occurrence"].as_u64().unwrap());
         app.run("solid.box", json!({"length": 10, "width": 20, "height": 30})).unwrap();
-        let find =
-            |app: &SolveApp, id: u64| context_menu::entries(app, &Target::Component { id }).into_iter().find(|i| i.id == "ui.extractComponent");
+        let find = |app: &SketApp, id: u64| context_menu::entries(app, &Target::Component { id }).into_iter().find(|i| i.id == "ui.extractComponent");
         assert!(find(&app, 0).is_none());
         // Not offered while the component can't go: here, moved without Capture Position
         app.run("occurrence.move", json!({"occurrence": occurrence, "translate": [5, 0, 0], "capture": false})).unwrap();
@@ -427,7 +426,7 @@ mod tests {
     fn extract_offers_to_link_identical_copies() {
         let folder = std::env::temp_dir().join(format!("sketcraft-extract-copies-ui-{}", std::process::id()));
         std::fs::create_dir_all(&folder).unwrap();
-        let mut app = SolveApp::new(Session::default(), Default::default());
+        let mut app = SketApp::new(Session::default(), Default::default());
         let made = app.run("component.create", json!({"name": "Bracket"})).unwrap();
         let (component, occurrence) = (made["component"].as_u64().unwrap(), made["occurrence"].as_u64().unwrap());
         app.run("solid.box", json!({"length": 10, "width": 20, "height": 30})).unwrap();
@@ -462,9 +461,9 @@ mod tests {
         let mut part = Session::default();
         part.execute("solid.box", &json!({"length": 10, "width": 20, "height": 30})).unwrap();
         part.execute("file.save", &json!({"path": file})).unwrap();
-        let mut app = SolveApp::new(Session::default(), Default::default());
+        let mut app = SketApp::new(Session::default(), Default::default());
         app.run("component.insert_design", json!({"path": file})).unwrap();
-        let volume = |app: &SolveApp| {
+        let volume = |app: &SketApp| {
             crate::open_meshing::session_world(&app.session)
                 .bodies
                 .iter()
@@ -472,7 +471,7 @@ mod tests {
                 .sum::<f64>()
         };
         let ctx = egui::Context::default();
-        let settle = |app: &mut SolveApp| {
+        let settle = |app: &mut SketApp| {
             let began = std::time::Instant::now();
             while !app.file_load.idle() {
                 assert!(began.elapsed() < std::time::Duration::from_secs(120), "Update Links went on");
@@ -480,7 +479,7 @@ mod tests {
                 std::thread::sleep(std::time::Duration::from_millis(1));
             }
         };
-        let saved_box = |app: &mut SolveApp| {
+        let saved_box = |app: &mut SketApp| {
             crate::documents::switch(app, 1);
             app.run("solid.box", json!({"length": 10, "width": 10, "height": 10, "operation": "new"})).unwrap();
             app.run("file.save", json!({})).unwrap();
@@ -503,7 +502,7 @@ mod tests {
         assert_eq!(app.status.as_ref().map(|s| s.0.as_str()), Some("Update Links done"));
         // Changed outside the app (another window, a checkout) while the tab was away: the same.
         // The part's own tab now refuses to save over that change, so it stays out of the rest
-        let saved_elsewhere = |app: &mut SolveApp| {
+        let saved_elsewhere = |app: &mut SketApp| {
             crate::documents::switch(app, 1);
             let mut elsewhere = Session::default();
             elsewhere.execute("doc.open", &json!({"path": file})).unwrap();
@@ -525,14 +524,14 @@ mod tests {
     /// An assembly saved in `folder` linking a 10x20x30 plate and a 10 mm cube, with a blank
     /// second tab to step away to; the helpers save a part, settle the background work and
     /// measure the assembly.
-    fn two_links(name: &str) -> (SolveApp, std::path::PathBuf, std::path::PathBuf, std::path::PathBuf) {
+    fn two_links(name: &str) -> (SketApp, std::path::PathBuf, std::path::PathBuf, std::path::PathBuf) {
         let folder = std::env::temp_dir().join(format!("sketcraft-two-links-{name}-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&folder);
         std::fs::create_dir_all(&folder).unwrap();
         let (plate, cube) = (folder.join("plate.sketcraft"), folder.join("cube.sketcraft"));
         save_part(&plate, [10.0, 20.0, 30.0], false);
         save_part(&cube, [10.0, 10.0, 10.0], false);
-        let mut app = SolveApp::new(Session::default(), Default::default());
+        let mut app = SketApp::new(Session::default(), Default::default());
         app.run("component.insert_design", json!({"path": plate})).unwrap();
         app.run("component.insert_design", json!({"path": cube, "translate": [100, 0, 0]})).unwrap();
         app.run("file.save", json!({"path": folder.join("case.sketcraft")})).unwrap();
@@ -551,7 +550,7 @@ mod tests {
         s.execute("file.save", &json!({"path": path, "overwrite": true})).unwrap();
     }
 
-    fn settle(app: &mut SolveApp) {
+    fn settle(app: &mut SketApp) {
         let ctx = egui::Context::default();
         let began = std::time::Instant::now();
         while !app.file_load.idle() {
@@ -561,12 +560,12 @@ mod tests {
         }
     }
 
-    fn volume(app: &SolveApp) -> f64 {
+    fn volume(app: &SketApp) -> f64 {
         crate::open_meshing::session_world(&app.session).bodies.iter().map(|b| sketcraft_engine::kernel::measure(&b.body).unwrap().volume).sum()
     }
 
     /// Away to the blank tab and back to the assembly.
-    fn come_back(app: &mut SolveApp) {
+    fn come_back(app: &mut SketApp) {
         crate::documents::switch(app, 1);
         crate::documents::switch(app, 0);
         settle(app);
@@ -653,7 +652,7 @@ mod tests {
     fn a_design_opened_in_place_of_the_blank_one_reads_what_changes_while_it_is_shown() {
         let (app, folder, plate, _) = two_links("adopted");
         drop(app);
-        let mut app = SolveApp::new(Session::default(), Default::default());
+        let mut app = SketApp::new(Session::default(), Default::default());
         let mut opened = Session::default();
         opened.execute("doc.open", &json!({"path": folder.join("case.sketcraft")})).unwrap();
         crate::documents::adopt(&mut app, opened);
@@ -674,7 +673,7 @@ mod tests {
         drop(app);
         let case = folder.join("case.sketcraft");
         let open = |in_tab: bool| {
-            let mut app = SolveApp::new(Session::default(), Default::default());
+            let mut app = SketApp::new(Session::default(), Default::default());
             if in_tab {
                 app.run("solid.box", json!({"length": 1, "width": 1, "height": 1})).unwrap();
             }
@@ -703,7 +702,7 @@ mod tests {
         // An unsaved design, a blank tab (shown) and the assembly after it
         let mut unsaved = Session::default();
         unsaved.execute("solid.box", &json!({"length": 1, "width": 1, "height": 1})).unwrap();
-        let mut app = SolveApp::new(unsaved, Default::default());
+        let mut app = SketApp::new(unsaved, Default::default());
         crate::documents::open_tab(&mut app, Session::default()).unwrap();
         let mut opened = Session::default();
         opened.execute("doc.open", &json!({"path": folder.join("case.sketcraft")})).unwrap();
@@ -727,7 +726,7 @@ mod tests {
         let (app, folder, plate, _) = two_links("returns");
         drop(app);
         std::fs::remove_file(&plate).unwrap();
-        let mut app = SolveApp::new(Session::default(), Default::default());
+        let mut app = SketApp::new(Session::default(), Default::default());
         let mut opened = Session::default();
         opened.execute("doc.open", &json!({"path": folder.join("case.sketcraft")})).unwrap();
         crate::documents::adopt(&mut app, opened);

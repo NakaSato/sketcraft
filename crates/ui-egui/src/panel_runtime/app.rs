@@ -474,7 +474,7 @@ impl ActionSink for CommandActionSink<'_> {
     }
 }
 
-impl crate::SolveApp {
+impl crate::SketApp {
     pub fn run_panel_command(&mut self, id: &str, params: &serde_json::Value) -> PanelResult<serde_json::Value> {
         // Parse even without a runtime: hostile/unknown fields never become a
         // misleading capability success or reach the document command path.
@@ -556,7 +556,7 @@ impl crate::SolveApp {
     }
 }
 
-pub(crate) fn tick_app(app: &mut crate::SolveApp, ctx: &egui::Context) {
+pub(crate) fn tick_app(app: &mut crate::SketApp, ctx: &egui::Context) {
     if let Some(integration) = &mut app.panel_runtime {
         let frame = ctx.cumulative_frame_nr();
         if integration.last_tick_frame == Some(frame) {
@@ -570,7 +570,7 @@ pub(crate) fn tick_app(app: &mut crate::SolveApp, ctx: &egui::Context) {
 
 /// Called on the actual hidden transition, including a control-channel Home
 /// open/close interval between paints. No tick, destruction or owner rebind.
-pub(crate) fn hide_app_host(app: &mut crate::SolveApp) {
+pub(crate) fn hide_app_host(app: &mut crate::SketApp) {
     if let Some(integration) = &mut app.panel_runtime
         && let Err(reason) = integration.hide_in_app()
     {
@@ -578,7 +578,7 @@ pub(crate) fn hide_app_host(app: &mut crate::SolveApp) {
     }
 }
 
-pub(crate) fn reserve_host_input(app: &mut crate::SolveApp, ctx: &egui::Context) {
+pub(crate) fn reserve_host_input(app: &mut crate::SketApp, ctx: &egui::Context) {
     let Some(integration) = &mut app.panel_runtime else {
         return;
     };
@@ -591,7 +591,7 @@ pub(crate) fn reserve_host_input(app: &mut crate::SolveApp, ctx: &egui::Context)
     }
 }
 
-pub(crate) fn finish_app_host(app: &mut crate::SolveApp, ui: &mut egui::Ui) {
+pub(crate) fn finish_app_host(app: &mut crate::SketApp, ui: &mut egui::Ui) {
     if let Some(integration) = &mut app.panel_runtime
         && let Err(reason) = integration.finish_host(&app.session, ui)
     {
@@ -599,7 +599,7 @@ pub(crate) fn finish_app_host(app: &mut crate::SolveApp, ui: &mut egui::Ui) {
     }
 }
 
-impl crate::SolveApp {
+impl crate::SketApp {
     /// Alternate placement only. The caller keeps the app bar, ribbon, existing
     /// viewport/navigation and late feature/system overlays in their normal flow.
     pub(crate) fn universal_workspace_ui(&mut self, ui: &mut egui::Ui) {

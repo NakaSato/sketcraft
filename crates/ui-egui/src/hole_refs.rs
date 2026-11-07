@@ -11,14 +11,14 @@
 
 use egui::{Color32, Pos2, Stroke, vec2};
 use serde_json::{Value, json};
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 use sketcraft_engine::doc::HoleReference;
 use sketcraft_engine::doc::expr::Kind as ValueKind;
 use sketcraft_engine::doc::hole_reference::{ReferenceFrame, on_reference_face, reference_frame};
 use sketcraft_engine::geom::prelude::*;
 use sketcraft_engine::{Sel, Session};
 
-use crate::SolveApp;
+use crate::SketApp;
 use crate::dialogs::{Dialog, Kind};
 use crate::selection::{EDGES, FACES, PLANAR_FACES, SelInput, VERTICES};
 use crate::theme::Tokens;
@@ -383,7 +383,7 @@ fn nearest_edge(s: &Session, at: Vec3, p: Vec3) -> Option<Sel> {
 /// The reference distances on the canvas: a dimension from each edge to the hole's centre, and a
 /// box beside it to type the distance in. Whether a box took the keyboard (a newly picked edge's),
 /// which the dialog's main value then leaves to it.
-pub(crate) fn canvas(app: &SolveApp, ui: &mut egui::Ui, painter: &egui::Painter, proj: &Proj, d: &mut Dialog) -> bool {
+pub(crate) fn canvas(app: &SketApp, ui: &mut egui::Ui, painter: &egui::Painter, proj: &Proj, d: &mut Dialog) -> bool {
     if !takes(d) {
         return false;
     }

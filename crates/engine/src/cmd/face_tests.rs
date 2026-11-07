@@ -1,7 +1,7 @@
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 use crate::Session;
 use serde_json::{Value, json};
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 use sketcraft_doc::{Document, FeatureKind, PlaneRef};
 use sketcraft_geom::prelude::*;
 use std::f64::consts::PI;
@@ -20,10 +20,7 @@ fn check(s: &mut Session, want: f64, hole: bool, height: f64) {
     assert!(!state.bodies.iter().any(|b| b.body.classify_point(Vec3::new(5.0, 5.0, height + 1.0)).unwrap() == sketcraft_kernel::PointClass::Inside));
     if hole {
         assert!(
-            !state
-                .bodies
-                .iter()
-                .any(|b| b.body.classify_point(Vec3::new(20.0, 15.0, height - 1.0)).unwrap() == sketcraft_kernel::PointClass::Inside)
+            !state.bodies.iter().any(|b| b.body.classify_point(Vec3::new(20.0, 15.0, height - 1.0)).unwrap() == sketcraft_kernel::PointClass::Inside)
         );
     }
 }

@@ -3,7 +3,7 @@
 
 use crate::Session;
 use serde_json::{Value, json};
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 use sketcraft_doc::{Document, FeatureKind};
 use sketcraft_geom::prelude::*;
 

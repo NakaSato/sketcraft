@@ -1,7 +1,7 @@
 //! Original, headless CPU/GPU Glass evidence. This is not an application or image-quality acceptance test.
 //! Run with `--features sketcraft-render/raytrace-cpu`; output directory must not exist.
 use serde_json::json;
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 use sketcraft_geom::{Aabb3, Mesh, Vec3Geom};
 use sketcraft_render::{
     Camera, ProductMesh, ProductScene,

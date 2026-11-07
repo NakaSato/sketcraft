@@ -8,7 +8,7 @@ use crate::{
     texture_input::{MapRole, png_metadata::PngMetadata},
     texture_sampling::{TextureView, mips},
 };
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 use sketcraft_geom::prelude::*;
 use std::{
     io::{self, BufRead, Read, Seek, SeekFrom},

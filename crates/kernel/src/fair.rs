@@ -43,8 +43,8 @@
 //! control point that does not change the geometry at all — is reported as an error and the
 //! geometry is left alone.
 
-use solidcore_record::Vec3;
-use solidcore_record::brep as b;
+use sketcore_record::Vec3;
+use sketcore_record::brep as b;
 use sketcraft_geom::Grid;
 use sketcraft_geom::bspline::{HPoint, MAX_SPLINE_DEGREE, NurbsSurface, Side, SplineError, check_knots, local_basis};
 

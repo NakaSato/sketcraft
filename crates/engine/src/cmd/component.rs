@@ -7,7 +7,7 @@ use sketcraft_geom::prelude::*;
 use std::collections::HashMap;
 
 use serde_json::{Value, json};
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 use sketcraft_doc::{Feature, FeatureKind, Mat, Occurrence};
 
 use super::CommandSpec;

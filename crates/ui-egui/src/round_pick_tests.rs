@@ -4,7 +4,7 @@
 //! hovering one draws the axis or centre as construction geometry.
 
 use serde_json::{Value, json};
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 use sketcraft_engine::Sel;
 use sketcraft_engine::doc::{AxisRef, FeatureKind, PatternKind, PlaneRef};
 use sketcraft_engine::geom::prelude::*;

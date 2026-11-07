@@ -8,7 +8,7 @@
 use crate::prelude::*;
 use std::f64::consts::{PI, TAU};
 
-use solidcore_record::{Loop2, Region2, Seg2, Vec2};
+use sketcore_record::{Loop2, Region2, Seg2, Vec2};
 
 /// Most pieces one segment is fitted with.
 pub const MAX_FIT_PIECES: usize = 2048;

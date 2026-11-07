@@ -1,8 +1,8 @@
 //! What surface a face lies on (plane, cylinder, cone, sphere, torus), for construction
 //! geometry: axes through round faces, centres of spheres and tori.
 
-use solidcore_record::Vec3;
-use solidcore_record::brep::{Brep, Curve};
+use sketcore_record::Vec3;
+use sketcore_record::brep::{Brep, Curve};
 use sketcraft_geom::UnitVec3;
 use sketcraft_geom::brep::eval::CurveEval;
 use sketcraft_geom::prelude::*;

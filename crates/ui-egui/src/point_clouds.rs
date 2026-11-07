@@ -12,7 +12,7 @@ use sketcraft_engine::doc::point_cloud::{ColorBy, On, PLAIN, PointCloud, Source,
 use sketcraft_engine::doc::point_cloud_distribution::color_range_by;
 use sketcraft_gpu::view::{Cell, CloudFilter, CloudStyle, ColorMode, FILTERS, GpuCloud, cloud_cell};
 
-use crate::SolveApp;
+use crate::SketApp;
 use crate::browser::point_cloud_tracks::{Ask, Paint, Tracks};
 use crate::viewport::Proj;
 
@@ -233,7 +233,7 @@ fn style(ctx: &egui::Context, c: &PointCloud, playing: impl Fn(usize) -> Option<
 }
 
 /// The shown point clouds as the GPU draws them.
-pub fn gpu_clouds(app: &SolveApp, ctx: &egui::Context) -> Vec<GpuCloud> {
+pub fn gpu_clouds(app: &SketApp, ctx: &egui::Context) -> Vec<GpuCloud> {
     let doc = &app.session.doc;
     EXTENTS.with(|e| e.borrow_mut().retain(|id, _| doc.point_clouds.iter().any(|c| c.id == *id)));
     RECORDS.with(|m| {
@@ -262,7 +262,7 @@ pub fn gpu_clouds(app: &SolveApp, ctx: &egui::Context) -> Vec<GpuCloud> {
 }
 
 /// CPU viewport only: some of each shown cloud's points over the rendered model.
-pub fn show(app: &SolveApp, painter: &Painter, proj: &Proj) {
+pub fn show(app: &SketApp, painter: &Painter, proj: &Proj) {
     if app.viewport.gpu.is_some() {
         return;
     }

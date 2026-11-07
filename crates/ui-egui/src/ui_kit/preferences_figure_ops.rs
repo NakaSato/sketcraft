@@ -338,7 +338,7 @@ pub(crate) fn paint_navigation_axes(p: &Painter, rect: Rect) {
     p.circle(c, 46.0 * scale, t.overlay.gamma_multiply(0.35), Stroke::new(scale, t.border.gamma_multiply(0.75)));
     let cam = sketcraft_engine::render::Camera::default();
     let (right, up, back) = cam.basis();
-    use solidcore_record::Vec3;
+    use sketcore_record::Vec3;
     use sketcraft_engine::geom::Vec3Geom;
     let mut tips: Vec<_> = [("x", Vec3::X), ("-x", -Vec3::X), ("y", Vec3::Y), ("-y", -Vec3::Y), ("z", Vec3::Z), ("-z", -Vec3::Z)]
         .into_iter()

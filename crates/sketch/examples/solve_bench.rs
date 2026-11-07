@@ -5,7 +5,7 @@
 
 use std::time::Instant;
 
-use solidcore_record::Vec2;
+use sketcore_record::Vec2;
 use sketcraft_sketch::{
     Analysis, Budget, ConstraintKind, Hold, PatternAlignment, Sketch, SketchPattern, SketchPatternKind, SolveReport, solve, solve_with,
 };

@@ -203,7 +203,7 @@ fn curvature_polygon_and_fix_consume_clicked_operands_atomically() {
         };
         h.call("ui.view", json!({"view":"top"}));
         h.app.cam.distance = 80.0;
-        h.app.cam.target = solidcore_record::Vec3::new(30.0, 15.0, 0.0);
+        h.app.cam.target = sketcore_record::Vec3::new(30.0, 15.0, 0.0);
         h.settle();
         for (i, p) in picks.iter().enumerate() {
             h.step(&json!({"click":{"sketch":p},"shift":i>0})).unwrap();

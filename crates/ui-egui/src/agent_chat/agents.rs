@@ -236,7 +236,7 @@ impl Entry {
 }
 
 /// Every agent the chat can use: the installed ones found, then the ones the user added.
-pub fn entries(app: &crate::SolveApp) -> Vec<Entry> {
+pub fn entries(app: &crate::SketApp) -> Vec<Entry> {
     let mut out = Vec::new();
     #[cfg(not(target_arch = "wasm32"))]
     if let Some(d) = &app.agent_chat.detection {
@@ -270,7 +270,7 @@ pub fn entries(app: &crate::SolveApp) -> Vec<Entry> {
 }
 
 /// The agent a conversation uses: the one picked in the panel, else the default, else the first.
-pub fn current(app: &crate::SolveApp) -> Option<Entry> {
+pub fn current(app: &crate::SketApp) -> Option<Entry> {
     let all = entries(app);
     let pick = |id: &str| all.iter().find(|e| e.id == id).cloned();
     app.agent_chat.agent_id.as_deref().and_then(pick).or_else(|| pick(&app.preferences.agent_default)).or_else(|| all.first().cloned())

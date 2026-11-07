@@ -2,7 +2,7 @@ use std::f64::consts::{PI, TAU};
 
 use super::*;
 use crate::bezier;
-use solidcore_record::MAX_BEZIER_CTRL;
+use sketcore_record::MAX_BEZIER_CTRL;
 
 const TOL: f64 = 1e-6;
 

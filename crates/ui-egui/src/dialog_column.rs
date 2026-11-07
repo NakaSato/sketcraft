@@ -17,7 +17,7 @@
 use egui::{Rect, pos2};
 use serde::{Deserialize, Serialize};
 
-use crate::SolveApp;
+use crate::SketApp;
 use crate::theme::Tokens;
 use crate::ui_kit::{Container, Surface};
 
@@ -33,12 +33,12 @@ pub enum DialogPlace {
 }
 
 /// Does the open dialog hold the left column this frame?
-pub(crate) fn holds(app: &SolveApp) -> bool {
+pub(crate) fn holds(app: &SketApp) -> bool {
     app.preferences.dialog_place == DialogPlace::LeftColumn && app.dialog.as_ref().is_some_and(crate::dialogs::docks)
 }
 
 /// The History is drawn at the left this frame (beside or under the browser).
-fn left_history(app: &SolveApp) -> bool {
+fn left_history(app: &SketApp) -> bool {
     app.ui.show_timeline && app.preferences.timeline_left && !crate::render_workspace::active(app)
 }
 
@@ -47,7 +47,7 @@ fn left_history(app: &SolveApp) -> bool {
 /// right of what the column shows, at least `width` wide, and from the top down to a bottom
 /// History card. It mirrors where `timeline_left::left_panel` and `browser::browser` put
 /// their cards.
-pub(crate) fn rect(app: &SolveApp, available: Rect, width: f32) -> Rect {
+pub(crate) fn rect(app: &SketApp, available: Rect, width: f32) -> Rect {
     let t = Tokens::get();
     let panel = Container::for_layout(app.ui.layout, Surface::Panel);
     let gap = panel.gap();
@@ -78,7 +78,7 @@ pub(crate) fn rect(app: &SolveApp, available: Rect, width: f32) -> Rect {
 /// laid out with the browser this frame, or (a dialog opened after that, from a key in the view)
 /// the same column worked out now from the space the browser had; the next frame then leaves
 /// the browser out.
-pub(crate) fn place(app: &SolveApp, ctx: &egui::Context, d: &crate::dialogs::Dialog) -> Option<Rect> {
+pub(crate) fn place(app: &SketApp, ctx: &egui::Context, d: &crate::dialogs::Dialog) -> Option<Rect> {
     if app.preferences.dialog_place != DialogPlace::LeftColumn || !crate::dialogs::docks(d) {
         return None;
     }
@@ -91,14 +91,14 @@ pub(crate) fn place(app: &SolveApp, ctx: &egui::Context, d: &crate::dialogs::Dia
 
 /// Lay out this frame's column before the browser and the History are drawn: they skip
 /// themselves while a dialog holds it, and the view's content area starts beside it.
-pub(crate) fn layout(app: &mut SolveApp, available: Rect) {
+pub(crate) fn layout(app: &mut SketApp, available: Rect) {
     app.shell.left_space = Some(available);
     app.shell.dialog_column = app.dialog.as_ref().filter(|_| holds(app)).map(|d| rect(app, available, crate::dialogs::card_width(d)));
 }
 
 /// The bounds the dialog's card is placed in: the column's left and top, the space's right edge,
 /// and the column's bottom plus the gap the card keeps to it.
-pub(crate) fn bounds(app: &SolveApp, column: Rect, viewport: Rect) -> Rect {
+pub(crate) fn bounds(app: &SketApp, column: Rect, viewport: Rect) -> Rect {
     let gap = Container::for_layout(app.ui.layout, Surface::Feature).gap();
     Rect::from_min_max(column.min, pos2(viewport.right().max(column.right()), column.bottom() + gap))
 }

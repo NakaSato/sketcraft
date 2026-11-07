@@ -71,7 +71,7 @@ fn specimen(id: &str, readout: bool) -> crate::ui_kit::Details {
 }
 
 /// Presets are bounded, named specimens rather than arbitrary user-provided widget state.
-pub(crate) fn control(app: &mut crate::SolveApp, params: &Value) -> Result<Value, String> {
+pub(crate) fn control(app: &mut crate::SketApp, params: &Value) -> Result<Value, String> {
     let preset = params.get("preset").and_then(Value::as_str).ok_or("missing `preset`")?;
     let zebra = || item("zebra", StatusKind::Mode, "Zebra", crate::i18n::format("ui.viewport_status_stripes", &[("count", "12")]), false);
     let section = || item("section", StatusKind::Mode, "Section", "Z 20 mm".into(), false);
@@ -102,7 +102,7 @@ pub(crate) fn control(app: &mut crate::SolveApp, params: &Value) -> Result<Value
     Ok(json!({"preset": preset, "count": app.viewport_status_fixture.items.len()}))
 }
 
-pub(crate) fn show(app: &mut crate::SolveApp, ctx: &egui::Context, viewport: egui::Rect) {
+pub(crate) fn show(app: &mut crate::SketApp, ctx: &egui::Context, viewport: egui::Rect) {
     let fixture = &mut app.viewport_status_fixture;
     let folded = app.preferences.viewport_status_summary && fixture.items.len() >= 3;
     fixture.presentation.reconcile_summary(ctx, if folded { fixture.items.iter().map(|item| item.id.clone()).collect() } else { Vec::new() });

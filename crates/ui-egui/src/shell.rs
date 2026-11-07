@@ -3,7 +3,7 @@ use crate::ui_kit::{Container, Surface};
 use egui::{Rect, pos2, vec2};
 use serde::{Deserialize, Serialize};
 
-use crate::{SolveApp, theme::Tokens, toolbar};
+use crate::{SketApp, theme::Tokens, toolbar};
 
 /// Saved workspace layout; automation may override it for a session.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
@@ -120,7 +120,7 @@ pub(crate) struct State {
 }
 
 /// Register the actual card, so fitting and pointer shielding use the same rectangle.
-pub(crate) fn register_panel(app: &mut SolveApp, id: &'static str, rect: Option<Rect>, edge: Option<crate::ui_kit::Edge>) {
+pub(crate) fn register_panel(app: &mut SketApp, id: &'static str, rect: Option<Rect>, edge: Option<crate::ui_kit::Edge>) {
     let rect = rect.filter(|_| !crate::render_ui::focused(app) || !id.starts_with("render:") || id == "render:focus:exit");
     if let Some(rect) = rect.filter(|r| r.is_finite() && r.is_positive()) {
         app.shell.workspace_panels.insert(id, (rect, edge));
@@ -130,7 +130,7 @@ pub(crate) fn register_panel(app: &mut SolveApp, id: &'static str, rect: Option<
 }
 
 /// Shared workspace-card bounds below the ribbon and above a floating bottom strip.
-pub(crate) fn panel_bounds(app: &SolveApp, mut available: Rect) -> Rect {
+pub(crate) fn panel_bounds(app: &SketApp, mut available: Rect) -> Rect {
     for card in &app.shell.cards {
         available.min.y = within(card.bottom(), available.top(), available.bottom());
     }
@@ -147,18 +147,18 @@ pub(crate) fn panel_bounds(app: &SolveApp, mut available: Rect) -> Rect {
 }
 
 /// One source of occlusion for navigation, picking and overlays.
-pub(crate) fn covered_rects(app: &SolveApp) -> Vec<Rect> {
+pub(crate) fn covered_rects(app: &SketApp) -> Vec<Rect> {
     occluding_rects(app, false, false, true)
 }
 
 /// Selection controls follow the projected model, so they must not influence its fit.
-pub(crate) fn fit_rects(app: &SolveApp) -> Vec<Rect> {
+pub(crate) fn fit_rects(app: &SketApp) -> Vec<Rect> {
     occluding_rects(app, true, false, true)
 }
 
 /// Actual persistent workspace footprints for the opt-in host. Transient menus
 /// remain input shields, without becoming targets for framing or control placement.
-pub(crate) fn host_usable(app: &SolveApp) -> sketcraft_engine::panels::PanelResult<crate::panel_runtime::HostUsableRegion> {
+pub(crate) fn host_usable(app: &SketApp) -> sketcraft_engine::panels::PanelResult<crate::panel_runtime::HostUsableRegion> {
     use crate::panel_runtime::{MAX_USABLE_OBSTACLES, egui_rect, logical_rect, resolve_usable_region};
     use sketcraft_engine::panels::{Rule, error};
     let frame = app.universal_panel_frame().ok_or_else(|| error(Rule::Lifecycle, "universal host geometry is unavailable"))?;
@@ -180,7 +180,7 @@ pub(crate) fn host_usable(app: &SolveApp) -> sketcraft_engine::panels::PanelResu
     resolve_usable_region(frame.layout.render_domain, &obstacles)
 }
 
-fn occluding_rects(app: &SolveApp, fitting: bool, input: bool, include_confirm: bool) -> Vec<Rect> {
+fn occluding_rects(app: &SketApp, fitting: bool, input: bool, include_confirm: bool) -> Vec<Rect> {
     let mut rects = Vec::new();
     if let Some(frame) = app.universal_panel_frame() {
         let regions = if input { &frame.layout.input } else { &frame.layout.occlusion };
@@ -219,14 +219,14 @@ fn occluding_rects(app: &SolveApp, fitting: bool, input: bool, include_confirm: 
     rects
 }
 
-pub(crate) fn covered(app: &SolveApp, p: egui::Pos2) -> bool {
+pub(crate) fn covered(app: &SketApp, p: egui::Pos2) -> bool {
     occluding_rects(app, false, true, true).iter().any(|r| r.contains(p))
 }
 
 /// Space reserved below viewport overlays by the floating History card. Its rect is set before
 /// the viewport is painted, so showing or hiding History takes effect in the same frame. History
 /// docked as the left sidebar sits beside the viewport, not below it, so it reserves nothing.
-pub(crate) fn viewport_bottom_inset(app: &SolveApp, viewport: Rect) -> f32 {
+pub(crate) fn viewport_bottom_inset(app: &SketApp, viewport: Rect) -> f32 {
     if app.universal_panel_host_enabled() {
         return 0.0;
     }
@@ -241,13 +241,13 @@ pub(crate) fn viewport_bottom_inset(app: &SolveApp, viewport: Rect) -> f32 {
 
 /// Bottom-anchored overlays share the content area's History clearance without moving the
 /// viewport's projection or its left and right anchors.
-pub(crate) fn bottom_overlay_rect(app: &SolveApp, mut viewport: Rect) -> Rect {
+pub(crate) fn bottom_overlay_rect(app: &SketApp, mut viewport: Rect) -> Rect {
     viewport.max.y -= viewport_bottom_inset(app, viewport);
     viewport
 }
 
 /// The former central panel remains the anchor for controls and docked panels.
-pub(crate) fn content_rect(app: &SolveApp, viewport: Rect) -> Rect {
+pub(crate) fn content_rect(app: &SketApp, viewport: Rect) -> Rect {
     // The content kept from the last frame can lie outside a viewport that has shrunk or moved
     // since (a resize, a new scale): the intersection is then turned inside out, its min past
     // its max. The viewport stands in for it.
@@ -263,7 +263,7 @@ pub(crate) fn within(v: f32, lo: f32, hi: f32) -> f32 {
 
 /// Free anchor space shared by both layouts. Compact edge hosts have already consumed
 /// their allocation; content-hugging Browser and floating overlays reserve their measured span.
-pub(crate) fn workspace_content(app: &SolveApp, mut content: Rect) -> Rect {
+pub(crate) fn workspace_content(app: &SketApp, mut content: Rect) -> Rect {
     if let Some(frame) = app.universal_panel_frame() {
         return frame.layout.viewport.map(crate::panel_runtime::egui_rect).map_or(content, |rect| rect.intersect(content));
     }
@@ -302,7 +302,7 @@ pub(crate) fn workspace_content(app: &SolveApp, mut content: Rect) -> Rect {
 
 /// Tool sheets may cover Browser and History, while shell chrome and Assistant stay clear.
 /// Assistant's outside-rail exception stays in its owner.
-pub(crate) fn tool_drag_rect(app: &SolveApp, placement: Rect) -> Rect {
+pub(crate) fn tool_drag_rect(app: &SketApp, placement: Rect) -> Rect {
     let gap = Container::for_layout(app.ui.layout, Surface::Feature).gap();
     let mut bounds = crate::agent_chat::tool_space(app, app.viewport.rect.unwrap_or(placement));
     for card in app.shell.cards.iter().filter(|r| r.is_finite() && r.is_positive()) {
@@ -311,7 +311,7 @@ pub(crate) fn tool_drag_rect(app: &SolveApp, placement: Rect) -> Rect {
     bounds
 }
 
-pub(crate) fn panel_top(app: &SolveApp, viewport: Rect, bottom: f32, side: crate::frame::Side) -> f32 {
+pub(crate) fn panel_top(app: &SketApp, viewport: Rect, bottom: f32, side: crate::frame::Side) -> f32 {
     let content = content_rect(app, viewport);
     if side == crate::frame::Side::Right {
         // Both layouts use the measured compass, rather than a legacy fixed-height gap.

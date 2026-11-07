@@ -54,7 +54,7 @@ fn every_dimension_kind_has_a_drawable_frame() {
     let mut kinds = Vec::new();
     for c in dims {
         let f = dim_frame(&sk, &c.kind).unwrap_or_else(|| panic!("no frame for {c:?}"));
-        let l = dim_layout(&f, None, 0.1, solidcore_record::Vec2::new(1.0, 0.5));
+        let l = dim_layout(&f, None, 0.1, sketcore_record::Vec2::new(1.0, 0.5));
         assert!(!l.lines.is_empty() && !l.arrows.is_empty(), "{c:?}");
         assert!(l.text.is_finite());
         kinds.push(std::mem::discriminant(&f));
@@ -81,10 +81,10 @@ fn dimension_text_is_stored_relative_to_the_dimension_and_follows_it() {
         let f = dim_frame(&sk, &c.kind).expect("frame");
         dim_layout(&f, c.text, 0.1, Default::default()).text
     };
-    assert!(text(&s).dist(solidcore_record::Vec2::new(20.0, -8.0)) < 1e-9);
+    assert!(text(&s).dist(sketcore_record::Vec2::new(20.0, -8.0)) < 1e-9);
     // Moved by the parameter name; then the line moves and the text goes with it.
     run(&mut s, "sketch.dimension_text", json!({"dimension": param, "at": [30, 12]}));
-    assert!(text(&s).dist(solidcore_record::Vec2::new(30.0, 12.0)) < 1e-9);
+    assert!(text(&s).dist(sketcore_record::Vec2::new(30.0, 12.0)) < 1e-9);
     run(&mut s, "sketch.move_point", json!({"point": "l1.start", "to": [0, 10]}));
     run(&mut s, "sketch.move_point", json!({"point": "l1.end", "to": [40, 10]}));
     // Still 10 along and 12 across from the middle of the (moved) line.
@@ -115,7 +115,7 @@ fn deleting_a_dimension_frees_its_parameter() {
 // ---------------------------------------------------------------------------------------------
 // Fix / Unfix
 
-fn pt(s: &Session, id: &str) -> solidcore_record::Vec2 {
+fn pt(s: &Session, id: &str) -> sketcore_record::Vec2 {
     let sk = sketch(s);
     sk.resolve_point(id).and_then(|i| sk.point(i)).unwrap_or_else(|| panic!("no point {id}"))
 }
@@ -165,7 +165,7 @@ fn fixing_curves_holds_their_points_and_radius() {
     assert!(si["curves"].as_array().is_some_and(|c| c.iter().filter(|c| c["construction"] != true).all(|c| c["fixed"] == true)), "{si}");
     // A fixed circle keeps centre and radius; a dimension on it conflicts.
     run(&mut s, "sketch.move_point", json!({"point": "c1.center", "to": [0, 0]}));
-    assert_eq!(pt(&s, "c1.center"), solidcore_record::Vec2::new(10.0, 10.0));
+    assert_eq!(pt(&s, "c1.center"), sketcore_record::Vec2::new(10.0, 10.0));
     assert!(s.execute("sketch.dimension", &json!({"entities": ["c1"], "value": 20})).is_err());
     let r0 = sketch(&s).radius(0);
     assert_eq!(r0, Some(5.0));
@@ -298,7 +298,7 @@ fn projected_geometry_can_become_construction() {
 // Two-entity constraints: the first pick stays, the second moves
 
 /// Positions of an entity's points (and its radius).
-fn snap(s: &Session, id: &str) -> (Vec<solidcore_record::Vec2>, Option<f64>) {
+fn snap(s: &Session, id: &str) -> (Vec<sketcore_record::Vec2>, Option<f64>) {
     let sk = sketch(s);
     if let Some(i) = sk.curve_index(id) {
         let pts = sk.curves[i].kind.point_ids().into_iter().filter_map(|p| sk.point(p)).collect();
@@ -307,7 +307,7 @@ fn snap(s: &Session, id: &str) -> (Vec<solidcore_record::Vec2>, Option<f64>) {
     (vec![pt(s, id)], None)
 }
 
-fn same(a: &(Vec<solidcore_record::Vec2>, Option<f64>), b: &(Vec<solidcore_record::Vec2>, Option<f64>)) -> bool {
+fn same(a: &(Vec<sketcore_record::Vec2>, Option<f64>), b: &(Vec<sketcore_record::Vec2>, Option<f64>)) -> bool {
     a.0.len() == b.0.len() && a.0.iter().zip(&b.0).all(|(p, q)| p.dist(*q) < 1e-9) && a.1.zip(b.1).is_none_or(|(x, y)| (x - y).abs() < 1e-9)
 }
 
@@ -439,7 +439,7 @@ fn point_constraints_keep_the_first_pick() {
     let (a0, l0) = (snap(&s, "p1"), snap(&s, "l1"));
     run(&mut s, "sketch.constraint.symmetry", json!({"a": "p1", "b": "p2", "line": "l1"}));
     assert!(same(&snap(&s, "p1"), &a0) && same(&snap(&s, "l1"), &l0));
-    assert!(pt(&s, "p2").dist(solidcore_record::Vec2::new(3.0, -7.0)) < 1e-6, "{:?}", pt(&s, "p2"));
+    assert!(pt(&s, "p2").dist(sketcore_record::Vec2::new(3.0, -7.0)) < 1e-6, "{:?}", pt(&s, "p2"));
 }
 
 #[test]
@@ -572,12 +572,12 @@ fn drag(s: &mut Session, e: &str, from: [f64; 2], to: [f64; 2]) {
     run(s, "sketch.drag", json!({"entity": e, "from": from, "to": to}));
 }
 
-fn v(x: f64, y: f64) -> solidcore_record::Vec2 {
-    solidcore_record::Vec2::new(x, y)
+fn v(x: f64, y: f64) -> sketcore_record::Vec2 {
+    sketcore_record::Vec2::new(x, y)
 }
 
 /// The corners of the polygon drawn by `out`, in order, and its support circle's centre and radius.
-fn polygon_shape(s: &Session, out: &Value) -> (Vec<solidcore_record::Vec2>, solidcore_record::Vec2, f64) {
+fn polygon_shape(s: &Session, out: &Value) -> (Vec<sketcore_record::Vec2>, sketcore_record::Vec2, f64) {
     use sketcraft_sketch::CurveKind;
     let sk = sketch(s);
     let corners = out["curves"]
@@ -595,7 +595,7 @@ fn polygon_shape(s: &Session, out: &Value) -> (Vec<solidcore_record::Vec2>, soli
 }
 
 /// A regular polygon: corners equally far from `c`, sides equally long.
-fn assert_regular(corners: &[solidcore_record::Vec2], c: solidcore_record::Vec2, what: &str) {
+fn assert_regular(corners: &[sketcore_record::Vec2], c: sketcore_record::Vec2, what: &str) {
     let n = corners.len();
     let reach: Vec<f64> = corners.iter().map(|q| q.dist(c)).collect();
     let sides: Vec<f64> = (0..n).map(|i| corners[i].dist(corners[(i + 1) % n])).collect();
@@ -783,7 +783,7 @@ fn arm_drags(links: Links) -> (usize, usize) {
         let v3 = v2 + v(b * (th1 + bend).cos(), b * (th1 + bend).sin());
         let (tr, tt) = (lo + rnd() * (hi - lo), rnd() * TAU);
         let to = o + v(tr * tt.cos(), tr * tt.sin());
-        let clear = |p: solidcore_record::Vec2| (lo..=hi).contains(&p.dist(o));
+        let clear = |p: sketcore_record::Vec2| (lo..=hi).contains(&p.dist(o));
         if !(0..=100).all(|i| clear(v3 + (to - v3) * (i as f64 / 100.0))) {
             continue;
         }
@@ -870,13 +870,13 @@ fn hanging_triangle_flips(n: usize) -> usize {
         let v3 = v2 + v(b * (th1 + bend).cos(), b * (th1 + bend).sin());
         let (tr, tt) = (lo + rnd() * (hi - lo), rnd() * TAU);
         let to = o + v(tr * tt.cos(), tr * tt.sin());
-        let clear = |p: solidcore_record::Vec2| (lo..=hi).contains(&p.dist(o));
+        let clear = |p: sketcore_record::Vec2| (lo..=hi).contains(&p.dist(o));
         if !(0..=100).all(|i| clear(v3 + (to - v3) * (i as f64 / 100.0))) {
             continue;
         }
         kept += 1;
         let turn = rnd() * TAU;
-        let u = solidcore_record::Vec2::from_angle(turn);
+        let u = sketcore_record::Vec2::from_angle(turn);
         let normal = u.perp() * if rnd() < 0.5 { 1.0 } else { -1.0 };
         let (tq, tr) = (v3 + u * 3.9, v3 + u * 1.95 + normal * (4.0f64 - 1.95 * 1.95).sqrt());
         {
@@ -1070,7 +1070,7 @@ fn a_dragged_fillet_stays_in_its_corner() {
         let arc_id = sk0.curves[arc].id.clone();
         let inside = |s: &Session| {
             let sk = sketch(s);
-            let side = |p: solidcore_record::Vec2, a: solidcore_record::Vec2, b: solidcore_record::Vec2| (b - a).cross(p - a).signum();
+            let side = |p: sketcore_record::Vec2, a: sketcore_record::Vec2, b: sketcore_record::Vec2| (b - a).cross(p - a).signum();
             let c = sk.center(arc).expect("centre");
             let (p0, k1, k2, p3) = (pt(s, "l1.start"), pt(s, "l1.end"), pt(s, "l2.start"), pt(s, "l2.end"));
             let r = sk.radius(arc).unwrap_or(0.0);
@@ -1381,8 +1381,8 @@ fn three_d_curves_need_the_option_and_move_joined() {
     let sk = sketch(&s);
     let w = &sk.wires[sk.wire_index(&sid).expect("spline")];
     assert!(w.pts.len() > 10);
-    assert!(w.pts.first().expect("p").dist(solidcore_record::Vec3::new(10.0, 0.0, 10.0)) < 1e-12);
-    assert!(w.pts.last().expect("p").dist(solidcore_record::Vec3::new(20.0, 0.0, 20.0)) < 1e-12);
+    assert!(w.pts.first().expect("p").dist(sketcore_record::Vec3::new(10.0, 0.0, 10.0)) < 1e-12);
+    assert!(w.pts.last().expect("p").dist(sketcore_record::Vec3::new(20.0, 0.0, 20.0)) < 1e-12);
     // The shared corner moves for both lines (and the spline that starts there).
     let r = run(&mut s, "sketch.move3d", json!({"wire": ids[1], "index": 1, "by": [0, 0, 5]}));
     assert_eq!(r["moved"], 2);
@@ -1664,7 +1664,7 @@ fn an_ellipse_half_axis_dimension_follows_where_its_text_is_pulled() {
             match (gone, expected) {
                 ("minor", "minor") => assert!(end.is_none(), "the minor radius: {r}"),
                 ("major", "major") => {
-                    let m = solidcore_record::Vec2::new(20.0, 20.0) * std::f64::consts::FRAC_1_SQRT_2;
+                    let m = sketcore_record::Vec2::new(20.0, 20.0) * std::f64::consts::FRAC_1_SQRT_2;
                     assert!(end.is_some_and(|q| q.dist(m) < 1e-6), "the major end: {r}")
                 }
                 _ => assert!(
@@ -1841,7 +1841,7 @@ fn hung_elbow_side(s: &Session) -> f64 {
 }
 
 /// The hand of `hung_arm` swung by `angle` about the shoulder.
-fn hung_hand_target(s: &Session, angle: f64, scale: f64) -> solidcore_record::Vec2 {
+fn hung_hand_target(s: &Session, angle: f64, scale: f64) -> sketcore_record::Vec2 {
     let (b, h) = (pt(s, "ab.end"), pt(s, "eh.end"));
     let r = h - b;
     let (c, si) = (angle.cos(), angle.sin());
@@ -2334,7 +2334,7 @@ fn dragging_an_end_of_a_tangent_line_leaves_its_other_end_still() {
     drag(&mut s, &format!("{l}.end"), [20.0, 10.0], [5.0, 12.0]);
     assert!(at(&s, &format!("{l}.start")).dist(start) < 1e-7, "the far end moved: {:?}", at(&s, &format!("{l}.start")));
     assert!(
-        at(&s, &format!("{l}.end")).dist(solidcore_record::Vec2::new(5.0, 12.0)) < 1e-6,
+        at(&s, &format!("{l}.end")).dist(sketcore_record::Vec2::new(5.0, 12.0)) < 1e-6,
         "the end went where dragged: {:?}",
         at(&s, &format!("{l}.end"))
     );
@@ -2418,12 +2418,12 @@ fn a_changed_length_dimension_keeps_its_first_point() {
     let width = run(&mut s, "sketch.dimension", json!({"entities": [bottom]}))["param"].as_str().unwrap().to_string();
     let height = run(&mut s, "sketch.dimension", json!({"entities": [right]}))["param"].as_str().unwrap().to_string();
     run(&mut s, "parameters.change", json!({"name": width, "expression": "60 mm"}));
-    assert!(at(&s, "p1").dist(solidcore_record::Vec2::new(10.0, 10.0)) < 1e-6, "the first corner stays: {:?}", at(&s, "p1"));
-    assert!(at(&s, "p2").dist(solidcore_record::Vec2::new(70.0, 10.0)) < 1e-6, "the far corner moves: {:?}", at(&s, "p2"));
+    assert!(at(&s, "p1").dist(sketcore_record::Vec2::new(10.0, 10.0)) < 1e-6, "the first corner stays: {:?}", at(&s, "p1"));
+    assert!(at(&s, "p2").dist(sketcore_record::Vec2::new(70.0, 10.0)) < 1e-6, "the far corner moves: {:?}", at(&s, "p2"));
     // Several at once: the right side grows up from its start, the bottom-right corner.
     run(&mut s, "parameters.change", json!({"changes": {height: "25 mm"}}));
-    assert!(at(&s, "p2").dist(solidcore_record::Vec2::new(70.0, 10.0)) < 1e-6, "{:?}", at(&s, "p2"));
-    assert!(at(&s, "p3").dist(solidcore_record::Vec2::new(70.0, 35.0)) < 1e-6, "{:?}", at(&s, "p3"));
+    assert!(at(&s, "p2").dist(sketcore_record::Vec2::new(70.0, 10.0)) < 1e-6, "{:?}", at(&s, "p2"));
+    assert!(at(&s, "p3").dist(sketcore_record::Vec2::new(70.0, 35.0)) < 1e-6, "{:?}", at(&s, "p3"));
 
     // Centred on the Y axis: holding a corner can't keep it symmetric, so both ends move.
     let mut s = new_sketch();
@@ -2497,14 +2497,14 @@ fn move_points_moves_each_point_to_its_own_target() {
     assert_eq!(moved[1]["to"], json!([20.0, -5.0]));
     let sk = sketch(&s);
     let at = |id: &str| sk.point(sk.resolve_point(id).unwrap()).unwrap();
-    assert!(at("l1.end").dist(solidcore_record::Vec2::new(10.0, 5.0)) < 1e-9);
-    assert!(at("l2.end").dist(solidcore_record::Vec2::new(20.0, -5.0)) < 1e-9);
-    assert!(at("l3.end").dist(solidcore_record::Vec2::new(30.0, 0.0)) < 1e-9, "the other points stay");
+    assert!(at("l1.end").dist(sketcore_record::Vec2::new(10.0, 5.0)) < 1e-9);
+    assert!(at("l2.end").dist(sketcore_record::Vec2::new(20.0, -5.0)) < 1e-9);
+    assert!(at("l3.end").dist(sketcore_record::Vec2::new(30.0, 0.0)) < 1e-9, "the other points stay");
     // One undo step takes both back.
     let undo_after = run(&mut s, "document.inspect", json!({}))["undo"].as_u64().unwrap();
     assert_eq!(undo_after, undo_before.as_u64().unwrap() + 1);
     run(&mut s, "edit.undo", json!({}));
-    assert!(pt(&s, "l1.end").dist(solidcore_record::Vec2::new(10.0, 0.0)) < 1e-9);
+    assert!(pt(&s, "l1.end").dist(sketcore_record::Vec2::new(10.0, 0.0)) < 1e-9);
     // `near` that finds nothing, or a malformed move, is refused and moves nothing.
     for bad in [
         json!({"moves": [{"near": [100, 100], "to": [0, 0]}]}),

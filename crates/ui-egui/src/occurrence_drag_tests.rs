@@ -1,6 +1,6 @@
 //! A left-button drag on a free part repositions it (#2804).
 use serde_json::{Value, json};
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 use sketcraft_engine::geom::prelude::*;
 
 use crate::scenario::Harness;

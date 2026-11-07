@@ -1,7 +1,7 @@
 //! Request-only coat overrides on immutable captured geometry; no saved appearance changes.
 use crate::{Result, params::bad};
 use serde::Deserialize;
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 use sketcraft_render::{
     ProductScene,
     clear_coat::ClearCoat,

@@ -1041,7 +1041,7 @@ fn native_spatial_aa_preflight_and_host_forwarding_change_actual_edge_png() {
     let center = scene.bounds.center();
     let mut camera = sketcraft_render::Camera { distance: 2.0, fov: 0.0, ..Default::default() };
     camera.set_view(sketcraft_render::StandardView::Top);
-    camera.target = solidcore_record::Vec3::new(scene.bounds.min.x, center.y, center.z);
+    camera.target = sketcore_record::Vec3::new(scene.bounds.min.x, center.y, center.z);
     let doc = s.doc.clone();
     let before = (s.revision, s.evaluations, s.is_dirty(), s.undo.len(), s.redo.len());
     let mut legacy: Option<Vec<u8>> = None;
@@ -1554,7 +1554,7 @@ fn saved_cpu_optics_match_runtime_capture_pixels_prefixes_cancel_and_accounting(
     let mut s = Session::default();
     s.execute("solid.box", &json!({"length":10,"width":10,"height":3,"body_name":"Glass"})).unwrap();
     let camera = sketcraft_render::Camera {
-        target: solidcore_record::Vec3::new(5.0, 5.0, 1.5),
+        target: sketcore_record::Vec3::new(5.0, 5.0, 1.5),
         distance: 20.0,
         yaw: 0.3,
         pitch: 0.4,
@@ -1911,7 +1911,7 @@ fn saved_cpu_aging_cold_reopen_resolves_exact_target_and_changes_real_png_withou
         .unwrap();
     layers.get_mut(0).unwrap().target = Some(target.clone());
     let physical = s.execute("component.properties", &json!({})).unwrap();
-    let mut camera = sketcraft_render::Camera { distance: 15.0, target: solidcore_record::Vec3::new(5.0, 5.0, 1.0), fov: 0.0, ..Default::default() };
+    let mut camera = sketcraft_render::Camera { distance: 15.0, target: sketcore_record::Vec3::new(5.0, 5.0, 1.0), fov: 0.0, ..Default::default() };
     camera.set_view(sketcraft_render::StandardView::Top);
     s.execute("render.settings.set", &json!({"name":"CPU aging","set":{"width":8,"height":8,"camera":camera,
         "job":{"method":"cpu_raytrace","options":{"progressive":{"samples_per_pixel":3,"seed":81},"aging":layers,"denoise":true,"output":{"linear_exr":true},"lights":[{"direction":[0,0,1],"color":[1,1,1],"intensity":std::f64::consts::PI}]}}}})).unwrap();
@@ -2091,7 +2091,7 @@ fn saved_cpu_general_closed_mesh_path_matches_runtime_and_actual_captured_cylind
     let mut s = Session::default();
     s.execute("solid.cylinder", &json!({"radius":5,"height":3,"body_name":"Curved"})).unwrap();
     let camera = sketcraft_render::Camera {
-        target: solidcore_record::Vec3::new(0.0, 0.0, 1.5),
+        target: sketcore_record::Vec3::new(0.0, 0.0, 1.5),
         distance: 20.0,
         yaw: 0.3,
         pitch: 0.4,
@@ -2160,7 +2160,7 @@ fn runtime_checked_hdr_keeps_two_stable_glass_targets_and_exact_cpu_options_with
     for (name, corner) in [("Saved glass", [0, 0, 0]), ("Draft glass", [4, 0, 0])] {
         s.execute("solid.box", &json!({"body_name":name,"length":2,"width":2,"height":2,"corner":corner,"operation":"new"})).unwrap();
     }
-    let camera = sketcraft_render::Camera { target: solidcore_record::Vec3::new(3.0, 1.0, 1.0), distance: 20.0, fov: 0.6, ..Default::default() };
+    let camera = sketcraft_render::Camera { target: sketcore_record::Vec3::new(3.0, 1.0, 1.0), distance: 20.0, fov: 0.6, ..Default::default() };
     s.execute("render.settings.set", &json!({"name":"Glass HDR","set":{"width":4,"height":3,"camera":camera,"exposure_ev":0.75,
         "job":{"method":"cpu_raytrace","transparent_background":true,"options":{"path":{"max_depth":12},"progressive":{"samples_per_pixel":3,"seed":81},
         "lights":[],"lens":{"aperture_radius_mm":0.01,"focus_distance_mm":20},"output":{"linear_exr":true}}}}})).unwrap();
@@ -2408,7 +2408,7 @@ fn saved_coat_cpu_direct_and_path_render_match_independent_normal_incidence_laye
         let channel = |i: usize| f32::from_bits(word(bytes, offset + 8 + i * 4));
         [channel(3), channel(2), channel(1), channel(0)]
     }
-    use solidcore_record::Vec3;
+    use sketcore_record::Vec3;
     use sketcraft_doc::render_coat::SavedCoat;
     use std::f64::consts::{FRAC_PI_2, PI, SQRT_2};
     for indirect in [false, true] {
@@ -2492,8 +2492,7 @@ fn saved_cpu_coat_survives_builtin_maps_aging_and_guided_filter_without_changing
     let mut s = Session::default();
     s.execute("solid.box", &json!({"body_name":"Panel","corner":[-10,-10,-2],"length":20,"width":20,"height":2})).unwrap();
     s.execute("appearance.assign", &json!({"bodies":["Panel"],"color":[128,64,32],"pbr":{"metallic":0,"roughness":0.5,"dielectric_ior":1}})).unwrap();
-    let camera =
-        sketcraft_render::Camera { distance: 10.0, yaw: 0.0, pitch: std::f64::consts::FRAC_PI_2, roll: 0.0, fov: 0.0, ..Default::default() };
+    let camera = sketcraft_render::Camera { distance: 10.0, yaw: 0.0, pitch: std::f64::consts::FRAC_PI_2, roll: 0.0, fov: 0.0, ..Default::default() };
     s.execute(
         "render.coat.bind",
         &json!({"name":"Coat","body_index":0,"body_name":"Panel","expected_revision":s.revision,
@@ -2554,7 +2553,7 @@ fn saved_cpu_subsurface_cold_capture_matches_runtime_real_png_raw_and_one_undo_w
     let mut s = Session::default();
     s.execute("solid.box", &json!({"length":10,"width":10,"height":2,"body_name":"Scattering"})).unwrap();
     let camera = sketcraft_render::Camera {
-        target: solidcore_record::Vec3::new(5.0, 5.0, 0.5),
+        target: sketcore_record::Vec3::new(5.0, 5.0, 0.5),
         distance: 0.5,
         yaw: 0.0,
         pitch: std::f64::consts::FRAC_PI_2,
@@ -2623,7 +2622,7 @@ fn saved_cpu_atmosphere_cold_capture_start_matches_runtime_pixels_raw_and_one_un
     let mut s = Session::default();
     s.execute("solid.box", &json!({"length":10,"width":10,"height":2,"body_name":"Fog receiver"})).unwrap();
     let camera = sketcraft_render::Camera {
-        target: solidcore_record::Vec3::new(5.0, 5.0, 1.0),
+        target: sketcore_record::Vec3::new(5.0, 5.0, 1.0),
         distance: 5.0,
         yaw: 0.0,
         pitch: std::f64::consts::FRAC_PI_2,
@@ -2688,7 +2687,8 @@ fn saved_cpu_atmosphere_incompatibility_is_pure_before_hdr_capture_and_keeps_aut
         [json!({"volume":volume,"denoise":true,"path":{"max_depth":4},"progressive":{"samples_per_pixel":4,"seed":9}}), json!({"volume":volume})]
     {
         options["hdr"] = json!({"resource":"0".repeat(64),"rotation_rad":0,"intensity":1,"samples":16});
-        let params = json!({"settings":{"camera":sketcraft_render::Camera::default(),"width":4,"height":4,"job":{"method":"cpu_raytrace","options":options}}});
+        let params =
+            json!({"settings":{"camera":sketcraft_render::Camera::default(),"width":4,"height":4,"job":{"method":"cpu_raytrace","options":options}}});
         let error = s.execute("render.preflight", &params).unwrap_err().to_string();
         assert!(error.contains("Atmosphere"), "{error}");
         assert!(Arc::ptr_eq(&before, &s.doc));
@@ -3567,7 +3567,7 @@ fn tessellated_cpu_sheet_saved_and_prospective_bindings_certify_and_render_witho
     let draft_name = scene.meshes[1].name.clone();
     let targets = s.execute("render.library.targets", &json!({})).unwrap();
     let draft_target = targets["items"].as_array().unwrap().iter().find(|row| row["name"] == draft_name).unwrap()["stable_target"].clone();
-    let mut camera = sketcraft_render::Camera { target: solidcore_record::Vec3::new(15.0, 0.0, 0.0), distance: 30.0, ..Default::default() };
+    let mut camera = sketcraft_render::Camera { target: sketcore_record::Vec3::new(15.0, 0.0, 0.0), distance: 30.0, ..Default::default() };
     camera.set_view(sketcraft_render::StandardView::Top);
     s.execute(
         "render.settings.set",

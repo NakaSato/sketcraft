@@ -14,7 +14,7 @@
 use crate::ui_kit::BackingTooltipExt as _;
 use egui::{Color32, FontId, Rect, Sense, pos2, vec2};
 
-use crate::SolveApp;
+use crate::SketApp;
 use crate::context_menu::Target;
 use crate::theme::Tokens;
 use crate::ui_kit::{Container, Edge, Surface};
@@ -24,7 +24,7 @@ pub(crate) const HEIGHT: f32 = 24.0;
 
 /// The bar is drawn: the preference is on, outside the compact browser embed (which has no
 /// application chrome).
-pub(crate) fn shown(app: &SolveApp) -> bool {
+pub(crate) fn shown(app: &SketApp) -> bool {
     app.preferences.status_bar && !app.embedded
 }
 
@@ -91,7 +91,7 @@ pub(crate) struct Contents {
     pub navigation: String,
 }
 
-pub(crate) fn contents(app: &SolveApp) -> Contents {
+pub(crate) fn contents(app: &SketApp) -> Contents {
     let st = crate::open_meshing::session_world(&app.session);
     let sketch = app.session.active_sketch.and_then(|id| st.sketch(id));
     let edited = app
@@ -112,7 +112,7 @@ pub(crate) fn contents(app: &SolveApp) -> Contents {
 
 /// Draw the bar along the window's bottom edge. Call it before the panels and the viewport take
 /// the rest of the window: the bar then spans the whole width and sits below History.
-pub(crate) fn show(app: &mut SolveApp, ui: &mut egui::Ui) {
+pub(crate) fn show(app: &mut SketApp, ui: &mut egui::Ui) {
     app.shell.status_bar = None;
     if !shown(app) {
         return;
@@ -129,7 +129,7 @@ pub(crate) fn show(app: &mut SolveApp, ui: &mut egui::Ui) {
 /// The items, right-aligned from the window's right edge: units, the mouse mapping, the sketch's
 /// state, what is being edited. The left end stays free (for next-step hints, #2325). An item
 /// that would not fit is left out, the leftmost first.
-fn paint(app: &mut SolveApp, ui: &mut egui::Ui, contents: &Contents) {
+fn paint(app: &mut SketApp, ui: &mut egui::Ui, contents: &Contents) {
     let t = Tokens::get();
     let r = ui.max_rect();
     let painter = ui.painter().clone();
@@ -176,9 +176,8 @@ fn paint(app: &mut SolveApp, ui: &mut egui::Ui, contents: &Contents) {
     }
 
     // Active tool prompt / status message on the left (SketchUp status bar prompt parity)
-    let prompt_text = app.status.as_ref().map(|(msg, _, _)| msg.clone())
-        .or_else(|| app.tool.as_ref().map(|tool| crate::tools::hint(tool.cmd)))
-        .unwrap_or_default();
+    let prompt_text =
+        app.status.as_ref().map(|(msg, _, _)| msg.clone()).or_else(|| app.tool.as_ref().map(|tool| crate::tools::hint(tool.cmd))).unwrap_or_default();
     if !prompt_text.is_empty() && right > left + t.space_16 {
         let max_w = right - left - t.space_8;
         let prompt_color = app.status.as_ref().map_or(t.text_dim, |(_, _, err)| if *err { t.error } else { t.text });
@@ -190,7 +189,7 @@ fn paint(app: &mut SolveApp, ui: &mut egui::Ui, contents: &Contents) {
 
 /// A flat button with the kit's dropdown chevron, its right edge at `right`; a click opens (or
 /// closes) the `target` menu above the bar, its right edge on the button's.
-fn menu_button(app: &mut SolveApp, ui: &mut egui::Ui, right: f32, target: Target, text: &str, label: &str, tip: &str) -> Rect {
+fn menu_button(app: &mut SketApp, ui: &mut egui::Ui, right: f32, target: Target, text: &str, label: &str, tip: &str) -> Rect {
     let handle = if target == Target::Units { "status:units" } else { "status:navigation" };
     let t = Tokens::get();
     let r = ui.max_rect();

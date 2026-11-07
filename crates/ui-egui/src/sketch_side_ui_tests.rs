@@ -3,7 +3,7 @@
 
 use crate::scenario::Harness;
 use serde_json::json;
-use solidcore_record::{Plane, Vec3};
+use sketcore_record::{Plane, Vec3};
 use sketcraft_engine::doc::{FeatureKind, PlaneRef};
 use sketcraft_engine::geom::prelude::*;
 

@@ -1,6 +1,6 @@
 //! Native progressive product rendering. Software BVH traversal needs no ray-query
 //! features. Small measured quanta adapt to the device, then check cancellation.
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 use sketcraft_geom::Vec3Geom;
 #[cfg(test)]
 use sketcraft_render::job::ToneMap;

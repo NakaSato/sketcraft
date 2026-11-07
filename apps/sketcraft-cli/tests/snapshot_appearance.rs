@@ -58,8 +58,7 @@ struct Scratch(PathBuf);
 
 impl Scratch {
     fn new() -> Self {
-        let dir =
-            std::env::temp_dir().join(format!("sketcraft-snapshot-appearance-{}-{}", std::process::id(), NEXT.fetch_add(1, Ordering::Relaxed)));
+        let dir = std::env::temp_dir().join(format!("sketcraft-snapshot-appearance-{}-{}", std::process::id(), NEXT.fetch_add(1, Ordering::Relaxed)));
         std::fs::create_dir(&dir).unwrap();
         Self(dir)
     }

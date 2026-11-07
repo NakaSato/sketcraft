@@ -8,7 +8,7 @@
 
 use std::f64::consts::PI;
 
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 
 use super::*;
 

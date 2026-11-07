@@ -7,7 +7,7 @@ use sketcraft_geom::prelude::*;
 use std::collections::BTreeMap;
 
 use serde_json::{Value, json};
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 use sketcraft_doc::joints;
 use sketcraft_doc::motion::MotionStudy;
 use sketcraft_doc::{Document, Mat, apply_point, mat_mul};

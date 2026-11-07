@@ -17,7 +17,7 @@ use sketcraft_engine::render::{
 };
 
 use crate::gpu::{Frame, GpuScene, SceneSlot, ViewportCallback};
-use crate::{SolveApp, theme::Tokens};
+use crate::{SketApp, theme::Tokens};
 
 // Vertex payload only, not an OS/GPU peak-memory promise. Native viewport
 // uploads are already chunked by the installed device's buffer limit.
@@ -307,7 +307,7 @@ fn mmss(d: std::time::Duration) -> String {
 
 /// The path tracer's setup as it goes: a progress bar estimated from the last setup on this
 /// adapter, else a spinner with the time so far. Drivers report no progress of their own.
-fn setup_progress(ui: &mut egui::Ui, app: &SolveApp, started: std::time::Instant) {
+fn setup_progress(ui: &mut egui::Ui, app: &SketApp, started: std::time::Instant) {
     let elapsed = started.elapsed();
     let expected = app.render_workspace.setup_key.as_ref().and_then(|k| app.render_workspace.setup_seconds.get(k)).copied();
     ui.label(app.tr("render.gpu_path_preparing"));
@@ -378,15 +378,15 @@ pub enum RenderSelection {
 }
 
 /// Focus a Render editor without changing the shared modelling selection.
-pub(crate) fn selection_editor(app: &mut SolveApp, selection: &RenderSelection) {
+pub(crate) fn selection_editor(app: &mut SketApp, selection: &RenderSelection) {
     app.render_workspace.view.selection = selection.clone();
     app.render_workspace.view.inspector.hidden = false;
 }
 
-pub(crate) fn object_selection(app: &SolveApp) -> RenderSelection {
+pub(crate) fn object_selection(app: &SketApp) -> RenderSelection {
     if app.session.selection.is_empty() { RenderSelection::Nothing } else { RenderSelection::Object(app.session.selection.clone()) }
 }
-pub(crate) fn current_shot_selection(app: &SolveApp) -> RenderSelection {
+pub(crate) fn current_shot_selection(app: &SketApp) -> RenderSelection {
     let name = &app.render_workspace.view.name;
     if app.session.doc.render.setups.contains_key(name) { RenderSelection::Shot(name.clone()) } else { RenderSelection::Nothing }
 }
@@ -700,7 +700,7 @@ fn write_marker(path: &std::path::Path, key: &str) {
 
 /// Under the failure message: when the setup stopped the app last time (#9236), the button
 /// that runs it again. Nothing else runs it.
-pub(crate) fn retry_crashed_setup(app: &mut SolveApp, ui: &mut egui::Ui) {
+pub(crate) fn retry_crashed_setup(app: &mut SketApp, ui: &mut egui::Ui) {
     #[cfg(not(target_arch = "wasm32"))]
     if app.render_workspace.setup_crashed() {
         let response = crate::ui_kit::button(ui, app.tr("render.gpu_path_retry"), crate::ui_kit::Button::Normal);
@@ -714,29 +714,29 @@ pub(crate) fn retry_crashed_setup(app: &mut SolveApp, ui: &mut egui::Ui) {
 }
 
 /// The app is closing normally: a setup still running did not stop it.
-pub fn close(app: &mut SolveApp) {
+pub fn close(app: &mut SketApp) {
     if matches!(app.render_workspace.path_host, PathHost::Preparing(..)) {
         app.render_workspace.clear_setup_marker();
     }
 }
 
-pub fn active(app: &SolveApp) -> bool {
+pub fn active(app: &SketApp) -> bool {
     crate::workspace::render_tab(&app.ui.tab)
 }
 
-pub(crate) fn result_active(app: &SolveApp) -> bool {
+pub(crate) fn result_active(app: &SketApp) -> bool {
     active(app) && app.render_workspace.view.result
 }
 
-pub(crate) fn comparison_active(app: &SolveApp) -> bool {
+pub(crate) fn comparison_active(app: &SketApp) -> bool {
     active(app) && app.render_workspace.view.compare.is_some()
 }
 
-pub(crate) fn comparison_drag_captured(app: &SolveApp) -> bool {
+pub(crate) fn comparison_drag_captured(app: &SketApp) -> bool {
     active(app) && app.render_workspace.view.compare.as_ref().is_some_and(|view| view.dragging)
 }
 
-pub(crate) fn fit_result(app: &mut SolveApp) {
+pub(crate) fn fit_result(app: &mut SketApp) {
     app.render_workspace.view.result_scale = ResultScale::Fit;
     app.render_workspace.view.result_domain = None;
 }
@@ -744,7 +744,7 @@ pub(crate) fn fit_result(app: &mut SolveApp) {
 /// Read-only identities for automation and diagnostics. Does not prepare a
 /// request, open a device, evaluate geometry, change the selected result or pump
 /// a job. Clients must use render.status for the exact identity returned here.
-pub(crate) fn inspect_state(app: &SolveApp) -> serde_json::Value {
+pub(crate) fn inspect_state(app: &SketApp) -> serde_json::Value {
     let view = &app.render_workspace.view;
     let method = match view.method {
         ImageMethod::Raster => "raster",
@@ -794,11 +794,11 @@ pub fn host_executor(max_dimension: u32, depth: bool, samples: u32) -> Result<Ex
 /// Its setup compiles a large shader that some Vulkan drivers take gigabytes and minutes over,
 /// so Render with the Raster or CPU method never starts it (#9041).
 #[cfg(not(target_arch = "wasm32"))]
-fn wants_path_host(app: &SolveApp) -> bool {
+fn wants_path_host(app: &SketApp) -> bool {
     active(app) && app.render_workspace.view.method == ImageMethod::GpuRaytrace
 }
 
-pub fn sync_backend(app: &mut SolveApp) {
+pub fn sync_backend(app: &mut SketApp) {
     #[cfg(not(target_arch = "wasm32"))]
     if wants_path_host(app) {
         app.render_workspace.start_deferred_path_host();
@@ -829,7 +829,7 @@ pub fn sync_backend(app: &mut SolveApp) {
 
 /// Cooperative work belongs to the frame loop, never to a status/control request. Keep
 /// scheduling frames even after leaving Render so a browser job can finish in Design.
-pub fn tick(app: &mut SolveApp, ctx: &egui::Context) {
+pub fn tick(app: &mut SketApp, ctx: &egui::Context) {
     library::poll_import(app, ctx);
     if !app.universal_panel_host_enabled() {
         // Classic shell input and Fit run before the host overlay finalizer.
@@ -868,7 +868,7 @@ pub fn tick(app: &mut SolveApp, ctx: &egui::Context) {
     live::tick(app, ctx);
 }
 
-pub fn reset_document(app: &mut SolveApp) {
+pub fn reset_document(app: &mut SketApp) {
     // The app-global preparation owner drains across this document replacement.
     prepare::cancel(app);
     crate::render_ui::reset_shell(app);
@@ -900,7 +900,7 @@ pub fn reset_document(app: &mut SolveApp) {
     sync_backend(app);
 }
 
-pub(crate) fn invalidate_images(app: &mut SolveApp) {
+pub(crate) fn invalidate_images(app: &mut SketApp) {
     app.render_workspace.displayed.clear();
     app.render_workspace.image = None;
     app.render_workspace.image_info = None;
@@ -908,7 +908,7 @@ pub(crate) fn invalidate_images(app: &mut SolveApp) {
     app.render_workspace.comparison_images.clear();
 }
 
-pub fn invalidate_scene(app: &mut SolveApp) {
+pub fn invalidate_scene(app: &mut SketApp) {
     app.render_workspace.thumbnails = Default::default();
     app.render_workspace.revision = u64::MAX;
     app.render_workspace.scene_signature = None;
@@ -922,7 +922,7 @@ pub fn invalidate_scene(app: &mut SolveApp) {
     }
 }
 
-pub fn enter(app: &mut SolveApp, render: bool) -> Result<(), String> {
+pub fn enter(app: &mut SketApp, render: bool) -> Result<(), String> {
     if render {
         if app.session.active_sketch.is_some() || app.tool.is_some() || app.dialog.is_some() || app.file_load.busy() {
             return Err(crate::i18n::tr("render.error_finish_operation").into());
@@ -1009,13 +1009,13 @@ pub fn enter(app: &mut SolveApp, render: bool) -> Result<(), String> {
 }
 
 /// Camera takeover cancels the entry-only allowance along with the pending fit.
-pub(crate) fn cancel_entry_fit(app: &mut SolveApp) {
+pub(crate) fn cancel_entry_fit(app: &mut SketApp) {
     app.render_workspace.entry_fit = None;
 }
 
 /// The first Render frame can still carry Design's measured floating-panel bounds.
 /// Only this exact automatic entry fit waits for two matching Render measurements.
-pub(crate) fn wait_entry_fit_layout(app: &mut SolveApp) -> bool {
+pub(crate) fn wait_entry_fit_layout(app: &mut SketApp) -> bool {
     let Some(entry) = app.render_workspace.entry_fit.as_ref() else {
         return false;
     };
@@ -1042,7 +1042,7 @@ pub(crate) fn wait_entry_fit_layout(app: &mut SolveApp) -> bool {
 }
 
 /// Called only when a nonanimated pending fit actually installs its final camera.
-pub(crate) fn settle_entry_fit(app: &mut SolveApp, source: Camera, bounds: sketcraft_engine::geom::Aabb3, previous: Camera) {
+pub(crate) fn settle_entry_fit(app: &mut SketApp, source: Camera, bounds: sketcraft_engine::geom::Aabb3, previous: Camera) {
     let Some(entry) = app.render_workspace.entry_fit.take() else {
         return;
     };
@@ -1071,7 +1071,7 @@ pub(crate) fn settle_entry_fit(app: &mut SolveApp, source: Camera, bounds: sketc
 }
 
 /// Stage navigation is transient per-document state. It never applies a resource or starts a job.
-pub(crate) fn select_stage(app: &mut SolveApp, key: &str) {
+pub(crate) fn select_stage(app: &mut SketApp, key: &str) {
     let stage = match key {
         "look" => Stage::Look,
         "light" => Stage::Light,
@@ -1098,21 +1098,21 @@ pub(crate) fn select_stage(app: &mut SolveApp, key: &str) {
     }
 }
 
-pub(crate) fn switch_shot(app: &mut SolveApp, name: String) {
+pub(crate) fn switch_shot(app: &mut SketApp, name: String) {
     inspector::switch_shot(app, name);
 }
-pub(crate) fn stage_projection(app: &mut SolveApp, perspective: bool) -> Result<(), String> {
+pub(crate) fn stage_projection(app: &mut SketApp, perspective: bool) -> Result<(), String> {
     let mut camera = app.cam;
     camera.fov = if perspective { 0.6 } else { 0.0 };
     inspector::apply_camera_draft(app, camera)
 }
 
-pub(crate) fn output_summary(app: &SolveApp) -> (String, &'static str) {
+pub(crate) fn output_summary(app: &SketApp) -> (String, &'static str) {
     let view = &app.render_workspace.view;
     (format!("{} × {}", view.draft.width, view.draft.height), if view.studio.export_exr { "EXR" } else { "PNG" })
 }
 
-pub(crate) fn output_child_summary(app: &SolveApp, kind: &str) -> String {
+pub(crate) fn output_child_summary(app: &SketApp, kind: &str) -> String {
     let view = &app.render_workspace.view;
     match kind {
         "sampling" => format!(
@@ -1136,22 +1136,22 @@ pub(crate) fn output_child_summary(app: &SolveApp, kind: &str) -> String {
     }
 }
 
-pub(crate) fn job_busy(app: &SolveApp) -> bool {
+pub(crate) fn job_busy(app: &SketApp) -> bool {
     ribbon::busy(app)
 }
-pub(crate) fn output_stage_tools(app: &mut SolveApp, ui: &mut egui::Ui) {
+pub(crate) fn output_stage_tools(app: &mut SketApp, ui: &mut egui::Ui) {
     inspector::stage_tools(app, ui);
 }
 
-pub(crate) fn job_ready(app: &SolveApp, id: &str) -> Result<(), String> {
+pub(crate) fn job_ready(app: &SketApp, id: &str) -> Result<(), String> {
     ribbon::action_ready(app, id)
 }
 
-pub(crate) fn set_inspector_visible(app: &mut SolveApp, visible: bool) {
+pub(crate) fn set_inspector_visible(app: &mut SketApp, visible: bool) {
     app.render_workspace.view.inspector.hidden = !visible;
 }
 
-pub fn panel(app: &mut SolveApp, ui: &mut egui::Ui) {
+pub fn panel(app: &mut SketApp, ui: &mut egui::Ui) {
     if crate::render_ui::focused(app) {
         return;
     }
@@ -1160,14 +1160,14 @@ pub fn panel(app: &mut SolveApp, ui: &mut egui::Ui) {
 
 /// Interactive stage-panel review. Direct engine JSON calls remain dialog-free.
 /// S5 supplies its selected specification id without owning another consent form.
-pub(crate) fn review_resource(app: &mut SolveApp, command: &str, id: &str) -> Result<(), String> {
+pub(crate) fn review_resource(app: &mut SketApp, command: &str, id: &str) -> Result<(), String> {
     match command {
         "render.quality.prepare" => library::review::quality(app, id),
         _ => Err("this command has no stage-panel review adapter".into()),
     }
 }
 
-pub(crate) fn apply_browser_controls(app: &mut SolveApp, value: &serde_json::Value) {
+pub(crate) fn apply_browser_controls(app: &mut SketApp, value: &serde_json::Value) {
     let view = &mut app.render_workspace.view;
     if let Some(by_look) = value.get("by_look").and_then(serde_json::Value::as_bool) {
         view.by_look = by_look;
@@ -1181,7 +1181,7 @@ pub(crate) fn apply_browser_controls(app: &mut SolveApp, value: &serde_json::Val
 }
 
 /// Local Browser-card content, never a new workspace or an alternative model tree.
-pub(crate) fn browser_mode(app: &mut SolveApp, ui: &mut egui::Ui) -> bool {
+pub(crate) fn browser_mode(app: &mut SketApp, ui: &mut egui::Ui) -> bool {
     if !active(app) {
         return false;
     }
@@ -1197,11 +1197,11 @@ pub(crate) fn browser_mode(app: &mut SolveApp, ui: &mut egui::Ui) -> bool {
 }
 
 /// Per-stage companion sharing the Browser's dock policy.
-pub(crate) fn appearances_card(app: &mut SolveApp, ui: &mut egui::Ui, bounds: egui::Rect) {
+pub(crate) fn appearances_card(app: &mut SketApp, ui: &mut egui::Ui, bounds: egui::Rect) {
     library::card(app, ui, bounds);
 }
 
-fn image_host(app: &SolveApp, method: ImageMethod) -> Result<&ImageHost, String> {
+fn image_host(app: &SketApp, method: ImageMethod) -> Result<&ImageHost, String> {
     if method == ImageMethod::GpuRaytrace {
         let host = match &app.render_workspace.path_host {
             PathHost::NotStarted => return Err(app.tr("render.gpu_path_not_started").to_string()),
@@ -1227,7 +1227,7 @@ fn image_host(app: &SolveApp, method: ImageMethod) -> Result<&ImageHost, String>
 
 /// Check and Start use exactly this request, rebuilt at each click. The result camera is
 /// temporarily installed only inside shared navigation; app.cam remains the product camera.
-fn image_params(app: &SolveApp) -> Result<serde_json::Value, String> {
+fn image_params(app: &SketApp) -> Result<serde_json::Value, String> {
     let view = &app.render_workspace.view;
     image_host(app, view.method)?;
     if app.session.model.is_stale() {
@@ -1237,11 +1237,11 @@ fn image_params(app: &SolveApp) -> Result<serde_json::Value, String> {
 }
 
 /// Pure request construction is shared with offline setup editing; host checks stay above.
-fn image_request(app: &SolveApp) -> Result<serde_json::Value, String> {
+fn image_request(app: &SketApp) -> Result<serde_json::Value, String> {
     light::filter_request(app, raw_image_request(app)?)
 }
 
-fn raw_image_request(app: &SolveApp) -> Result<serde_json::Value, String> {
+fn raw_image_request(app: &SketApp) -> Result<serde_json::Value, String> {
     cpu::validate_progressive_image(app)?;
     if !setups::requires_runtime_request(app) {
         return Ok(json!({"settings":setups::image_snapshot(app)?}));
@@ -1273,7 +1273,7 @@ fn raw_image_request(app: &SolveApp) -> Result<serde_json::Value, String> {
     Ok(params)
 }
 
-fn celestial_switch_active(app: &SolveApp) -> bool {
+fn celestial_switch_active(app: &SketApp) -> bool {
     let view = &app.render_workspace.view;
     view.studio.sun_enabled
         || match view.method {
@@ -1285,7 +1285,7 @@ fn celestial_switch_active(app: &SolveApp) -> bool {
 
 /// One prospective numerical command transfers every shared physical effect.
 /// Failure restores the full draft; navigation and saved camera stay untouched.
-fn switch_celestial_method(app: &mut SolveApp, method: ImageMethod, enable_indirect: bool) -> Result<(), String> {
+fn switch_celestial_method(app: &mut SketApp, method: ImageMethod, enable_indirect: bool) -> Result<(), String> {
     if setups::has_unportable_bindings(app) {
         return Err(app.tr("render.setup_runtime_unsupported").into());
     }
@@ -1379,11 +1379,11 @@ fn switch_celestial_method(app: &mut SolveApp, method: ImageMethod, enable_indir
 }
 
 /// Volume and celestial choices share one atomic transaction, including both.
-fn switch_volume_method(app: &mut SolveApp, method: ImageMethod, enable_indirect: bool) -> Result<(), String> {
+fn switch_volume_method(app: &mut SketApp, method: ImageMethod, enable_indirect: bool) -> Result<(), String> {
     switch_celestial_method(app, method, enable_indirect)
 }
 
-fn select_image_method(app: &mut SolveApp, method: ImageMethod) {
+fn select_image_method(app: &mut SketApp, method: ImageMethod) {
     if method != app.render_workspace.view.method
         && method != ImageMethod::Raster
         && app.render_workspace.view.method != ImageMethod::Raster
@@ -1416,7 +1416,7 @@ fn select_image_method(app: &mut SolveApp, method: ImageMethod) {
 }
 
 #[cfg(test)]
-fn method_selector(app: &mut SolveApp, ui: &mut egui::Ui) {
+fn method_selector(app: &mut SketApp, ui: &mut egui::Ui) {
     ui.label(app.tr("render.image_method"));
     method_dropdown(app, ui);
     if image_host(app, app.render_workspace.view.method).is_err() {
@@ -1428,7 +1428,7 @@ fn method_selector(app: &mut SolveApp, ui: &mut egui::Ui) {
 }
 
 /// The same method authority in an aligned editor row or the legacy master form.
-fn method_dropdown(app: &mut SolveApp, ui: &mut egui::Ui) -> egui::Response {
+fn method_dropdown(app: &mut SketApp, ui: &mut egui::Ui) -> egui::Response {
     let current = app.render_workspace.view.method;
     let label = app.tr(current.label()).to_string();
     let bounded =
@@ -1489,7 +1489,7 @@ fn method_dropdown(app: &mut SolveApp, ui: &mut egui::Ui) -> egui::Response {
     response
 }
 
-fn cpu_sampling_controls(app: &mut SolveApp, ui: &mut egui::Ui) {
+fn cpu_sampling_controls(app: &mut SketApp, ui: &mut egui::Ui) {
     let progressive = cpu::progressive_controls(app, ui);
     if progressive {
         crate::ui_kit::text(ui, app.tr("render.cpu_progressive_help"), crate::ui_kit::Text::Note("render.cpu_progressive_help"));
@@ -1517,7 +1517,7 @@ fn cpu_sampling_controls(app: &mut SolveApp, ui: &mut egui::Ui) {
 }
 
 #[cfg(test)]
-fn cpu_lighting_controls(app: &mut SolveApp, ui: &mut egui::Ui) {
+fn cpu_lighting_controls(app: &mut SketApp, ui: &mut egui::Ui) {
     ui.label(app.tr("render.cpu_lighting"));
     let presets = [
         (LightingPreset::Neutral, "render.cpu_neutral"),
@@ -1546,7 +1546,7 @@ fn cpu_lighting_controls(app: &mut SolveApp, ui: &mut egui::Ui) {
 }
 
 #[cfg(test)]
-fn image_method_controls(app: &mut SolveApp, ui: &mut egui::Ui) {
+fn image_method_controls(app: &mut SketApp, ui: &mut egui::Ui) {
     method_selector(app, ui);
     if app.render_workspace.view.method != ImageMethod::CpuRaytrace {
         return;
@@ -1560,7 +1560,7 @@ fn image_method_controls(app: &mut SolveApp, ui: &mut egui::Ui) {
 }
 
 #[cfg(test)]
-fn image_edit_controls(app: &mut SolveApp, ui: &mut egui::Ui) {
+fn image_edit_controls(app: &mut SketApp, ui: &mut egui::Ui) {
     ui.heading(app.tr("render.image_title"));
     let preview = app.tr("render.result_preview").to_string();
     let result = app.tr("render.result_title").to_string();
@@ -1659,14 +1659,14 @@ fn image_edit_controls(app: &mut SolveApp, ui: &mut egui::Ui) {
 
 /// Dense all-controls composition, also useful to standalone/offscreen hosts.
 #[cfg(test)]
-fn image_controls(app: &mut SolveApp, ui: &mut egui::Ui) {
+fn image_controls(app: &mut SketApp, ui: &mut egui::Ui) {
     image_edit_controls(app, ui);
     job_controls(app, ui, false);
     completed_image(app, ui);
 }
 
 #[cfg(test)]
-fn job_controls(app: &mut SolveApp, ui: &mut egui::Ui, compact: bool) {
+fn job_controls(app: &mut SketApp, ui: &mut egui::Ui, compact: bool) {
     let params = image_params(app);
     if !compact {
         if let Err(error) = &params {
@@ -1784,7 +1784,7 @@ fn job_controls(app: &mut SolveApp, ui: &mut egui::Ui, compact: bool) {
 /// Decode each published sequence once. Provisional textures stay separate from the last
 /// final image, so cancellation or a failed pass cannot change the export target.
 #[cfg(test)]
-fn completed_image(app: &mut SolveApp, ui: &mut egui::Ui) {
+fn completed_image(app: &mut SketApp, ui: &mut egui::Ui) {
     cache_render_images(app, ui.ctx());
     if let Some(display) = displayed_image(app) {
         if display.preview.is_some() {
@@ -1809,7 +1809,7 @@ fn completed_image(app: &mut SolveApp, ui: &mut egui::Ui) {
     }
 }
 
-fn cache_completed_image(app: &mut SolveApp, ctx: &egui::Context) {
+fn cache_completed_image(app: &mut SketApp, ctx: &egui::Context) {
     let Some(job) = app.render_workspace.view.completed else {
         app.render_workspace.image = None;
         app.render_workspace.image_info = None;
@@ -1840,7 +1840,7 @@ fn cache_completed_image(app: &mut SolveApp, ctx: &egui::Context) {
     }
 }
 
-fn displayed_image(app: &SolveApp) -> Option<DisplayImage<'_>> {
+fn displayed_image(app: &SketApp) -> Option<DisplayImage<'_>> {
     let state = &app.render_workspace;
     if let Some(preview) = &state.preview_image
         && state.view.job == Some(preview.info.frame.job)
@@ -1872,7 +1872,7 @@ fn captured_adaptive_preview(
     }
 }
 
-fn cache_preview_frame(app: &mut SolveApp, ctx: &egui::Context, info: &PreviewInfo, png: &[u8]) {
+fn cache_preview_frame(app: &mut SketApp, ctx: &egui::Context, info: &PreviewInfo, png: &[u8]) {
     if app.render_workspace.view.job != Some(info.frame.job) {
         return;
     }
@@ -1925,7 +1925,7 @@ fn cache_preview_frame(app: &mut SolveApp, ctx: &egui::Context, info: &PreviewIn
     app.render_workspace.preview_image = Some(PreviewImage { info: info.clone(), image: result });
 }
 
-fn cache_preview_image(app: &mut SolveApp, ctx: &egui::Context) {
+fn cache_preview_image(app: &mut SketApp, ctx: &egui::Context) {
     if app.render_workspace.view.follow_job
         && let Some(job) = app.render_workspace.view.job
         && let Ok(handle) = app.session.render_job_handle(job)
@@ -1944,7 +1944,7 @@ fn cache_preview_image(app: &mut SolveApp, ctx: &egui::Context) {
     app.render_workspace.preview_image = None;
 }
 
-fn remember_displayed_job(app: &mut SolveApp, preserve_view: bool) {
+fn remember_displayed_job(app: &mut SketApp, preserve_view: bool) {
     let Some(job) = displayed_image(app).map(|display| display.info.job) else {
         return;
     };
@@ -1957,7 +1957,7 @@ fn remember_displayed_job(app: &mut SolveApp, preserve_view: bool) {
     }
 }
 
-fn cache_render_images(app: &mut SolveApp, ctx: &egui::Context) {
+fn cache_render_images(app: &mut SketApp, ctx: &egui::Context) {
     let preserve_view = app.render_workspace.preview_image.as_ref().is_some_and(|preview| {
         app.render_workspace.view.result_job == Some(preview.info.frame.job) && app.render_workspace.view.job == Some(preview.info.frame.job)
     });
@@ -1969,7 +1969,7 @@ fn cache_render_images(app: &mut SolveApp, ctx: &egui::Context) {
     finish_auto_result(app);
 }
 
-fn finish_auto_result(app: &mut SolveApp) {
+fn finish_auto_result(app: &mut SketApp) {
     use sketcraft_engine::render::job::Phase;
     let Some(auto) = &app.render_workspace.view.auto_result_job else {
         return;
@@ -2002,7 +2002,7 @@ fn finish_auto_result(app: &mut SolveApp) {
     }
 }
 
-fn sync_results(app: &mut SolveApp) {
+fn sync_results(app: &mut SketApp) {
     let Ok(mut results) = app.session.render_retained_results() else {
         return;
     };
@@ -2025,7 +2025,7 @@ fn sync_results(app: &mut SolveApp) {
     }
 }
 
-fn follow_batch(app: &mut SolveApp) {
+fn follow_batch(app: &mut SketApp) {
     let queue = app.session.render_queue_state();
     follow_batch_view(&mut app.render_workspace.view, queue);
 }
@@ -2091,7 +2091,7 @@ fn decode_render_image(png: &[u8], width: u32, height: u32, budget: RenderLimits
     Ok(egui::ColorImage::from_rgba_unmultiplied([display_size.0 as usize, display_size.1 as usize], image.as_raw()))
 }
 
-fn reduced_display(app: &SolveApp) -> bool {
+fn reduced_display(app: &SketApp) -> bool {
     displayed_image(app).is_some_and(|display| {
         display.image.as_ref().is_ok_and(|texture| texture.size() != [display.info.width as usize, display.info.height as usize])
     })
@@ -2099,7 +2099,7 @@ fn reduced_display(app: &SolveApp) -> bool {
 
 /// The image has its own per-document orthographic camera. Shared navigation can temporarily
 /// drive it without changing the product camera, saved setup, or a pending Design view.
-pub(crate) fn with_result_camera(app: &mut SolveApp, navigate: impl FnOnce(&mut SolveApp)) {
+pub(crate) fn with_result_camera(app: &mut SketApp, navigate: impl FnOnce(&mut SketApp)) {
     let preview = std::mem::replace(&mut app.cam, app.render_workspace.view.result_camera);
     let before = app.cam;
     let draft = app.render_workspace.view.draft.clone();
@@ -2150,7 +2150,7 @@ fn result_rect(camera: Camera, size: [u32; 2], canvas: egui::Rect) -> egui::Rect
     egui::Rect::from_center_size(center, egui::vec2((f64::from(size[0]) * scale) as f32, (f64::from(size[1]) * scale) as f32))
 }
 
-fn result_actions(app: &mut SolveApp, ui: &mut egui::Ui) {
+fn result_actions(app: &mut SketApp, ui: &mut egui::Ui) {
     if app.universal_panel_host_enabled() {
         // The comparison picker contains scoped controls (including Swap). Give
         // that compound widget its own row, then wrap actions at the original
@@ -2181,7 +2181,7 @@ fn result_action_button(ui: &mut egui::Ui, label: &str, enabled: bool, host: boo
     }
 }
 
-fn result_action_controls(app: &mut SolveApp, ui: &mut egui::Ui) {
+fn result_action_controls(app: &mut SketApp, ui: &mut egui::Ui) {
     crate::scenario::publish_rect("render:result-actions-clip", ui.clip_rect());
     let host = app.universal_panel_host_enabled();
     let results = app.render_workspace.view.retained.clone();
@@ -2248,7 +2248,7 @@ fn result_action_controls(app: &mut SolveApp, ui: &mut egui::Ui) {
     }
 }
 
-fn classic_result_actions(app: &mut SolveApp, ui: &mut egui::Ui) {
+fn classic_result_actions(app: &mut SketApp, ui: &mut egui::Ui) {
     // Each independently sized control group begins in the original free width.
     // A ComboBox width is a minimum; placing it after the comparison strip in a
     // wrapped row can otherwise move its entire hit target under the inspector.
@@ -2332,7 +2332,7 @@ fn result_label(result: &sketcraft_engine::render_jobs::RetainedResult) -> Strin
     if result.stale { crate::i18n::format("render.results_stale_label", &[("result", &label)]) } else { label }
 }
 
-fn result_header(app: &mut SolveApp, ui: &mut egui::Ui) {
+fn result_header(app: &mut SketApp, ui: &mut egui::Ui) {
     let t = Tokens::get();
     let display = displayed_image(app).map(|display| (display.info.clone(), display.preview.cloned()));
     let state = match &display {
@@ -2415,7 +2415,7 @@ fn result_header(app: &mut SolveApp, ui: &mut egui::Ui) {
 /// Result controls remain legacy chrome. Paint them after the shell, inside a
 /// real free contour piece, and record only the clipped card actually shown.
 /// No panel adapter, outer host or second navigation path is introduced.
-pub(crate) fn host_result_overlays(app: &mut SolveApp, ui: &mut egui::Ui) {
+pub(crate) fn host_result_overlays(app: &mut SketApp, ui: &mut egui::Ui) {
     use crate::panel_runtime::{egui_rect, logical_rect};
     crate::shell::register_panel(app, "render:result-controls", None, None);
     if !app.universal_panel_host_enabled() || !active(app) || (!result_active(app) && app.render_workspace.view.compare.is_none()) {
@@ -2466,7 +2466,7 @@ pub(crate) fn host_result_overlays(app: &mut SolveApp, ui: &mut egui::Ui) {
 
 /// The existing legacy card, shared with bounded-widget regression fixtures.
 /// The caller alone records its footprint and finalizes the canvas response.
-fn host_result_card(app: &mut SolveApp, ui: &mut egui::Ui, bounds: egui::Rect, canvas: egui::Rect) -> egui::Rect {
+fn host_result_card(app: &mut SketApp, ui: &mut egui::Ui, bounds: egui::Rect, canvas: egui::Rect) -> egui::Rect {
     let t = Tokens::get();
     let mut controls = ui.new_child(egui::UiBuilder::new().max_rect(bounds).id_salt("render_host_result_controls"));
     controls.set_clip_rect(ui.clip_rect().intersect(bounds));
@@ -2494,7 +2494,7 @@ fn host_result_card(app: &mut SolveApp, ui: &mut egui::Ui, bounds: egui::Rect, c
     card.response.rect.intersect(controls.clip_rect())
 }
 
-fn host_navigation_captured(app: &SolveApp) -> bool {
+fn host_navigation_captured(app: &SketApp) -> bool {
     // The root finishes host input after result navigation, so an existing
     // header/resize capture still owns this pass even when Primary releases.
     app.panel_runtime.as_ref().and_then(|runtime| runtime.host()).is_some_and(|host| host.interaction().is_captured())
@@ -2502,7 +2502,7 @@ fn host_navigation_captured(app: &SolveApp) -> bool {
 
 /// Apply Fit/Actual only for an explicit request, a new image domain or DPI.
 /// Ordinary panel moves cannot mutate either the image or product camera.
-fn update_host_result_camera(app: &mut SolveApp, ctx: &egui::Context, canvas: egui::Rect) {
+fn update_host_result_camera(app: &mut SketApp, ctx: &egui::Context, canvas: egui::Rect) {
     use crate::panel_runtime::egui_rect;
     use sketcraft_engine::panels::Point;
     let view = &app.render_workspace.view;
@@ -2544,7 +2544,7 @@ fn update_host_result_camera(app: &mut SolveApp, ctx: &egui::Context, canvas: eg
     }
 }
 
-fn show_result(app: &mut SolveApp, ui: &mut egui::Ui) {
+fn show_result(app: &mut SketApp, ui: &mut egui::Ui) {
     cache_render_images(app, ui.ctx());
     let t = Tokens::get();
     ui.painter().rect_filled(ui.max_rect(), 0.0, t.viewport_bottom);
@@ -2673,7 +2673,7 @@ fn show_result(app: &mut SolveApp, ui: &mut egui::Ui) {
 /// the world state (geometry and placements) and what decides which bodies are visible. Not the
 /// session's revision, which every command moves: a selection or a view change extracts no scene
 /// and builds no vertices. The document and world state are held while the signature names them.
-fn preview_signature(app: &mut SolveApp) -> (u64, usize, u64) {
+fn preview_signature(app: &mut SketApp) -> (u64, usize, u64) {
     let mut visibility = std::collections::hash_map::DefaultHasher::new();
     let v = &app.session.visibility;
     (&v.hidden_bodies, &v.hidden_occurrences, &v.hidden_folders, app.session.active_sketch).hash(&mut visibility);
@@ -2683,7 +2683,7 @@ fn preview_signature(app: &mut SolveApp) -> (u64, usize, u64) {
     signature
 }
 
-pub(super) fn adaptive_preview_label(_app: &SolveApp, progress: sketcraft_engine::render::job::adaptive::AdaptivePreview) -> String {
+pub(super) fn adaptive_preview_label(_app: &SketApp, progress: sketcraft_engine::render::job::adaptive::AdaptivePreview) -> String {
     use sketcraft_engine::render::job::adaptive::PreviewStage;
     crate::i18n::format(
         match progress.stage {
@@ -2747,7 +2747,7 @@ impl State {
 
 /// Use the shared kit's wrapped, themed error surface, not text painted directly
 /// on the user-selected background (which may have the opposite theme contrast).
-fn preview_error(app: &mut SolveApp, ui: &mut egui::Ui, rect: egui::Rect, error: &str) {
+fn preview_error(app: &mut SketApp, ui: &mut egui::Ui, rect: egui::Rect, error: &str) {
     let t = Tokens::get();
     let bounded = crate::shell::workspace_content(app, crate::shell::panel_bounds(app, rect)).shrink(t.space_12);
     // At tiny window sizes the shell may leave no room for the shared error card.
@@ -2774,7 +2774,7 @@ fn preview_error(app: &mut SolveApp, ui: &mut egui::Ui, rect: egui::Rect, error:
 }
 
 /// Keep the selected image and overwrite consent fixed while the upstream picker holds model input.
-fn export_image(app: &mut SolveApp, job: sketcraft_engine::render::job::JobId, overwrite: bool) {
+fn export_image(app: &mut SketApp, job: sketcraft_engine::render::job::JobId, overwrite: bool) {
     let origin = app.session.doc.clone();
     app.pick_save("render.png", &["png"], move |app, path| {
         let Some(path) = path else { return };
@@ -2787,7 +2787,7 @@ fn export_image(app: &mut SolveApp, job: sketcraft_engine::render::job::JobId, o
 }
 
 /// Captures format and completed identity before the asynchronous picker opens.
-fn export_linear_image(app: &mut SolveApp, job: sketcraft_engine::render::job::JobId, overwrite: bool) {
+fn export_linear_image(app: &mut SketApp, job: sketcraft_engine::render::job::JobId, overwrite: bool) {
     let origin = app.session.doc.clone();
     app.pick_save("render.exr", &["exr"], move |app, path| {
         let Some(path) = path else {
@@ -2968,7 +2968,7 @@ pub fn image_aspect(setup: &RenderSetup) -> f64 {
 /// Product Fit/navigation use the actual output-camera frame in every inspector.
 /// Contextual guide visibility is independent; the compatibility preference keeps
 /// its previous Frame-only projection policy.
-pub(crate) fn camera_rect(app: &SolveApp, supplied: egui::Rect) -> egui::Rect {
+pub(crate) fn camera_rect(app: &SketApp, supplied: egui::Rect) -> egui::Rect {
     if app.viewport.rect != Some(supplied) {
         return supplied;
     }
@@ -2976,7 +2976,7 @@ pub(crate) fn camera_rect(app: &SolveApp, supplied: egui::Rect) -> egui::Rect {
 }
 
 /// Resolve the painted projection from an authoritative outer product canvas.
-fn authored_camera_rect(app: &SolveApp, supplied: egui::Rect) -> egui::Rect {
+fn authored_camera_rect(app: &SketApp, supplied: egui::Rect) -> egui::Rect {
     if !active(app) || app.preferences.render_legacy_image_defaults || app.render_workspace.view.result || app.render_workspace.view.compare.is_some()
     {
         return supplied;
@@ -2984,7 +2984,7 @@ fn authored_camera_rect(app: &SolveApp, supplied: egui::Rect) -> egui::Rect {
     live::projection_rect(app, shot::render_rect(app, supplied))
 }
 
-pub(crate) fn picture_layout(app: &SolveApp, layout: &crate::viewport_layout::Layout) -> crate::viewport_layout::Layout {
+pub(crate) fn picture_layout(app: &SketApp, layout: &crate::viewport_layout::Layout) -> crate::viewport_layout::Layout {
     let frame = if app.preferences.render_legacy_image_defaults {
         live::projection_rect(app, shot::render_rect(app, layout.viewport))
     } else {
@@ -3004,7 +3004,7 @@ pub(crate) fn picture_layout(app: &SolveApp, layout: &crate::viewport_layout::La
 
 /// Clip the current host obstacles to the painted product projection.
 pub(crate) fn host_picture_layout(
-    app: &SolveApp,
+    app: &SketApp,
     layout: &crate::viewport_layout::Layout,
     usable: &crate::panel_runtime::HostUsableRegion,
 ) -> Option<crate::viewport_layout::Layout> {
@@ -3019,7 +3019,7 @@ pub(crate) fn host_picture_layout(
 /// Explicit product Fit shares the host fitter but keeps Render's authored lens
 /// and existing full-size Fit policy. Layout changes never call this helper.
 pub(crate) fn fit_host_product_bounds(
-    app: &SolveApp,
+    app: &SketApp,
     cam: Camera,
     bounds: &sketcraft_engine::geom::Aabb3,
     layout: &crate::viewport_layout::Layout,
@@ -3032,7 +3032,7 @@ pub(crate) fn fit_host_product_bounds(
 /// Look At/Centre uses the same picture and authored FOV while preserving the
 /// requested focus and distance contract of the shared centring implementation.
 pub(crate) fn centre_host_product_camera(
-    app: &SolveApp,
+    app: &SketApp,
     cam: Camera,
     bounds: Option<&sketcraft_engine::geom::Aabb3>,
     layout: &crate::viewport_layout::Layout,
@@ -3051,7 +3051,7 @@ pub fn preview_size(executor: Option<&ExecutorDescriptor>, full: (u64, u64)) -> 
 
 /// Theme only the untouched, unsaved preview. Saved setups have no background provenance,
 /// so even a saved default-colour backplate remains scene-owned. Never alter image requests.
-fn preview_background(app: &SolveApp) -> Tokens {
+fn preview_background(app: &SketApp) -> Tokens {
     let view = &app.render_workspace.view;
     let tokens = Tokens::get();
     if crate::theme::tab_surfaces_enabled()
@@ -3070,7 +3070,7 @@ fn preview_background(app: &SolveApp) -> Tokens {
     }
 }
 
-pub fn show(app: &mut SolveApp, ui: &mut egui::Ui) {
+pub fn show(app: &mut SketApp, ui: &mut egui::Ui) {
     app.render_workspace.result_navigation = None;
     if app.render_workspace.view.compare.is_some() {
         app.render_workspace.view.environment_ring = environment::RingView::default();
@@ -3163,13 +3163,13 @@ fn product_projection(camera: Camera, radius: f64, canvas: egui::Rect, image: Op
     sketcraft_engine::render::Mat4([[sx, 0.0, 0.0, 0.0], [0.0, sy, 0.0, 0.0], [0.0, 0.0, 1.0, 0.0], [tx, ty, 0.0, 1.0]]).mul(&projection)
 }
 
-fn paint_product(app: &mut SolveApp, ui: &mut egui::Ui, rect: egui::Rect, camera: Camera, image: Option<egui::Rect>) {
+fn paint_product(app: &mut SketApp, ui: &mut egui::Ui, rect: egui::Rect, camera: Camera, image: Option<egui::Rect>) {
     paint_product_kind(app, ui, rect, camera, image, false);
 }
-fn paint_product_feedback(app: &mut SolveApp, ui: &mut egui::Ui, rect: egui::Rect, camera: Camera) {
+fn paint_product_feedback(app: &mut SketApp, ui: &mut egui::Ui, rect: egui::Rect, camera: Camera) {
     paint_product_kind(app, ui, rect, camera, None, true);
 }
-fn paint_product_kind(app: &mut SolveApp, ui: &mut egui::Ui, rect: egui::Rect, camera: Camera, image: Option<egui::Rect>, feedback: bool) {
+fn paint_product_kind(app: &mut SketApp, ui: &mut egui::Ui, rect: egui::Rect, camera: Camera, image: Option<egui::Rect>, feedback: bool) {
     let background = preview_background(app);
     if !feedback {
         crate::gpu::paint_background(ui.painter(), rect, &background);
@@ -3292,7 +3292,7 @@ fn paint_product_kind(app: &mut SolveApp, ui: &mut egui::Ui, rect: egui::Rect, c
 }
 
 /// Apply validated UI requests after the same registry call used by automation.
-pub(crate) fn apply_command(app: &mut SolveApp, id: &str, reply: &serde_json::Value) -> Result<(), String> {
+pub(crate) fn apply_command(app: &mut SketApp, id: &str, reply: &serde_json::Value) -> Result<(), String> {
     if matches!(id, "render.result.view" | "render.result.close" | "render.result.select" | "render.result.discard" | "render.compare") {
         app.render_workspace.displayed.clear();
     }
@@ -3405,7 +3405,7 @@ pub(crate) fn apply_command(app: &mut SolveApp, id: &str, reply: &serde_json::Va
 }
 
 /// `key` names the row's scenario handles (`ui_kit::progress_action`).
-pub(crate) fn progress_pill(app: &mut SolveApp, ui: &mut egui::Ui, key: &str) -> bool {
+pub(crate) fn progress_pill(app: &mut SketApp, ui: &mut egui::Ui, key: &str) -> bool {
     if prepare::progress(app, ui) {
         return true;
     }
@@ -3446,11 +3446,11 @@ pub(crate) fn progress_pill(app: &mut SolveApp, ui: &mut egui::Ui, key: &str) ->
     true
 }
 
-pub(crate) fn environment_overlay(app: &mut SolveApp, ui: &mut egui::Ui, viewport: egui::Rect) {
+pub(crate) fn environment_overlay(app: &mut SketApp, ui: &mut egui::Ui, viewport: egui::Rect) {
     environment::ring_overlay(app, ui, viewport);
 }
 
-pub(crate) fn interactive_command_info(app: &SolveApp, command: &sketcraft_engine::CommandSpec) -> sketcraft_engine::CommandInfo {
+pub(crate) fn interactive_command_info(app: &SketApp, command: &sketcraft_engine::CommandSpec) -> sketcraft_engine::CommandInfo {
     let mut info = ribbon::command_info(app, command);
     // A drawing tool on the SKETCH tab kept shown outside a sketch starts one (#7904).
     // A SketchUp modelling tool in a sketch begun from its tab finishes the sketch first.
@@ -3460,9 +3460,9 @@ pub(crate) fn interactive_command_info(app: &SolveApp, command: &sketcraft_engin
     }
     info
 }
-pub(crate) fn comparison_controls(app: &mut SolveApp, ui: &mut egui::Ui) {
+pub(crate) fn comparison_controls(app: &mut SketApp, ui: &mut egui::Ui) {
     compare::controls(app, ui);
 }
-pub(crate) fn start_interactive(app: &mut SolveApp, id: &str) -> bool {
+pub(crate) fn start_interactive(app: &mut SketApp, id: &str) -> bool {
     assign::start(app, id) || ribbon::start(app, id)
 }

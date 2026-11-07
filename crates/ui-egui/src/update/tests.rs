@@ -192,10 +192,7 @@ fn each_installation_gets_its_own_file() {
         Some("sudo snap install --dangerous ./sketcraft-linux-x86_64.snap")
     );
     assert_eq!(InstallKind::Flatpak(APP_ID.into()).update_command(None).as_deref(), Some("flatpak update io.tangencylabs.sketcraft"));
-    assert_eq!(
-        InstallKind::Deb.update_command(Some("sketcraft-linux-x86_64.deb")).as_deref(),
-        Some("sudo apt install ./sketcraft-linux-x86_64.deb")
-    );
+    assert_eq!(InstallKind::Deb.update_command(Some("sketcraft-linux-x86_64.deb")).as_deref(), Some("sudo apt install ./sketcraft-linux-x86_64.deb"));
     assert_eq!(InstallKind::WindowsMsi.update_command(None), None);
 }
 
@@ -952,7 +949,9 @@ fn install_selection_refreshes_the_button_and_progress_before_completion() {
             return Ok(json!({"tag_name":"v999.1.0", "assets":[
                 {"name": name, "browser_download_url":format!("https://github.com/NakaSato/sketcraft/releases/download/v999.1.0/{name}")},
                 {"name": install::SUMS, "browser_download_url":"https://github.com/NakaSato/sketcraft/releases/download/v999.1.0/SHA256SUMS.txt"}
-            ]}).to_string().into_bytes());
+            ]})
+            .to_string()
+            .into_bytes());
         }
         Ok(format!("{}  {name}\n", "a".repeat(64)).into_bytes())
     }));
@@ -998,7 +997,9 @@ fn cancel_download_leaves_downloading_immediately() {
             return Ok(json!({"tag_name":"v999.1.0", "assets":[
                 {"name": name, "browser_download_url":format!("https://github.com/NakaSato/sketcraft/releases/download/v999.1.0/{name}")},
                 {"name": install::SUMS, "browser_download_url":"https://github.com/NakaSato/sketcraft/releases/download/v999.1.0/SHA256SUMS.txt"}
-            ]}).to_string().into_bytes());
+            ]})
+            .to_string()
+            .into_bytes());
         }
         // Stall checksum GET until the test ends so Cancel has to work before the body download.
         let _ = gate_rx.lock().unwrap().recv();

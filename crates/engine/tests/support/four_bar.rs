@@ -1,6 +1,6 @@
 //! Public-safe 10/40/20/42 mm linkage, matching the reported one-degree-of-freedom sketch.
 use serde_json::json;
-use solidcore_record::Vec2;
+use sketcore_record::Vec2;
 use sketcraft_engine::Session;
 use sketcraft_geom::prelude::*;
 

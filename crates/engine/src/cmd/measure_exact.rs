@@ -6,8 +6,8 @@
 
 use std::f64::consts::PI;
 
-use solidcore_record::Vec3;
-use solidcore_record::brep::Curve;
+use sketcore_record::Vec3;
+use sketcore_record::brep::Curve;
 use sketcraft_geom::prelude::*;
 use sketcraft_geom::{Mesh, UnitVec3};
 use sketcraft_kernel::{Body, FaceSurface};

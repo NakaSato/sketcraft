@@ -1,5 +1,5 @@
 //! Move/Copy changes the text source, never independent generated outlines.
-use crate::{SolveApp, dialogs::Kind, selection::SelInput};
+use crate::{SketApp, dialogs::Kind, selection::SelInput};
 use serde_json::{Value, json};
 use sketcraft_engine::{Sel, doc::expr::Kind as ValueKind, sketch::LinkKind};
 
@@ -11,7 +11,7 @@ pub struct TextMove {
     copy: bool,
 }
 
-pub(crate) fn start(app: &SolveApp, id: &str) -> Option<(Kind, Vec<SelInput>)> {
+pub(crate) fn start(app: &SketApp, id: &str) -> Option<(Kind, Vec<SelInput>)> {
     if id != "sketch.move" {
         return None;
     }
@@ -23,7 +23,7 @@ pub(crate) fn start(app: &SolveApp, id: &str) -> Option<(Kind, Vec<SelInput>)> {
     Some((Kind::TextMove(TextMove { sketch, link, values: [format!("0 {unit}"), format!("0 {unit}"), "0 deg".into()], copy: false }), vec![]))
 }
 
-pub(crate) fn valid(app: &SolveApp, k: &TextMove) -> bool {
+pub(crate) fn valid(app: &SketApp, k: &TextMove) -> bool {
     app.session.active_sketch == Some(k.sketch)
         && app.session.doc.sketch(k.sketch).ok().and_then(|sk| sk.link(&k.link)).is_some_and(|l| l.kind == LinkKind::Text)
 }
@@ -36,7 +36,7 @@ pub(crate) fn rows(ui: &mut egui::Ui, k: &mut TextMove) -> bool {
     enter
 }
 
-pub(crate) fn commands(app: &SolveApp, k: &TextMove) -> Result<Vec<(String, Value)>, String> {
+pub(crate) fn commands(app: &SketApp, k: &TextMove) -> Result<Vec<(String, Value)>, String> {
     if !valid(app, k) {
         return Err("The text is no longer in the active sketch".into());
     }
@@ -61,7 +61,7 @@ pub(crate) fn commands(app: &SolveApp, k: &TextMove) -> Result<Vec<(String, Valu
     )])
 }
 
-pub(crate) fn highlighted(app: &SolveApp) -> Vec<Sel> {
+pub(crate) fn highlighted(app: &SketApp) -> Vec<Sel> {
     let link = match app.dialog.as_ref().map(|d| &d.kind) {
         Some(Kind::TextMove(k)) => Some(k.link.as_str()),
         _ => app.viewport.text_drag.as_ref().map(|(_, link)| link.as_str()),
@@ -76,7 +76,7 @@ pub(crate) fn highlighted(app: &SolveApp) -> Vec<Sel> {
 }
 
 /// Esc restores the document and both history stacks to the start of this gesture.
-pub(crate) fn cancel_drag(app: &mut SolveApp) -> bool {
+pub(crate) fn cancel_drag(app: &mut SketApp) -> bool {
     let Some((checkpoint, _)) = app.viewport.text_drag.take() else {
         return false;
     };
@@ -86,7 +86,7 @@ pub(crate) fn cancel_drag(app: &mut SolveApp) -> bool {
     true
 }
 
-pub(crate) fn end_drag(app: &mut SolveApp) {
+pub(crate) fn end_drag(app: &mut SketApp) {
     if let Some((checkpoint, _)) = app.viewport.text_drag.take() {
         let _ = app.session.execute("edit.restore_checkpoint", &json!({"checkpoint":checkpoint,"forget":true}));
     }
@@ -127,7 +127,7 @@ mod tests {
         assert!(h.app.dialog.is_none());
         let sk = h.app.session.doc.sketch(1).unwrap();
         let LinkSource::Text { at, angle, text, .. } = &sk.link(&link).unwrap().source else { panic!() };
-        assert!(at.dist(solidcore_record::Vec2::new(28.4, 2.0)) < 1e-8);
+        assert!(at.dist(sketcore_record::Vec2::new(28.4, 2.0)) < 1e-8);
         assert!((*angle - std::f64::consts::FRAC_PI_2).abs() < 1e-12);
         assert_eq!(text, "II");
         assert_eq!(h.app.session.undo.len(), undo + 1);

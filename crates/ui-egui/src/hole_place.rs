@@ -18,13 +18,13 @@ use std::cell::RefCell;
 use std::sync::Arc;
 
 use egui::{Pos2, vec2};
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 use sketcraft_engine::Sel;
 use sketcraft_engine::Session;
 use sketcraft_engine::doc::expr::Kind as ValueKind;
 use sketcraft_engine::geom::{Aabb3, Mesh};
 
-use crate::SolveApp;
+use crate::SketApp;
 use crate::dialogs::{Dialog, Kind};
 use crate::dialogs_assembly::SnapKind;
 use crate::selection::same_item;
@@ -108,7 +108,7 @@ fn on_face(p: Vec3, n: Vec3, tris: &[[Vec3; 3]], tol: f64) -> bool {
 }
 
 /// Is a Single hole being placed: the Hole dialog open on its face input?
-pub(crate) fn placing(app: &SolveApp) -> bool {
+pub(crate) fn placing(app: &SketApp) -> bool {
     app.dialog.as_ref().is_some_and(|d| {
         d.active == 0
             && matches!(&d.kind, Kind::Hole { opts, .. } if !opts.multiple)
@@ -117,7 +117,7 @@ pub(crate) fn placing(app: &SolveApp) -> bool {
 }
 
 /// Do picks snap while a Single hole is placed (the preference is on)?
-pub(crate) fn snapping(app: &SolveApp) -> bool {
+pub(crate) fn snapping(app: &SketApp) -> bool {
     app.preferences.hole_snaps && placing(app)
 }
 
@@ -157,7 +157,7 @@ fn nearest(proj: &Proj, pos: Pos2, snaps: &[Snap]) -> Option<Snap> {
 /// A pick for a Single hole's face place: the nearest face under the cursor is taken at the snap
 /// within reach on it, or at the centre of a round edge the cursor is on (the edge lies between
 /// the face and a hole's or a boss's wall, so the face under the cursor may be the wall).
-pub(crate) fn snap_hits(app: &SolveApp, proj: &Proj, pos: Pos2, hits: &mut Vec<Hit>) {
+pub(crate) fn snap_hits(app: &SketApp, proj: &Proj, pos: Pos2, hits: &mut Vec<Hit>) {
     if !snapping(app) || crate::drag_snap::suppressed() {
         return;
     }
@@ -194,7 +194,7 @@ pub(crate) fn snap_hits(app: &SolveApp, proj: &Proj, pos: Pos2, hits: &mut Vec<H
 }
 
 /// The snap a face place sits on, if any.
-fn snap_under(app: &SolveApp, body: &str, index: usize, point: Vec3) -> (Arc<Vec<Snap>>, Option<Snap>) {
+fn snap_under(app: &SketApp, body: &str, index: usize, point: Vec3) -> (Arc<Vec<Snap>>, Option<Snap>) {
     let st = crate::open_meshing::session_world(&app.session);
     let Some(b) = st.body(body) else { return (Arc::new(Vec::new()), None) };
     let snaps = face_snaps(&b.mesh(), index);
@@ -264,7 +264,7 @@ pub(crate) fn pick_moves(d: &mut Dialog, s: &Session, sel: &Sel) -> bool {
 /// The hovered face's snap marks, and the face places' handles when holes move by dragging.
 /// Called after the canvas draws the dialog's arrows, so a press on a hole's centre takes the
 /// hole, not the depth arrow.
-pub(crate) fn show(app: &mut SolveApp, ui: &mut egui::Ui, painter: &egui::Painter, proj: &Proj) {
+pub(crate) fn show(app: &mut SketApp, ui: &mut egui::Ui, painter: &egui::Painter, proj: &Proj) {
     let Some(d) = app.dialog.as_ref() else { return };
     if !matches!(&d.kind, Kind::Hole { opts, .. } if !opts.multiple) || app.applying.is_some() {
         return;
@@ -332,7 +332,7 @@ fn remove_place(d: &mut Dialog, s: &Session, i: usize) {
 
 /// The snap points of the face under the cursor while a Single hole is placed, and the one a
 /// pick there takes, named.
-fn marks(app: &SolveApp, painter: &egui::Painter, proj: &Proj) {
+fn marks(app: &SketApp, painter: &egui::Painter, proj: &Proj) {
     if !snapping(app) {
         return;
     }
@@ -353,7 +353,7 @@ fn marks(app: &SolveApp, painter: &egui::Painter, proj: &Proj) {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use solidcore_record::Vec3;
+    use sketcore_record::Vec3;
 
     /// A square face (two triangles) at z = 5 with a round edge about (2, 3) on it.
     fn mesh() -> Mesh {

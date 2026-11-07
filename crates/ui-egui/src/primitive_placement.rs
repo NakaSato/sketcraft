@@ -11,7 +11,7 @@
 //! feature's stored point goes back unchanged.
 
 use serde_json::{Map, Value, json};
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 use sketcraft_engine::Session;
 use sketcraft_engine::doc::expr::Kind as ValueKind;
 use sketcraft_engine::geom::PlaneGeom as _;

@@ -15,7 +15,7 @@
 use sketcraft_geom::prelude::*;
 use std::f64::consts::{PI, TAU};
 
-use solidcore_record::Vec2;
+use sketcore_record::Vec2;
 use sketcraft_sketch::{Analysis, Budget, ConstraintKind, CurveKind, Hold, Sketch, conic_rho_from_point};
 
 use super::{Ent, Left, counted_solve};

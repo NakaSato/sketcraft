@@ -4,7 +4,7 @@
 //! result's boundaries are the operands' curves, cut at their crossings and never refitted.
 //! Also the test of whether a record surface is a wall swept along a direction.
 
-use solidcore_record::{Plane, Region2, Seg2, Vec2};
+use sketcore_record::{Plane, Region2, Seg2, Vec2};
 use sketcraft_geom::prelude::*;
 
 use crate::body::Body;
@@ -110,10 +110,10 @@ struct Regions {
 }
 
 mod sheets {
-    use solidcore_record::Loop2;
-    use solidcore_record::Vec3;
-    use solidcore_record::brep::Loop;
-    use solidcore_record::brep::Surface;
+    use sketcore_record::Loop2;
+    use sketcore_record::Vec3;
+    use sketcore_record::brep::Loop;
+    use sketcore_record::brep::Surface;
     use sketcraft_smlib::{BooleanOp, Brep};
 
     use super::*;
@@ -293,7 +293,7 @@ mod sheets {
 #[allow(clippy::unwrap_used, clippy::panic)]
 mod planar_tests {
     use super::*;
-    use solidcore_record::Loop2;
+    use sketcore_record::Loop2;
     #[test]
     fn single_prism_intersection_uses_common_height_in_both_orders() {
         for k in [1.0, 0.05] {
@@ -304,9 +304,9 @@ mod planar_tests {
                 (22.5, 10.0, None),
                 (25.0, 10.0, None),
             ] {
-                let a = crate::cylinder(solidcore_record::Vec3::new(12.5, 5.0, 5.0) * k, solidcore_record::Vec3::Z, 2.5 * k, 17.5 * k).unwrap();
-                let b = crate::box_solid(solidcore_record::Vec3::new(10.0, 5.0, lo) * k, solidcore_record::Vec3::new(22.5, 10.0, lo + height) * k)
-                    .unwrap();
+                let a = crate::cylinder(sketcore_record::Vec3::new(12.5, 5.0, 5.0) * k, sketcore_record::Vec3::Z, 2.5 * k, 17.5 * k).unwrap();
+                let b =
+                    crate::box_solid(sketcore_record::Vec3::new(10.0, 5.0, lo) * k, sketcore_record::Vec3::new(22.5, 10.0, lo + height) * k).unwrap();
                 for (lhs, rhs) in [(&a, &b), (&b, &a)] {
                     let result = crate::boolean(lhs, rhs, BoolOp::Intersect).unwrap();
                     if let Some((bottom, top)) = expected {

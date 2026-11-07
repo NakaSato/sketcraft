@@ -1,5 +1,5 @@
 use serde::{Deserialize, Serialize};
-use solidcore_record::{Plane, Seg2, Vec2, Vec3};
+use sketcore_record::{Plane, Seg2, Vec2, Vec3};
 use sketcraft_geom::Aabb2;
 use sketcraft_geom::prelude::*;
 use std::collections::BTreeMap;
@@ -1690,7 +1690,7 @@ impl Sketch {
                 _ => Vec::new(),
             },
             CurveKind::Circle { c, r } => match self.point(c) {
-                Some(c) => solidcore_record::Loop2::circle(c, r).segs,
+                Some(c) => sketcore_record::Loop2::circle(c, r).segs,
                 None => Vec::new(),
             },
             CurveKind::Arc { c, a, b } => match (self.point(c), self.point(a), self.point(b)) {
@@ -1742,7 +1742,7 @@ impl Sketch {
                 let p: Vec<Vec2> = pts.iter().map(pt).collect::<Option<_>>()?;
                 nurbs.segs(&p, *degree)
             }
-            CurveKind::Spline { pts, control: true, degree, nurbs: None, .. } if (*degree as usize) <= solidcore_record::MAX_BEZIER_DEGREE => {
+            CurveKind::Spline { pts, control: true, degree, nurbs: None, .. } if (*degree as usize) <= sketcore_record::MAX_BEZIER_DEGREE => {
                 let p: Vec<Vec2> = pts.iter().map(pt).collect::<Option<_>>()?;
                 let k = (*degree as usize).min(p.len().saturating_sub(1)).max(1);
                 Some(crate::curves::bspline_beziers(&p, k).iter().filter_map(|c| sketcraft_geom::bezier(c)).collect())
@@ -1754,7 +1754,7 @@ impl Sketch {
     /// The exact [`Seg2`] pieces of a curve of any kind, in the curve's own direction of travel:
     /// lines, circles and arcs from their analytic form, free-form curves through
     /// [`Sketch::exact_segs`]. Empty for a curve with no exact pieces (a spline above
-    /// `solidcore_record::MAX_BEZIER_DEGREE`).
+    /// `sketcore_record::MAX_BEZIER_DEGREE`).
     pub fn exact_pieces(&self, ci: usize) -> Vec<Seg2> {
         match self.exact_segs(ci) {
             Some(segs) => segs,
@@ -1817,11 +1817,10 @@ impl Sketch {
                     }
                     nurbs.check(pts.len(), *degree)?;
                 }
-                if pts.len() < 2 || pts.len() > crate::curves::MAX_SPLINE_POINTS || !(1..=solidcore_record::MAX_BEZIER_DEGREE as u8).contains(degree)
-                {
+                if pts.len() < 2 || pts.len() > crate::curves::MAX_SPLINE_POINTS || !(1..=sketcore_record::MAX_BEZIER_DEGREE as u8).contains(degree) {
                     return Err(SketchError::Invalid(format!(
                         "a spline needs 2 to 500 points and degree 1 to {}",
-                        solidcore_record::MAX_BEZIER_DEGREE
+                        sketcore_record::MAX_BEZIER_DEGREE
                     )));
                 }
                 if *periodic {

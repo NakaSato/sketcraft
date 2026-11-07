@@ -24,7 +24,7 @@
 use std::collections::{BTreeMap, BTreeSet};
 use std::sync::{Arc, OnceLock};
 
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 use sketcraft_kernel::history::{FaceOrigin, FaceProv, History};
 
 use crate::ModelBody;

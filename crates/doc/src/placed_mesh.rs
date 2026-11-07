@@ -3,7 +3,7 @@
 use sketcraft_geom::prelude::*;
 use std::sync::{Arc, OnceLock};
 
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 use sketcraft_geom::Mesh;
 use sketcraft_geom::tess::TessPlan;
 use sketcraft_kernel::{self as kernel, Body};

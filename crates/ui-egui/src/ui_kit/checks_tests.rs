@@ -207,7 +207,7 @@ pub(crate) fn textures_update(textures: &mut HashMap<egui::TextureId, egui::Colo
 fn surface(
     ui: &mut Ui,
     name: &str,
-    app: &mut crate::SolveApp,
+    app: &mut crate::SketApp,
     editor: &mut crate::dialogs_motion::Mo,
     appearance: &mut crate::dialogs_appearance::Ap,
     inputs: &mut [crate::selection::SelInput],
@@ -257,7 +257,7 @@ fn actual_config_appearance_preferences_and_menu_boxes_and_ticks_match_at_1x_2x(
                 let ctx = crate::fonts::test_context();
                 ctx.set_pixels_per_point(ppp);
                 ctx.set_visuals(if dark { egui::Visuals::dark() } else { egui::Visuals::light() });
-                let mut app = crate::SolveApp::new(Default::default(), Default::default());
+                let mut app = crate::SketApp::new(Default::default(), Default::default());
                 app.home.open = false;
                 app.ui.dark = dark;
                 app.run("parameters.add", json!({"name":"width", "expression":"10 mm"})).unwrap();

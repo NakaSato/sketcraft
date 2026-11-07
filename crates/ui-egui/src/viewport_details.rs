@@ -1,6 +1,6 @@
 //! Current effect data -> the one generic details grammar; edits use normal commands.
 use crate::{
-    SolveApp,
+    SketApp,
     ui_kit::{DetailEvent, DetailFinding, DetailKey, DetailSetting, DetailValue, Details},
 };
 use serde_json::{Value, json};
@@ -15,7 +15,7 @@ fn tr(id: &str) -> String {
 fn field(id: &str, label: &str, value: DetailValue) -> DetailSetting {
     DetailSetting { id: id.into(), label: tr(label), value, enabled: true }
 }
-fn length(app: &SolveApp, value: f64) -> DetailValue {
+fn length(app: &SketApp, value: f64) -> DetailValue {
     DetailValue::Length { value, units: app.session.doc.units.clone(), decimals: app.preferences.length_decimals }
 }
 fn number(value: f64, min: f64, max: f64, suffix: &str) -> DetailValue {
@@ -43,7 +43,7 @@ fn record_id(row: &ContinuityDetail) -> String {
 fn record_label(row: &ContinuityDetail) -> String {
     crate::i18n::format("ui.details_seam", &[("body", &row.body), ("edge", &row.edge.to_string())])
 }
-fn selected<'a>(app: &SolveApp, rows: &'a [ContinuityDetail]) -> Option<&'a ContinuityDetail> {
+fn selected<'a>(app: &SketApp, rows: &'a [ContinuityDetail]) -> Option<&'a ContinuityDetail> {
     app.viewport_status.selected_record.as_ref().and_then(|id| rows.iter().find(|row| record_id(row) == *id)).or_else(|| rows.first())
 }
 
@@ -59,7 +59,7 @@ pub(crate) fn primary(effect: &StatusItem) -> &'static str {
     }
 }
 
-pub(crate) fn description(app: &SolveApp, effect: &StatusItem) -> Details {
+pub(crate) fn description(app: &SketApp, effect: &StatusItem) -> Details {
     let mut details = Details::default();
     match effect.setting {
         StatusSetting::Draft { pull, angle_deg } => {
@@ -112,7 +112,7 @@ pub(crate) fn description(app: &SolveApp, effect: &StatusItem) -> Details {
     details
 }
 
-fn continuity_description(app: &SolveApp, details: &mut Details) {
+fn continuity_description(app: &SketApp, details: &mut Details) {
     use sketcraft_engine::status_details::ContinuityVerdict as V;
     let rows = app.session.continuity_details();
     let Some(row) = selected(app, &rows) else { return };
@@ -170,7 +170,7 @@ fn continuity_description(app: &SolveApp, details: &mut Details) {
 
 /// Rebuild a complete command from current Session values for every single-field edit.
 /// The value passed by the widget changes exactly one companion of that current command.
-pub(crate) fn edit_params(app: &SolveApp, effect: &StatusItem, id: &str, value: &DetailValue) -> Option<Value> {
+pub(crate) fn edit_params(app: &SketApp, effect: &StatusItem, id: &str, value: &DetailValue) -> Option<Value> {
     match effect.setting {
         StatusSetting::Draft { pull, angle_deg } => {
             Some(json!({"pull":if id=="pull" { axis_value(value)? } else {pull},"angle":if id=="angle"{scalar(value)?}else{angle_deg}}))
@@ -219,7 +219,7 @@ fn axis_value(value: &DetailValue) -> Option<[f64; 3]> {
     if let DetailValue::Axis { value, .. } = value { Some(*value) } else { None }
 }
 
-pub(crate) fn dispatch(app: &mut SolveApp, ctx: &egui::Context, owner: &str, event: DetailEvent) {
+pub(crate) fn dispatch(app: &mut SketApp, ctx: &egui::Context, owner: &str, event: DetailEvent) {
     let Some(effect) = app.session.status_items().into_iter().find(|effect| crate::viewport_status::identity(effect) == owner) else { return };
     match event {
         DetailEvent::Change(id, DetailValue::Choice { selected, .. }) if id == "record" && effect.command == "inspect.continuity" => {
@@ -260,7 +260,7 @@ pub(crate) fn dispatch(app: &mut SolveApp, ctx: &egui::Context, owner: &str, eve
     }
 }
 
-pub(crate) fn legacy_description(app: &SolveApp) -> Details {
+pub(crate) fn legacy_description(app: &SketApp) -> Details {
     let mut details = Details::default();
     if let Some((title, along, rows)) = crate::viewport::analysis_legend_data(app) {
         details.caption = Some(along.map_or_else(|| title.to_owned(), |along| format!("{title}\n{along}")));
@@ -280,7 +280,7 @@ pub(crate) fn legacy_description(app: &SolveApp) -> Details {
 }
 
 /// Compatibility placement uses the same description and renderer, never a second painter.
-pub(crate) fn legacy_legends(app: &SolveApp, ui: &mut egui::Ui, viewport: egui::Rect) {
+pub(crate) fn legacy_legends(app: &SketApp, ui: &mut egui::Ui, viewport: egui::Rect) {
     let mut descriptions = Vec::new();
     if !app.preferences.viewport_analysis_status {
         descriptions.push(("analysis:legend", legacy_description(app)));
@@ -312,7 +312,7 @@ pub(crate) fn legacy_legends(app: &SolveApp, ui: &mut egui::Ui, viewport: egui::
     }
 }
 
-fn legacy_legend(_app: &SolveApp, ui: &mut egui::Ui, free: egui::Rect, id: &str, description: &Details) -> Option<egui::Rect> {
+fn legacy_legend(_app: &SketApp, ui: &mut egui::Ui, free: egui::Rect, id: &str, description: &Details) -> Option<egui::Rect> {
     if description.key.is_empty() {
         return None;
     }

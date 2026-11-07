@@ -8,7 +8,7 @@ use egui::RichText;
 use serde_json::{Map, Value, json};
 use sketcraft_engine::doc::metadata::{self, BOM_KEYS};
 
-use crate::SolveApp;
+use crate::SketApp;
 use crate::theme::Tokens;
 
 /// The window's state; the rows come from the engine.
@@ -36,7 +36,7 @@ impl BomPanel {
     }
 
     /// The bill of materials for the design as it is now (computed again only after a change).
-    fn rows(&mut self, app: &mut SolveApp) -> Value {
+    fn rows(&mut self, app: &mut SketApp) -> Value {
         let revision = app.session.revision;
         let key = [self.top, self.by_definition, self.group_children];
         if let Some((r, k, v)) = &self.cache
@@ -57,7 +57,7 @@ impl BomPanel {
 }
 
 /// Open the window.
-pub fn open(app: &mut SolveApp) {
+pub fn open(app: &mut SketApp) {
     app.bom = Some(BomPanel::default());
 }
 
@@ -110,7 +110,7 @@ fn field_label(key: &str) -> &str {
 }
 
 /// Apply the picked row's fields to each of its definitions (one undo step each).
-fn apply(app: &mut SolveApp, d: &mut BomPanel, row: &Value) {
+fn apply(app: &mut SketApp, d: &mut BomPanel, row: &Value) {
     let mut params: Map<String, Value> = BOM_KEYS.iter().zip(&d.fields).map(|(k, v)| (k.to_string(), json!(v))).collect();
     for c in row["components"].as_array().into_iter().flatten() {
         params.insert("component".into(), c.clone());
@@ -124,7 +124,7 @@ fn apply(app: &mut SolveApp, d: &mut BomPanel, row: &Value) {
 }
 
 /// Draw the window when it is open. Called once per frame.
-pub fn show(app: &mut SolveApp, ctx: &egui::Context) {
+pub fn show(app: &mut SketApp, ctx: &egui::Context) {
     let Some(mut d) = app.bom.take() else { return };
     let t = Tokens::get();
     let bom = d.rows(app);

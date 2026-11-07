@@ -1,10 +1,10 @@
-//! solidcore's primitives through the flat arrays: each exports to a valid record of the right
+//! sketcore's primitives through the flat arrays: each exports to a valid record of the right
 //! volume, and the record comes back to an equal body. A body with a sealed void crosses with each region's enclosing shell first,
 //! whatever order its arrays list the shells in (the capi's `PutEnclosingShellsFirst`).
 
 use std::f64::consts::PI;
 
-use solidcore_record::brep as b;
+use sketcore_record::brep as b;
 
 use super::boolean::boolean;
 use super::{Body, from_arrays, make_box, make_cone, make_cylinder, make_sphere, make_torus, to_arrays, volume};
@@ -12,7 +12,7 @@ use crate::BooleanOp;
 use crate::export::native;
 use crate::import::{self, Arrays};
 
-/// A primitive: solidcore's body and its analytic volume.
+/// A primitive: sketcore's body and its analytic volume.
 struct Case {
     body: Body,
     volume: f64,
@@ -35,7 +35,7 @@ fn rel(a: f64, b: f64) -> f64 {
     (a - b).abs() / b.abs()
 }
 
-/// The record of solidcore's arrays, validated and its geometry checked.
+/// The record of sketcore's arrays, validated and its geometry checked.
 fn record(a: &Arrays) -> b::Brep {
     let (rec, _) = native(a).unwrap();
     sketcraft_geom::brep::check::validate(&rec).unwrap();
@@ -72,11 +72,11 @@ fn exports(name: &str) {
     record(&to_arrays(&case(name).body).unwrap());
 }
 
-/// solidcore's body measures its analytic volume.
+/// sketcore's body measures its analytic volume.
 fn measures(name: &str) {
     let c = case(name);
     let v = volume(&c.body, 1e-8).unwrap();
-    assert!(rel(v, c.volume) < 1e-9, "{name}: solidcore volume {v} vs {}", c.volume);
+    assert!(rel(v, c.volume) < 1e-9, "{name}: sketcore volume {v} vs {}", c.volume);
 }
 
 /// record -> arrays -> from_arrays -> to_arrays -> record is the record, the volume exact.
@@ -149,14 +149,14 @@ fn hostile_arrays_are_refused() {
 /// `MakeNurb`.
 #[test]
 fn a_parabola_gives_its_nurb_or_says_it_cannot() {
-    use solidcore::curve::curve::Curve;
-    use solidcore::curve::parabola::Parabola;
-    use solidcore::geom::extent1d::Extent1d;
-    use solidcore::geom::vector3d::{Point3, Vec3};
+    use sketcore::curve::curve::Curve;
+    use sketcore::curve::parabola::Parabola;
+    use sketcore::geom::extent1d::Extent1d;
+    use sketcore::geom::vector3d::{Point3, Vec3};
     let (x, y) = (Vec3::new(1.0, 0.0, 0.0), Vec3::new(0.0, 1.0, 0.0));
     let part = |lo: f64, hi: f64| -> crate::Result<bool> {
         let c = Curve::from(Parabola::new(Point3::new(0.0, 0.0, 0.0), x, y, Extent1d::from_min_max(lo, hi), 1.0, 3));
-        let k = solidcore::kernel::Kernel::default();
+        let k = sketcore::kernel::Kernel::default();
         Ok(super::convert::bspline_curve_part(&k, &c)?.is_some_and(|b| b.gw_nurb().is_some()))
     };
     assert_eq!(part(-1.0, 1.0), Ok(true));
@@ -257,7 +257,7 @@ fn shells_reversed(a: &Arrays) -> Arrays {
     p
 }
 
-/// solidcore's sealed void exports with its outer shell first, comes back through the arrays
+/// sketcore's sealed void exports with its outer shell first, comes back through the arrays
 /// with it first, and keeps its volume.
 #[test]
 fn a_sealed_void_crosses_the_arrays_outer_shell_first() {
@@ -287,7 +287,7 @@ fn shells_listed_inner_first_import_outer_first() {
 /// found from the points, differ from the rebuilt ones by rounding of the coordinates' size, not of 1.
 #[test]
 fn nurbs_weights_far_from_the_origin_compare_within_their_rounding() {
-    use solidcore::Vec3 as P;
+    use sketcore::Vec3 as P;
     let cv = [
         197.06,
         33.35,

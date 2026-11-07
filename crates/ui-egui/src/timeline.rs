@@ -12,13 +12,13 @@ use sketcraft_engine::doc::{
 
 use sketcraft_engine::schema::edit::PlaybackAction;
 
-use crate::SolveApp;
+use crate::SketApp;
 use crate::context_menu::Item;
 use crate::theme::Tokens;
 
 /// Apply transport actions from the current marker; endpoints stay bounded, including an
 /// empty design. All orientations reach the same rollback command.
-pub(crate) fn run_transport(app: &mut SolveApp, control: crate::ui_kit::HistoryTransport) {
+pub(crate) fn run_transport(app: &mut SketApp, control: crate::ui_kit::HistoryTransport) {
     // A step moves from the marker the design has, not the one an open editor rolled to (#10688).
     if app.close_editor_for_history().is_err() {
         return;
@@ -40,7 +40,7 @@ pub(crate) fn run_transport(app: &mut SolveApp, control: crate::ui_kit::HistoryT
 }
 
 /// A click runs a History control; a right-click offers to show or hide the Play button.
-pub(crate) fn transport_response(app: &mut SolveApp, control: crate::ui_kit::HistoryTransport, response: &egui::Response) {
+pub(crate) fn transport_response(app: &mut SketApp, control: crate::ui_kit::HistoryTransport, response: &egui::Response) {
     if response.clicked() {
         run_transport(app, control);
     }
@@ -52,7 +52,7 @@ pub(crate) fn transport_response(app: &mut SolveApp, control: crate::ui_kit::His
 
 /// The History controls' menu: shows or hides the Play button, and — when the design marks any
 /// component out of the bar — shows or hides those components' entries (#10393).
-pub(crate) fn transport_items(app: &SolveApp) -> Vec<crate::context_menu::Item> {
+pub(crate) fn transport_items(app: &SketApp) -> Vec<crate::context_menu::Item> {
     let show = !app.preferences.history_play_button;
     let label = crate::i18n::tr(if show { "ui.history_play_button_show" } else { "ui.history_play_button_hide" });
     let mut items = vec![crate::context_menu::Item::action("ui.historyPlayButton", label, "timeline_play").with(json!({ "show": show }))];
@@ -67,14 +67,14 @@ pub(crate) fn transport_items(app: &SolveApp) -> Vec<crate::context_menu::Item> 
 /// The feature that made a face, edge or vertex of `body` (its world name): a face's own creator,
 /// as Edit Feature on a face finds it (the hole, not the plate it was cut into), else the feature
 /// that made the body.
-fn geometry_feature(app: &SolveApp, body: &str, face: Option<usize>) -> Option<u64> {
+fn geometry_feature(app: &SketApp, body: &str, face: Option<usize>) -> Option<u64> {
     face.and_then(|index| crate::context_menu::face_feature(app, body, index))
         .or_else(|| crate::open_meshing::session_world(&app.session).body(body).map(|b| b.feature))
         .filter(|id| app.session.doc.feature(*id).is_some())
 }
 
 /// The feature of the face, edge or vertex under the pointer in the view.
-pub(crate) fn hovered_feature(app: &SolveApp) -> Option<u64> {
+pub(crate) fn hovered_feature(app: &SketApp) -> Option<u64> {
     match &app.viewport.hover {
         Some(crate::viewport::Hit::Face { body, index, .. }) => geometry_feature(app, body, Some(*index)),
         Some(crate::viewport::Hit::Edge { body, .. } | crate::viewport::Hit::Vertex { body, .. }) => geometry_feature(app, body, None),
@@ -83,7 +83,7 @@ pub(crate) fn hovered_feature(app: &SolveApp) -> Option<u64> {
 }
 
 /// The feature of the first face or edge picked in the view.
-pub(crate) fn picked_feature(app: &SolveApp) -> Option<u64> {
+pub(crate) fn picked_feature(app: &SketApp) -> Option<u64> {
     app.session.selection.iter().find_map(|selection| match selection {
         sketcraft_engine::Sel::Face { body, index, .. } => geometry_feature(app, body, Some(*index)),
         sketcraft_engine::Sel::Edge { body, .. } => geometry_feature(app, body, None),
@@ -93,7 +93,7 @@ pub(crate) fn picked_feature(app: &SolveApp) -> Option<u64> {
 
 /// A new face or edge picked in the view scrolls the history shown to the feature that made it,
 /// once per pick; the history stays where it is while the pick does not change.
-pub(crate) fn follow_view_pick(app: &mut SolveApp) {
+pub(crate) fn follow_view_pick(app: &mut SketApp) {
     crate::browser::sync_reveals(app);
     let picked = picked_feature(app);
     if picked == app.tree.view_pick {
@@ -257,21 +257,21 @@ fn slot_at(xs: &[f32], end: f32, x: f32) -> usize {
 
 /// Check what deleting `ids` takes with it or makes fail (off the window thread when that takes a
 /// while, #2678), then delete them or ask first.
-pub(crate) fn delete_features(app: &mut SolveApp, ids: Vec<u64>) {
+pub(crate) fn delete_features(app: &mut SketApp, ids: Vec<u64>) {
     let checks = ids.iter().map(|id| ("timeline.dependents".to_string(), json!({ "feature": id }))).collect();
     app.check_delete(checks, crate::deferred::AfterCheck::Timeline { features: ids, groups: Vec::new() });
 }
 
 /// Delete timeline folders with their features (`contents`, nested folders' included) after the
 /// same check as [`delete_features`] (#7219).
-pub(crate) fn delete_folders(app: &mut SolveApp, groups: Vec<u64>, contents: Vec<u64>) {
+pub(crate) fn delete_folders(app: &mut SketApp, groups: Vec<u64>, contents: Vec<u64>) {
     let checks = contents.iter().map(|id| ("timeline.dependents".to_string(), json!({ "feature": id }))).collect();
     app.check_delete(checks, crate::deferred::AfterCheck::Timeline { features: contents, groups });
 }
 
 /// [`delete_features`] once each feature's `timeline.dependents` report is in; `groups` are
 /// timeline folders deleted with them.
-pub(crate) fn delete_checked_features(app: &mut SolveApp, ids: Vec<u64>, groups: Vec<u64>, reports: &[Value]) {
+pub(crate) fn delete_checked_features(app: &mut SketApp, ids: Vec<u64>, groups: Vec<u64>, reports: &[Value]) {
     // Each report is about one feature alone, so it names the others being deleted too: those
     // go anyway and are left out of the confirmation.
     let deleting: Vec<&str> = ids.iter().filter_map(|id| app.session.doc.feature(*id)).map(|f| f.name.as_str()).collect();
@@ -303,7 +303,7 @@ pub(crate) fn delete_params(features: &[u64], groups: &[u64]) -> Value {
 }
 
 /// The selected timeline features, in timeline order.
-pub(crate) fn selected_feature_ids(app: &SolveApp) -> Vec<u64> {
+pub(crate) fn selected_feature_ids(app: &SketApp) -> Vec<u64> {
     app.session
         .doc
         .features
@@ -317,7 +317,7 @@ pub(crate) fn selected_feature_ids(app: &SolveApp) -> Vec<u64> {
 
 /// What Copy and Delete in a feature's menu act on: the selected features when the
 /// right-clicked one is among them, else that feature alone.
-pub(crate) fn menu_targets(app: &SolveApp, id: u64) -> Vec<u64> {
+pub(crate) fn menu_targets(app: &SketApp, id: u64) -> Vec<u64> {
     let selected = selected_feature_ids(app);
     if selected.contains(&id) { selected } else { vec![id] }
 }
@@ -332,7 +332,7 @@ fn delete_label(count: usize) -> String {
 
 /// Delete in a feature's menu, in both timelines: the selected features when the right-clicked
 /// one is among them, labelled with how many, else that feature alone (#5005).
-pub(crate) fn delete_button(app: &mut SolveApp, ui: &mut egui::Ui, id: u64) {
+pub(crate) fn delete_button(app: &mut SketApp, ui: &mut egui::Ui, id: u64) {
     let targets = menu_targets(app, id);
     if crate::context_menu::button(ui, &delete_label(targets.len()), "delete").clicked() {
         delete_features(app, targets);
@@ -342,7 +342,7 @@ pub(crate) fn delete_button(app: &mut SolveApp, ui: &mut egui::Ui, id: u64) {
 
 /// The features from design position `from` to the end, only the `shown` positions (ascending)
 /// when the timeline shows some of the design's features.
-fn features_from(app: &SolveApp, from: usize, shown: Option<&[usize]>) -> Vec<u64> {
+fn features_from(app: &SketApp, from: usize, shown: Option<&[usize]>) -> Vec<u64> {
     let features = app.session.doc.features.iter().enumerate().skip(from);
     features.filter(|(i, _)| shown.is_none_or(|shown| shown.binary_search(i).is_ok())).map(|(_, f)| f.id).collect()
 }
@@ -353,7 +353,7 @@ fn features_from(app: &SolveApp, from: usize, shown: Option<&[usize]>) -> Vec<u6
 /// through [`delete_features`] so the confirmation still lists what would fail. Not offered
 /// before the marker, nor when the menu acts on several selected features: an entry that acts
 /// partly on the selection and partly beyond it is hard to read.
-fn after_marker(app: &SolveApp, id: u64, index: usize, marker: usize, shown: Option<&[usize]>) -> Option<(String, Vec<u64>)> {
+fn after_marker(app: &SketApp, id: u64, index: usize, marker: usize, shown: Option<&[usize]>) -> Option<(String, Vec<u64>)> {
     if index < marker || menu_targets(app, id).len() > 1 {
         return None;
     }
@@ -367,7 +367,7 @@ fn after_marker(app: &SolveApp, id: u64, index: usize, marker: usize, shown: Opt
 }
 
 /// The [`after_marker`] entry as a button.
-pub(crate) fn delete_after_marker_button(app: &mut SolveApp, ui: &mut egui::Ui, id: u64, index: usize, marker: usize, shown: Option<&[usize]>) {
+pub(crate) fn delete_after_marker_button(app: &mut SketApp, ui: &mut egui::Ui, id: u64, index: usize, marker: usize, shown: Option<&[usize]>) {
     let Some((label, ids)) = after_marker(app, id, index, marker, shown) else { return };
     if crate::context_menu::button(ui, &label, "delete").clicked() {
         delete_features(app, ids);
@@ -377,7 +377,7 @@ pub(crate) fn delete_after_marker_button(app: &mut SolveApp, ui: &mut egui::Ui, 
 
 /// A History bar feature's menu (`Target::Timeline`): edit, rename, group, suppress, roll back,
 /// find, the clipboard and delete.
-pub(crate) fn feature_items(app: &SolveApp, id: u64) -> Vec<Item> {
+pub(crate) fn feature_items(app: &SketApp, id: u64) -> Vec<Item> {
     let doc = &app.session.doc;
     let (Some(feature), Some(index)) = (doc.feature(id), doc.feature_index(id)) else { return Vec::new() };
     let mut v = vec![Item::action("ui.editFeature", "Edit Feature", "edit").with(json!({ "feature": id }))];
@@ -431,7 +431,7 @@ pub(crate) fn anchor_key(id: u64) -> String {
 }
 
 /// Copy and Paste in a feature's timeline menu. Paste puts the copies at the history marker.
-pub(crate) fn clipboard_buttons(app: &mut SolveApp, ui: &mut egui::Ui, id: u64) {
+pub(crate) fn clipboard_buttons(app: &mut SketApp, ui: &mut egui::Ui, id: u64) {
     if crate::context_menu::button(ui, crate::i18n::tr_label("Copy"), "copy").clicked() {
         let features = menu_targets(app, id);
         let _ = app.run("timeline.copy", json!({ "features": features }));
@@ -480,13 +480,13 @@ pub(crate) fn status_text(name: &str, ty: &str, error: Option<&str>, warning: Op
 
 /// A feature's mark: an error, else a warning; none while it is suppressed or rolled back, as
 /// it isn't built then.
-pub(crate) fn feature_status(app: &SolveApp, id: u64) -> Option<Status> {
+pub(crate) fn feature_status(app: &SketApp, id: u64) -> Option<Status> {
     let index = app.session.doc.feature_index(id)?;
     status_at(app, index, || app.session.model.result(id))
 }
 
 /// The mark of the feature at `index` in the history, given how to find its result.
-fn status_at<'a>(app: &SolveApp, index: usize, result: impl FnOnce() -> Option<&'a sketcraft_engine::doc::FeatureResult>) -> Option<Status> {
+fn status_at<'a>(app: &SketApp, index: usize, result: impl FnOnce() -> Option<&'a sketcraft_engine::doc::FeatureResult>) -> Option<Status> {
     let feature = app.session.doc.features.get(index)?;
     if feature.suppressed || app.session.doc.marker.is_some_and(|marker| index >= marker) {
         return None;
@@ -496,7 +496,7 @@ fn status_at<'a>(app: &SolveApp, index: usize, result: impl FnOnce() -> Option<&
 }
 
 /// The worst mark among `ids`, with the message of the first feature that has it.
-pub(crate) fn worst_status(app: &SolveApp, ids: &[u64]) -> (Option<Status>, Option<String>) {
+pub(crate) fn worst_status(app: &SketApp, ids: &[u64]) -> (Option<Status>, Option<String>) {
     let mark = |status: Option<Status>, id: &u64| status.map(|status| (status, *id));
     // A long folder finds each feature's place and result in tables built once: a search per
     // feature made a folded long history cost the square of its length every frame. A short
@@ -522,7 +522,7 @@ pub(crate) fn worst_status(app: &SolveApp, ids: &[u64]) -> (Option<Status>, Opti
 /// What a feature's error or warning mark says, as its tooltip shows it (name and type, then
 /// the error and the warning), for the clipboard, and an import's every warning as the kernel
 /// words them. `None` when it has neither.
-pub(crate) fn feature_message(app: &SolveApp, id: u64) -> Option<String> {
+pub(crate) fn feature_message(app: &SketApp, id: u64) -> Option<String> {
     let result = app.session.model.result(id)?;
     if result.error.is_none() && result.warning.is_none() {
         return None;
@@ -552,7 +552,7 @@ pub(crate) fn warning_text(result: &FeatureResult) -> Option<String> {
 /// The status line after an open or an import with warnings: their summary. The import made
 /// the reply's `feature`; a STEP file opened as a design is the design's one import. `None`
 /// without an import's warnings.
-pub(crate) fn import_status(app: &SolveApp, reply: &Value) -> Option<String> {
+pub(crate) fn import_status(app: &SketApp, reply: &Value) -> Option<String> {
     let reported = |r: &&FeatureResult| r.import_report.as_deref().is_some_and(|r| !r.issues.is_empty());
     let result = match reply.get("feature").and_then(Value::as_u64) {
         Some(id) => app.session.model.result(id).filter(reported)?,
@@ -612,7 +612,7 @@ pub(crate) fn import_summary(report: &ImportReport) -> String {
 }
 
 /// Copy Error Message (or Copy Warning Message) in the menu of a feature that has one.
-pub(crate) fn message_button(app: &SolveApp, ui: &mut egui::Ui, id: u64) {
+pub(crate) fn message_button(app: &SketApp, ui: &mut egui::Ui, id: u64) {
     let Some(text) = feature_message(app, id) else { return };
     let failed = app.session.model.result(id).is_some_and(|r| r.error.is_some());
     let label = if failed { "Copy Error Message" } else { "Copy Warning Message" };
@@ -623,7 +623,7 @@ pub(crate) fn message_button(app: &SolveApp, ui: &mut egui::Ui, id: u64) {
 }
 
 /// Reuse the Browser action so both History layouts edit the same sketch attachment.
-pub(crate) fn sketch_plane_button(app: &mut SolveApp, ui: &mut egui::Ui, id: u64) {
+pub(crate) fn sketch_plane_button(app: &mut SketApp, ui: &mut egui::Ui, id: u64) {
     if !matches!(app.session.doc.feature(id).map(|feature| &feature.kind), Some(FeatureKind::Sketch { .. })) {
         return;
     }
@@ -642,7 +642,7 @@ pub(crate) fn sketch_plane_button(app: &mut SolveApp, ui: &mut egui::Ui, id: u64
 /// Shift+click on a feature: select the features from the anchor (the last feature clicked, or
 /// the last selected one) to this one. `order` is the timeline as drawn this frame, taken before
 /// drawing so the range never mixes two orders. Ctrl as well adds the range to the selection.
-fn select_range(app: &mut SolveApp, order: &[u64], id: u64, add: bool) {
+fn select_range(app: &mut SketApp, order: &[u64], id: u64, add: bool) {
     let anchor = app.tree.timeline_anchor.clone().or_else(|| selected_feature_ids(app).last().map(|f| anchor_key(*f)));
     let from = anchor.and_then(|key| order.iter().position(|f| anchor_key(*f) == key));
     let (Some(from), Some(to)) = (from, order.iter().position(|f| *f == id)) else {
@@ -656,7 +656,7 @@ fn select_range(app: &mut SolveApp, order: &[u64], id: u64, add: bool) {
 
 /// Give a History feature click to a compatible active dialog input in any layout.
 /// Plain clicks keep an existing pick; Ctrl/Command clicks toggle it off.
-pub(crate) fn pick_feature_into_dialog(app: &mut SolveApp, id: u64, modifiers: egui::Modifiers) -> bool {
+pub(crate) fn pick_feature_into_dialog(app: &mut SketApp, id: u64, modifiers: egui::Modifiers) -> bool {
     // A pattern or Mirror says why it does not take a sketch (#10057).
     if app.dialog.as_mut().is_some_and(|d| d.refuse_sketch(&app.session, id)) {
         return true;
@@ -672,7 +672,7 @@ pub(crate) fn pick_feature_into_dialog(app: &mut SolveApp, id: u64, modifiers: e
 }
 
 /// A plain click on a feature: select it alone.
-fn select_one(app: &mut SolveApp, id: u64) {
+fn select_one(app: &mut SketApp, id: u64) {
     app.tree.picked_joints.clear();
     app.tree.picked_timeline_groups.clear();
     app.tree.timeline_anchor = Some(anchor_key(id));
@@ -680,7 +680,7 @@ fn select_one(app: &mut SolveApp, id: u64) {
 }
 
 /// Ctrl+click on a feature: add it to the selection, or take it out.
-fn toggle_feature(app: &mut SolveApp, id: u64) {
+fn toggle_feature(app: &mut SketApp, id: u64) {
     app.tree.timeline_anchor = Some(anchor_key(id));
     let selected = selected_feature_ids(app);
     if selected.contains(&id) {
@@ -703,7 +703,7 @@ pub(crate) struct Playback {
 
 const PLAYBACK_STEP_SECONDS: f64 = 0.5;
 
-pub(crate) fn stop_playback(app: &mut SolveApp) {
+pub(crate) fn stop_playback(app: &mut SketApp) {
     if app.timeline_playback.take().is_some_and(|p| p.waiting) {
         // The worker only fills the evaluation cache. Dropping its reply prevents an
         // interrupted playback step from later moving the marker in an edited/new design.
@@ -711,7 +711,7 @@ pub(crate) fn stop_playback(app: &mut SolveApp) {
     }
 }
 
-pub(crate) fn playback_command_info(app: &SolveApp, command: &sketcraft_engine::CommandSpec) -> sketcraft_engine::CommandInfo {
+pub(crate) fn playback_command_info(app: &SketApp, command: &sketcraft_engine::CommandSpec) -> sketcraft_engine::CommandInfo {
     let mut info = command.info(&app.session);
     if app.timeline_playback.is_some() {
         info.label = "Stop History";
@@ -724,7 +724,7 @@ pub(crate) fn playback_command_info(app: &SolveApp, command: &sketcraft_engine::
 }
 
 /// What playback can't run alongside: starting refuses on these, and a running playback stops on them.
-fn playback_blocked(app: &SolveApp) -> bool {
+fn playback_blocked(app: &SketApp) -> bool {
     app.home.open
         || crate::render_workspace::active(app)
         || app.session.active_sketch.is_some()
@@ -738,7 +738,7 @@ fn playback_blocked(app: &SolveApp) -> bool {
         || !app.deferred_queue.is_empty()
 }
 
-fn playback_ready(app: &SolveApp) -> Result<(), String> {
+fn playback_ready(app: &SketApp) -> Result<(), String> {
     if app.computing_since().is_some() || playback_blocked(app) {
         return Err(crate::i18n::tr("ui.history_play_finish_action").into());
     }
@@ -749,7 +749,7 @@ fn playback_ready(app: &SolveApp) -> Result<(), String> {
     Ok(())
 }
 
-pub(crate) fn request_playback(app: &mut SolveApp, action: PlaybackAction) -> Result<(), String> {
+pub(crate) fn request_playback(app: &mut SketApp, action: PlaybackAction) -> Result<(), String> {
     if matches!(action, PlaybackAction::Stop) || (matches!(action, PlaybackAction::Toggle) && app.timeline_playback.is_some()) {
         stop_playback(app);
         return Ok(());
@@ -764,7 +764,7 @@ pub(crate) fn request_playback(app: &mut SolveApp, action: PlaybackAction) -> Re
     Ok(())
 }
 
-pub(crate) fn tick_playback(app: &mut SolveApp, ctx: &egui::Context) {
+pub(crate) fn tick_playback(app: &mut SketApp, ctx: &egui::Context) {
     if app.timeline_playback.is_none() {
         return;
     }
@@ -811,7 +811,7 @@ pub(crate) fn tick_playback(app: &mut SolveApp, ctx: &egui::Context) {
     app.timeline_playback = Some(playback);
 }
 
-pub fn timeline(app: &mut SolveApp, ui: &mut egui::Ui) {
+pub fn timeline(app: &mut SketApp, ui: &mut egui::Ui) {
     crate::browser::sync_reveals(app);
     let t = Tokens::get();
     app.shell.history_dock_space = Some(ui.available_rect_before_wrap());
@@ -849,7 +849,7 @@ pub(crate) fn floating_rect(available: Rect) -> Rect {
     Container::floating_card(Surface::Panel).bottom_strip_rect(available, 40.0)
 }
 
-fn timeline_contents(app: &mut SolveApp, ui: &mut egui::Ui, floating: bool) {
+fn timeline_contents(app: &mut SketApp, ui: &mut egui::Ui, floating: bool) {
     let t = Tokens::get();
     let accent = crate::theme::TabAccent::for_tab(&t, &app.ui.tab);
     let r = ui.max_rect();
@@ -1226,7 +1226,7 @@ fn timeline_contents(app: &mut SolveApp, ui: &mut egui::Ui, floating: bool) {
 /// Select what a feature made, so the browser shows it. While the browser's rows start closed
 /// (Preferences › Layout), its first body is also found there, as Find in Browser on a body
 /// does: the rows down to it open.
-pub(crate) fn find_in_browser(app: &mut SolveApp, id: u64) {
+pub(crate) fn find_in_browser(app: &mut SketApp, id: u64) {
     let st = crate::open_meshing::session_world(&app.session);
     let bodies: Vec<String> = st.bodies.iter().filter(|b| b.feature == id).map(|b| b.name.clone()).collect();
     let items: Vec<serde_json::Value> = if bodies.is_empty() {
@@ -1486,7 +1486,7 @@ mod tests {
 
     #[test]
     fn construction_history_matches_the_tool_that_created_it() {
-        use solidcore_record::Vec3;
+        use sketcore_record::Vec3;
         use sketcraft_engine::doc::{
             FeatureKind, PlaneRef,
             construct::{AxisDef, GeoRef, PointDef},
@@ -2267,9 +2267,9 @@ mod tests {
             let names = sketcraft_engine::doc::naming::face_names(body);
             let index = names.iter().position(|name| sketcraft_engine::doc::persistent_name::made_by(name) == Some(hole)).unwrap();
             let plate = body.name.clone();
-            h.app.viewport.hover = Some(crate::viewport::Hit::Face { body: plate.clone(), index, point: solidcore_record::Vec3::ZERO });
+            h.app.viewport.hover = Some(crate::viewport::Hit::Face { body: plate.clone(), index, point: sketcore_record::Vec3::ZERO });
             assert_eq!(crate::timeline::hovered_feature(&h.app), Some(hole), "left={left}: hovering the hole's face finds the hole");
-            h.app.viewport.hover = Some(crate::viewport::Hit::Vertex { body: plate.clone(), point: solidcore_record::Vec3::ZERO });
+            h.app.viewport.hover = Some(crate::viewport::Hit::Vertex { body: plate.clone(), point: sketcore_record::Vec3::ZERO });
             assert_eq!(crate::timeline::hovered_feature(&h.app), Some(block), "left={left}: a vertex finds the feature that made its body");
             h.app.viewport.hover = None;
 

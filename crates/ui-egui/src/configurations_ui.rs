@@ -1,11 +1,11 @@
 //! Manage configuration table. Commands and cell decoding remain in dialogs_motion.
 use super::{cell_value, column_parts, configuration_rules_ui, table, unit_of};
-use crate::{SolveApp, ui_kit};
+use crate::{SketApp, ui_kit};
 use serde_json::{Value, json};
 use sketcraft_engine::doc::DEFAULT_MATERIAL;
 /// The Configurations table, its rules and errors.
 pub(super) fn configurations_rows(
-    app: &mut SolveApp,
+    app: &mut SketApp,
     ui: &mut egui::Ui,
     new_row: &mut String,
     error: &mut Option<String>,
@@ -23,7 +23,7 @@ pub(super) fn configurations_rows(
     }
     let Some(shown) = rule_editor.table.clone() else { return };
     let (_, v, tb) = &*shown;
-    let run = |app: &mut SolveApp, error: &mut Option<String>, id: &str, p: Value| {
+    let run = |app: &mut SketApp, error: &mut Option<String>, id: &str, p: Value| {
         *error = app.run(id, p).err();
     };
     let labels: Vec<_> = std::iter::once(crate::i18n::tr_label("Configuration").to_owned())
@@ -270,7 +270,7 @@ pub(super) fn configurations_rows(
 
 /// Bare numbers show with their parameter's unit ("40" is 40 mm), as Fusion shows them. The
 /// unit is looked up once per column, not once per cell.
-fn with_units(app: &SolveApp, mut tb: super::Table) -> super::Table {
+fn with_units(app: &SketApp, mut tb: super::Table) -> super::Table {
     let kinds = app.session.doc.all_param_exprs();
     let units: Vec<Option<String>> =
         tb.columns
@@ -302,13 +302,13 @@ fn with_units(app: &SolveApp, mut tb: super::Table) -> super::Table {
 }
 
 fn column_menu(
-    app: &mut SolveApp,
+    app: &mut SketApp,
     ui: &mut egui::Ui,
     error: &mut Option<String>,
     columns: &[String],
     rule_editor: &mut configuration_rules_ui::Editor,
 ) {
-    let run = |app: &mut SolveApp, error: &mut Option<String>, id: &str, params: Value| {
+    let run = |app: &mut SketApp, error: &mut Option<String>, id: &str, params: Value| {
         *error = app.run(id, params).err();
     };
     // A column: a parameter's value or a feature's suppression.

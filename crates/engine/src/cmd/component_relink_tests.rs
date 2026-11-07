@@ -100,12 +100,7 @@ fn linked_design_properties_do_not_replace_conflicting_custom_materials() {
     let file = dir.join("source.sketcraft");
     properties_part(&file, "Custom alloy", Some(4.2), [12, 34, 56]);
     let mut s = Session::default();
-    s.doc_mut().user_materials.push(sketcraft_doc::UserMaterial {
-        name: "Custom alloy".into(),
-        density: 9.0,
-        appearance: None,
-        physical_card: None,
-    });
+    s.doc_mut().user_materials.push(sketcraft_doc::UserMaterial { name: "Custom alloy".into(), density: 9.0, appearance: None, physical_card: None });
     let c = run(&mut s, "component.insert_design", json!({"path": file}))["component"].as_u64().unwrap();
     let p = run(&mut s, "component.properties", json!({"component": c}));
     let assigned = p["bodies"][0]["material"].as_str().unwrap();
@@ -278,7 +273,7 @@ fn linked_design_properties_update_density_without_geometry_and_keep_edited_card
 
 #[test]
 fn linked_design_properties_keep_opaque_pbr_and_face_color_after_reload() {
-    use solidcore_record::Vec3;
+    use sketcore_record::Vec3;
     use sketcraft_doc::appearance::{FaceLook, Look};
     let dir = folder("properties-optics");
     let file = dir.join("source.sketcraft");
@@ -321,7 +316,7 @@ fn linked_design_properties_keep_opaque_pbr_and_face_color_after_reload() {
 
 #[test]
 fn linked_face_overrides_update_independently_and_preserve_local_edits_and_removals() {
-    use solidcore_record::Vec3;
+    use sketcore_record::Vec3;
     use sketcraft_doc::appearance::{FaceLook, Look};
     let dir = folder("properties-faces");
     let file = dir.join("source.sketcraft");
@@ -416,7 +411,7 @@ fn linked_face_removal_without_a_body_look_does_not_reveal_baked_source_paint() 
     part.doc_mut().appearances.bodies.clear();
     part.doc_mut().appearances.faces.push(FaceLook {
         body: "Cube".into(),
-        point: solidcore_record::Vec3::new(5.0, 5.0, 10.0),
+        point: sketcore_record::Vec3::new(5.0, 5.0, 10.0),
         look: Look::custom([190, 20, 30], 0.65),
         name: None,
         strict_name: false,
@@ -444,7 +439,7 @@ fn unchanged_linked_face_overrides_do_not_reorder_assignments_or_report_updates(
     let mut part = properties_part(&file, "Steel", None, [12, 34, 56]);
     part.doc_mut().appearances.faces.push(FaceLook {
         body: "Cube".into(),
-        point: solidcore_record::Vec3::new(5.0, 5.0, 10.0),
+        point: sketcore_record::Vec3::new(5.0, 5.0, 10.0),
         look: Look::custom([190, 20, 30], 0.65),
         name: None,
         strict_name: false,
@@ -646,7 +641,7 @@ fn relink_keeps_joint_definitions_and_reports_solver_diagnostics() {
     // requiring relink to guess which face of a different design was intended.
     let joint = s.doc_mut().assembly.joints.first_mut().unwrap();
     joint.b.snap =
-        sketcraft_doc::joints::Snap::FaceCenter { pick: solidcore_record::Vec3::ZERO, face: Some("no-such-linked-face".to_string()), x: None };
+        sketcraft_doc::joints::Snap::FaceCenter { pick: sketcore_record::Vec3::ZERO, face: Some("no-such-linked-face".to_string()), x: None };
     s.refresh();
     let result = run(&mut s, "component.relink", json!({"component": component, "path": replacement}));
     assert!(result["joint_errors"].as_array().unwrap().iter().any(|e| e["name"] == "Seat"));

@@ -390,7 +390,7 @@ impl Brep {
         r
     }
 
-    /// [`Brep::blend`] and its kin on solidcore (`core::blend::blend`).
+    /// [`Brep::blend`] and its kin on sketcore (`core::blend::blend`).
     #[allow(clippy::too_many_arguments)]
     fn core_blend(
         &self,

@@ -1,17 +1,17 @@
-//! Booleans on solidcore, against analytic volumes: every result exports to a record that validates
+//! Booleans on sketcore, against analytic volumes: every result exports to a record that validates
 //! and counts the solids it should.
 //!
-//! Curved operands are built on solidcore itself.
+//! Curved operands are built on sketcore itself.
 
 use std::collections::BTreeMap;
 use std::f64::consts::PI;
 use std::sync::mpsc;
 use std::time::Duration;
 
-use solidcore::geom::axis2_placement::Axis2Placement;
-use solidcore::geom::vector3d::Vec3;
-use solidcore::mass::integrator::properties::brep_area;
-use solidcore::primitive::primitive_creation::p1::create_rectangle;
+use sketcore::geom::axis2_placement::Axis2Placement;
+use sketcore::geom::vector3d::Vec3;
+use sketcore::mass::integrator::properties::brep_area;
+use sketcore::primitive::primitive_creation::p1::create_rectangle;
 
 use super::boolean::{boolean, boolean2d, edge_closes, imprint, union_all};
 use super::{Body, counts, make_box, make_cylinder, make_sphere, run, solid_count, to_arrays, volume, with_body};
@@ -125,7 +125,7 @@ struct Measured {
     solids: usize,
 }
 
-fn kinds(rec: &solidcore_record::brep::Brep) -> BTreeMap<String, usize> {
+fn kinds(rec: &sketcore_record::brep::Brep) -> BTreeMap<String, usize> {
     let mut out = BTreeMap::new();
     for f in &rec.faces {
         let v = serde_json::to_value(&f.surface).unwrap();
@@ -134,7 +134,7 @@ fn kinds(rec: &solidcore_record::brep::Brep) -> BTreeMap<String, usize> {
     out
 }
 
-/// The case on solidcore: `None` for an empty result.
+/// The case on sketcore: `None` for an empty result.
 fn on_core(c: &Case) -> crate::Result<Option<Body>> {
     match &c.op {
         Op::Boolean(a, b, op) => boolean(&a.core(), &b.core(), *op),
@@ -159,21 +159,21 @@ fn timed<T: Send + 'static>(name: &str, f: impl FnOnce() -> T + Send + 'static) 
             Err(p) => std::panic::resume_unwind(p),
             Ok(()) => panic!("{name}: no result"),
         },
-        Err(mpsc::RecvTimeoutError::Timeout) => panic!("{name}: solidcore hung (no result after {TIMEOUT:?})"),
+        Err(mpsc::RecvTimeoutError::Timeout) => panic!("{name}: sketcore hung (no result after {TIMEOUT:?})"),
     }
 }
 
-/// Runs the case on solidcore and checks it against the analytic answer; what it measured.
-fn solidcore_case(name: &'static str) -> Option<Measured> {
+/// Runs the case on sketcore and checks it against the analytic answer; what it measured.
+fn sketcore_case(name: &'static str) -> Option<Measured> {
     timed(name, move || {
         let c = case(name);
-        let r = on_core(&c).unwrap_or_else(|e| panic!("{name}: solidcore failed: {e}"));
+        let r = on_core(&c).unwrap_or_else(|e| panic!("{name}: sketcore failed: {e}"));
         let (Some(body), Some(expected)) = (&r, c.volume) else {
-            assert!(r.is_none() && c.volume.is_none(), "{name}: solidcore gave {}, expected {:?}", r.is_some(), c.volume);
+            assert!(r.is_none() && c.volume.is_none(), "{name}: sketcore gave {}, expected {:?}", r.is_some(), c.volume);
             return None;
         };
         let v = volume(body, 1e-8).unwrap_or_else(|e| panic!("{name}: volume: {e}"));
-        assert!(rel(v, expected) < 1e-9, "{name}: solidcore volume {v} vs analytic {expected}");
+        assert!(rel(v, expected) < 1e-9, "{name}: sketcore volume {v} vs analytic {expected}");
         let n = counts(body).unwrap();
         if let Some(f) = c.faces {
             assert_eq!(n[0], f, "{name}: faces {n:?}");
@@ -191,8 +191,8 @@ macro_rules! cases {
         mod $m {
             #[test]
             $(#[$ign])?
-            fn solidcore_matches_the_analytic_volume() {
-                super::solidcore_case(stringify!($m));
+            fn sketcore_matches_the_analytic_volume() {
+                super::sketcore_case(stringify!($m));
             }
         }
     )*};
@@ -212,7 +212,7 @@ cases!(
     imprint_top_face,
 );
 
-/// A `w` x `h` planar sheet on z = 0 from `(x, y)`, solidcore's `CreateRectangle`.
+/// A `w` x `h` planar sheet on z = 0 from `(x, y)`, sketcore's `CreateRectangle`.
 fn rectangle(x: f64, y: f64, w: f64, h: f64) -> Body {
     let frame = Axis2Placement::new(Vec3::new(x, y, 0.0), Vec3::new(1.0, 0.0, 0.0), Vec3::new(0.0, 1.0, 0.0));
     run("create_rectangle", |k| create_rectangle(k, 0.0, w, h, &frame)).map(Body::new).unwrap()
@@ -240,7 +240,7 @@ fn boolean2d_combines_overlapping_squares() {
 /// fails makes the body not closed non-manifold (false), never an error that fails the boolean.
 #[test]
 fn closed_nonmanifold_takes_a_failed_edge_query_as_false() {
-    let failed = || solidcore::SolidError::null_pointer("GetEdgeuses");
+    let failed = || sketcore::SolidError::null_pointer("GetEdgeuses");
     assert!(edge_closes(Ok(false), Ok(4)));
     assert!(edge_closes(Ok(false), Ok(8)));
     assert!(!edge_closes(Ok(false), Ok(2)));
@@ -303,8 +303,8 @@ fn operands_stay_as_they_were() {
 /// capi (smlib_history.cpp:246): the face is Modified, the operation stands.
 #[test]
 fn a_failed_closest_point_counts_as_off_the_piece() {
-    use solidcore::query::api_queries::edge_closest_point;
-    use solidcore::topology::edge;
+    use sketcore::query::api_queries::edge_closest_point;
+    use sketcore::topology::edge;
     let body = A.core();
     super::with_body("moved", &body, |k, b| {
         let e = b.edge_list()[0];
@@ -326,7 +326,7 @@ fn a_failed_closest_point_counts_as_off_the_piece() {
 /// equal circles a little apart cross; they do not coincide over a tiny edge. The stack's volume
 /// is 113 pi whatever e is.
 /// This path passes with `simple_coincidence_crossing_is_point` off too, so the test holds the
-/// result here and does not single out that flag (solidcore's own test does).
+/// result here and does not single out that flag (sketcore's own test does).
 #[test]
 fn a_ring_and_a_lip_with_walls_nearly_together() {
     use super::sweep::extrude;
@@ -361,7 +361,7 @@ fn a_ring_and_a_lip_with_walls_nearly_together() {
 /// Face and edge tags (`Brep::tagged`) through booleans: each operand tagged, the result's history
 /// ([`Raw`]) read back.
 mod history {
-    use solidcore_record::brep::history::Change;
+    use sketcore_record::brep::history::Change;
 
     use crate::history::Raw;
     use crate::{BooleanOp, Brep};
@@ -407,7 +407,7 @@ mod history {
         }
     }
 
-    /// `SmApiBrepCopy` (the copy every solidcore operation starts from) keeps every tag: the
+    /// `SmApiBrepCopy` (the copy every sketcore operation starts from) keeps every tag: the
     /// copy's history is the operand's own, every face Kept.
     #[test]
     fn tags_cross_a_copy() {

@@ -311,10 +311,8 @@ fn requested_menu_icons_have_artwork_and_match_manifest() {
     }
     let mut h = harness();
     h.app.home.open = false;
-    h.app.services.install_app = Some(sketcraft_ui_egui::install::InstallApp {
-        offer: Box::new(|| Some(sketcraft_ui_egui::install::Offer::Prompt)),
-        prompt: Box::new(|| {}),
-    });
+    h.app.services.install_app =
+        Some(sketcraft_ui_egui::install::InstallApp { offer: Box::new(|| Some(sketcraft_ui_egui::install::Offer::Prompt)), prompt: Box::new(|| {}) });
     h.app.preferences.radial_context_menu = true;
     assert_eq!(h.call("ui.icon_audit", json!({"reset":true}))["ok"], true);
     h.app.session.run_script(&sketcraft_engine::sample::script()).unwrap();

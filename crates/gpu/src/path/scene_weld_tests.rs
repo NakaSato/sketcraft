@@ -2,7 +2,7 @@ use sketcraft_geom::prelude::*;
 use std::sync::Arc;
 
 use super::{MediumWeld, Triangle, flatten, medium_preparation_bytes};
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 use sketcraft_geom::Mesh;
 use sketcraft_render::{ProductMesh, ProductScene, job::CancelToken, surface::OpaqueSurface, transmission::Transmission};
 

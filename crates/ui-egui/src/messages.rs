@@ -7,7 +7,7 @@ use std::collections::VecDeque;
 use egui::{RichText, vec2};
 use serde_json::{Value, json};
 
-use crate::SolveApp;
+use crate::SketApp;
 use crate::i18n::{format, tr};
 use crate::theme::Tokens;
 
@@ -91,7 +91,7 @@ fn ago(now: f64, at: f64) -> String {
 
 /// `ui.messages`: `clear?: true` empties the list, `open?: bool` shows or hides the window; the
 /// reply lists them, oldest first (`text`, `error`, `at` in ms since the epoch, `count`).
-pub fn control(app: &mut SolveApp, p: &Value) -> Value {
+pub fn control(app: &mut SketApp, p: &Value) -> Value {
     if p.get("clear").and_then(Value::as_bool) == Some(true) {
         app.messages.clear();
     }
@@ -103,7 +103,7 @@ pub fn control(app: &mut SolveApp, p: &Value) -> Value {
 }
 
 /// The Messages window.
-pub fn show(app: &mut SolveApp, ctx: &egui::Context) {
+pub fn show(app: &mut SketApp, ctx: &egui::Context) {
     if !app.messages.open {
         return;
     }

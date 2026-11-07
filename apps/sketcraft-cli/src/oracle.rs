@@ -5,7 +5,7 @@
 #![allow(clippy::needless_range_loop)]
 
 use serde_json::{Value, json};
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 
 use crate::spatial::{self, Tri};
 use crate::{read_json, recipe};

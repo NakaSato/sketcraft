@@ -16,7 +16,7 @@ use sketcraft_engine::{
 };
 
 use super::{ImageMethod, ribbon};
-use crate::{SolveApp, ui_kit};
+use crate::{SketApp, ui_kit};
 
 const LONGEST_EDGE: u32 = 512;
 const EDIT_DELAY_SECONDS: f64 = 0.2;
@@ -229,7 +229,7 @@ impl State {
     }
 }
 
-fn enabled(app: &SolveApp) -> bool {
+fn enabled(app: &SketApp) -> bool {
     !cfg!(target_arch = "wasm32") && !app.preferences.render_legacy_image_defaults && app.render_workspace.view.method != ImageMethod::Raster
 }
 fn rounded_size(rect: Rect) -> [u32; 2] {
@@ -239,7 +239,7 @@ fn rounded_size(rect: Rect) -> [u32; 2] {
     let scale = (f64::from(LONGEST_EDGE) / longest).min(1.0);
     [(width * scale).round().clamp(1.0, f64::from(LONGEST_EDGE)) as u32, (height * scale).round().clamp(1.0, f64::from(LONGEST_EDGE)) as u32]
 }
-fn size(app: &SolveApp, rect: Rect) -> [u32; 2] {
+fn size(app: &SketApp, rect: Rect) -> [u32; 2] {
     let [width, height] = [app.render_workspace.view.draft.width, app.render_workspace.view.draft.height];
     if width == 0 || height == 0 {
         // Request validates original intent before any temporary live-size copy.
@@ -269,7 +269,7 @@ fn size(app: &SolveApp, rect: Rect) -> [u32; 2] {
 
 /// Match product navigation, picking and pixels to the exact integer live-capture aspect.
 /// At most a pixel of letterboxing is introduced instead of stretching the rendered image.
-pub(crate) fn projection_rect(app: &SolveApp, rect: Rect) -> Rect {
+pub(crate) fn projection_rect(app: &SketApp, rect: Rect) -> Rect {
     if !enabled(app) || !rect.is_finite() || !rect.is_positive() {
         return rect;
     }
@@ -279,7 +279,7 @@ pub(crate) fn projection_rect(app: &SolveApp, rect: Rect) -> Rect {
 
 /// Build a separate, labelled live-size request. Final size, AA and saved intent are restored
 /// before returning, including on refusal. Effects are never removed to obtain a preview.
-fn request(app: &mut SolveApp) -> Result<Value, String> {
+fn request(app: &mut SketApp) -> Result<Value, String> {
     super::image_host(app, app.render_workspace.view.method)?;
     if app.session.model.is_stale() {
         return Err(app.tr("render.image_scene_stale").into());
@@ -343,7 +343,7 @@ fn target(request: &Value) -> u32 {
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-fn capture(app: &SolveApp, identity: &Identity, generation: u64) -> Result<Pending, String> {
+fn capture(app: &SketApp, identity: &Identity, generation: u64) -> Result<Pending, String> {
     let mut owner = app.session.scratch();
     let request = identity.request.clone();
     let revision = identity.revision;
@@ -374,11 +374,11 @@ fn capture(app: &SolveApp, identity: &Identity, generation: u64) -> Result<Pendi
     Ok(Pending { receiver, cancelled, generation })
 }
 
-pub(crate) fn tick(app: &mut SolveApp, ctx: &Context) {
+pub(crate) fn tick(app: &mut SketApp, ctx: &Context) {
     let now = ctx.input(|input| input.time);
     tick_at(app, ctx, now);
 }
-fn tick_at(app: &mut SolveApp, ctx: &Context, now: f64) {
+fn tick_at(app: &mut SketApp, ctx: &Context, now: f64) {
     let mut state = std::mem::take(&mut app.render_workspace.live);
     state.poll_capture();
     state.reap_draining();
@@ -470,7 +470,7 @@ fn tick_at(app: &mut SolveApp, ctx: &Context, now: f64) {
     app.render_workspace.live = state;
 }
 
-pub(crate) fn set_paused(app: &mut SolveApp, paused: bool) {
+pub(crate) fn set_paused(app: &mut SketApp, paused: bool) {
     app.render_workspace.view.live_paused = paused;
     if paused {
         app.render_workspace.live.cancel_work();
@@ -481,7 +481,7 @@ pub(crate) fn set_paused(app: &mut SolveApp, paused: bool) {
 }
 /// Preparation owns the same live-release priority as an explicit final. The
 /// original pending/running owners stay here until their release acknowledgements.
-pub(super) fn suspend_for_preparation(app: &mut SolveApp) {
+pub(super) fn suspend_for_preparation(app: &mut SketApp) {
     let state = &mut app.render_workspace.live;
     state.cancel_work();
     state.suspended = true;
@@ -490,11 +490,11 @@ pub(super) fn suspend_for_preparation(app: &mut SolveApp) {
     state.poll_capture();
     state.reap_draining();
 }
-pub(super) fn preparation_ready(app: &SolveApp) -> bool {
+pub(super) fn preparation_ready(app: &SketApp) -> bool {
     let state = &app.render_workspace.live;
     state.pending.is_none() && state.running.is_none() && state.draining.is_empty()
 }
-pub(super) fn defer_final(app: &mut SolveApp, request: ribbon::PendingFinal) -> bool {
+pub(super) fn defer_final(app: &mut SketApp, request: ribbon::PendingFinal) -> bool {
     let state = &mut app.render_workspace.live;
     state.cancel_work();
     state.suspended = true;
@@ -508,13 +508,13 @@ pub(super) fn defer_final(app: &mut SolveApp, request: ribbon::PendingFinal) -> 
         false
     }
 }
-pub(super) fn final_pending(app: &SolveApp) -> bool {
+pub(super) fn final_pending(app: &SketApp) -> bool {
     app.render_workspace.live.final_request.is_some()
 }
-pub(super) fn cancel_final(app: &mut SolveApp) -> bool {
+pub(super) fn cancel_final(app: &mut SketApp) -> bool {
     app.render_workspace.live.final_request.take().is_some()
 }
-fn picture_current(app: &SolveApp) -> bool {
+fn picture_current(app: &SketApp) -> bool {
     let state = &app.render_workspace.live;
     let Some(identity) = &state.identity else { return false };
     let Some(viewport) = app.viewport.rect.filter(|rect| rect.is_finite() && rect.is_positive()) else { return false };
@@ -536,17 +536,17 @@ fn picture_current(app: &SolveApp) -> bool {
         && identity.request.pointer("/settings/width").and_then(Value::as_u64) == Some(u64::from(width))
         && identity.request.pointer("/settings/height").and_then(Value::as_u64) == Some(u64::from(height))
 }
-pub(crate) fn picking_current(app: &SolveApp) -> bool {
+pub(crate) fn picking_current(app: &SketApp) -> bool {
     let state = &app.render_workspace.live;
     !enabled(app) || state.picture.is_none() || picture_current(app)
 }
 /// Terminal status precedes native cleanup. Live admission waits for that final work too.
-pub(super) fn drain_final(app: &mut SolveApp, handle: JobHandle) {
+pub(super) fn drain_final(app: &mut SketApp, handle: JobHandle) {
     if !handle.work_released() {
         app.render_workspace.live.draining.push(handle);
     }
 }
-pub(crate) fn paint(app: &mut SolveApp, ui: &egui::Ui, rect: Rect) {
+pub(crate) fn paint(app: &mut SketApp, ui: &egui::Ui, rect: Rect) {
     if !enabled(app) {
         return;
     }
@@ -569,12 +569,12 @@ pub(crate) fn paint(app: &mut SolveApp, ui: &egui::Ui, rect: Rect) {
         }
     }
 }
-pub(crate) fn has_picture(app: &SolveApp) -> bool {
+pub(crate) fn has_picture(app: &SketApp) -> bool {
     enabled(app) && app.render_workspace.live.picture.is_some()
 }
 /// Describe the image that is actually painted, including a retained previous capture.
 /// The selected draft method cannot rename pixels produced by another executor.
-pub(crate) fn source_note(app: &SolveApp) -> (String, &'static str) {
+pub(crate) fn source_note(app: &SketApp) -> (String, &'static str) {
     let Some(picture) = app.render_workspace.live.picture.as_ref().filter(|_| has_picture(app)) else {
         return (app.tr("render.stage_preview_note").into(), "render.preview_lighting_help");
     };
@@ -586,7 +586,7 @@ pub(crate) fn source_note(app: &SolveApp) -> (String, &'static str) {
     (source_text(app, picture.executor.as_str(), current), if current { "render.live.quality_help" } else { "render.live.source_outdated_help" })
 }
 
-pub(super) fn source_text(app: &SolveApp, executor: &str, current: bool) -> String {
+pub(super) fn source_text(app: &SketApp, executor: &str, current: bool) -> String {
     let method = match executor {
         "cpu-raytrace" => app.tr("render.method_cpu"),
         "gpu-path" => app.tr("render.method_gpu"),
@@ -595,7 +595,7 @@ pub(super) fn source_text(app: &SolveApp, executor: &str, current: bool) -> Stri
     crate::i18n::format(if current { "render.live.source_current" } else { "render.live.source_outdated" }, &[("method", method)])
 }
 
-pub(crate) fn controls(app: &mut SolveApp, ui: &mut egui::Ui) {
+pub(crate) fn controls(app: &mut SketApp, ui: &mut egui::Ui) {
     if !enabled(app) {
         return;
     }
@@ -656,7 +656,7 @@ pub(crate) fn controls(app: &mut SolveApp, ui: &mut egui::Ui) {
     ui_kit::StageBar::separator(ui);
 }
 
-pub(super) fn inspect(app: &SolveApp) -> Value {
+pub(super) fn inspect(app: &SketApp) -> Value {
     let state = &app.render_workspace.live;
     let is_current = picture_current(app);
     json!({"enabled":enabled(app),"paused":app.render_workspace.view.live_paused,"generation":state.generation,"draining":state.draining.len(),"final_pending":state.final_request.is_some(),"suspended":state.suspended,"pending":state.pending.is_some(),"running":state.running.is_some(),"error":state.error,
@@ -668,6 +668,6 @@ pub(super) fn inspect(app: &SolveApp) -> Value {
         "hash":state.running.as_ref().and_then(|job| job.handle.frame().ok().flatten()).map(|frame| frame.info.png_sha256.clone()),"complete":is_current && state.picture.as_ref().is_some_and(|picture|picture.complete)})
 }
 #[cfg(test)]
-pub(super) fn advance(app: &mut SolveApp, ctx: &Context, now: f64) {
+pub(super) fn advance(app: &mut SketApp, ctx: &Context, now: f64) {
     tick_at(app, ctx, now);
 }

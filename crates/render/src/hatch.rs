@@ -8,7 +8,7 @@
 use sketcraft_geom::prelude::*;
 use std::collections::{HashMap, HashSet};
 
-use solidcore_record::{Vec2, Vec3};
+use sketcore_record::{Vec2, Vec3};
 
 /// The colours a cut is hatched in: the section cap's own, then the others of its family.
 pub const HATCH_COLOURS: usize = 3;

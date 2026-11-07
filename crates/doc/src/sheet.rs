@@ -10,7 +10,7 @@
 //! together; the flat solid is the outline extruded through the thickness.
 
 use serde::{Deserialize, Serialize};
-use solidcore_record::{Loop2, Plane, Region2, Seg2, Vec2, Vec3};
+use sketcore_record::{Loop2, Plane, Region2, Seg2, Vec2, Vec3};
 use sketcraft_geom::prelude::*;
 use sketcraft_geom::{Aabb2, LINEAR_TOL, Ring};
 use sketcraft_kernel::{self as kernel, Body, EdgeSpec, FaceSpec, SurfSpec};

@@ -1,4 +1,4 @@
-use solidcore_record::{Plane, Vec2, Vec3};
+use sketcore_record::{Plane, Vec2, Vec3};
 
 use crate::Vec3Geom;
 

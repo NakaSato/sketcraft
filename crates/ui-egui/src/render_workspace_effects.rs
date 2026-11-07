@@ -1,7 +1,7 @@
 //! Shared-kit layered weathering and photographic presentation editors.
 //! Output presentation edits patch the saved job; legacy master controls retain their draft.
 use super::{ImageMethod, materials, setups, studio};
-use crate::{SolveApp, ui_kit};
+use crate::{SketApp, ui_kit};
 use sketcraft_engine::render::job::looks::{LookKind, LookLayer};
 
 #[derive(Clone, Debug, Default)]
@@ -11,14 +11,14 @@ pub(super) struct View {
     pub(super) targets: Vec<materials::Target>,
     pub(super) search: String,
 }
-pub(super) fn note(app: &SolveApp, ui: &mut egui::Ui, key: &'static str) {
+pub(super) fn note(app: &SketApp, ui: &mut egui::Ui, key: &'static str) {
     ui_kit::text(ui, app.tr(key), ui_kit::Text::Note(key));
 }
-pub(super) fn number(app: &SolveApp, ui: &mut egui::Ui, key: &str, value: &mut f64, range: std::ops::RangeInclusive<f64>, speed: f64, suffix: &str) {
+pub(super) fn number(app: &SketApp, ui: &mut egui::Ui, key: &str, value: &mut f64, range: std::ops::RangeInclusive<f64>, speed: f64, suffix: &str) {
     let response = ui_kit::row(ui, app.tr(key), |ui| ui_kit::number_field(ui, value, range, speed, suffix));
     crate::scenario::publish_target(key, response.rect);
 }
-fn slider(app: &SolveApp, ui: &mut egui::Ui, key: &str, value: &mut f64, range: std::ops::RangeInclusive<f64>, speed: f64, suffix: &str) {
+fn slider(app: &SketApp, ui: &mut egui::Ui, key: &str, value: &mut f64, range: std::ops::RangeInclusive<f64>, speed: f64, suffix: &str) {
     let label = match key {
         "render.flare_strength" => "render.children.flare",
         "render.flare_threshold" | "render.bloom_threshold" => "render.children.threshold",
@@ -48,12 +48,12 @@ fn slider(app: &SolveApp, ui: &mut egui::Ui, key: &str, value: &mut f64, range: 
     }
     crate::scenario::publish_target(key, response.rect);
 }
-pub(super) fn failure(app: &mut SolveApp, result: Result<(), String>) {
+pub(super) fn failure(app: &mut SketApp, result: Result<(), String>) {
     if let Err(error) = result {
         app.set_status(error, true);
     }
 }
-pub(super) fn layer_actions(app: &SolveApp, ui: &mut egui::Ui, prefix: &str, selected: usize, length: usize) -> (i32, bool) {
+pub(super) fn layer_actions(app: &SketApp, ui: &mut egui::Ui, prefix: &str, selected: usize, length: usize) -> (i32, bool) {
     let mut movement = 0;
     let mut remove = false;
     ui.horizontal_wrapped(|ui| {
@@ -74,7 +74,7 @@ pub(super) fn layer_actions(app: &SolveApp, ui: &mut egui::Ui, prefix: &str, sel
     (movement, remove)
 }
 
-pub(super) fn presentation_controls(app: &mut SolveApp, ui: &mut egui::Ui) {
+pub(super) fn presentation_controls(app: &mut SketApp, ui: &mut egui::Ui) {
     ui_kit::banner(ui, ui_kit::AssistantTone::Neutral, |ui| note(app, ui, "render.presentation_banner"));
     let enabled = app.render_workspace.view.method != ImageMethod::Raster;
     if app.render_workspace.view.method == ImageMethod::CpuRaytrace {
@@ -82,7 +82,7 @@ pub(super) fn presentation_controls(app: &mut SolveApp, ui: &mut egui::Ui) {
     }
     ui.add_enabled_ui(enabled, |ui| presentation_editor(app, ui));
 }
-fn presentation_editor(app: &mut SolveApp, ui: &mut egui::Ui) {
+fn presentation_editor(app: &mut SketApp, ui: &mut egui::Ui) {
     let presentation_before = super::ribbon::presentation(app);
     let title = app.tr("render.children.tone").to_string();
     ui_kit::section(ui, "render_effects_tone", &title, true, |ui| {
@@ -252,7 +252,7 @@ fn presentation_editor(app: &mut SolveApp, ui: &mut egui::Ui) {
 
 /// Output edits save one numerical job patch; merely revealing Effects is read-only.
 /// Both the legacy page and the Browser child use this command-backed editor.
-pub(super) fn output_controls(app: &mut SolveApp, ui: &mut egui::Ui) {
+pub(super) fn output_controls(app: &mut SketApp, ui: &mut egui::Ui) {
     let before_setup = setups::draft(app);
     let before = app.render_workspace.view.studio.clone();
     let dirty = app.render_workspace.view.dirty;

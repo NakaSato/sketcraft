@@ -4,7 +4,7 @@
 //! silently did nothing.
 
 use serde_json::json;
-use solidcore_record::Vec2;
+use sketcore_record::Vec2;
 use sketcraft_engine::Sel::{SketchCurve, SketchPoint};
 use sketcraft_engine::geom::prelude::*;
 

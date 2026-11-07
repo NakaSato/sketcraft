@@ -9,7 +9,7 @@
 use crate::ui_kit::BackingTooltipExt as _;
 use egui::{Rect, Sense, vec2};
 
-use crate::SolveApp;
+use crate::SketApp;
 use crate::theme::Tokens;
 use crate::ui_kit::{Action, Container, Surface};
 
@@ -25,7 +25,7 @@ enum Answers {
     Sketch,
 }
 
-fn answers(app: &SolveApp) -> Option<Answers> {
+fn answers(app: &SketApp) -> Option<Answers> {
     if !app.preferences.view_confirm_corner || app.home.open || crate::render_workspace::active(app) {
         return None;
     }
@@ -36,7 +36,7 @@ fn answers(app: &SolveApp) -> Option<Answers> {
 }
 
 /// The pair's size while it is shown, else zero: the view's layout keeps the corner for it.
-pub(crate) fn size(app: &SolveApp) -> egui::Vec2 {
+pub(crate) fn size(app: &SketApp) -> egui::Vec2 {
     if answers(app).is_none() {
         return egui::Vec2::ZERO;
     }
@@ -45,7 +45,7 @@ pub(crate) fn size(app: &SolveApp) -> egui::Vec2 {
 }
 
 /// Where the pair is while it is shown.
-pub(crate) fn rect(app: &SolveApp) -> Option<Rect> {
+pub(crate) fn rect(app: &SketApp) -> Option<Rect> {
     answers(app)?;
     app.viewport.layout.as_ref().map(|layout| layout.confirm).filter(|r| r.is_finite() && r.is_positive())
 }
@@ -63,7 +63,7 @@ struct Choice {
 /// Draws the pair and answers a click. A dialog's answer waits for `dialogs::show` in this frame
 /// (`ViewportState::corner`), which acts on it as on its own OK and Cancel; a sketch's runs at
 /// once, the way the ribbon's Finish Sketch and Cancel do (a refusal shows as their errors do).
-pub(crate) fn show(app: &mut SolveApp, ctx: &egui::Context) {
+pub(crate) fn show(app: &mut SketApp, ctx: &egui::Context) {
     let host = app.universal_panel_host_enabled();
     if host {
         app.viewport.host_confirm = Some(Rect::NOTHING);

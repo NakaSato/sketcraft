@@ -4,7 +4,7 @@
 use sketcraft_geom::prelude::*;
 use std::f64::consts::PI;
 
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 
 /// Lowest admitted perceptual roughness. Perfect delta mirrors need another integrator.
 pub const MIN_ROUGHNESS: f64 = 0.045;

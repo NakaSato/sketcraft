@@ -108,10 +108,7 @@ mod tests {
         let home = Path::new("/home/u");
         let ours = home.join(".var/app/io.tangencylabs.sketcraft/data/sketcraft");
         let id = std::ffi::OsStr::new(APP_ID);
-        assert_eq!(
-            flatpak_twins(&ours, id, home),
-            [home.join(".var/app/ai.storyteller.solvecraft/data/sketcraft")]
-        );
+        assert_eq!(flatpak_twins(&ours, id, home), [home.join(".var/app/ai.storyteller.solvecraft/data/sketcraft")]);
         // Outside our sandbox folder, or in another app's sandbox, there is nothing to map.
         assert!(flatpak_twins(&home.join(".local/share/sketcraft"), id, home).is_empty());
         assert!(flatpak_twins(&ours, std::ffi::OsStr::new("org.example.Other"), home).is_empty());

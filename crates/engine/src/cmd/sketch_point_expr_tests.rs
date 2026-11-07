@@ -2,7 +2,7 @@
 //! where it comes to, and the point follows the parameters without a dimension or a solve.
 
 use serde_json::{Value, json};
-use solidcore_record::Vec2;
+use sketcore_record::Vec2;
 use sketcraft_geom::prelude::*;
 
 use crate::Session;

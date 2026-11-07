@@ -27,7 +27,7 @@ pub use refine::Cut;
 
 use crate::bspline::{HPoint, MAX_SPLINE_DEGREE, Side, SplineError, SplineResult, invalid, local_basis, weighted_points};
 use crate::prelude::*;
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 
 /// A blending function: its anchor's local knot vectors as line indices and as values, and
 /// its support.

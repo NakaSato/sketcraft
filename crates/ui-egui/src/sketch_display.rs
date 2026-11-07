@@ -4,12 +4,12 @@ use std::collections::HashMap;
 use std::hash::{Hash, Hasher};
 use std::sync::Arc;
 
-use solidcore_record::{Loop2, Plane, Region2, Vec2, Vec3};
+use sketcore_record::{Loop2, Plane, Region2, Vec2, Vec3};
 use sketcraft_engine::doc::ModelState;
 use sketcraft_engine::render::{PixelCurveView, SampledPath, SamplingBudget, SamplingQuality, sample_segment, sample_segment_unclipped};
 use sketcraft_engine::sketch::Sketch;
 
-use crate::SolveApp;
+use crate::SketApp;
 use crate::viewport::Proj;
 
 pub fn projection_key(proj: &Proj, ppp: f32) -> u64 {
@@ -30,8 +30,8 @@ pub fn pixel_view(proj: &Proj, ppp: f32) -> PixelCurveView {
 /// The pieces a curve is drawn and picked from. An infinite line (#1359) reaches across the whole
 /// view: through the point of its line nearest the view's centre, far past the view each way
 /// (the sampler clips it to the view). Only the display changes: the line keeps its two points.
-fn display_segs(sketch: &Sketch, index: usize, plane: &Plane, proj: &Proj) -> Vec<solidcore_record::Seg2> {
-    use solidcore_record::Seg2;
+fn display_segs(sketch: &Sketch, index: usize, plane: &Plane, proj: &Proj) -> Vec<sketcore_record::Seg2> {
+    use sketcore_record::Seg2;
     let segs = sketch.exact_segs(index).unwrap_or_else(|| sketch.segs(index));
     if !sketch.curves.get(index).is_some_and(|c| c.infinite) {
         return segs;
@@ -327,7 +327,7 @@ impl DisplayCache {
     }
 }
 
-pub fn profile_region(app: &SolveApp, sketch: u64, index: usize, plane: &Plane, proj: &Proj) -> Arc<Option<Region2>> {
+pub fn profile_region(app: &SketApp, sketch: u64, index: usize, plane: &Plane, proj: &Proj) -> Arc<Option<Region2>> {
     let state = crate::open_meshing::session_world(&app.session);
     let ppp = app.viewport.pixels_per_point();
     match app.viewport.display.lock() {
@@ -336,7 +336,7 @@ pub fn profile_region(app: &SolveApp, sketch: u64, index: usize, plane: &Plane, 
     }
 }
 
-pub fn curve_sample(app: &SolveApp, sketch: u64, index: usize, plane: &Plane, proj: &Proj) -> Arc<SampledPath> {
+pub fn curve_sample(app: &SketApp, sketch: u64, index: usize, plane: &Plane, proj: &Proj) -> Arc<SampledPath> {
     let state = crate::open_meshing::session_world(&app.session);
     let ppp = app.viewport.pixels_per_point();
     match app.viewport.display.lock() {

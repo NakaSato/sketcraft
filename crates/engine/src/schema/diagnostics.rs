@@ -197,7 +197,7 @@ pub struct ProfileParams {
 /// One category's share of the recorded self time.
 #[derive(Debug, Serialize, JsonSchema)]
 pub struct ProfileCategory {
-    /// `solidcore` (the kernel's own calls), `kernel`, `feature`, `doc`, `command`, `import`, `io`.
+    /// `sketcore` (the kernel's own calls), `kernel`, `feature`, `doc`, `command`, `import`, `io`.
     pub category: String,
     pub self_ms: f64,
     /// Of all recorded self time, 0–1.

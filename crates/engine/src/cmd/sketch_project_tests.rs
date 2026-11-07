@@ -49,12 +49,12 @@ fn initial_projection_retains_selected_face_when_closest_point_lands_on_shared_e
     run(&mut s, "solid.box", json!({"length":20,"width":20,"height":10,"body_name":"Target"}));
     let state = s.model.state();
     let body = state.body("Target").unwrap();
-    let source = sketcraft_sketch::LinkSource::Face { body: "Target".into(), at: solidcore_record::Vec3::new(-0.1, 5., 10.5) };
+    let source = sketcraft_sketch::LinkSource::Face { body: "Target".into(), at: sketcore_record::Vec3::new(-0.1, 5., 10.5) };
     let resolved = sketcraft_doc::project::resolve(
         &s.doc,
         &std::collections::BTreeMap::new(),
         &state,
-        &solidcore_record::Plane::XY,
+        &sketcore_record::Plane::XY,
         sketcraft_sketch::LinkKind::Project,
         &source,
     )
@@ -522,7 +522,7 @@ fn three_d_sketch_curves() {
 /// B-rep piece under the pick; a fit-point spline's wall is one face per span joined by hidden seams.
 #[test]
 fn intersection_curve_of_picked_faces_spans_the_whole_surface() {
-    use solidcore_record::Plane;
+    use sketcore_record::Plane;
     use sketcraft_doc::project::resolve;
     use sketcraft_sketch::{LinkKind, LinkSource};
     use std::collections::BTreeMap;
@@ -651,7 +651,7 @@ fn intersection_curve_of_two_sketch_curves_is_one_curve_at_any_scale() {
 
 #[test]
 fn intersection_curve_of_two_sketch_curves() {
-    use solidcore_record::{Vec2, Vec3};
+    use sketcore_record::{Vec2, Vec3};
 
     let mut s = Session::default();
     run(&mut s, "sketch.create", json!({"plane": "XY", "name": "Top"}));
@@ -827,7 +827,7 @@ fn sweeps_and_pipes_follow_3d_sketch_curves() {
     // A sweep of a square profile drawn square to the curve at its start.
     let (a, b) = (pts[0], pts[1]);
     let t = (b - a).normalized().unwrap();
-    let x = t.cross(solidcore_record::Vec3::Z).normalized().unwrap();
+    let x = t.cross(sketcore_record::Vec3::Z).normalized().unwrap();
     let y = t.cross(x);
     run(&mut s, "sketch.create", json!({"plane": {"origin": [a.x, a.y, a.z], "x_dir": [x.x, x.y, x.z], "y_dir": [y.x, y.y, y.z]}}));
     run(&mut s, "sketch.rectangle.two_point", json!({"p0": [-1, -1], "p1": [1, 1]}));
@@ -879,8 +879,7 @@ fn project_and_include_from_other_bodies() {
     let row = t["timeline"].as_array().unwrap().iter().find(|r| r["id"] == json!(id)).cloned().unwrap();
     let error = row["error"].as_str().unwrap_or_default();
     assert!(
-        sketcraft_doc::reselect_parts(error)
-            .is_some_and(|(feature, reference)| feature == row["name"] && reference.starts_with(&format!("F{cyl}:"))),
+        sketcraft_doc::reselect_parts(error).is_some_and(|(feature, reference)| feature == row["name"] && reference.starts_with(&format!("F{cyl}:"))),
         "{row}"
     );
 }
@@ -1185,13 +1184,13 @@ fn intersect_keeps_its_exact_cuts() {
     let curves = intersect_curves(&tilted, json!({"plane": "XY", "offset": 10})).unwrap();
     let ends = line_ends(&curves);
     assert!(ends.len() == curves.len() && ends.len() >= 16, "{curves:?}");
-    let axis = solidcore_record::Vec3::new(1.0, 0.0, 1.0).normalized().unwrap();
+    let axis = sketcore_record::Vec3::new(1.0, 0.0, 1.0).normalized().unwrap();
     // The cylinder's box: its axis 40 along (1, 0, 1)/√2 and its ends' discs of radius 5 span
     // (40 + 2·5)/√2 in x and z and 10 in y.
     let span = 50.0 * std::f64::consts::FRAC_1_SQRT_2;
     let reach = 1e-3 * (2.0 * span * span + 100.0).sqrt();
     for e in &ends {
-        for p in [solidcore_record::Vec3::new(e[0], e[1], 10.0), solidcore_record::Vec3::new(e[2], e[3], 10.0)] {
+        for p in [sketcore_record::Vec3::new(e[0], e[1], 10.0), sketcore_record::Vec3::new(e[2], e[3], 10.0)] {
             assert!(((p - axis * p.dot(axis)).len() - 5.0).abs() < reach, "{p:?}");
         }
     }
@@ -1338,7 +1337,7 @@ fn whole_body_project_stays_on_the_body_outline_after_a_late_chamfer() {
                     }
                     for i in 0..=16 {
                         let t = t0 + sweep * f64::from(i) / 16.0;
-                        let q = solidcore_record::Vec2::new(c.x + r * t.cos(), c.y + r * t.sin());
+                        let q = sketcore_record::Vec2::new(c.x + r * t.cos(), c.y + r * t.sin());
                         worst = worst.max((x0 - q.x).max(q.x - x1).max(y0 - q.y).max(q.y - y1));
                     }
                     assert!(sweep < std::f64::consts::PI + 0.01, "{plane} {chamfer:?}: arc sweeps {sweep} rad, not a rounded corner");
@@ -1415,7 +1414,7 @@ fn a_rounded_slot_rim_projects_as_an_arc_of_its_circle() {
     run(&mut s, "sketch.finish", json!({}));
 
     let state = s.model.state();
-    let center = solidcore_record::Vec2::new(20., 2.);
+    let center = sketcore_record::Vec2::new(20., 2.);
     for id in [edge, face] {
         let sk = &state.sketch(id).unwrap().sketch;
         let pos = |i: usize| sk.points[i].pos;
@@ -1475,7 +1474,7 @@ fn whole_body_project_of_a_chamfered_hook_keeps_its_arcs() {
         match curve.kind {
             CurveKind::Line { .. } => {}
             CurveKind::Arc { c, a, b } => {
-                assert!(pos(c).dist(solidcore_record::Vec2::new(-15., 0.)) < 1e-3, "arc centre {:?}", pos(c));
+                assert!(pos(c).dist(sketcore_record::Vec2::new(-15., 0.)) < 1e-3, "arc centre {:?}", pos(c));
                 assert!((pos(a).dist(pos(c)) - pos(b).dist(pos(c))).abs() < 1e-6);
                 radii.push(pos(a).dist(pos(c)));
             }
@@ -1638,8 +1637,8 @@ fn a_thicker_angle_moves_the_projected_face_of_the_sketch_on_it() {
         let st = s.model.state();
         let ss = st.sketch(sketch).unwrap();
         assert!(ss.sketch.links.iter().all(|l| !l.lost));
-        let world = |p: solidcore_record::Vec2| ss.plane.to_world(p);
-        let at = |x: f64, y: f64| ss.sketch.points.iter().any(|p| world(p.pos).dist(solidcore_record::Vec3::new(x, y, 30.)) < 1e-6);
+        let world = |p: sketcore_record::Vec2| ss.plane.to_world(p);
+        let at = |x: f64, y: f64| ss.sketch.points.iter().any(|p| world(p.pos).dist(sketcore_record::Vec3::new(x, y, 30.)) < 1e-6);
         // The inner corner is at (30, 30) now, and the hole 10 from the wall that moved.
         assert!(at(30., 30.) && !at(20., 20.));
         let center = ss.sketch.points.iter().find(|p| p.id == format!("{hole}.center")).unwrap();

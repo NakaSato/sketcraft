@@ -1,7 +1,7 @@
 //! The SketCraft egui front end.
 //!
 //! A thin shell over [`sketcraft_engine::Session`]: panels read engine state and act through
-//! commands ([`SolveApp::run`]). Nothing here owns design data. The layout follows the familiar
+//! commands ([`SketApp::run`]). Nothing here owns design data. The layout follows the familiar
 //! parametric-CAD desktop: application bar, a toolbar of workspace tabs and panels, the browser
 //! on the left, the 3D viewport with an axis view and navigation bar, the command dialog on the
 //! right of the viewport, the command palette and a bottom or left-sidebar feature timeline.
@@ -156,7 +156,7 @@ mod status_tests {
             );
         }
         assert_eq!(super::friendly_error("edit.undo", "nothing to undo"), "Undo: nothing to undo");
-        let mut app = super::SolveApp::new(sketcraft_engine::Session::default(), Default::default());
+        let mut app = super::SketApp::new(sketcraft_engine::Session::default(), Default::default());
         app.run("solid.box", serde_json::json!({"length": 5, "width": 5, "height": 5})).unwrap();
         assert_eq!(app.session.log.last().map(String::as_str), Some("Box done"));
         let _ = app.run("edit.redo", serde_json::json!({}));
@@ -269,10 +269,6 @@ mod sketch_families;
 #[cfg(test)]
 mod sketch_guidance_ui_tests;
 pub(crate) mod sketch_line_arc;
-pub(crate) mod sketchup_draw;
-pub(crate) mod sketchup_screen;
-#[cfg(test)]
-mod sketchup_draw_tests;
 pub mod sketch_modify_ui;
 #[cfg(test)]
 mod sketch_modify_ui_tests;
@@ -289,19 +285,18 @@ mod sketch_text_handles;
 mod sketch_text_move;
 pub mod sketch_tools;
 mod sketch_transform_ui;
+pub(crate) mod sketchup_draw;
+#[cfg(test)]
+mod sketchup_draw_tests;
+pub(crate) mod sketchup_screen;
 pub mod smart_extrude;
 #[cfg(test)]
 mod smart_extrude_ui_tests;
-pub mod space_mouse;
-pub mod space_mouse_calibration;
-pub mod space_mouse_model;
-pub mod space_mouse_offer;
 pub mod stand_up;
 mod status_bar;
 #[cfg(test)]
 mod sweep_dialog_tests;
 pub mod tags_panel;
-pub(crate) mod test_boat;
 pub mod theme;
 pub mod theme_files;
 mod theme_options;
@@ -384,7 +379,7 @@ pub struct UiState {
     /// (#2682). Off by default; when on it decides the projection instead of `perspective`.
     pub auto_ortho_faces: bool,
     /// View angles card locks (#4581): a locked angle stays put while orbiting, turning with the
-    /// arrow keys or using a 3D mouse, and its field and zero button in the card go inert.
+    /// arrow keys, and its field and zero button in the card go inert.
     pub view_angles_lock_yaw: bool,
     pub view_angles_lock_pitch: bool,
     pub view_angles_lock_roll: bool,
@@ -544,7 +539,7 @@ pub(crate) enum EscapeOwner {
     Overlay,
 }
 
-pub struct SolveApp {
+pub struct SketApp {
     /// Common panel foundation, internal opt-in; stays on the app across document tabs.
     pub(crate) panel_runtime: Option<panel_runtime::AppPanelRuntime>,
     pub blur: blur::State,
@@ -646,7 +641,7 @@ pub struct SolveApp {
     pub edit_in_place: edit_in_place::EditInPlace,
     pub(crate) pending_feature_edit: Option<feature_edit::PendingFeatureEdit>,
     /// The feature being reopened from a click and where, until its dialog opens (UI state only).
-    edit_anchor_hint: Option<(u64, solidcore_record::Vec3)>,
+    edit_anchor_hint: Option<(u64, sketcore_record::Vec3)>,
     /// The open feature window's check of what its material does (#6901).
     pub op_check: op_auto::OpCheck,
     /// A command recomputing the history (the marker moved, undo) computing off the window
@@ -765,7 +760,7 @@ pub struct SolveApp {
     /// Where the application bar puts search, Report a bug and the version (set by the host).
     pub header: toolbar::HeaderLayout,
     /// Build bodies' display meshes on the CPU even where the GPU could (safe mode). Read by
-    /// [`SolveApp::set_wgpu`].
+    /// [`SketApp::set_wgpu`].
     pub cpu_meshing: bool,
     pub frame_ms: f64,
     /// The viewport's frame-rate readout ([`frame_rate`]).
@@ -809,8 +804,6 @@ pub struct SolveApp {
     pub flat_view: dialogs_sheet::FlatView,
     /// The start page.
     pub home: home::HomeState,
-    /// The 3D mouse: which device, its reading, and the calibration window.
-    pub space_mouse: space_mouse::Input,
     pub file_load: file_load::FileLoad,
     /// An opened design's bodies still being meshed, off the UI thread.
     pub(crate) open_meshing: Option<open_meshing::Meshing>,
@@ -829,7 +822,7 @@ pub struct SolveApp {
     applied_system_fonts: bool,
 }
 
-impl Drop for SolveApp {
+impl Drop for SketApp {
     /// The Home pictures it started are drawn before it goes: one still on the GPU as the
     /// process exits can crash the graphics driver.
     fn drop(&mut self) {
@@ -838,7 +831,7 @@ impl Drop for SolveApp {
     }
 }
 
-impl SolveApp {
+impl SketApp {
     pub fn new(mut session: Session, services: Services) -> Self {
         #[cfg(test)]
         let image_host = Some(sketcraft_engine::render::job::CpuHost::cooperative());
@@ -853,7 +846,7 @@ impl SolveApp {
         sketcraft_engine::slicer_files::clean_old();
         let tree = browser::TreeState::for_session(session.uid);
         let (shot_tx, shot_rx) = std::sync::mpsc::channel();
-        let mut app = SolveApp {
+        let mut app = SketApp {
             panel_runtime: None,
             viewport_status: Default::default(),
             blur: Default::default(),
@@ -990,7 +983,6 @@ impl SolveApp {
             embedded: false,
             embed_editor: false,
             home: home::HomeState::default(),
-            space_mouse: Default::default(),
             file_load: file_load::FileLoad::default(),
             open_meshing: None,
             open_meshing_next: false,
@@ -1058,10 +1050,7 @@ impl SolveApp {
                     Ok(sketcraft_gpu::view::MsaaCheck::Fallback) => {
                         installed.samples = 1;
                         self.msaa_compatibility = true;
-                        eprintln!(
-                            "SketCraft graphics: anti-aliasing check failed at {}x and passed at 1x; using 1x for this session",
-                            scene.samples
-                        );
+                        eprintln!("SketCraft graphics: anti-aliasing check failed at {}x and passed at 1x; using 1x for this session", scene.samples);
                     }
                     Ok(sketcraft_gpu::view::MsaaCheck::FailedAtOne) => {
                         eprintln!("SketCraft graphics: anti-aliasing check also failed at 1x; keeping {}x", scene.samples);
@@ -1146,7 +1135,7 @@ impl SolveApp {
         v.to_string()
     }
 
-    /// Restore preferences saved with [`SolveApp::prefs`].
+    /// Restore preferences saved with [`SketApp::prefs`].
     pub fn load_prefs(&mut self, prefs: &str) {
         let Ok(v) = serde_json::from_str::<Value>(prefs) else { return };
         let flag = |k: &str| v.get(k).and_then(Value::as_bool);
@@ -1735,9 +1724,9 @@ impl SolveApp {
         if let Some((blend, point)) = blend {
             return self.edit_feature_at(blend, Some(point));
         }
-        let curved = sel.iter().any(
-            |s| matches!(s, sketcraft_engine::Sel::Face { body, index, .. } if dialogs::planar_face(&self.session, body, *index).is_none()),
-        );
+        let curved = sel
+            .iter()
+            .any(|s| matches!(s, sketcraft_engine::Sel::Face { body, index, .. } if dialogs::planar_face(&self.session, body, *index).is_none()));
         if curved {
             return self.start("solid.offset_face");
         }
@@ -2210,7 +2199,7 @@ impl SolveApp {
         self.start_interactive(id, finished_sketch);
     }
 
-    /// The rest of [`SolveApp::start`], once any sketch `id` ends is finished.
+    /// The rest of [`SketApp::start`], once any sketch `id` ends is finished.
     pub(crate) fn start_interactive(&mut self, id: &str, finished_sketch: Option<u64>) {
         if let Some(spec) = sketcraft_engine::find_command(id)
             && self.interactive(id)
@@ -2367,7 +2356,7 @@ impl SolveApp {
 
     /// [`Self::edit_feature`] opened from a click at `at` on what the feature made: the dialog's
     /// arrow sits by that point (a fillet's or chamfer's edge nearest it).
-    pub(crate) fn edit_feature_at(&mut self, id: u64, at: Option<solidcore_record::Vec3>) {
+    pub(crate) fn edit_feature_at(&mut self, id: u64, at: Option<sketcore_record::Vec3>) {
         use sketcraft_engine::doc::FeatureKind;
         // A non-finite point (over the control channel) keeps the first edge.
         self.edit_anchor_hint = at.filter(|p| p.is_finite()).map(|p| (id, p));
@@ -2442,7 +2431,7 @@ impl SolveApp {
         self.edit_sketch_in(id, None);
     }
 
-    /// Edit a sketch as [`SolveApp::edit_sketch`] does, in one placement of its component (a
+    /// Edit a sketch as [`SketApp::edit_sketch`] does, in one placement of its component (a
     /// sketch row inside a component in the browser): that component is active while the sketch
     /// is open, and the one active before comes back when the sketch ends (#8127).
     pub fn edit_sketch_in(&mut self, id: u64, placement: Option<(u64, &[u64])>) {
@@ -2606,9 +2595,12 @@ impl SolveApp {
             && let sketcraft_engine::doc::FeatureKind::Sketch { plane: sketcraft_engine::doc::PlaneRef::Face { at, .. }, sketch } = &feature.kind
             && sketch.curves.iter().any(|c| !c.construction)
         {
-            let already_split = self.session.doc.features.iter().any(|f| {
-                matches!(&f.kind, sketcraft_engine::doc::FeatureKind::SplitFace { sketch: Some(sk_id), .. } if sk_id.0 == sid)
-            });
+            let already_split = self
+                .session
+                .doc
+                .features
+                .iter()
+                .any(|f| matches!(&f.kind, sketcraft_engine::doc::FeatureKind::SplitFace { sketch: Some(sk_id), .. } if sk_id.0 == sid));
             if !already_split {
                 let _ = self.run("solid.split_face", json!({ "faces": [[at.x, at.y, at.z]], "sketch": sid }));
             }
@@ -2644,9 +2636,9 @@ impl SolveApp {
     }
 
     /// Is the origin widget shown? Origin planes and axes are drawn and pickable. While a dialog
-    /// picks a plane ([`SolveApp::picking_plane`]) the Origin is always shown, drawn through the
+    /// picks a plane ([`SketApp::picking_plane`]) the Origin is always shown, drawn through the
     /// model (a plane inside a body stays visible), even when the browser hides it — except the
-    /// origin planes for Project ([`SolveApp::picking_project_geometry`], #10778), which keep a
+    /// origin planes for Project ([`SketApp::picking_project_geometry`], #10778), which keep a
     /// hidden Origin hidden.
     pub fn origin_visible(&self) -> bool {
         self.origin_shown() || self.picking_plane()
@@ -2871,7 +2863,7 @@ impl SolveApp {
     pub fn fitted(&self, mut cam: Camera) -> Camera {
         let b = viewport::view_bounds(self);
         if b.is_empty() {
-            cam.target = solidcore_record::Vec3::ZERO;
+            cam.target = sketcore_record::Vec3::ZERO;
             cam.distance = 150.0;
         } else {
             cam = self.fitted_bounds(cam, &b);
@@ -2918,7 +2910,7 @@ impl SolveApp {
         let radius = (bounds.diagonal() * 0.5).max(0.5);
         // A cube around the sphere, seen square-on from any axis, projects to the sphere's own
         // square, so the layout fit of that cube is the sphere's.
-        let offset = solidcore_record::Vec3::new(radius, radius, radius);
+        let offset = sketcore_record::Vec3::new(radius, radius, radius);
         let sphere = sketcraft_engine::geom::Aabb3 { min: centre - offset, max: centre + offset };
         // Keep Classic's original probe; the opt-in host retains the authored lens and up axis.
         let mut probe = if self.universal_panel_host_enabled() { cam } else { Camera::default() };
@@ -3649,7 +3641,7 @@ impl SolveApp {
             // A file loading, a save being written, an agent's design change computing, or the
             // agent cursor acting one out: commands that change the design wait their turn (the
             // window, inspection and screenshots still answer, #1989). `engine.script` runs
-            // directly, past `SolveApp::run`'s guard, so without the save here it changed the
+            // directly, past `SketApp::run`'s guard, so without the save here it changed the
             // design the save was taken up for (#6003).
             let waits =
                 self.file_load.busy() || self.file_picker.is_some() || self.saving.is_some() || self.control_job.is_some() || self.agent.busy();

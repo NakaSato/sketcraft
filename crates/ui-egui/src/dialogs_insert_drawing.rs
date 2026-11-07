@@ -5,7 +5,7 @@
 use crate::ui_kit::BackingTooltipExt as _;
 use serde_json::{Value, json};
 
-use crate::SolveApp;
+use crate::SketApp;
 use crate::dialogs::{Dialog, Kind, form_row};
 
 /// Largest scale the insert commands take.
@@ -27,7 +27,7 @@ pub struct Place {
 }
 
 /// Open the placement for `path`, picked for `command` (`sketch.insert_svg` / `_dxf`).
-pub fn open(app: &mut SolveApp, command: &str, path: String) {
+pub fn open(app: &mut SketApp, command: &str, path: String) {
     let natural = app
         .session
         .execute("sketch.drawing_bounds", &json!({"path": path, "format": if command.ends_with("dxf") { "dxf" } else { "svg" }}))
@@ -105,7 +105,7 @@ mod tests {
         path.to_string_lossy().to_string()
     }
 
-    fn lines(h: &Harness) -> Vec<(solidcore_record::Vec2, solidcore_record::Vec2)> {
+    fn lines(h: &Harness) -> Vec<(sketcore_record::Vec2, sketcore_record::Vec2)> {
         let st = h.app.session.world_state().unwrap();
         let sk = &st.sketch(h.app.session.active_sketch.unwrap()).unwrap().sketch;
         (0..sk.curves.len())

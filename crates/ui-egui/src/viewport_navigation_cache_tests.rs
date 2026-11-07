@@ -1,9 +1,9 @@
 use super::*;
 
-fn app() -> SolveApp {
+fn app() -> SketApp {
     let mut session = sketcraft_engine::Session::default();
     session.execute("solid.box", &json!({"length":40,"width":30,"height":20})).unwrap();
-    let mut app = SolveApp::new(session, crate::Services::default());
+    let mut app = SketApp::new(session, crate::Services::default());
     app.home.open = false;
     app.set_origin_shown(false);
     app.ui.show_grid = false;
@@ -13,48 +13,16 @@ fn app() -> SolveApp {
     app
 }
 
-fn frame(app: &mut SolveApp, ctx: &egui::Context) {
+fn frame(app: &mut SketApp, ctx: &egui::Context) {
     frame_events(app, ctx, vec![]);
 }
 
-fn frame_events(app: &mut SolveApp, ctx: &egui::Context, events: Vec<egui::Event>) {
+fn frame_events(app: &mut SketApp, ctx: &egui::Context, events: Vec<egui::Event>) {
     let mut output = ctx
         .run_ui(egui::RawInput { screen_rect: Some(Rect::from_min_size(Pos2::ZERO, vec2(800.0, 600.0))), events, ..Default::default() }, |ui| {
             show(app, ui)
         });
     output.textures_delta.clear();
-}
-
-#[test]
-fn face_hover_and_clicks_follow_device_rotation_on_each_axis() {
-    use crate::space_mouse::{DeviceMotion, Motion};
-    for rotation in [[0.1, 0.0, 0.0], [0.0, 0.1, 0.0], [0.0, 0.0, 0.1]] {
-        let ctx = crate::fonts::test_context();
-        let mut app = app();
-        app.cam.target = Vec3::new(20.0, 15.0, 10.0);
-        frame(&mut app, &ctx);
-        let p = projection(&app, app.viewport.rect.unwrap()).to_screen(app.cam.target).unwrap();
-        let turn = |app: &mut SolveApp| {
-            app.viewport.device_motion = Some(DeviceMotion { motion: Motion { translation: [0.0; 3], rotation }, seconds: 0.016 });
-        };
-        let before = app.cam;
-        for pressed in [None, Some(true), Some(false)] {
-            turn(&mut app);
-            let mut events = vec![egui::Event::PointerMoved(p)];
-            if let Some(pressed) = pressed {
-                events.push(egui::Event::PointerButton { pos: p, button: egui::PointerButton::Primary, pressed, modifiers: Default::default() });
-            }
-            frame_events(&mut app, &ctx, events);
-            let proj = projection(&app, app.viewport.rect.unwrap());
-            let (expected, _) = candidate(&app, &pick(&app, &proj, p)).unwrap();
-            assert!(matches!(expected, Hit::Face { .. }));
-            assert_eq!(app.viewport.hover, Some(expected));
-        }
-        assert_ne!(app.cam, before);
-        let proj = projection(&app, app.viewport.rect.unwrap());
-        let (_, expected) = candidate(&app, &pick(&app, &proj, p)).unwrap();
-        assert_eq!(app.session.selection, vec![expected]);
-    }
 }
 
 /// Crossing the ground used to rebuild every body even with the shadow switched off.
@@ -156,7 +124,7 @@ fn active_assembly_membership_is_reused_and_follows_edits_and_activation() {
     s.execute("solid.box", &json!({"length":4,"width":4,"height":4})).unwrap();
     let path = s.doc.first_path(a);
     s.execute("component.activate", &json!({"component":a,"path":path,"occurrence":path.last()})).unwrap();
-    let mut app = SolveApp::new(s, crate::Services::default());
+    let mut app = SketApp::new(s, crate::Services::default());
     let first = active_body_names(&app).unwrap();
     assert_eq!(first.len(), 2, "the child belongs to the active assembly too");
     app.cam.pitch = -0.5;

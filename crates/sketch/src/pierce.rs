@@ -24,7 +24,7 @@
 //! - A point of the curve close enough to the plane counts as lying on it, so a curve that
 //!   touches the plane at its end pierces there.
 
-use solidcore_record::{Plane, Vec2, Vec3};
+use sketcore_record::{Plane, Vec2, Vec3};
 use sketcraft_geom::prelude::*;
 
 /// A point counts as lying on the plane when it is this close to it, as a fraction of how
@@ -105,7 +105,7 @@ fn tolerance(plane: &Plane, curve: &[Vec3]) -> f64 {
 #[cfg(test)]
 mod tests {
     use super::{pierce_point, pierce_point_world, pierce_points, pierce_points_world};
-    use solidcore_record::{Plane, Vec2, Vec3};
+    use sketcore_record::{Plane, Vec2, Vec3};
     use sketcraft_geom::prelude::*;
 
     fn v(x: f64, y: f64) -> Vec2 {

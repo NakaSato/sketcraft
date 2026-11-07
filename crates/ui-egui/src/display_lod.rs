@@ -19,7 +19,7 @@ use sketcraft_engine::geom::prelude::*;
 use std::collections::HashMap;
 use std::sync::Arc;
 
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 use sketcraft_engine::doc::ModelBody;
 use sketcraft_engine::doc::display_quality::{DisplayQuality, MAX_REFINE, refinement_for};
 use sketcraft_engine::geom::tess::TessPlan;

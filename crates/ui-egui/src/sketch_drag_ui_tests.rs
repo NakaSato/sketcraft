@@ -2,7 +2,7 @@
 //! brings the model up to date in the drag's one undo step, and the grab stays on the geometry.
 
 use serde_json::{Value, json};
-use solidcore_record::Vec2;
+use sketcore_record::Vec2;
 use sketcraft_engine::Sel;
 use sketcraft_engine::geom::prelude::*;
 

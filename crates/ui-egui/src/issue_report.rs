@@ -8,7 +8,7 @@ use std::sync::Arc;
 
 use egui::{ColorImage, TextureHandle};
 
-use crate::{SolveApp, dialogs, help};
+use crate::{SketApp, dialogs, help};
 
 mod form;
 
@@ -52,7 +52,7 @@ pub(crate) struct CadInput {
 }
 
 impl CadInput {
-    pub(crate) fn block(app: &SolveApp, ui: &mut egui::Ui, guard: &mut Option<Self>) {
+    pub(crate) fn block(app: &SketApp, ui: &mut egui::Ui, guard: &mut Option<Self>) {
         if guard.is_none() {
             *guard = Self::begin(app, ui.ctx());
         }
@@ -62,7 +62,7 @@ impl CadInput {
         }
     }
 
-    pub(crate) fn begin(app: &SolveApp, ctx: &egui::Context) -> Option<Self> {
+    pub(crate) fn begin(app: &SketApp, ctx: &egui::Context) -> Option<Self> {
         if app.issue_report.draft.is_none() && app.file_picker.is_none() {
             return None;
         }
@@ -334,7 +334,7 @@ impl std::fmt::Write for Fingerprint {
 }
 
 /// What a report's context is drawn from: the design, the dialog and the selection.
-fn context_signature(app: &SolveApp, dialog: Option<&dialogs::Dialog>) -> u64 {
+fn context_signature(app: &SketApp, dialog: Option<&dialogs::Dialog>) -> u64 {
     let mut h = Fingerprint(std::collections::hash_map::DefaultHasher::new());
     app.session.revision.hash(&mut h.0);
     app.docs.active.hash(&mut h.0);
@@ -350,7 +350,7 @@ fn context_signature(app: &SolveApp, dialog: Option<&dialogs::Dialog>) -> u64 {
 }
 
 /// [`context_signature`] and the preview shown with it.
-fn source_signature(app: &SolveApp, dialog: Option<&dialogs::Dialog>) -> u64 {
+fn source_signature(app: &SketApp, dialog: Option<&dialogs::Dialog>) -> u64 {
     let mut h = Fingerprint(std::collections::hash_map::DefaultHasher::new());
     context_signature(app, dialog).hash(&mut h.0);
     app.preview.key.hash(&mut h.0);
@@ -359,7 +359,7 @@ fn source_signature(app: &SolveApp, dialog: Option<&dialogs::Dialog>) -> u64 {
     h.0.finish()
 }
 
-fn signature(app: &SolveApp, dialog: Option<&dialogs::Dialog>) -> u64 {
+fn signature(app: &SketApp, dialog: Option<&dialogs::Dialog>) -> u64 {
     let mut h = Fingerprint(std::collections::hash_map::DefaultHasher::new());
     source_signature(app, dialog).hash(&mut h.0);
     let _ = write!(&mut h, "{:?}{:?}{:?}", app.cam, app.viewport.rect, app.ui.perspective);
@@ -435,7 +435,7 @@ fn messages_context(messages: &crate::messages::Messages, now: f64, home: Option
 }
 
 /// Every feature whose result has an error, in timeline order, not only the selected or latest one.
-fn failures_context(app: &SolveApp, home: Option<&str>) -> String {
+fn failures_context(app: &SketApp, home: Option<&str>) -> String {
     let mut failing = app.session.doc.features.iter().filter_map(|f| app.session.model.result(f.id)?.error.as_deref().map(|e| (f, e)));
     let mut out = String::new();
     let mut count = 0usize;
@@ -458,7 +458,7 @@ fn failures_context(app: &SolveApp, home: Option<&str>) -> String {
 }
 
 /// Read-only context excludes whole documents, sketch geometry and imported file contents.
-pub fn draft_for(app: &SolveApp, dialog: Option<&dialogs::Dialog>, error: Option<&str>) -> Draft {
+pub fn draft_for(app: &SketApp, dialog: Option<&dialogs::Dialog>, error: Option<&str>) -> Draft {
     let mut context = String::new();
     let label = dialog.map(dialogs::report_title).unwrap_or_else(|| crate::mouse_gesture::Studio::of(app).label().into());
     if let Some(d) = dialog {
@@ -597,7 +597,7 @@ pub fn crash_draft(report: &serde_json::Value) -> Draft {
 }
 
 /// Open a reviewed draft for a crash report (no screenshot: the view shows nothing of it).
-pub fn begin_crash(app: &mut SolveApp, ctx: &egui::Context, report: &serde_json::Value) {
+pub fn begin_crash(app: &mut SketApp, ctx: &egui::Context, report: &serde_json::Value) {
     if app.issue_report.draft.is_none() {
         app.issue_report.cad_focus = ctx.memory(|m| m.focused());
     }
@@ -647,7 +647,7 @@ pub fn draft_url(title: &str, body: &str) -> (String, bool) {
     (base, true)
 }
 
-pub fn begin(app: &mut SolveApp, ctx: &egui::Context, dialog: Option<&dialogs::Dialog>, error: Option<&str>) {
+pub fn begin(app: &mut SketApp, ctx: &egui::Context, dialog: Option<&dialogs::Dialog>, error: Option<&str>) {
     if app.issue_report.draft.is_none() {
         app.issue_report.cad_focus = ctx.memory(|m| m.focused());
     }
@@ -657,7 +657,7 @@ pub fn begin(app: &mut SolveApp, ctx: &egui::Context, dialog: Option<&dialogs::D
 }
 
 /// [`draft_for`] and the window it is shown in.
-fn window_draft(app: &SolveApp, ctx: &egui::Context, dialog: Option<&dialogs::Dialog>, error: Option<&str>) -> Draft {
+fn window_draft(app: &SketApp, ctx: &egui::Context, dialog: Option<&dialogs::Dialog>, error: Option<&str>) -> Draft {
     let mut draft = draft_for(app, dialog, error);
     let rect = ctx.content_rect();
     let _ = write!(
@@ -675,7 +675,7 @@ fn window_draft(app: &SolveApp, ctx: &egui::Context, dialog: Option<&dialogs::Di
 /// Retake: a draft whose design, dialog, selection or preview changed since it was made gets its
 /// technical details rebuilt for the current view first, and keeps what was typed (#7350). Edited
 /// details stay as edited; a crash draft's come from its crash report and stay too.
-fn retake(app: &mut SolveApp, ctx: &egui::Context, dialog: Option<&dialogs::Dialog>) {
+fn retake(app: &mut SketApp, ctx: &egui::Context, dialog: Option<&dialogs::Dialog>) {
     let current = source_signature(app, dialog);
     let Some(draft) = app.issue_report.draft.as_ref() else { return };
     let changed = draft.source_signature != current;
@@ -701,20 +701,20 @@ fn retake(app: &mut SolveApp, ctx: &egui::Context, dialog: Option<&dialogs::Dial
     capture(app, ctx, dialog);
 }
 
-fn cancel_capture(app: &mut SolveApp) {
+fn cancel_capture(app: &mut SketApp) {
     app.issue_report.waiting = None;
     if let Some(pending) = app.issue_report.pending.take() {
         app.queued_shots.retain(|(token, ..)| *token != pending.token);
     }
 }
 
-fn capture(app: &mut SolveApp, ctx: &egui::Context, dialog: Option<&dialogs::Dialog>) {
+fn capture(app: &mut SketApp, ctx: &egui::Context, dialog: Option<&dialogs::Dialog>) {
     capture_unless_busy(app, ctx, dialog, true);
 }
 
 /// Take a screenshot for the report; `wait`: while the preview is being computed, wait for it
 /// with the report open ([`tick`] takes it once it is done, #7171).
-fn capture_unless_busy(app: &mut SolveApp, ctx: &egui::Context, dialog: Option<&dialogs::Dialog>, wait: bool) {
+fn capture_unless_busy(app: &mut SketApp, ctx: &egui::Context, dialog: Option<&dialogs::Dialog>, wait: bool) {
     cancel_capture(app);
     let current_source = source_signature(app, dialog);
     let context = context_signature(app, dialog);
@@ -778,14 +778,14 @@ fn capture_unless_busy(app: &mut SolveApp, ctx: &egui::Context, dialog: Option<&
     ctx.request_repaint();
 }
 
-pub(crate) fn pending(app: &SolveApp) -> bool {
+pub(crate) fn pending(app: &SketApp) -> bool {
     app.issue_report.pending.is_some()
 }
 
 /// While a capture hides the report, what is typed waits for the form to come back, which gets
 /// its focused field back: a screenshot taken once the preview is done can hide the form while
 /// its user types (#7171).
-pub(crate) fn hold_input(app: &mut SolveApp, raw: &mut egui::RawInput) {
+pub(crate) fn hold_input(app: &mut SketApp, raw: &mut egui::RawInput) {
     let state = &mut app.issue_report;
     if state.draft.is_none() {
         state.held.clear();
@@ -816,7 +816,7 @@ pub(crate) fn typing(event: &egui::Event) -> bool {
     )
 }
 
-pub(crate) fn tick(app: &mut SolveApp, ctx: &egui::Context) {
+pub(crate) fn tick(app: &mut SketApp, ctx: &egui::Context) {
     if let Some(waiting) = &app.issue_report.waiting {
         let settled = !app.preview.busy && app.queued_shots.len() < 16;
         let (late, context) = (crate::now_ms() >= waiting.deadline, waiting.context);
@@ -867,7 +867,7 @@ pub(crate) fn tick(app: &mut SolveApp, ctx: &egui::Context) {
     }
 }
 
-pub(crate) fn receive(app: &mut SolveApp, token: u64, image: Arc<ColorImage>) {
+pub(crate) fn receive(app: &mut SketApp, token: u64, image: Arc<ColorImage>) {
     let Some(max_side) = app.issue_report.pending.as_ref().filter(|p| p.token == token).map(|p| p.max_side) else {
         return;
     };
@@ -931,7 +931,7 @@ fn fitted(image: Arc<ColorImage>, max: usize, max_side: usize) -> Option<Arc<Col
 }
 
 /// The report card is hidden only while a frame is captured, so it cannot cover the evidence.
-pub fn show(app: &mut SolveApp, ctx: &egui::Context) {
+pub fn show(app: &mut SketApp, ctx: &egui::Context) {
     if pending(app) {
         return;
     }
@@ -976,11 +976,11 @@ mod tests {
     use serde_json::json;
     use sketcraft_engine::{Sel, Session};
 
-    fn app() -> SolveApp {
-        SolveApp::new(Session::default(), Default::default())
+    fn app() -> SketApp {
+        SketApp::new(Session::default(), Default::default())
     }
 
-    fn combine(app: &mut SolveApp) {
+    fn combine(app: &mut SketApp) {
         app.start("solid.combine");
         let dialog = app.dialog.as_mut().unwrap();
         dialog.kind = dialogs::Kind::Combine { operation: 2, keep_tools: true };
@@ -1389,11 +1389,11 @@ mod tests {
     }
 
     /// The sample with Fillet1 failing (the plate made narrower than its fillets).
-    fn failing_sample() -> SolveApp {
+    fn failing_sample() -> SketApp {
         let mut s = Session::default();
         s.run_script(&sketcraft_engine::sample::script()).unwrap();
         s.execute("parameters.change", &json!({"name": "width", "expression": "5 mm"})).unwrap();
-        SolveApp::new(s, Default::default())
+        SketApp::new(s, Default::default())
     }
 
     #[test]
@@ -1891,7 +1891,7 @@ mod tests {
         h.app.run("sketch.line", json!({"points":[[0,0],[20,0]]})).unwrap();
         h.call("ui.view", json!({"view":"top"}));
         h.app.cam.distance = 80.0;
-        h.app.cam.target = solidcore_record::Vec3::new(10.0, 0.0, 0.0);
+        h.app.cam.target = sketcore_record::Vec3::new(10.0, 0.0, 0.0);
         h.settle();
         h.step(&json!({"start":"sketch.dimension"})).unwrap();
         for point in [[0, 0, 0], [20, 0, 0], [10, 5, 0]] {
@@ -2194,7 +2194,7 @@ mod tests {
         begin(&mut app, &ctx, None, None);
         let token = app.issue_report.pending.as_ref().unwrap().token;
         receive(&mut app, token, green(4, 3));
-        let kept = |app: &SolveApp| app.issue_report.draft.as_ref().unwrap().image.as_ref().map(|i| i.size);
+        let kept = |app: &SketApp| app.issue_report.draft.as_ref().unwrap().image.as_ref().map(|i| i.size);
         // Waits for the preview, then is refused: the selection changed meanwhile.
         app.preview.busy = true;
         retake(&mut app, &ctx, None);

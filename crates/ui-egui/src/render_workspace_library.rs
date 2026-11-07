@@ -7,9 +7,9 @@ mod surface_import;
 
 use super::{ImageMethod, materials, setups};
 use crate::ui_kit::BackingTooltipExt as _;
-use crate::{SolveApp, theme::Tokens, ui_kit};
+use crate::{SketApp, theme::Tokens, ui_kit};
 use serde_json::{Value, json};
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 use sketcraft_engine::doc::Document;
 use std::{
     collections::BTreeMap,
@@ -74,7 +74,7 @@ struct SourcePreview {
 }
 
 #[cfg(test)]
-pub(super) fn clear_preview_texture(app: &mut SolveApp) {
+pub(super) fn clear_preview_texture(app: &mut SketApp) {
     app.render_workspace.view.library.preview = None;
 }
 impl std::fmt::Debug for SourcePreview {
@@ -128,7 +128,7 @@ impl Default for View {
     }
 }
 
-fn refresh(app: &mut SolveApp, view: &mut View) -> Result<(), String> {
+fn refresh(app: &mut SketApp, view: &mut View) -> Result<(), String> {
     if matches!(view.collection, 1 | 2) {
         let keys: Vec<_> = if view.collection == 1 {
             app.preferences.render_library_favorites.iter().take(256).cloned().collect()
@@ -199,13 +199,13 @@ fn refresh(app: &mut SolveApp, view: &mut View) -> Result<(), String> {
     // Search/page changes preserve the independently inspected resource.
     Ok(())
 }
-fn current_target(app: &SolveApp, view: &View) -> bool {
+fn current_target(app: &SketApp, view: &View) -> bool {
     view.target.is_some()
         && view.target_revision == Some(app.session.revision)
         && view.target_document.as_ref().is_some_and(|d| Weak::ptr_eq(d, &Arc::downgrade(&app.session.doc)))
         && !app.session.model.is_stale()
 }
-fn refresh_targets(app: &mut SolveApp, view: &mut View) -> Result<(), String> {
+fn refresh_targets(app: &mut SketApp, view: &mut View) -> Result<(), String> {
     let reply = app.run("render.library.targets", json!({"query":view.target_query,"limit":128}))?;
     view.targets = serde_json::from_value(reply["items"].clone()).map_err(|e| e.to_string())?;
     view.target = None;
@@ -224,7 +224,7 @@ fn refresh_targets(app: &mut SolveApp, view: &mut View) -> Result<(), String> {
     }
     Ok(())
 }
-fn target_controls(app: &mut SolveApp, ui: &mut egui::Ui, view: &mut View) {
+fn target_controls(app: &mut SketApp, ui: &mut egui::Ui, view: &mut View) {
     ui.label(app.tr("render.library_target"));
     ui_kit::bounded_cell_editor(
         ui,
@@ -256,7 +256,7 @@ fn target_controls(app: &mut SolveApp, ui: &mut egui::Ui, view: &mut View) {
         ui_kit::text(ui, app.tr("render.material_revalidate_needed"), ui_kit::Text::Note("render.material_revalidate_needed"));
     }
 }
-fn patch(app: &SolveApp) -> Result<Value, String> {
+fn patch(app: &SketApp) -> Result<Value, String> {
     serde_json::to_value(setups::snapshot(app)?).map_err(|e| e.to_string())
 }
 
@@ -312,7 +312,7 @@ fn switch_kind(view: &mut View, kind: &str) {
     view.preview = None;
     view.preview_error = None;
 }
-pub(super) fn open_category(app: &mut SolveApp, kind: &str) {
+pub(super) fn open_category(app: &mut SketApp, kind: &str) {
     // Explicit catalog browsing retains read-only Inspector workflows on the library stage.
     let stage = match kind {
         "native_scenes" | "rigs" | "hdr" | "scenes" | "selene_shots" | "lighting" | "environments" => "light",
@@ -335,7 +335,7 @@ pub(super) fn open_category(app: &mut SolveApp, kind: &str) {
     let _ = app.run("view.render_browser", json!({"open":true}));
     app.preferences.browser_collapsed = false;
 }
-pub(super) fn choose(app: &mut SolveApp, view: &mut View, kind: &str, id: &str) -> Result<(), String> {
+pub(super) fn choose(app: &mut SketApp, view: &mut View, kind: &str, id: &str) -> Result<(), String> {
     switch_kind(view, kind);
     let detail = describe(app, kind, id)?;
     let display = detail["resource"]["name"].as_str().or_else(|| detail["resource"]["designation"].as_str()).unwrap_or(id).to_string();
@@ -358,7 +358,7 @@ pub(super) fn choose(app: &mut SolveApp, view: &mut View, kind: &str, id: &str) 
     Ok(())
 }
 
-fn choose_in_stage(app: &mut SolveApp, view: &mut View, kind: &str, id: &str) -> Result<(), String> {
+fn choose_in_stage(app: &mut SketApp, view: &mut View, kind: &str, id: &str) -> Result<(), String> {
     // A stage scope can combine several catalog kinds. Inspecting a tile keeps
     // that scope's search and category, rather than navigating to another catalog.
     let query = view.query.clone();
@@ -378,7 +378,7 @@ fn look_signature(entry: &Value) -> Value {
 pub(super) fn appearance_id(entry: &Value) -> String {
     entry["id"].as_str().map(str::to_owned).unwrap_or_else(|| look_signature(entry).to_string())
 }
-fn describe(app: &mut SolveApp, kind: &str, id: &str) -> Result<Value, String> {
+fn describe(app: &mut SketApp, kind: &str, id: &str) -> Result<Value, String> {
     if kind != "appearances" {
         return app.run("render.library.describe", json!({"kind":kind,"id":id}));
     }
@@ -482,7 +482,7 @@ fn matches_entry(entry: &Value, query: &str, category: &str, availability: &str)
             .any(|field| field.to_string().to_lowercase().contains(&query))
 }
 
-pub(super) fn card(app: &mut SolveApp, ui: &mut egui::Ui, bounds: egui::Rect) {
+pub(super) fn card(app: &mut SketApp, ui: &mut egui::Ui, bounds: egui::Rect) {
     let mut side = app.preferences.render_browser_side.clone();
     let mut width = app.preferences.render_browser_width;
     let stage = app.render_workspace.view.stage;
@@ -585,7 +585,7 @@ fn stage_title(stage: super::Stage) -> &'static str {
     }
 }
 
-fn restore_view(app: &mut SolveApp, mut view: View) {
+fn restore_view(app: &mut SketApp, mut view: View) {
     if let Some(review) = app.render_workspace.view.library.review.take() {
         view.review = Some(review);
     }
@@ -603,7 +603,7 @@ const LIGHT_SCOPES: &[(&str, &str)] = &[
     ("mine", "render.stage_panels.mine"),
 ];
 
-fn light_panel(app: &mut SolveApp, ui: &mut egui::Ui) {
+fn light_panel(app: &mut SketApp, ui: &mut egui::Ui) {
     let mut view = std::mem::take(&mut app.render_workspace.view.library);
     let previous = view.light_scope;
     let labels: Vec<_> = LIGHT_SCOPES.iter().map(|(_, key)| app.tr(key)).collect();
@@ -685,7 +685,7 @@ fn light_panel(app: &mut SolveApp, ui: &mut egui::Ui) {
     restore_view(app, view);
 }
 
-fn catalog_search(app: &mut SolveApp, ui: &mut egui::Ui, view: &mut View, hint: &str) {
+fn catalog_search(app: &mut SketApp, ui: &mut egui::Ui, view: &mut View, hint: &str) {
     let search = ui_kit::search_field(ui, ui.scope_id().with("render_stage_catalog_search"), &mut view.query, app.tr(hint));
     crate::scenario::publish_target("render:library-search", search.rect);
     let end = view.query.char_indices().nth(128).map_or(view.query.len(), |(at, _)| at);
@@ -703,7 +703,7 @@ fn catalog_search(app: &mut SolveApp, ui: &mut egui::Ui, view: &mut View, hint: 
         app.set_status(error, true);
     }
 }
-fn catalog_pages(app: &SolveApp, ui: &mut egui::Ui, view: &mut View) {
+fn catalog_pages(app: &SketApp, ui: &mut egui::Ui, view: &mut View) {
     if view.offset > 0 || view.next.is_some() {
         ui.horizontal(|ui| {
             if ui_kit::button(ui, app.tr("render.library_previous"), ui_kit::Button::Enabled(view.offset > 0)).clicked() {
@@ -717,7 +717,7 @@ fn catalog_pages(app: &SolveApp, ui: &mut egui::Ui, view: &mut View) {
         });
     }
 }
-fn surface_panel(app: &mut SolveApp, ui: &mut egui::Ui) {
+fn surface_panel(app: &mut SketApp, ui: &mut egui::Ui) {
     let mut view = std::mem::take(&mut app.render_workspace.view.library);
     let mut scope = usize::from(view.kind == "physical_profiles");
     if ui_kit::segmented(
@@ -781,7 +781,7 @@ fn surface_panel(app: &mut SolveApp, ui: &mut egui::Ui) {
     });
     restore_view(app, view);
 }
-fn light_reason(app: &SolveApp, _kind: &str) -> Option<String> {
+fn light_reason(app: &SketApp, _kind: &str) -> Option<String> {
     if app.render_workspace.view.method == ImageMethod::Raster {
         return Some(app.tr("render.environment_tiles_require_raytrace").into());
     }
@@ -789,7 +789,7 @@ fn light_reason(app: &SolveApp, _kind: &str) -> Option<String> {
 }
 
 /// Catalogue availability only; the typed engine projection remains authoritative.
-fn selected_light_reason(app: &SolveApp, view: &View) -> Option<String> {
+fn selected_light_reason(app: &SketApp, view: &View) -> Option<String> {
     if let Some(reason) = light_reason(app, &view.kind) {
         return Some(reason);
     }
@@ -814,7 +814,7 @@ fn selected_light_reason(app: &SolveApp, view: &View) -> Option<String> {
 
 /// The button uses the same portable numerical validator as saving. Stable
 /// identities distinguish an unrelated optical body from this map target.
-fn cpu_maps_supported(app: &SolveApp, view: &View) -> bool {
+fn cpu_maps_supported(app: &SketApp, view: &View) -> bool {
     let Some(target) = view.target.as_ref().and_then(|target| target.stable_target.as_ref()) else { return false };
     let Ok(setup) = setups::snapshot(app) else { return false };
     let Some(sketcraft_engine::doc::render_settings::RenderJob::CpuRaytrace { options, .. }) = &setup.job else { return false };
@@ -823,7 +823,7 @@ fn cpu_maps_supported(app: &SolveApp, view: &View) -> bool {
         && options.validate_surface_maps(setup.exposure_ev).is_ok()
 }
 
-fn surface_controls(app: &mut SolveApp, ui: &mut egui::Ui, view: &mut View, id: &str) {
+fn surface_controls(app: &mut SketApp, ui: &mut egui::Ui, view: &mut View, id: &str) {
     let picked = app.session.selection.iter().find_map(|selection| match selection {
         sketcraft_engine::Sel::Body { name } | sketcraft_engine::Sel::Face { body: name, .. } => Some(name.clone()),
         _ => None,
@@ -956,7 +956,7 @@ fn surface_controls(app: &mut SolveApp, ui: &mut egui::Ui, view: &mut View, id: 
     }
 }
 
-fn selected_looks(app: &mut SolveApp) -> Vec<Value> {
+fn selected_looks(app: &mut SketApp) -> Vec<Value> {
     use sketcraft_engine::Sel;
     let targets: Vec<_> = app
         .session
@@ -1005,7 +1005,7 @@ fn applicable(entry: &Value, selected: &[Value], used: &[Value]) -> bool {
         })
 }
 
-fn browse_contents(app: &mut SolveApp, ui: &mut egui::Ui, stage_card: bool) {
+fn browse_contents(app: &mut SketApp, ui: &mut egui::Ui, stage_card: bool) {
     let mut view = std::mem::take(&mut app.render_workspace.view.library);
     let document_changed =
         view.revision != Some(app.session.revision) || view.document.as_ref().is_none_or(|doc| !Weak::ptr_eq(doc, &Arc::downgrade(&app.session.doc)));
@@ -1318,12 +1318,12 @@ fn browse_contents(app: &mut SolveApp, ui: &mut egui::Ui, stage_card: bool) {
     restore_view(app, view);
 }
 
-pub(super) fn selected_kind(app: &SolveApp, kind: &str) -> bool {
+pub(super) fn selected_kind(app: &SketApp, kind: &str) -> bool {
     let view = &app.render_workspace.view.library;
     view.kind == kind && view.selected.is_some()
 }
 
-pub(super) fn inspect_kinds(app: &mut SolveApp, ui: &mut egui::Ui, kinds: &[&str]) {
+pub(super) fn inspect_kinds(app: &mut SketApp, ui: &mut egui::Ui, kinds: &[&str]) {
     if kinds.contains(&app.render_workspace.view.library.kind.as_str())
         || (kinds.contains(&"surfaces") && app.render_workspace.view.library.kind == "appearances")
     {
@@ -1334,7 +1334,7 @@ pub(super) fn inspect_kinds(app: &mut SolveApp, ui: &mut egui::Ui, kinds: &[&str
 }
 
 /// Interactive command activation can review the specification selected by S5.
-pub(super) fn review_selected_quality(app: &mut SolveApp) -> Result<(), String> {
+pub(super) fn review_selected_quality(app: &mut SketApp) -> Result<(), String> {
     let id = app.render_workspace.view.library.selected.clone().filter(|_| app.render_workspace.view.library.kind == "quality");
     if let Some(id) = id {
         super::review_resource(app, "render.quality.prepare", &id)?;
@@ -1342,11 +1342,11 @@ pub(super) fn review_selected_quality(app: &mut SolveApp) -> Result<(), String> 
     Ok(())
 }
 
-pub(super) fn review_open(app: &SolveApp) -> bool {
+pub(super) fn review_open(app: &SketApp) -> bool {
     let view = &app.render_workspace.view.library;
     view.review.is_some() || view.removal.is_some()
 }
-pub(super) fn inspect(app: &mut SolveApp, ui: &mut egui::Ui) {
+pub(super) fn inspect(app: &mut SketApp, ui: &mut egui::Ui) {
     let mut view = std::mem::take(&mut app.render_workspace.view.library);
     if let Some(id) = view.selected.clone() {
         ui.strong(view.details.as_ref().and_then(|d| d["resource"]["name"].as_str()).unwrap_or(&id));
@@ -1416,7 +1416,7 @@ pub(super) fn inspect(app: &mut SolveApp, ui: &mut egui::Ui) {
     }
     restore_view(app, view);
 }
-fn source_preview(app: &mut SolveApp, ui: &mut egui::Ui, view: &mut View, id: &str) {
+fn source_preview(app: &mut SketApp, ui: &mut egui::Ui, view: &mut View, id: &str) {
     if view.preview.as_ref().is_none_or(|preview| preview.id != id) && view.preview_error.is_none() {
         let result = (|| -> Result<SourcePreview, String> {
             let reply = app.run("render.library.preview", json!({"id":id}))?;
@@ -1452,7 +1452,7 @@ fn source_preview(app: &mut SolveApp, ui: &mut egui::Ui, view: &mut View, id: &s
     }
 }
 #[cfg(test)]
-pub(super) fn controls(app: &mut SolveApp, ui: &mut egui::Ui) {
+pub(super) fn controls(app: &mut SketApp, ui: &mut egui::Ui) {
     stage_controls(app, ui);
     saved_surface_controls(app, ui);
     let title = app.tr("render.library_title").to_string();
@@ -1462,7 +1462,7 @@ pub(super) fn controls(app: &mut SolveApp, ui: &mut egui::Ui) {
     });
 }
 
-fn resource_controls(app: &mut SolveApp, ui: &mut egui::Ui, view: &mut View, id: &str) {
+fn resource_controls(app: &mut SketApp, ui: &mut egui::Ui, view: &mut View, id: &str) {
     let Some(detail) = view.details.clone() else { return };
     let source = &detail["resource"];
     if let Some(description) = source["description"].as_str().or_else(|| source["purpose"].as_str()) {
@@ -1554,13 +1554,13 @@ fn resource_controls(app: &mut SolveApp, ui: &mut egui::Ui, view: &mut View, id:
 }
 
 #[cfg(test)]
-pub(super) fn saved_surface_controls(app: &mut SolveApp, ui: &mut egui::Ui) {
+pub(super) fn saved_surface_controls(app: &mut SketApp, ui: &mut egui::Ui) {
     let title = app.tr("render.saved_surfaces").to_string();
     ui_kit::section(ui, "render_saved_surfaces", &title, false, |ui| saved_surface_content(app, ui, None));
 }
 
 pub(super) fn saved_surface_target_controls(
-    app: &mut SolveApp,
+    app: &mut SketApp,
     ui: &mut egui::Ui,
     target: Option<&sketcraft_engine::doc::render_surface::RenderBodyTarget>,
 ) {
@@ -1569,7 +1569,7 @@ pub(super) fn saved_surface_target_controls(
     }
 }
 
-fn saved_surface_content(app: &mut SolveApp, ui: &mut egui::Ui, target: Option<&sketcraft_engine::doc::render_surface::RenderBodyTarget>) {
+fn saved_surface_content(app: &mut SketApp, ui: &mut egui::Ui, target: Option<&sketcraft_engine::doc::render_surface::RenderBodyTarget>) {
     let bindings = app.render_workspace.view.draft.surfaces.clone();
     if !bindings.iter().any(|b| target.is_none_or(|t| t == &b.target)) {
         return;
@@ -1604,12 +1604,12 @@ fn saved_surface_content(app: &mut SolveApp, ui: &mut egui::Ui, target: Option<&
 }
 
 #[cfg(test)]
-pub(super) fn stage_controls(app: &mut SolveApp, ui: &mut egui::Ui) {
+pub(super) fn stage_controls(app: &mut SketApp, ui: &mut egui::Ui) {
     let title = app.tr("render.passive_stage").to_string();
     ui_kit::section(ui, "render_passive_stage", &title, false, |ui| stage_content(app, ui));
 }
 #[cfg(test)]
-pub(super) fn stage_content(app: &mut SolveApp, ui: &mut egui::Ui) {
+pub(super) fn stage_content(app: &mut SketApp, ui: &mut egui::Ui) {
     ui_kit::text(ui, app.tr("render.passive_stage_help"), ui_kit::Text::Note("render.passive_stage_help"));
     let stage = &app.render_workspace.view.draft.stage;
     ui.label(format!("{}: {}", app.tr("render.stage_panel_count"), stage.len()));
@@ -1637,7 +1637,7 @@ pub(super) fn stage_content(app: &mut SolveApp, ui: &mut egui::Ui) {
     }
 }
 
-fn physical_controls(app: &mut SolveApp, ui: &mut egui::Ui, view: &mut View, id: &str, detail: &Value) {
+fn physical_controls(app: &mut SketApp, ui: &mut egui::Ui, view: &mut View, id: &str, detail: &Value) {
     ui_kit::text(ui, app.tr("render.physical_separate"), ui_kit::Text::Note("render.physical_separate"));
     let resource = &detail["resource"];
     ui.strong(resource["designation"].as_str().unwrap_or(id));
@@ -1689,7 +1689,7 @@ fn physical_controls(app: &mut SolveApp, ui: &mut egui::Ui, view: &mut View, id:
     }
 }
 
-fn short_availability<'a>(app: &'a SolveApp, status: Option<&str>) -> &'a str {
+fn short_availability<'a>(app: &'a SketApp, status: Option<&str>) -> &'a str {
     app.tr(match status {
         Some("native_appearance") => "render.library_appearance_available",
         Some("native_composition") => "render.library_short_native",
@@ -1700,7 +1700,7 @@ fn short_availability<'a>(app: &'a SolveApp, status: Option<&str>) -> &'a str {
     })
 }
 
-fn tile_badge<'a>(app: &'a SolveApp, entry: &Value) -> &'a str {
+fn tile_badge<'a>(app: &'a SketApp, entry: &Value) -> &'a str {
     app.tr(match entry.pointer("/projection/status").and_then(Value::as_str) {
         Some("native_appearance" | "native_composition") => "render.stage_panels.badge_native",
         Some("implemented_pending_batch_validation") => "render.stage_panels.badge_projection",
@@ -1711,7 +1711,7 @@ fn tile_badge<'a>(app: &'a SolveApp, entry: &Value) -> &'a str {
     })
 }
 
-fn availability_label<'a>(app: &'a SolveApp, status: Option<&str>) -> &'a str {
+fn availability_label<'a>(app: &'a SketApp, status: Option<&str>) -> &'a str {
     app.tr(match status {
         Some("native_appearance") => "render.library_appearance_available",
         Some("native_composition") => "render.availability_native",
@@ -1723,21 +1723,21 @@ fn availability_label<'a>(app: &'a SolveApp, status: Option<&str>) -> &'a str {
 }
 
 /// Focus the existing library card from the viewport Appearance menu.
-pub(super) fn focus_library(app: &mut SolveApp) {
+pub(super) fn focus_library(app: &mut SketApp) {
     let view = &mut app.render_workspace.view.library;
     view.collection = 0;
     switch_kind(view, "appearances");
 }
 
-pub(super) fn invalidate(app: &mut SolveApp) {
+pub(super) fn invalidate(app: &mut SketApp) {
     app.render_workspace.view.library.loaded = false;
 }
 
-pub(super) fn poll_import(app: &mut SolveApp, ctx: &egui::Context) {
+pub(super) fn poll_import(app: &mut SketApp, ctx: &egui::Context) {
     surface_import::poll(app, ctx);
 }
 
-pub(super) fn reveal_import(app: &mut SolveApp) {
+pub(super) fn reveal_import(app: &mut SketApp) {
     app.render_workspace.view.library.imported.reveal = true;
 }
 
@@ -1973,7 +1973,7 @@ mod studio_browser_tests {
         h.app.run("select.set", json!({"items":[sketcraft_engine::Sel::Body{name:"Sample".into()}]})).unwrap();
         let camera = sketcraft_engine::render::Camera {
             distance: 73.0,
-            target: solidcore_record::Vec3::new(10.0, 7.5, 5.0),
+            target: sketcore_record::Vec3::new(10.0, 7.5, 5.0),
             yaw: 0.3,
             pitch: -0.2,
             ..Default::default()
@@ -2232,7 +2232,7 @@ mod studio_browser_tests {
             h.app.session.set_render_job_host(Some(host.clone())).unwrap();
             h.app.run("solid.box", json!({"length":20,"width":15,"height":10,"body_name":"Sample"})).unwrap();
             let saved_camera =
-                sketcraft_engine::render::Camera { distance: 60.0, target: solidcore_record::Vec3::new(10.0, 7.5, 5.0), ..Default::default() };
+                sketcraft_engine::render::Camera { distance: 60.0, target: sketcore_record::Vec3::new(10.0, 7.5, 5.0), ..Default::default() };
             h.app.run("render.settings.set",json!({"name":"Studio","set":{"width":8,"height":8,"camera":saved_camera,"job":{"method":"cpu_raytrace","options":{"progressive":{"samples_per_pixel":2,"seed":47},"area_samples":4,"seed":731,"output":{"linear_exr":true}}}}})).unwrap();
             super::super::enter(&mut h.app, true).unwrap();
             h.app.render_workspace.view.live_paused = true;

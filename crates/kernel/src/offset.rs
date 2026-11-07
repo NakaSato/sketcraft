@@ -3,8 +3,8 @@
 //! Moving faces along their normals (offset faces, shell, draft) is SMLib's
 //! (`crate::offset_backend`).
 
-use solidcore_record::Vec3;
-use solidcore_record::brep::{Brep, Frame, Loop, Surface};
+use sketcore_record::Vec3;
+use sketcore_record::brep::{Brep, Frame, Loop, Surface};
 use sketcraft_geom::prelude::*;
 
 use crate::body::Body;

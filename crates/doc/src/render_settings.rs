@@ -3,7 +3,7 @@
 use std::collections::BTreeMap;
 
 use serde::{Deserialize, Serialize};
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 use sketcraft_render::{BackendId, Camera, RenderFormat, RenderLimits, RenderMode, UpAxis};
 
 pub use crate::render_job::{CpuJob, GpuJob, RenderJob, SkyEnvironment};

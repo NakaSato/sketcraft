@@ -9,7 +9,7 @@
 //! curvature in the line's direction times the surface normal, `κₙ n` with
 //! `κₙ = n · S_tt / |S_t|²` (the second fundamental form over the first, in that direction).
 
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 use sketcraft_geom::brep::eval::{CurveEval, SurfaceEval};
 use sketcraft_geom::prelude::*;
 

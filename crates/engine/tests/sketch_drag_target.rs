@@ -3,7 +3,7 @@
 mod four_bar;
 
 use serde_json::json;
-use solidcore_record::Vec2;
+use sketcore_record::Vec2;
 use sketcraft_geom::prelude::*;
 
 #[test]

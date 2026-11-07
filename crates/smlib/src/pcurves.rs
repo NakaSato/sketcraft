@@ -7,7 +7,7 @@
 use sketcraft_geom::prelude::*;
 use std::collections::HashSet;
 
-use solidcore_record::brep::{self as b, Curve2, EdgeUseRef, Loop, OrientedEdge, OrientedFace, Region, Shell, Vertex};
+use sketcore_record::brep::{self as b, Curve2, EdgeUseRef, Loop, OrientedEdge, OrientedFace, Region, Shell, Vertex};
 use sketcraft_geom::brep::pcurve::{SURFACE_GAP_MARGIN, TrimFace, Trims};
 
 /// [`Trims`] by SMLib.

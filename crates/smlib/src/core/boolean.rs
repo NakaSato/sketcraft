@@ -1,4 +1,4 @@
-//! Booleans on solidcore: the C API's own logic round `SM_API`, ported from the fork's
+//! Booleans on sketcore: the C API's own logic round `SM_API`, ported from the fork's
 //! `capi/src/smlib_ops.cpp` (`smlib_boolean_with`, `smlib_boolean2d`,
 //! `smlib_boolean_union_all`, `finish`, `closed_nonmanifold`) and
 //! `capi/src/smlib_imprint.cpp` (`smlib_imprint`).
@@ -8,16 +8,16 @@
 
 use std::sync::PoisonError;
 
-use solidcore::Result as SolidResult;
-use solidcore::SolidError;
-use solidcore::boolean::api_brep::{self as sm, Boolean2dOutcome};
-use solidcore::boolean::merge::MergeOptions;
-use solidcore::geom::a_object::BooleanOperation;
-use solidcore::kernel::Kernel;
-use solidcore::primitive::primitive_creation::p1::Boolean2d;
-use solidcore::topology::brep::p3::brep_copy;
-use solidcore::topology::brep::{p1, p2};
-use solidcore::topology::{Brep, edge};
+use sketcore::Result as SolidResult;
+use sketcore::SolidError;
+use sketcore::boolean::api_brep::{self as sm, Boolean2dOutcome};
+use sketcore::boolean::merge::MergeOptions;
+use sketcore::geom::a_object::BooleanOperation;
+use sketcore::kernel::Kernel;
+use sketcore::primitive::primitive_creation::p1::Boolean2d;
+use sketcore::topology::brep::p3::brep_copy;
+use sketcore::topology::brep::{p1, p2};
+use sketcore::topology::{Brep, edge};
 
 use super::{Body, run_on};
 use crate::{BooleanOp, Error, Result};

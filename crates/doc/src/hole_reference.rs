@@ -3,7 +3,7 @@
 //! measured in the face's plane. The edges are found again by their persistent names, else by
 //! their stored points, so the hole follows them when the part changes.
 
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 use sketcraft_geom::Mesh;
 use sketcraft_geom::prelude::*;
 

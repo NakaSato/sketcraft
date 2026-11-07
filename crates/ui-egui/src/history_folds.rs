@@ -12,7 +12,7 @@ use std::collections::BTreeSet;
 
 use serde_json::{Value, json};
 
-use crate::SolveApp;
+use crate::SketApp;
 
 /// Designs whose choices are remembered between runs; the least recently used is forgotten first.
 const DESIGNS_MAX: usize = 256;
@@ -88,45 +88,45 @@ impl Remembered {
 }
 
 /// Whether `key` shows open in the active design: as last chosen there, else `unless_chosen`.
-pub(crate) fn is_open(app: &SolveApp, key: &str, unless_chosen: bool) -> bool {
+pub(crate) fn is_open(app: &SketApp, key: &str, unless_chosen: bool) -> bool {
     app.tree.history_folds.get(key).or_else(|| legacy_folded(app, key).then_some(false)).unwrap_or(unless_chosen)
 }
 
 /// Whether `key` is a folder folded while the History kept its folders' folds for all designs at
 /// once, with the browser's folded folders (which keep it for every design, as then).
-fn legacy_folded(app: &SolveApp, key: &str) -> bool {
+fn legacy_folded(app: &SketApp, key: &str) -> bool {
     key.starts_with(crate::timeline_folders::KEY) && app.tree.collapsed.contains(key)
 }
 
 /// Open or fold `key` in the active design, remembered for its file when it has one.
-pub(crate) fn set_open(app: &mut SolveApp, key: &str, open: bool) {
+pub(crate) fn set_open(app: &mut SketApp, key: &str, open: bool) {
     app.tree.history_folds.set(key, open);
     remember(app);
 }
 
 /// Remember the active design's choices for its file: as they change, and after a save gave it
 /// a file (or another one).
-pub(crate) fn remember(app: &mut SolveApp) {
+pub(crate) fn remember(app: &mut SketApp) {
     if let Some(path) = app.session.path.as_deref() {
         app.tree.history_remembered.put(path, &app.tree.history_folds);
     }
 }
 
 /// Take up the choices remembered for the design just put in the active tab: its file's, or none.
-pub(crate) fn load(app: &mut SolveApp) {
+pub(crate) fn load(app: &mut SketApp) {
     app.tree.history_folds = app.session.path.as_deref().and_then(|p| app.tree.history_remembered.get(p)).cloned().unwrap_or_default();
     remember(app);
 }
 
 /// The remembered choices, for the preferences.
-pub(crate) fn prefs(app: &SolveApp) -> Value {
+pub(crate) fn prefs(app: &SketApp) -> Value {
     app.tree.history_remembered.0.iter().map(|(path, folds)| json!({"path": path, "open": folds.open, "folded": folds.folded})).collect()
 }
 
 /// Restore the choices saved with [`prefs`] (`v`: the preferences), and drop the History's keys
 /// from the browser's folders, where they were once saved for all designs; folders folded then
 /// stay ([`legacy_folded`]).
-pub(crate) fn load_prefs(app: &mut SolveApp, v: &Value) {
+pub(crate) fn load_prefs(app: &mut SketApp, v: &Value) {
     let entries = v.get("history_folds").and_then(Value::as_array).map(Vec::as_slice).unwrap_or_default();
     let mut remembered = Remembered::default();
     for entry in entries.iter().skip(entries.len().saturating_sub(DESIGNS_MAX)) {
@@ -146,10 +146,10 @@ mod tests {
     use serde_json::json;
 
     use super::{DESIGNS_MAX, Folds, Remembered};
-    use crate::SolveApp;
+    use crate::SketApp;
 
-    fn new_app() -> SolveApp {
-        SolveApp::new(sketcraft_engine::Session::default(), crate::Services::default())
+    fn new_app() -> SketApp {
+        SketApp::new(sketcraft_engine::Session::default(), crate::Services::default())
     }
 
     /// An empty folder of its own for one test's designs.
@@ -160,14 +160,14 @@ mod tests {
         dir
     }
 
-    fn design(app: &mut SolveApp, dir: &std::path::Path, name: &str) -> String {
+    fn design(app: &mut SketApp, dir: &std::path::Path, name: &str) -> String {
         let path = dir.join(name).to_string_lossy().into_owned();
         app.run("solid.box", json!({"length": 10, "width": 10, "height": 10})).expect("a box");
         app.run("file.save_as", json!({"path": path})).expect("saved");
         path
     }
 
-    fn open(app: &mut SolveApp, path: &str) {
+    fn open(app: &mut SketApp, path: &str) {
         crate::documents::prepare_open(app);
         app.run("doc.open", json!({"path": path})).expect("opened");
     }

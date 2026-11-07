@@ -13,7 +13,7 @@ use sketcraft_engine::Session;
 use sketcraft_engine::doc::Mat;
 use sketcraft_engine::doc::joints::JointKind;
 
-use crate::SolveApp;
+use crate::SketApp;
 use crate::dialogs::{Dialog, Kind, combo, form_row};
 use crate::selection::{BODIES, SelInput};
 use crate::theme::Tokens;
@@ -95,7 +95,7 @@ impl Mo {
 }
 
 /// The dialog for a motion command.
-pub fn start(app: &SolveApp, id: &str) -> Option<(Kind, Vec<SelInput>)> {
+pub fn start(app: &SketApp, id: &str) -> Option<(Kind, Vec<SelInput>)> {
     let n = |prefix: &str, list: &str| -> String {
         let taken: Vec<String> = app
             .session
@@ -353,7 +353,7 @@ pub fn cell_value(column: &str, text: &str) -> Value {
 // ---- display ----
 
 /// Show `moves` as pending occurrence moves (display only), keeping what was there before.
-fn display(app: &mut SolveApp, saved: &mut Option<BTreeMap<u64, Mat>>, moves: BTreeMap<u64, Mat>) {
+fn display(app: &mut SketApp, saved: &mut Option<BTreeMap<u64, Mat>>, moves: BTreeMap<u64, Mat>) {
     if saved.is_none() {
         *saved = Some(app.session.pending_moves.clone());
     }
@@ -361,7 +361,7 @@ fn display(app: &mut SolveApp, saved: &mut Option<BTreeMap<u64, Mat>>, moves: BT
     app.session.revision += 1;
 }
 
-fn restore(app: &mut SolveApp, saved: &mut Option<BTreeMap<u64, Mat>>) {
+fn restore(app: &mut SketApp, saved: &mut Option<BTreeMap<u64, Mat>>) {
     if let Some(m) = saved.take() {
         app.session.pending_moves = m;
         app.session.revision += 1;
@@ -369,7 +369,7 @@ fn restore(app: &mut SolveApp, saved: &mut Option<BTreeMap<u64, Mat>>) {
 }
 
 /// The dialog closed (`applied`: by OK): what it showed goes away, unless OK made it the view.
-pub fn closed(app: &mut SolveApp, d: &mut Dialog, applied: bool) {
+pub fn closed(app: &mut SketApp, d: &mut Dialog, applied: bool) {
     let Kind::Motion(k) = &mut d.kind else { return };
     match k {
         Mo::MotionStudy { saved, .. } => restore(app, saved),
@@ -392,7 +392,7 @@ fn moved(before: &Session, after: &Session) -> BTreeMap<u64, Mat> {
 }
 
 /// The study's pose at `step`, computed on a scratch copy.
-fn study_pose(app: &SolveApp, params: &Value, step: u32) -> Result<BTreeMap<u64, Mat>, String> {
+fn study_pose(app: &SketApp, params: &Value, step: u32) -> Result<BTreeMap<u64, Mat>, String> {
     let mut sc = app.session.scratch();
     let id = scratch_study(&mut sc, params)?;
     sc.execute("motion.play", &json!({"study": id, "step": step})).map_err(|e| e.to_string())?;
@@ -401,7 +401,7 @@ fn study_pose(app: &SolveApp, params: &Value, step: u32) -> Result<BTreeMap<u64,
 
 /// Save the study being edited as an animated GIF, seen from the viewport's camera. Drawn on a
 /// scratch copy, so the dialog's keys need not be saved first and the design is not changed.
-fn export_animation(app: &mut SolveApp, params: Value, name: &str) {
+fn export_animation(app: &mut SketApp, params: Value, name: &str) {
     // The view as the viewport shows it: its camera, and its grid and axes on or off.
     let (camera, guides) = (app.cam, crate::control::window_guides(app));
     let file = format!("{}.gif", Some(name.trim()).filter(|n| !n.is_empty()).unwrap_or("Motion Study"));
@@ -434,7 +434,7 @@ pub fn scratch_study(sc: &mut Session, params: &Value) -> Result<Value, String> 
 }
 
 /// The explosion at `scale`, computed on a scratch copy.
-fn explode_pose(app: &SolveApp, scale: f64) -> Result<BTreeMap<u64, Mat>, String> {
+fn explode_pose(app: &SketApp, scale: f64) -> Result<BTreeMap<u64, Mat>, String> {
     let mut sc = app.session.scratch();
     sc.execute("explode.create", &json!({"name": "__preview", "scale": scale})).map_err(|e| e.to_string())?;
     sc.execute("explode.show", &json!({ "view": "__preview" })).map_err(|e| e.to_string())?;
@@ -443,12 +443,12 @@ fn explode_pose(app: &SolveApp, scale: f64) -> Result<BTreeMap<u64, Mat>, String
 
 // ---- rows ----
 
-fn joints_moving(app: &SolveApp) -> Vec<(usize, String, JointKind)> {
+fn joints_moving(app: &SketApp) -> Vec<(usize, String, JointKind)> {
     app.session.doc.assembly.joints.iter().enumerate().filter(|(_, j)| j.kind != JointKind::Rigid).map(|(i, j)| (i, j.name.clone(), j.kind)).collect()
 }
 
 /// The dialog's rows; true when Enter was pressed in a value.
-pub fn rows(app: &mut SolveApp, ui: &mut egui::Ui, k: &mut Mo, inputs: &mut [SelInput]) -> bool {
+pub fn rows(app: &mut SketApp, ui: &mut egui::Ui, k: &mut Mo, inputs: &mut [SelInput]) -> bool {
     let t = Tokens::get();
     let mut enter = false;
     match k {
@@ -542,7 +542,7 @@ pub fn rows(app: &mut SolveApp, ui: &mut egui::Ui, k: &mut Mo, inputs: &mut [Sel
 }
 
 /// The Motion Study rows; true when Enter was pressed in a value.
-fn motion_study_rows(app: &mut SolveApp, ui: &mut egui::Ui, k: &mut Mo, inputs: &mut [SelInput], t: Tokens) -> bool {
+fn motion_study_rows(app: &mut SketApp, ui: &mut egui::Ui, k: &mut Mo, inputs: &mut [SelInput], t: Tokens) -> bool {
     let Mo::MotionStudy { name, study, steps, tracks, step, playing, looping, speed, shown, saved, error, analysis } = k else { return false };
     let mut enter = false;
     // An existing study opens to edit (and to chart); New makes another from these keys.
@@ -772,7 +772,7 @@ fn key_strip(ui: &mut egui::Ui, tr: &Track, total: u32, now: u32, t: &Tokens) {
 }
 
 /// The commands OK runs.
-pub fn commands(app: &SolveApp, k: &Mo, inputs: &[SelInput]) -> Result<Vec<(String, Value)>, String> {
+pub fn commands(app: &SketApp, k: &Mo, inputs: &[SelInput]) -> Result<Vec<(String, Value)>, String> {
     Ok(match k {
         Mo::ContactSet { name, .. } => {
             let mut occs: Vec<u64> = Vec::new();
@@ -820,7 +820,7 @@ mod tests {
     /// What a dialog shows goes away when it closes; an exploded view applied with OK stays.
     #[test]
     fn shown_poses_are_put_back() {
-        let mut app = SolveApp::new(Session::default(), crate::Services::default());
+        let mut app = SketApp::new(Session::default(), crate::Services::default());
         app.session.pending_moves.insert(9, sketcraft_engine::doc::IDENTITY);
         let before = app.session.pending_moves.clone();
         let mut m = sketcraft_engine::doc::IDENTITY;

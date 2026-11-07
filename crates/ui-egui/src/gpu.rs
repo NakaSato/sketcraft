@@ -60,7 +60,7 @@ struct BackgroundPicture {
 
 /// The background picture over the view's background (the Background picture preference), read
 /// off the window thread. Until it is ready, and if it can't be read, the view's background stays.
-pub(crate) fn paint_background_picture(app: &mut crate::SolveApp, painter: &egui::Painter, rect: egui::Rect) {
+pub(crate) fn paint_background_picture(app: &mut crate::SketApp, painter: &egui::Painter, rect: egui::Rect) {
     let path = &app.preferences.background_image;
     if path.is_empty() {
         return;
@@ -137,7 +137,7 @@ pub fn install(
 
 /// Draw bodies from their plans on the GPU from the frame the evaluation shader has compiled
 /// ([`install`]); until then, and where it never does, they are built on the CPU.
-pub(crate) fn tick_tessellation(app: &mut crate::SolveApp) {
+pub(crate) fn tick_tessellation(app: &mut crate::SketApp) {
     if app.viewport.tess_ready.as_ref().is_some_and(|ready| ready.get().is_some()) {
         app.viewport.tess_ready = None;
         if let Some(gpu) = app.viewport.gpu.as_mut() {
@@ -240,7 +240,7 @@ mod test_support {
 
     #[cfg(not(target_arch = "wasm32"))]
     impl EguiFixture {
-        pub(crate) fn new(app: &mut crate::SolveApp, size: [u32; 2]) -> Option<Self> {
+        pub(crate) fn new(app: &mut crate::SketApp, size: [u32; 2]) -> Option<Self> {
             use super::*;
             let Some((_, device, queue)) = offscreen_device() else {
                 assert!(std::env::var_os("SKETCRAFT_REQUIRE_GPU").is_none(), "GPU adapter required for egui fixture");
@@ -1079,7 +1079,7 @@ mod tests {
     /// This is intentionally distinct from model-only `ui.render`/OffscreenFrames.
     #[cfg(not(target_arch = "wasm32"))]
     struct BlurFixture {
-        app: crate::SolveApp,
+        app: crate::SketApp,
         ctx: egui::Context,
         renderer: std::sync::Arc<egui::epaint::mutex::RwLock<egui_wgpu::Renderer>>,
         adapter: egui_wgpu::wgpu::Adapter,
@@ -1115,7 +1115,7 @@ mod tests {
             app.preferences.ambient_occlusion = false;
             app.cpu_meshing = true;
             app.cam.distance = 110.0;
-            app.cam.target = solidcore_record::Vec3::new(20.0, 15.0, 12.5);
+            app.cam.target = sketcore_record::Vec3::new(20.0, 15.0, 12.5);
             let window = GpuTarget { format, depth: None, samples: 1, tess: false, oit: false };
             let scene = GpuTarget { depth: Some(sketcraft_gpu::depth_format(&device, true)), ..window };
             let view = Renderer::with_window_target(&device, scene, window, None);
@@ -1623,7 +1623,7 @@ mod tests {
             eprintln!("skipped: no GPU adapter that builds the evaluation");
             return;
         };
-        let mut app = crate::SolveApp::new(Default::default(), Default::default());
+        let mut app = crate::SketApp::new(Default::default(), Default::default());
         app.viewport.gpu =
             Some(super::GpuTarget { format: egui_wgpu::wgpu::TextureFormat::Rgba8Unorm, depth: None, samples: 1, tess: false, oit: false });
         let ready = super::TessReady::default();

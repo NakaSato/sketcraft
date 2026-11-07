@@ -137,7 +137,7 @@ pub(crate) enum Checked {
 /// at the end is the step's own, of the result the step made.
 #[derive(Debug)]
 pub(crate) struct Unchecked {
-    record: std::sync::Weak<solidcore_record::brep::Brep>,
+    record: std::sync::Weak<sketcore_record::brep::Brep>,
     /// The step, as its own refusal names it (`SMLib fillet`).
     what: String,
     how: Checked,
@@ -145,12 +145,12 @@ pub(crate) struct Unchecked {
 }
 
 impl Unchecked {
-    pub(crate) fn new(record: &Arc<solidcore_record::brep::Brep>, what: &str, how: Checked, result: sketcraft_smlib::Brep) -> Unchecked {
+    pub(crate) fn new(record: &Arc<sketcore_record::brep::Brep>, what: &str, how: Checked, result: sketcraft_smlib::Brep) -> Unchecked {
         Unchecked { record: Arc::downgrade(record), what: what.to_string(), how, result: std::sync::Mutex::new(Some(result)) }
     }
 
     /// The step's result, taken (once), when this is `record`'s.
-    fn take(&self, record: &Arc<solidcore_record::brep::Brep>) -> Option<sketcraft_smlib::Brep> {
+    fn take(&self, record: &Arc<sketcore_record::brep::Brep>) -> Option<sketcraft_smlib::Brep> {
         if !std::ptr::eq(self.record.as_ptr(), Arc::as_ptr(record)) {
             return None;
         }
@@ -228,7 +228,7 @@ mod tests {
     /// says the check was left for later, and the check of the body kept refuses it.
     #[test]
     fn a_body_the_check_refuses_is_refused_at_the_step_or_at_the_end() {
-        use solidcore_record::Vec3;
+        use sketcore_record::Vec3;
         let good = crate::box_solid(Vec3::new(0.0, 0.0, 0.0), Vec3::new(10.0, 10.0, 10.0)).unwrap();
         assert!(check_kept(&good).is_ok());
         let mut record = good.record().clone();

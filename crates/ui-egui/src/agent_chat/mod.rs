@@ -46,7 +46,7 @@ use serde_json::{Value, json};
 use context::Context;
 
 use crate::i18n::{format as trf, tr};
-use crate::{ControlRequest, SolveApp};
+use crate::{ControlRequest, SketApp};
 use backend::{ChatBackend, Event, PermissionOption, PromptPart, ToolStatus};
 
 pub(crate) use panel::{left_inset, owns_keyboard_input, tool_space};
@@ -880,12 +880,12 @@ enum Outcome {
 }
 
 /// The AI features are on (the master switch in Settings → AI) and this is the desktop app.
-pub fn shown(app: &SolveApp) -> bool {
+pub fn shown(app: &SketApp) -> bool {
     app.preferences.ai_features && cfg!(not(target_arch = "wasm32"))
 }
 
 /// The Assistant button in the application bar is shown (honours the existing preference).
-pub fn app_bar_button_shown(app: &SolveApp) -> bool {
+pub fn app_bar_button_shown(app: &SketApp) -> bool {
     shown(app) && app.preferences.ai_toolbar_button
 }
 
@@ -920,7 +920,7 @@ fn assistant_mark_for(state: State, login: &str, configured: bool, waiting: usiz
     }
 }
 
-pub(crate) fn assistant_mark(app: &SolveApp) -> AssistantMark {
+pub(crate) fn assistant_mark(app: &SketApp) -> AssistantMark {
     let chat = &app.agent_chat;
     let current = agents::current(app);
     assistant_mark_for(
@@ -933,7 +933,7 @@ pub(crate) fn assistant_mark(app: &SolveApp) -> AssistantMark {
     )
 }
 
-pub(crate) fn assistant_tip(app: &SolveApp, mark: AssistantMark) -> String {
+pub(crate) fn assistant_tip(app: &SketApp, mark: AssistantMark) -> String {
     let state = match mark {
         AssistantMark::Quiet => tr("ui.agent_chat_state_off").to_string(),
         AssistantMark::Ready => tr("ui.agent_chat_state_ready").to_string(),
@@ -976,7 +976,7 @@ fn working_dir() -> std::path::PathBuf {
 
 /// Start the agent: the chat's control endpoint for its MCP bridge if needed, the process.
 #[cfg(not(target_arch = "wasm32"))]
-pub fn connect(app: &mut SolveApp, ctx: &egui::Context) {
+pub fn connect(app: &mut SketApp, ctx: &egui::Context) {
     disconnect(app);
     let Some(entry) = agents::current(app) else {
         let chat = &mut app.agent_chat;
@@ -1085,7 +1085,7 @@ pub fn connect(app: &mut SolveApp, ctx: &egui::Context) {
 
 /// The launch, once the window is up (the desktop host; not for runs driven over `--control`):
 /// Settings → AI can open the panel and connect the agent started last (#7009).
-pub fn begin(app: &mut SolveApp) {
+pub fn begin(app: &mut SketApp) {
     if !shown(app) {
         return;
     }
@@ -1100,7 +1100,7 @@ pub fn begin(app: &mut SolveApp) {
 /// failed, whose Retry starts the agent the switcher shows. Nothing waits on it: discovery and
 /// the agent run in the background, and an agent connected by hand meanwhile stays.
 #[cfg(not(target_arch = "wasm32"))]
-fn connect_at_start(app: &mut SolveApp, ctx: &egui::Context) {
+fn connect_at_start(app: &mut SketApp, ctx: &egui::Context) {
     if !app.agent_chat.connect_at_start {
         return;
     }
@@ -1125,13 +1125,13 @@ fn connect_at_start(app: &mut SolveApp, ctx: &egui::Context) {
 }
 
 /// Stop the agent (and everything it started); the conversation stays.
-pub fn disconnect(app: &mut SolveApp) {
+pub fn disconnect(app: &mut SketApp) {
     crate::edit_in_place::forget_after_turn(app);
     app.agent_chat.disconnect_document(&mut app.session, false);
 }
 
 /// Revoking an endpoint's HTTP consent also stops its conversations in other document tabs.
-pub(super) fn disconnect_endpoint(app: &mut SolveApp, id: &str) {
+pub(super) fn disconnect_endpoint(app: &mut SketApp, id: &str) {
     #[cfg(not(target_arch = "wasm32"))]
     settings::forget_card_listing(&mut app.agent_chat.settings, id);
     if app.agent_chat.running_id == id {
@@ -1141,18 +1141,14 @@ pub(super) fn disconnect_endpoint(app: &mut SolveApp, id: &str) {
 }
 
 /// The app is quitting: end the agent and its helpers before the window goes.
-pub fn shutdown(app: &mut SolveApp) {
+pub fn shutdown(app: &mut SketApp) {
     app.agent_chat.disconnect_document(&mut app.session, true);
     crate::documents::disconnect_background_chats(app, true);
 }
 
 /// Mark the origin only for this synchronous dispatch. Deferred work carries the same trusted
 /// turn flag and enters here when it applies; JSON parameters cannot opt into continuation.
-pub(crate) fn with_tool_request<T>(
-    app: &mut SolveApp,
-    active: Option<&Arc<std::sync::atomic::AtomicBool>>,
-    run: impl FnOnce(&mut SolveApp) -> T,
-) -> T {
+pub(crate) fn with_tool_request<T>(app: &mut SketApp, active: Option<&Arc<std::sync::atomic::AtomicBool>>, run: impl FnOnce(&mut SketApp) -> T) -> T {
     let own = active.is_some_and(|active| {
         active.load(std::sync::atomic::Ordering::Relaxed) && app.agent_chat.turn.as_ref().is_some_and(|turn| Arc::ptr_eq(active, &turn.active))
     });
@@ -1175,7 +1171,7 @@ pub(crate) fn with_tool_request<T>(
 
 /// The agent's replacement succeeded. Keep its backend, transcript, queue, limits and validity
 /// flag; subsequent edits undo in this design and picked geometry belongs to the old one.
-pub(crate) fn continue_in_document(app: &mut SolveApp) {
+pub(crate) fn continue_in_document(app: &mut SketApp) {
     if let Some(turn) = app.agent_chat.turn.as_mut() {
         turn.start_doc = app.session.doc.clone();
         turn.start_undo = app.session.undo.len();
@@ -1187,7 +1183,7 @@ pub(crate) fn continue_in_document(app: &mut SolveApp) {
 
 /// A newly opened tab has no conversation to displace. Move the initiating chat into it,
 /// grouping the previous design's completed edits before its session is parked.
-pub(crate) fn follow_new_tab(app: &mut SolveApp, switch: impl FnOnce(&mut SolveApp)) {
+pub(crate) fn follow_new_tab(app: &mut SketApp, switch: impl FnOnce(&mut SketApp)) {
     if !app.agent_chat.following_document {
         switch(app);
         return;
@@ -1208,7 +1204,7 @@ pub(crate) fn follow_new_tab(app: &mut SolveApp, switch: impl FnOnce(&mut SolveA
 
 /// A tab switch stops this turn before its session leaves the app. Keep the backend's own
 /// conversation, drafts and queue, but do not send that queue automatically on returning.
-pub(crate) fn leave_document(app: &mut SolveApp) {
+pub(crate) fn leave_document(app: &mut SketApp) {
     if app.agent_chat.state() == State::Busy {
         cancel(app);
     }
@@ -1302,7 +1298,7 @@ fn changed_note(seen: &sketcraft_engine::doc::Document, now: &sketcraft_engine::
 }
 
 /// How many things the selection is, counting what was clicked (the two halves of a rim are one).
-pub fn selected_count(app: &mut SolveApp) -> usize {
+pub fn selected_count(app: &mut SketApp) -> usize {
     let doc = Arc::as_ptr(&app.session.doc) as usize;
     if let Some((selection, at, count)) = &app.agent_chat.selected_count
         && *at == doc
@@ -1317,14 +1313,14 @@ pub fn selected_count(app: &mut SolveApp) -> usize {
 
 /// Open the picker for the next message's context (what is already picked stays in it). Nothing
 /// happens while another tool or dialog is open.
-pub fn start_pick(app: &mut SolveApp) {
+pub fn start_pick(app: &mut SketApp) {
     if app.dialog.is_none() {
         app.dialog = Some(crate::dialogs::Dialog::chat_context(&app.agent_chat.picked));
     }
 }
 
 /// The picker's OK: what its inputs hold is the next message's context.
-pub(crate) fn pick_done(app: &mut SolveApp, d: &crate::dialogs::Dialog) -> Result<(), String> {
+pub(crate) fn pick_done(app: &mut SketApp, d: &crate::dialogs::Dialog) -> Result<(), String> {
     let mut picked: Vec<sketcraft_engine::Sel> = Vec::new();
     for sel in d.inputs.iter().flat_map(|i| i.items.iter()) {
         if !picked.contains(sel) {
@@ -1339,7 +1335,7 @@ pub(crate) fn pick_done(app: &mut SolveApp, d: &crate::dialogs::Dialog) -> Resul
 }
 
 /// Take one picked item (by its place in the tray) out of what the next message carries.
-pub fn remove_picked(app: &mut SolveApp, at: usize) {
+pub fn remove_picked(app: &mut SketApp, at: usize) {
     let chat = &mut app.agent_chat;
     if at < chat.picked_context.items.len() {
         chat.picked_context.items.remove(at);
@@ -1351,7 +1347,7 @@ pub fn remove_picked(app: &mut SolveApp, at: usize) {
 
 /// Send what the user typed: now if the agent is ready, queued behind the running message if it
 /// is working, else once it is ready (starting it if needed).
-pub fn send(app: &mut SolveApp, ctx: &egui::Context, text: String) {
+pub fn send(app: &mut SketApp, ctx: &egui::Context, text: String) {
     // A message waits for its files: the words go back in the box until they are read.
     if !app.agent_chat.loading.is_empty() {
         if app.agent_chat.input.trim().is_empty() {
@@ -1399,7 +1395,7 @@ pub fn send(app: &mut SolveApp, ctx: &egui::Context, text: String) {
 
 /// Put `text` in the conversation and send it with its files (`interrupted`: the agent is told it
 /// cut in on its previous step).
-fn submit(app: &mut SolveApp, ctx: &egui::Context, text: String, image: bool, context: Context, files: Vec<attach::Attachment>, interrupted: bool) {
+fn submit(app: &mut SketApp, ctx: &egui::Context, text: String, image: bool, context: Context, files: Vec<attach::Attachment>, interrupted: bool) {
     // Attached pictures show as thumbnails with the viewer, as the view's picture does; the other
     // files are listed by name.
     let pictures = files
@@ -1435,7 +1431,7 @@ fn submit(app: &mut SolveApp, ctx: &egui::Context, text: String, image: bool, co
 }
 
 /// Send the queued messages as one prompt, in order.
-fn send_queue(app: &mut SolveApp, ctx: &egui::Context, interrupted: bool) {
+fn send_queue(app: &mut SketApp, ctx: &egui::Context, interrupted: bool) {
     let chat = &mut app.agent_chat;
     chat.pending_edit = None;
     if chat.pending.is_empty() {
@@ -1466,7 +1462,7 @@ fn send_queue(app: &mut SolveApp, ctx: &egui::Context, interrupted: bool) {
 
 /// Send now: stop the running step and send the queue as the next prompt once the agent has said
 /// it stopped (its note tells the agent it was interrupted). With nothing running, sends the queue.
-pub fn send_now(app: &mut SolveApp, ctx: &egui::Context) {
+pub fn send_now(app: &mut SketApp, ctx: &egui::Context) {
     if app.agent_chat.pending.is_empty() {
         return;
     }
@@ -1482,7 +1478,7 @@ pub fn send_now(app: &mut SolveApp, ctx: &egui::Context) {
 /// New chat: stop what runs (as Stop does), clear the conversation and the queue, and start a
 /// fresh session on the same agent (no restart); the agent and its mode stay, the design's undo
 /// history is untouched.
-pub fn new_chat(app: &mut SolveApp) {
+pub fn new_chat(app: &mut SketApp) {
     let running = app.agent_chat.state() == State::Busy;
     if running {
         cancel(app);
@@ -1521,12 +1517,12 @@ pub fn new_chat(app: &mut SolveApp) {
 }
 
 /// Whether New chat would throw something away that the user may want (so it asks first).
-pub fn new_chat_needs_confirm(app: &SolveApp) -> bool {
+pub fn new_chat_needs_confirm(app: &SketApp) -> bool {
     app.agent_chat.state() == State::Busy || !app.agent_chat.pending.is_empty() || app.agent_chat.files() > 0
 }
 
 /// Take a queued message out of the queue.
-pub fn remove_pending(app: &mut SolveApp, index: usize) {
+pub fn remove_pending(app: &mut SketApp, index: usize) {
     let chat = &mut app.agent_chat;
     if index < chat.pending.len() {
         chat.pending.remove(index);
@@ -1536,7 +1532,7 @@ pub fn remove_pending(app: &mut SolveApp, index: usize) {
 
 /// The turn ended: the queue goes on its own after a normal end, and after a Send now; not after
 /// Stop, a sign-in request or an error.
-fn after_turn(app: &mut SolveApp, ctx: &egui::Context) {
+fn after_turn(app: &mut SketApp, ctx: &egui::Context) {
     let reason = app.agent_chat.ended.take().unwrap_or_default();
     let steering = std::mem::take(&mut app.agent_chat.steering);
     if app.agent_chat.state() != State::Ready || app.agent_chat.pending.is_empty() {
@@ -1549,7 +1545,7 @@ fn after_turn(app: &mut SolveApp, ctx: &egui::Context) {
     }
 }
 
-fn start_turn(app: &mut SolveApp, text: String, image: bool, at: Option<usize>, files: Vec<attach::Attachment>) {
+fn start_turn(app: &mut SketApp, text: String, image: bool, at: Option<usize>, files: Vec<attach::Attachment>) {
     start_turn_with(app, text, image, at, files, None);
 }
 
@@ -1557,7 +1553,7 @@ fn start_turn(app: &mut SolveApp, text: String, image: bool, at: Option<usize>, 
 /// does what changed in the design since the agent's last turn ([`changed_note`]). The
 /// files are named after the text (text files in full), and pictures go as images to an agent
 /// that takes them. `at` is the message's place in the conversation, where its picture is kept.
-fn start_turn_with(app: &mut SolveApp, text: String, image: bool, at: Option<usize>, files: Vec<attach::Attachment>, note: Option<&str>) {
+fn start_turn_with(app: &mut SketApp, text: String, image: bool, at: Option<usize>, files: Vec<attach::Attachment>, note: Option<&str>) {
     let (pictures, documents) = (app.agent_chat.images, app.agent_chat.documents);
     let changed = app.agent_chat.seen.as_deref().and_then(|seen| changed_note(seen, &app.session.doc));
     let notes: Vec<&str> = note.into_iter().chain(changed.as_deref()).collect();
@@ -1606,7 +1602,7 @@ fn start_turn_with(app: &mut SolveApp, text: String, image: bool, at: Option<usi
 
 /// Add a file to the next message. A picture or text file is read and kept (see [`attach`]); a CAD
 /// file is imported into the design at once, as its own component, and the message says so.
-pub fn attach_path(app: &mut SolveApp, path: &str) -> std::result::Result<String, String> {
+pub fn attach_path(app: &mut SketApp, path: &str) -> std::result::Result<String, String> {
     if app.agent_chat.files() >= attach::MAX_FILES {
         return Err(trf("ui.agent_chat_files_max", &[("max", &attach::MAX_FILES.to_string())]));
     }
@@ -1641,7 +1637,7 @@ pub fn attach_path(app: &mut SolveApp, path: &str) -> std::result::Result<String
 }
 
 /// Add a picture from the clipboard (RGBA rows, as the system gives them) to the next message.
-pub fn attach_rgba(app: &mut SolveApp, width: usize, height: usize, rgba: &[u8]) -> std::result::Result<String, String> {
+pub fn attach_rgba(app: &mut SketApp, width: usize, height: usize, rgba: &[u8]) -> std::result::Result<String, String> {
     if app.agent_chat.files() >= attach::MAX_FILES {
         return Err(trf("ui.agent_chat_files_max", &[("max", &attach::MAX_FILES.to_string())]));
     }
@@ -1664,7 +1660,7 @@ pub fn attach_rgba(app: &mut SolveApp, width: usize, height: usize, rgba: &[u8])
 
 /// Attach the picture on the clipboard, if it holds one.
 #[cfg(not(target_arch = "wasm32"))]
-pub fn paste_picture(app: &mut SolveApp) -> std::result::Result<String, String> {
+pub fn paste_picture(app: &mut SketApp) -> std::result::Result<String, String> {
     let image = arboard::Clipboard::new().and_then(|mut c| c.get_image()).map_err(|_| tr("ui.agent_chat_no_picture").to_string())?;
     attach_rgba(app, image.width, image.height, &image.bytes)
 }
@@ -1673,7 +1669,7 @@ pub fn paste_picture(app: &mut SolveApp) -> std::result::Result<String, String> 
 /// those taken aren't opened too. A drop is the chat's when the pointer was last seen over it:
 /// the platform gives no position during a drag (winit 0.30), so that is the best the chat can
 /// know; the + button always works.
-pub fn take_drops(app: &mut SolveApp, ctx: &egui::Context) {
+pub fn take_drops(app: &mut SketApp, ctx: &egui::Context) {
     if !drop_is_ours(app, ctx) || !ctx.input(|i| !i.raw.dropped_files.is_empty()) {
         return;
     }
@@ -1682,13 +1678,13 @@ pub fn take_drops(app: &mut SolveApp, ctx: &egui::Context) {
 }
 
 /// Whether files dropped now would be the chat's: the pointer was last seen over it.
-pub(crate) fn drop_is_ours(app: &SolveApp, ctx: &egui::Context) -> bool {
+pub(crate) fn drop_is_ours(app: &SketApp, ctx: &egui::Context) -> bool {
     let Some(rect) = app.agent_chat.drop_rect else { return false };
     ctx.input(|i| i.pointer.latest_pos()).is_some_and(|p| rect.contains(p))
 }
 
 /// Attach dropped files; a refused one says why in the conversation.
-pub(crate) fn attach_dropped(app: &mut SolveApp, paths: impl Iterator<Item = std::path::PathBuf>) {
+pub(crate) fn attach_dropped(app: &mut SketApp, paths: impl Iterator<Item = std::path::PathBuf>) {
     for p in paths {
         if p.as_os_str().is_empty() {
             continue;
@@ -1701,7 +1697,7 @@ pub(crate) fn attach_dropped(app: &mut SolveApp, paths: impl Iterator<Item = std
 
 /// Stop: ask the agent to stop the message it is on; requests waiting for approval are declined.
 /// Messages queued meanwhile stay queued (they wait for Send).
-pub fn cancel(app: &mut SolveApp) {
+pub fn cancel(app: &mut SketApp) {
     app.agent_chat.steering = false;
     app.agent_chat.stopped = true;
     crate::edit_in_place::forget_after_turn(app);
@@ -1709,7 +1705,7 @@ pub fn cancel(app: &mut SolveApp) {
 }
 
 /// Ask the agent to stop the message it is on and decline what waits for approval.
-fn interrupt(app: &mut SolveApp) {
+fn interrupt(app: &mut SketApp) {
     decline_all(app, "the user stopped the message");
     if let Some(b) = app.agent_chat.backend.as_mut() {
         b.cancel();
@@ -1721,7 +1717,7 @@ fn interrupt(app: &mut SolveApp) {
     }
 }
 
-fn decline_all(app: &mut SolveApp, why: &str) {
+fn decline_all(app: &mut SketApp, why: &str) {
     let ids: Vec<u64> = app.agent_chat.held.iter().map(|h| h.id).collect();
     for id in ids {
         approve_with(app, id, false, why);
@@ -1729,12 +1725,12 @@ fn decline_all(app: &mut SolveApp, why: &str) {
 }
 
 /// Allow or deny a held request.
-pub fn approve(app: &mut SolveApp, id: u64, allow: bool) {
+pub fn approve(app: &mut SketApp, id: u64, allow: bool) {
     approve_with(app, id, allow, "the user declined it");
 }
 
 /// Allow a held request and remember to allow its tool for this agent from now on.
-pub fn approve_always(app: &mut SolveApp, id: u64) {
+pub fn approve_always(app: &mut SketApp, id: u64) {
     let tool = app.agent_chat.items.iter().find_map(|i| match i {
         Item::Approval { id: x, tool, .. } if *x == id => Some(tool.clone()),
         _ => None,
@@ -1748,7 +1744,7 @@ pub fn approve_always(app: &mut SolveApp, id: u64) {
 
 /// Answer the agent's own permission question at `index` with one of its options (`None`:
 /// cancelled); an "always allow" answer is remembered for this agent and tool.
-pub fn answer_permission(app: &mut SolveApp, index: usize, option: Option<&str>) {
+pub fn answer_permission(app: &mut SketApp, index: usize, option: Option<&str>) {
     if let (Some(o), Some(Item::Permission { title, options, answer: None, .. })) = (option, app.agent_chat.items.get(index))
         && options.iter().any(|x| x.id == o && x.kind == "allow_always")
     {
@@ -1762,7 +1758,7 @@ pub fn answer_permission(app: &mut SolveApp, index: usize, option: Option<&str>)
 /// SketCraft's gate, so they're allowed here (no double question, see [`acp::is_bridge_tool`]);
 /// otherwise the mode or an earlier "always allow" may answer, and the chat says so; otherwise the
 /// user is asked.
-fn on_permission(app: &mut SolveApp, key: u64, title: String, kind: Option<&str>, options: Vec<PermissionOption>) {
+fn on_permission(app: &mut SketApp, key: u64, title: String, kind: Option<&str>, options: Vec<PermissionOption>) {
     let agent = app.agent_chat.running_id.clone();
     let mode = agents::mode_for(&app.preferences, &agent);
     let remembered = agents::always_allowed(&app.preferences, &agent, &title);
@@ -1789,7 +1785,7 @@ fn on_permission(app: &mut SolveApp, key: u64, title: String, kind: Option<&str>
     }
 }
 
-fn approve_with(app: &mut SolveApp, id: u64, allow: bool, why: &str) {
+fn approve_with(app: &mut SketApp, id: u64, allow: bool, why: &str) {
     let chat = &mut app.agent_chat;
     let Some(i) = chat.held.iter().position(|h| h.id == id) else { return };
     let h = chat.held.remove(i);
@@ -1826,7 +1822,7 @@ fn requests_edit(text: &str) -> bool {
 }
 
 /// The message is answered: its changes become one undo step, and what still waits is declined.
-fn end_turn(app: &mut SolveApp) {
+fn end_turn(app: &mut SketApp) {
     decline_all(app, "the message ended");
     finish_turn(&mut app.agent_chat, &mut app.session);
 }
@@ -1861,12 +1857,7 @@ fn finish_turn(chat: &mut AgentChat, session: &mut sketcraft_engine::Session) {
 
 /// Merge the undo steps made since `start_doc` (at depth `start_undo`) into one, labelled `label`;
 /// how many steps it took in (0: none were made, or the history no longer reaches that far).
-fn merge_undo(
-    undo: &mut Vec<sketcraft_engine::Snapshot>,
-    start_doc: &Arc<sketcraft_engine::doc::Document>,
-    start_undo: usize,
-    label: &str,
-) -> usize {
+fn merge_undo(undo: &mut Vec<sketcraft_engine::Snapshot>, start_doc: &Arc<sketcraft_engine::doc::Document>, start_undo: usize, label: &str) -> usize {
     // The first change of the turn saved the design as it was when the turn began. When the
     // history is full its oldest steps go, so look for it at or below where it was put.
     let Some(first) = (0..undo.len().min(start_undo + 1)).rev().find(|&i| undo.get(i).is_some_and(|s| Arc::ptr_eq(&s.doc, start_doc))) else {
@@ -1881,7 +1872,7 @@ fn merge_undo(
 }
 
 /// Undo a message's changes from the conversation (only while they are the last thing done).
-pub fn undo_changes(app: &mut SolveApp, index: usize) {
+pub fn undo_changes(app: &mut SketApp, index: usize) {
     let Some(Item::Changes { doc, undone, .. }) = app.agent_chat.items.get(index) else { return };
     if *undone || !Arc::ptr_eq(doc, &app.session.doc) {
         return;
@@ -1894,7 +1885,7 @@ pub fn undo_changes(app: &mut SolveApp, index: usize) {
 }
 
 /// The requests the agent's tools sent through the chat's endpoint: each one passes the gate.
-fn pump_tools(app: &mut SolveApp) {
+fn pump_tools(app: &mut SketApp) {
     let Some(rx) = app.agent_chat.tools_rx.take() else { return };
     let configured = app.preferences.agent_chat_turn_limit;
     let limit = if configured == 0 { u32::MAX } else { configured.clamp(1, 1000) };
@@ -1968,7 +1959,7 @@ fn pump_tools(app: &mut SolveApp) {
 /// Read what the agent sent since the last frame, its tool requests, and the agent search.
 /// Files read off the window thread join the message as they are done, where their ids put them;
 /// a refused one says why.
-pub(crate) fn take_loaded(app: &mut SolveApp, ctx: &egui::Context) {
+pub(crate) fn take_loaded(app: &mut SketApp, ctx: &egui::Context) {
     use std::sync::mpsc::TryRecvError;
     let chat = &mut app.agent_chat;
     let mut i = 0;
@@ -2008,7 +1999,7 @@ pub(crate) fn take_loaded(app: &mut SolveApp, ctx: &egui::Context) {
     }
 }
 
-pub fn poll(app: &mut SolveApp, ctx: &egui::Context) {
+pub fn poll(app: &mut SketApp, ctx: &egui::Context) {
     settings::poll_tests(&mut app.agent_chat);
     #[cfg(not(target_arch = "wasm32"))]
     if let Some(rx) = &app.agent_chat.detecting
@@ -2103,7 +2094,7 @@ pub fn poll(app: &mut SolveApp, ctx: &egui::Context) {
 
 /// Look for installed agents in the background (cached; Refresh looks again).
 #[cfg(not(target_arch = "wasm32"))]
-pub fn refresh(app: &mut SolveApp, ctx: &egui::Context) {
+pub fn refresh(app: &mut SketApp, ctx: &egui::Context) {
     if app.agent_chat.detecting.is_some() {
         return;
     }
@@ -2118,7 +2109,7 @@ pub fn refresh(app: &mut SolveApp, ctx: &egui::Context) {
 
 /// Choose the model for this chat (the header's model picker): the agent switches to it, and it is
 /// remembered for this agent; an API endpoint's agent also keeps it as its default model.
-pub fn set_model(app: &mut SolveApp, model: &str) {
+pub fn set_model(app: &mut SketApp, model: &str) {
     if let Some(options) = app.agent_chat.config_options.as_ref() {
         let Some(option) = options.iter().find(|x| x.category == "model") else {
             return;
@@ -2134,7 +2125,7 @@ pub fn set_model(app: &mut SolveApp, model: &str) {
 
 /// Whether a model the agent did not list can be sent: an endpoint, an ACP agent with a model
 /// option, or a legacy ACP agent that listed models.
-pub fn custom_models_accepted(app: &SolveApp) -> bool {
+pub fn custom_models_accepted(app: &SketApp) -> bool {
     let chat = &app.agent_chat;
     if chat.backend.is_none() || !chat.state().running() {
         return false;
@@ -2147,7 +2138,7 @@ pub fn custom_models_accepted(app: &SolveApp) -> bool {
 
 /// A typed model (the pickers' custom row). A listed id goes the usual way, others by the agent's
 /// kind; an agent that refuses it keeps its model and the chat says so. Returns whether it was sent.
-pub fn set_custom_model(app: &mut SolveApp, text: &str) -> bool {
+pub fn set_custom_model(app: &mut SketApp, text: &str) -> bool {
     let model = text.trim();
     if !model_id_valid(model) || !custom_models_accepted(app) {
         return false;
@@ -2166,7 +2157,7 @@ pub fn set_custom_model(app: &mut SolveApp, text: &str) -> bool {
 
 /// Switch a legacy ACP agent or an endpoint to `model`: it shows as current at once and is
 /// remembered for this agent; an endpoint also keeps it as its default model.
-fn send_model(app: &mut SolveApp, model: &str) {
+fn send_model(app: &mut SketApp, model: &str) {
     let agent = app.agent_chat.running_id.clone();
     let chat = &mut app.agent_chat;
     let unlisted = !chat.models.iter().any(|m| m.id == model);
@@ -2194,7 +2185,7 @@ fn send_model(app: &mut SolveApp, model: &str) {
 }
 
 /// A new session is ready: put back the model last chosen for this agent, when it offers it.
-fn apply_saved_model(app: &mut SolveApp) {
+fn apply_saved_model(app: &mut SketApp) {
     let chat = &app.agent_chat;
     let Some(saved) = app.preferences.agent_models.get(&chat.running_id).cloned() else { return };
     if saved != chat.model && chat.models.iter().any(|m| m.id == saved) {
@@ -2203,7 +2194,7 @@ fn apply_saved_model(app: &mut SolveApp) {
 }
 
 /// Whether the model picker shows: only for an agent that reports models.
-pub fn models_shown(app: &SolveApp) -> bool {
+pub fn models_shown(app: &SketApp) -> bool {
     !app.agent_chat.models.is_empty() && app.agent_chat.state().running()
 }
 
@@ -2284,7 +2275,7 @@ fn provider_of(m: &acp::ModelInfo) -> String {
 
 /// The providers of the agent's models in the order the agent lists them, each with how many
 /// models it serves. Empty when the models come from fewer than two providers: one list is enough.
-pub fn model_providers(app: &SolveApp) -> Vec<(String, usize)> {
+pub fn model_providers(app: &SketApp) -> Vec<(String, usize)> {
     let mut out: Vec<(String, usize)> = Vec::new();
     for m in &app.agent_chat.models {
         let p = provider_of(m);
@@ -2301,7 +2292,7 @@ pub fn model_providers(app: &SolveApp) -> Vec<(String, usize)> {
 
 /// The provider whose models the header lists: the one picked while the agent still offers it,
 /// else the current model's, else the first. `None` when there is no provider picker.
-pub fn shown_provider(app: &SolveApp) -> Option<String> {
+pub fn shown_provider(app: &SketApp) -> Option<String> {
     let providers = model_providers(app);
     if let Some(p) = &app.agent_chat.model_provider
         && providers.iter().any(|(n, _)| n == p)
@@ -2315,7 +2306,7 @@ pub fn shown_provider(app: &SolveApp) -> Option<String> {
 /// The models the header's model picker lists, each with the name it shows: with a provider picker,
 /// the shown provider's models without the provider in front; otherwise every model as it is named.
 #[cfg_attr(target_arch = "wasm32", allow(dead_code))]
-pub fn listed_models(app: &SolveApp) -> Vec<(acp::ModelInfo, String)> {
+pub fn listed_models(app: &SketApp) -> Vec<(acp::ModelInfo, String)> {
     let Some(provider) = shown_provider(app) else {
         return app.agent_chat.models.iter().map(|m| (m.clone(), m.name.clone())).collect();
     };
@@ -2330,7 +2321,7 @@ pub fn listed_models(app: &SolveApp) -> Vec<(acp::ModelInfo, String)> {
 /// Every model the header's picker lists, with its label, the group it folds under and its tooltip
 /// ([`model_rows`]).
 #[cfg_attr(target_arch = "wasm32", allow(dead_code))]
-pub fn grouped_models(app: &SolveApp) -> Vec<(acp::ModelInfo, String, Option<String>, String)> {
+pub fn grouped_models(app: &SketApp) -> Vec<(acp::ModelInfo, String, Option<String>, String)> {
     let rows = model_rows(&app.agent_chat.models);
     app.agent_chat.models.iter().cloned().zip(rows).map(|(m, (label, group, tip))| (m, label, group, tip)).collect()
 }
@@ -2338,14 +2329,14 @@ pub fn grouped_models(app: &SolveApp) -> Vec<(acp::ModelInfo, String, Option<Str
 /// The provider whose group the header's model picker opens first (the control channel's
 /// `provider`). The agent keeps its model until one is chosen. A provider the agent does not offer
 /// is ignored.
-pub fn set_model_provider(app: &mut SolveApp, provider: &str) {
+pub fn set_model_provider(app: &mut SketApp, provider: &str) {
     if model_providers(app).iter().any(|(n, _)| n == provider) {
         app.agent_chat.model_provider = Some(provider.to_string());
     }
 }
 
 /// Switch the agent to one of its own modes (the header's mode picker).
-pub fn set_mode(app: &mut SolveApp, mode: &str) {
+pub fn set_mode(app: &mut SketApp, mode: &str) {
     if let Some(options) = app.agent_chat.config_options.as_ref() {
         let Some(option) = options.iter().find(|x| x.category == "mode") else {
             return;
@@ -2363,13 +2354,13 @@ pub fn set_mode(app: &mut SolveApp, mode: &str) {
 }
 
 /// Change a reported modern ACP configuration option; only acknowledged snapshots change state.
-pub fn set_config_option(app: &mut SolveApp, id: &str, value: &str) {
+pub fn set_config_option(app: &mut SketApp, id: &str, value: &str) {
     set_config_option_checked(app, id, value, true);
 }
 
 /// [`set_config_option`], with a choice the agent did not list (`listed_only` false: a typed
 /// model, which the agent may refuse). Returns whether it was sent.
-fn set_config_option_checked(app: &mut SolveApp, id: &str, value: &str, listed_only: bool) -> bool {
+fn set_config_option_checked(app: &mut SketApp, id: &str, value: &str, listed_only: bool) -> bool {
     let Some(option) = app.agent_chat.config_options.as_ref().and_then(|xs| xs.iter().find(|x| x.id == id)) else {
         return false;
     };
@@ -2392,7 +2383,7 @@ fn set_config_option_checked(app: &mut SolveApp, id: &str, value: &str, listed_o
 /// next message), `remove_file` (index), `send`, `attach_view`, `attach_selection`, `pick`,
 /// `permission` (an option id, or `"cancel"`), `approve` (`true`/`false`, the oldest held
 /// request), `cancel` (Stop), `send_now` (steer: stop, then send the queue), `remove_pending` (index), `undo` (the newest message's changes); returns the panel's state.
-pub fn control(app: &mut SolveApp, ctx: &egui::Context, p: &Value) -> Result<Value, String> {
+pub fn control(app: &mut SketApp, ctx: &egui::Context, p: &Value) -> Result<Value, String> {
     if let Some(e) = p.get("features").and_then(Value::as_bool) {
         app.preferences.ai_features = e;
     }
@@ -2586,7 +2577,7 @@ pub fn control(app: &mut SolveApp, ctx: &egui::Context, p: &Value) -> Result<Val
     Ok(status(app))
 }
 
-pub fn status(app: &SolveApp) -> Value {
+pub fn status(app: &SketApp) -> Value {
     let c = &app.agent_chat;
     let items: Vec<Value> = c
         .items

@@ -10,7 +10,7 @@
 use sketcraft_geom::prelude::*;
 use std::collections::HashMap;
 
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 use sketcraft_geom::tess::EvalSurface;
 
 /// Split the triangles `tris` of a face (indices into `uv`; the first `fixed.len()` points sit

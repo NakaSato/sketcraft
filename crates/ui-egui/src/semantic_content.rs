@@ -2,14 +2,14 @@
 //!
 //! A frame has one app-owned begin/finalize pair. Each presentation owns its range order,
 //! anchor, geometry and transient input; the document, selection, folds and row cache remain
-//! in `SolveApp`. Hosts and future adapters can render the same content through `show`.
+//! in `SketApp`. Hosts and future adapters can render the same content through `show`.
 
 use std::cell::RefCell;
 use std::collections::{BTreeMap, HashMap, HashSet};
 
 use egui::{Rect, Ui};
 
-use crate::SolveApp;
+use crate::SketApp;
 
 /// A presentation identity, independent of its placement or content composition.
 #[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
@@ -166,7 +166,7 @@ fn row_capture_id() -> egui::Id {
     egui::Id::unique("sc_semantic_content_row_capture")
 }
 
-pub(crate) fn current_source(app: &SolveApp) -> Option<ContentSource> {
+pub(crate) fn current_source(app: &SketApp) -> Option<ContentSource> {
     let (owner, _) = app.tree.content.active?;
     (app.tree.content.session == Some(app.session.uid)).then_some(ContentSource { session: app.session.uid, owner })
 }
@@ -175,7 +175,7 @@ pub(crate) fn same_document(ui: &Ui, source: ContentSource) -> bool {
     ui.ctx().data(|data| data.get_temp::<ContentSource>(active_id())).is_some_and(|active| active.session == source.session)
 }
 
-pub(crate) fn source_present(app: &SolveApp, source: ContentSource) -> bool {
+pub(crate) fn source_present(app: &SketApp, source: ContentSource) -> bool {
     app.tree.content.session == Some(source.session)
         && app.session.uid == source.session
         && app.tree.content.owner(source.owner).is_some_and(|state| state.presented)
@@ -183,7 +183,7 @@ pub(crate) fn source_present(app: &SolveApp, source: ContentSource) -> bool {
 
 /// Called while the outgoing session (and its undo stack) is still active. Context is retained
 /// solely for cancelling owned egui capture when a tab changes outside the drawing callback.
-pub(crate) fn leave_document(app: &mut SolveApp) {
+pub(crate) fn leave_document(app: &mut SketApp) {
     let context = app.tree.content.context.clone();
     if let (Some(ctx), Some(session)) = (&context, app.tree.content.session) {
         if ctx.data(|data| data.get_temp::<EyeCapture>(capture_id())).is_some_and(|capture| capture.source.session == session) {
@@ -212,7 +212,7 @@ pub(crate) fn leave_document(app: &mut SolveApp) {
 }
 
 /// Also protects callers which replace a Session without passing through Documents.
-pub(crate) fn ensure_session(app: &mut SolveApp, ctx: &egui::Context) {
+pub(crate) fn ensure_session(app: &mut SketApp, ctx: &egui::Context) {
     crate::browser::sync_reveals(app);
     if app.tree.content.session != Some(app.session.uid) {
         leave_document(app);
@@ -223,12 +223,12 @@ pub(crate) fn ensure_session(app: &mut SolveApp, ctx: &egui::Context) {
 
 /// An external producer replaced this slot. Its ownership supersedes our previous write even
 /// when the new vector contains precisely the same names (Select Other is one such producer).
-pub(crate) fn set_external_body_hover(app: &mut SolveApp, bodies: Vec<String>) {
+pub(crate) fn set_external_body_hover(app: &mut SketApp, bodies: Vec<String>) {
     app.tree.content.last_bodies.clear();
     app.viewport.hover_bodies = bodies;
 }
 
-fn expire_hover(app: &mut SolveApp) -> (Vec<String>, Option<String>) {
+fn expire_hover(app: &mut SketApp) -> (Vec<String>, Option<String>) {
     let old_bodies = std::mem::take(&mut app.tree.content.last_bodies);
     let old_plane = app.tree.content.last_plane.take();
     for body in &old_bodies {
@@ -243,7 +243,7 @@ fn expire_hover(app: &mut SolveApp) -> (Vec<String>, Option<String>) {
     (old_bodies, old_plane)
 }
 
-pub(crate) fn begin(app: &mut SolveApp, ctx: &egui::Context) {
+pub(crate) fn begin(app: &mut SketApp, ctx: &egui::Context) {
     ensure_session(app, ctx);
     let frame = &mut app.tree.content;
     frame.active = None;
@@ -263,16 +263,16 @@ pub(crate) fn begin(app: &mut SolveApp, ctx: &egui::Context) {
 }
 
 /// Render into an existing UI. Stable item IDs and command paths belong to the row renderers.
-pub(crate) fn show(app: &mut SolveApp, ui: &mut Ui, owner: ContentOwner, request: ContentRequest) {
+pub(crate) fn show(app: &mut SketApp, ui: &mut Ui, owner: ContentOwner, request: ContentRequest) {
     render_scope(app, ui, owner, request, |app, ui| crate::browser::render_content(app, ui, request));
 }
 
 pub(crate) fn render_scope(
-    app: &mut SolveApp,
+    app: &mut SketApp,
     ui: &mut Ui,
     owner: ContentOwner,
     request: ContentRequest,
-    render: impl FnOnce(&mut SolveApp, &mut Ui) -> crate::browser::Actions,
+    render: impl FnOnce(&mut SketApp, &mut Ui) -> crate::browser::Actions,
 ) {
     ensure_session(app, ui.ctx());
     if app.tree.content.owners.get(&owner).is_some_and(|state| state.presented) {
@@ -405,7 +405,7 @@ fn presented(ui: &Ui) -> bool {
     ui.is_visible() && ui.opacity() > 0.0
 }
 
-pub(crate) fn finalize(app: &mut SolveApp, ctx: &egui::Context) {
+pub(crate) fn finalize(app: &mut SketApp, ctx: &egui::Context) {
     ensure_session(app, ctx);
     if app.tree.content.finalized {
         return;

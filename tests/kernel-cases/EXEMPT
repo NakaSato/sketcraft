@@ -7,7 +7,7 @@
 # browser, files and saving, documents, diagnostics, and component, parameter and timeline
 # bookkeeping. Each is covered by the engine's and the UI's own tests. A command added since this
 # folder stopped taking cases (tests/kernel-cases/CASES) is listed here too, its reason naming
-# where it is tested: its kernel case in solidcore's corpus, or its test in its area's test file.
+# where it is tested: its kernel case in sketcore's corpus, or its test in its area's test file.
 
 appearance.assign                 appearance only: colours and textures
 appearance.chain                  appearance only: colours and textures
@@ -365,7 +365,7 @@ view.top                          the view: camera, layout, display
 view.visual_style                 the view: camera, layout, display
 
 # Commands that make or change geometry and have no case yet. This section only shrinks: the
-# pull request that gives one a case in solidcore's corpus or a test moves its line to the section
+# pull request that gives one a case in sketcore's corpus or a test moves its line to the section
 # above with where it is tested (the check fails on a listed command that a case here uses), and a
 # new geometry command gets its line in the section above.
 [to cover]

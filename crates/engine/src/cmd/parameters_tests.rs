@@ -729,7 +729,7 @@ fn a_failed_auto_constrain_keeps_the_stored_sketch_consistent() {
 }
 
 /// The stored sketch's points, by id.
-fn stored_points(s: &Session, feature: u64) -> Vec<solidcore_record::Vec2> {
+fn stored_points(s: &Session, feature: u64) -> Vec<sketcore_record::Vec2> {
     s.doc.sketch(feature).unwrap().points.iter().map(|p| p.pos).collect()
 }
 
@@ -760,7 +760,7 @@ fn an_unsolvable_value_edit_is_refused_and_changes_nothing() {
 fn value_edits_continue_from_the_last_solved_state() {
     // A → B → C, each a small edit solved in one jump; C is solved from B (the stored state),
     // and setting both values back reproduces A (the linkage is fully constrained).
-    let close = |a: &[solidcore_record::Vec2], b: &[solidcore_record::Vec2], tol: f64| a.iter().zip(b).all(|(p, q)| p.dist(*q) < tol);
+    let close = |a: &[sketcore_record::Vec2], b: &[sketcore_record::Vec2], tol: f64| a.iter().zip(b).all(|(p, q)| p.dist(*q) < tol);
     let (mut s, feature, params) = linkage_session();
     run(&mut s, "sketch.finish", json!({}));
     let a = stored_points(&s, feature);
@@ -881,11 +881,7 @@ fn a_large_import_is_checked_once_and_keeps_each_rows_unit() {
     // Changing the first moves the whole chain; a row that breaks changes nothing.
     run(&mut s, "parameters.import", json!({"text": "name,expression\np0,101 mm\n"}));
     assert!(
-        s.doc
-            .param_values()
-            .0
-            .get("p2999")
-            .is_some_and(|v| (v.to_kind(sketcraft_doc::expr::Kind::Length).unwrap_or(f64::NAN) - 3100.0).abs() < 1e-9)
+        s.doc.param_values().0.get("p2999").is_some_and(|v| (v.to_kind(sketcraft_doc::expr::Kind::Length).unwrap_or(f64::NAN) - 3100.0).abs() < 1e-9)
     );
     assert!(s.execute("parameters.import", &json!({"text": "name,expression\np0,2 mm\np5,p0 + 1 deg\n"})).is_err());
     assert_eq!(s.doc.param("p0").map(|p| p.expr.as_str()), Some("101 mm"));

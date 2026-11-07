@@ -2,7 +2,7 @@
 //! inference for interactive tools.
 
 use serde_json::{Value, json};
-use solidcore_record::Vec2;
+use sketcore_record::Vec2;
 use sketcraft_geom::prelude::*;
 use sketcraft_sketch::{ConstraintKind, CurveKind, Sketch};
 
@@ -448,9 +448,7 @@ fn toggle_diameter(s: &mut Session, p: &Value) -> Result<Value> {
             let others: Vec<String> = doc
                 .param_users(name)
                 .into_iter()
-                .filter(
-                    |u| !matches!(u, sketcraft_doc::ParamUser::Dimension { feature, constraint, .. } if *feature == sketch && *constraint == cid),
-                )
+                .filter(|u| !matches!(u, sketcraft_doc::ParamUser::Dimension { feature, constraint, .. } if *feature == sketch && *constraint == cid))
                 .map(|u| u.describe())
                 .collect();
             if !others.is_empty() {

@@ -18,7 +18,7 @@
 use sketcraft_geom::prelude::*;
 use std::f64::consts::{PI, TAU};
 
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 
 use crate::surface::{MIN_ROUGHNESS, OpaqueSurface, SurfaceError, unit_direction};
 

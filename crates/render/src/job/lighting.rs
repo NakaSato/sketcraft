@@ -2,7 +2,7 @@
 //! world-space millimetres; radiance is linear RGB. Saved setups reuse these bounds.
 use super::{DirectionalLightOptions, ErrorCode, JobError, Result};
 use serde::{Deserialize, Serialize};
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 use sketcraft_geom::prelude::*;
 
 pub const MAX_AREA_LIGHTS: usize = 4;

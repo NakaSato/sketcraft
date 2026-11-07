@@ -1,6 +1,6 @@
 #![allow(clippy::unwrap_used, clippy::panic)]
 use super::*;
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 use sketcraft_doc::joints::{Coupling, Joint, JointKind, MotionLink, NamedOrigin, Size, Snap, XRef};
 use sketcraft_doc::motion::{ContactSet, ExplodedView, MotionStudy, StudyKey};
 use sketcraft_doc::{IDENTITY, Occurrence};

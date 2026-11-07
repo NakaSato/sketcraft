@@ -49,8 +49,6 @@ Editable drawing code, native projects and shipped exports are collected under `
 | assets/icons/app/macos/exports/Assets.car | SketCraft contributors | Apple actool compilation of assets/icons/app/macos/source/SketCraft.icon for macOS; contains original artwork only | MIT OR Apache-2.0 |
 | assets/archive/icons/macos-v1/source/icon.vectorcraft | SketCraft contributors | retained editable historical VectorCraft source, with named face and background layers; redundant exports retired | MIT OR Apache-2.0 |
 | assets/icons/app/macos/exports/icon.icns | SketCraft contributors | macOS fallback compiled by Apple's actool from the approved assets/icons/app/macos/source/SketCraft.icon composition | MIT OR Apache-2.0 |
-| assets/models/test_boat.bin | 3DBenchy.com | 3DBenchy.com | Public Domain |
-| assets/models/make_test_boat.py | SketCraft contributors | original script that packs a model into the compact file above | MIT OR Apache-2.0 |
 | docs/screenshots/class-a-blend.png | SketCraft contributors | screenshot of SketCraft itself: a 24 mm and a 10 mm box bridged by a `surface.blend` sheet (G1 at both edges), rendered by the app's `ui.render` in the dark theme with examples/demo/class_a_shots.py | MIT OR Apache-2.0 |
 | docs/screenshots/class-a-crown.png | SketCraft contributors | screenshot of SketCraft itself: a patch crowned with `surface.patch crown=0.3` over a skew four-line rim, rendered by the app's `ui.render` in the dark theme with examples/demo/class_a_shots.py | MIT OR Apache-2.0 |
 | docs/screenshots/class-a-boundary.png | SketCraft contributors | screenshot of SketCraft itself: a surface through two 3D sketch splines built by `surface.boundary`, rendered by the app's `ui.render` in the dark theme with examples/demo/class_a_shots.py | MIT OR Apache-2.0 |
@@ -250,7 +248,6 @@ Editable drawing code, native projects and shipped exports are collected under `
 | assets/icons/ui/design/svg/flat/prefs_general.svg | SketCraft contributors | original icon master (64 grid) | MIT OR Apache-2.0 |
 | assets/icons/ui/design/svg/flat/prefs_graphics.svg | SketCraft contributors | original icon master (64 grid) | MIT OR Apache-2.0 |
 | assets/icons/ui/design/svg/flat/prefs_layout.svg | SketCraft contributors | original icon master (64 grid) | MIT OR Apache-2.0 |
-| assets/icons/ui/design/svg/flat/prefs_mouse3d.svg | SketCraft contributors | original icon master (64 grid) | MIT OR Apache-2.0 |
 | assets/icons/ui/design/svg/flat/prefs_navigation.svg | SketCraft contributors | original icon master (64 grid) | MIT OR Apache-2.0 |
 | assets/icons/ui/design/svg/flat/prefs_plugins.svg | SketCraft contributors | original icon master (64 grid) | MIT OR Apache-2.0 |
 | assets/icons/ui/design/svg/flat/prefs_shortcuts.svg | SketCraft contributors | original icon master (64 grid) | MIT OR Apache-2.0 |

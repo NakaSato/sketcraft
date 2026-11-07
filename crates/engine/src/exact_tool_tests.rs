@@ -4,7 +4,7 @@
 //! (a cut) or material (a join) on the bodies' faces, not just at a few sample points.
 
 use serde_json::{Value, json};
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 
 use crate::Session;
 
@@ -20,10 +20,7 @@ fn volume(s: &Session, body: &str) -> f64 {
 }
 
 fn has(s: &Session, body: &str, at: [f64; 3]) -> bool {
-    s.model
-        .state()
-        .body(body)
-        .is_some_and(|b| b.body.classify_point(Vec3::new(at[0], at[1], at[2])).unwrap() == sketcraft_kernel::PointClass::Inside)
+    s.model.state().body(body).is_some_and(|b| b.body.classify_point(Vec3::new(at[0], at[1], at[2])).unwrap() == sketcraft_kernel::PointClass::Inside)
 }
 
 fn bodies(s: &Session) -> Vec<String> {

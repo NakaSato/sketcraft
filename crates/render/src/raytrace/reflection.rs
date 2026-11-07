@@ -2,7 +2,7 @@
 use super::{Result, TraceError};
 use crate::anisotropic_surface::{AnisotropicSurface, VisualFrame};
 use crate::surface::{OpaqueSurface, unit_direction};
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 use sketcraft_geom::prelude::*;
 #[cfg(test)]
 use std::f64::consts::{PI, TAU};

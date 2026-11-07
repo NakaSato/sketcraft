@@ -66,7 +66,7 @@ pub(crate) struct PairCache(HashMap<(u64, u64, [u64; 3]), PairResult>);
 #[derive(Clone, Default)]
 struct PairResult {
     /// Shared volume, area, box and centre.
-    overlap: Option<(f64, f64, Aabb3, solidcore_record::Vec3)>,
+    overlap: Option<(f64, f64, Aabb3, sketcore_record::Vec3)>,
     distance: Option<BodyDistance>,
     unchecked: Option<String>,
 }
@@ -198,7 +198,7 @@ fn clearance(s: &mut Session, p: &Value) -> Result<Value> {
                     p.into_iter().for_each(|v| bx.add(v));
                 }
                 let chord = b.display_tol();
-                let g = solidcore_record::Vec3::new(1.0, 1.0, 1.0) * if chord.is_finite() && chord > 0.0 { chord } else { 0.0 };
+                let g = sketcore_record::Vec3::new(1.0, 1.0, 1.0) * if chord.is_finite() && chord > 0.0 { chord } else { 0.0 };
                 if bx.is_empty() { bx } else { Aabb3 { min: bx.min - g, max: bx.max + g } }
             }
             _ => Aabb3::EMPTY,
@@ -206,7 +206,7 @@ fn clearance(s: &mut Session, p: &Value) -> Result<Value> {
         .collect();
 
     // Pairs whose boxes, grown by half the clearance each, meet.
-    let half = solidcore_record::Vec3::new(1.0, 1.0, 1.0) * (gap / 2.0);
+    let half = sketcore_record::Vec3::new(1.0, 1.0, 1.0) * (gap / 2.0);
     let grown: Vec<Aabb3> = boxes.iter().map(|b| if b.is_empty() { *b } else { Aabb3 { min: b.min - half, max: b.max + half } }).collect();
     let (close, truncated) = super::joints::overlapping_pairs(&grown, MAX_PAIRS);
     let has_mesh = |i: usize| meshes.get(i).is_some_and(Option::is_some);
@@ -424,14 +424,14 @@ fn shared_region(a: &DistanceShape, b: &DistanceShape) -> Aabb3 {
         return Aabb3::EMPTY;
     }
     let grow = 1.0 + 0.05 * min.dist(max);
-    let g = solidcore_record::Vec3::new(grow, grow, grow);
+    let g = sketcore_record::Vec3::new(grow, grow, grow);
     Aabb3 { min: min - g, max: max + g }
 }
 
 /// [`sketcraft_kernel::measure`] of `body` moved by `-at` and back: far from the origin, the
 /// centre of a thin part loses its precision (its moments are large numbers that nearly cancel).
-fn measure_near_origin(body: &sketcraft_kernel::Body, at: solidcore_record::Vec3) -> sketcraft_kernel::Result<sketcraft_kernel::BodyMeasure> {
-    let moved = sketcraft_kernel::transform(body, -at, solidcore_record::Vec3::ZERO, solidcore_record::Vec3::Z, 0.0)?;
+fn measure_near_origin(body: &sketcraft_kernel::Body, at: sketcore_record::Vec3) -> sketcraft_kernel::Result<sketcraft_kernel::BodyMeasure> {
+    let moved = sketcraft_kernel::transform(body, -at, sketcore_record::Vec3::ZERO, sketcore_record::Vec3::Z, 0.0)?;
     let mut m = sketcraft_kernel::measure(&moved)?;
     m.centroid += at;
     m.bbox = Aabb3 { min: m.bbox.min + at, max: m.bbox.max + at };

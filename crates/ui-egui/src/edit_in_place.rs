@@ -15,7 +15,7 @@ use sketcraft_engine::Session;
 use sketcraft_engine::doc::{apply_point, apply_vector, mat_inverse, mat_mul};
 use sketcraft_engine::geom::Aabb3;
 
-use crate::SolveApp;
+use crate::SketApp;
 use crate::gpu::GpuScene;
 use crate::theme::Tokens;
 
@@ -77,14 +77,14 @@ impl EditInPlace {
 
 /// A linked component the window edits in place when it is double-clicked: in a saved design
 /// (its links are found from its file) with `double_click_components` on.
-pub(crate) fn edits_on_double_click(app: &SolveApp, component: u64) -> bool {
+pub(crate) fn edits_on_double_click(app: &SketApp, component: u64) -> bool {
     app.preferences.double_click_components && app.session.path.is_some() && app.session.doc.links.contains_key(&component)
 }
 
 /// A component double-clicked in the browser: a linked one is edited in place (Preferences:
 /// `double_click_components`), any other, or any in a design not saved yet, is made the active
 /// component (`component.activate` with `params`). Activate itself always does the latter.
-pub(crate) fn double_click_component(app: &mut SolveApp, params: Value) {
+pub(crate) fn double_click_component(app: &mut SketApp, params: Value) {
     let component = params["component"].as_u64().unwrap_or(0);
     if edits_on_double_click(app, component) {
         let path = params["path"].as_array().map(|p| p.iter().filter_map(Value::as_u64).collect::<Vec<_>>());
@@ -97,7 +97,7 @@ pub(crate) fn double_click_component(app: &mut SolveApp, params: Value) {
 /// A face of the body `body` double-clicked in the view: the component the body belongs to, at
 /// that body's placement, is edited in place when it is linked and activated otherwise. A body of
 /// the design itself or of the active component is left alone, as are features. Whether it acted.
-pub(crate) fn double_click_face(app: &mut SolveApp, body: &str) -> bool {
+pub(crate) fn double_click_face(app: &mut SketApp, body: &str) -> bool {
     if !app.preferences.double_click_components {
         return false;
     }
@@ -126,7 +126,7 @@ pub(crate) fn double_click_face(app: &mut SolveApp, body: &str) -> bool {
 /// Something runs that a change of the design shown would spoil: a file being read, written or
 /// picked, the assembly's refresh, or an undo, a queued command or a delete check, which would
 /// land in the other design.
-fn busy(app: &SolveApp) -> bool {
+fn busy(app: &SketApp) -> bool {
     app.file_picker_busy()
         || app.file_load.busy()
         || app.saving.is_some()
@@ -137,7 +137,7 @@ fn busy(app: &SolveApp) -> bool {
 }
 
 /// Why [`busy`]: the assembly's refresh, or something else that has to finish first.
-fn busy_reason(app: &SolveApp) -> String {
+fn busy_reason(app: &SketApp) -> String {
     match &app.edit_in_place.refresh {
         Some(r) => crate::i18n::format("ui.edit_in_place_refreshing", &[("name", &file_name(&r.assembly))]),
         None => crate::i18n::tr("ui.edit_in_place_wait").to_string(),
@@ -150,7 +150,7 @@ fn file_name(path: &str) -> String {
 
 /// A dialog, tool, sketch or feature edit, or the parameters or design properties panel (with
 /// text typed and not applied yet) is open in the design shown: leaving its tab would drop it.
-fn working(app: &SolveApp) -> bool {
+fn working(app: &SketApp) -> bool {
     app.dialog.is_some()
         || app.applying.is_some()
         || app.editing_state.is_some()
@@ -187,7 +187,7 @@ fn snapshot(session: &Session, component: u64, placement: &[u64]) -> Option<(usi
 /// Edit the linked component `component` in place at its placement `path` (default: its first),
 /// as the window does it (a double-click, Edit in Place in its menu): `component.edit_in_place`,
 /// with the questions an open can ask (a network location, a design open elsewhere) asked.
-pub(crate) fn open(app: &mut SolveApp, component: u64, path: Option<Vec<u64>>) {
+pub(crate) fn open(app: &mut SketApp, component: u64, path: Option<Vec<u64>>) {
     let mut params = json!({ "component": component });
     if let Some(path) = path {
         params["path"] = json!(path);
@@ -199,7 +199,7 @@ pub(crate) fn open(app: &mut SolveApp, component: u64, path: Option<Vec<u64>>) {
 
 /// `component.edit_in_place` ran: `result` names the component and its placement, and the window
 /// opens the edit. Run as a command, it asks nothing: what would need a question fails instead.
-pub(crate) fn command_ran(app: &mut SolveApp, result: &Value) -> Result<bool, String> {
+pub(crate) fn command_ran(app: &mut SketApp, result: &Value) -> Result<bool, String> {
     let component = result["component"].as_u64().unwrap_or(0);
     let path = result["path"].as_array().map(|p| p.iter().filter_map(Value::as_u64).collect::<Vec<_>>());
     let ask = app.edit_in_place.ask;
@@ -222,7 +222,7 @@ pub(crate) fn command_ran(app: &mut SolveApp, result: &Value) -> Result<bool, St
 }
 
 /// What holds up entering an edit from the design shown.
-fn check_enter(app: &SolveApp) -> Result<(), String> {
+fn check_enter(app: &SketApp) -> Result<(), String> {
     if busy(app) {
         return Err(busy_reason(app));
     }
@@ -237,7 +237,7 @@ fn check_enter(app: &SolveApp) -> Result<(), String> {
 
 /// Open the design the linked component `component` comes from, with the assembly around it as
 /// its placement `path` (default: its first) puts it (`ask`: with the open's questions).
-fn enter(app: &mut SolveApp, component: u64, path: Option<Vec<u64>>, ask: bool) -> Result<(), String> {
+fn enter(app: &mut SketApp, component: u64, path: Option<Vec<u64>>, ask: bool) -> Result<(), String> {
     let (context, link) = prepare(app, component, path, ask)?;
     app.edit_in_place.pending = Some(context);
     crate::network_prompt::open_linked(app, &link);
@@ -246,7 +246,7 @@ fn enter(app: &mut SolveApp, component: u64, path: Option<Vec<u64>>, ask: bool) 
 
 /// The edit [`enter`] would start, and the link it opens, or why it can't: everything is checked
 /// and nothing changes.
-fn prepare(app: &mut SolveApp, component: u64, path: Option<Vec<u64>>, ask: bool) -> Result<(PartContext, Value), String> {
+fn prepare(app: &mut SketApp, component: u64, path: Option<Vec<u64>>, ask: bool) -> Result<(PartContext, Value), String> {
     check_enter(app)?;
     let Some(assembly) = app.session.path.clone() else {
         return Err(crate::i18n::tr("ui.edit_in_place_save_first").to_string());
@@ -267,8 +267,7 @@ fn prepare(app: &mut SolveApp, component: u64, path: Option<Vec<u64>>, ask: bool
         #[cfg(not(target_arch = "wasm32"))]
         if app.locks.is_some()
             && crate::documents::session_at(app, &part).is_none()
-            && sketcraft_engine::io::design_lock::held_elsewhere(std::path::Path::new(&part), sketcraft_engine::io::design_lock::now_secs())
-                .is_some()
+            && sketcraft_engine::io::design_lock::held_elsewhere(std::path::Path::new(&part), sketcraft_engine::io::design_lock::now_secs()).is_some()
         {
             return Err(crate::i18n::format("ui.edit_in_place_open_elsewhere", &[("name", &file_name(&part))]));
         }
@@ -294,7 +293,7 @@ fn prepare(app: &mut SolveApp, component: u64, path: Option<Vec<u64>>, ask: bool
 
 /// The design shown has become the part an edit waits for: the edit starts there. An edit whose
 /// part did not open (the open failed or was cancelled) is dropped by [`tick`].
-pub(crate) fn attach(app: &mut SolveApp) {
+pub(crate) fn attach(app: &mut SketApp) {
     let shown = app.session.path.as_deref();
     let Some(mut context) = app.edit_in_place.pending.take_if(|c| shown.is_some_and(|p| crate::documents::same_path(p, &c.part))) else {
         return;
@@ -309,7 +308,7 @@ pub(crate) fn attach(app: &mut SolveApp) {
 
 /// The name of the design shown, while it reads its links for a part edited in place (it is
 /// not saved until the read is done).
-pub(crate) fn refreshing_assembly(app: &SolveApp) -> Option<String> {
+pub(crate) fn refreshing_assembly(app: &SketApp) -> Option<String> {
     let r = app.edit_in_place.refresh.as_ref()?;
     app.session.path.as_deref().filter(|p| crate::documents::same_path(p, &r.assembly))?;
     Some(app.session.doc.name.clone())
@@ -317,7 +316,7 @@ pub(crate) fn refreshing_assembly(app: &SolveApp) -> Option<String> {
 
 /// Update Links pressed while a part is edited in place: the assembly's tab reads its links again
 /// (off the window thread), and the picture around the part follows.
-pub(crate) fn refresh(app: &mut SolveApp) {
+pub(crate) fn refresh(app: &mut SketApp) {
     // A refresh already running is the one asked for.
     if app.edit_in_place.refreshing() {
         return;
@@ -356,7 +355,7 @@ pub(crate) fn refresh(app: &mut SolveApp) {
 
 /// Take up a finished refresh: the assembly's tab adopts it when it is still the assembly the
 /// run started from, and the picture around the part is taken again.
-fn take_refresh(app: &mut SolveApp) {
+fn take_refresh(app: &mut SketApp) {
     let Some(r) = &app.edit_in_place.refresh else { return };
     // An undo, a command or a feature still being computed in the assembly goes first: taken up
     // under it, the refresh would be what it undoes or what it is refused for.
@@ -414,7 +413,7 @@ fn take_refresh(app: &mut SolveApp) {
 
 /// Finish Edit from the window (its button, the back button): a part with changes is saved
 /// first, with whatever the save asks, and the edit finishes once the save is done.
-pub(crate) fn finish(app: &mut SolveApp) {
+pub(crate) fn finish(app: &mut SketApp) {
     if let Err(why) = finish_with(app, true) {
         app.set_status(why, true);
     }
@@ -423,13 +422,13 @@ pub(crate) fn finish(app: &mut SolveApp) {
 /// `component.finish_edit` run as a command: it opens nothing, so a part with changes is
 /// refused (save it first), as is anything else that holds Finish Edit up. The refusal is
 /// its error, which the caller reports; `true`: it waits for the end of the agent's turn.
-pub(crate) fn finish_command(app: &mut SolveApp) -> Result<bool, String> {
+pub(crate) fn finish_command(app: &mut SketApp) -> Result<bool, String> {
     finish_with(app, false)
 }
 
 /// Save the part (`save`: and wait for it), go back to the assembly, close the part's tab when
 /// the edit opened it and read the assembly's links again. `true`: it waits for the agent.
-fn finish_with(app: &mut SolveApp, save: bool) -> Result<bool, String> {
+fn finish_with(app: &mut SketApp, save: bool) -> Result<bool, String> {
     let Some(part) = app.edit_in_place.active.as_ref().map(|c| c.part.clone()) else {
         return Err(crate::i18n::tr("ui.edit_in_place_none").to_string());
     };
@@ -484,7 +483,7 @@ fn finish_with(app: &mut SolveApp, save: bool) -> Result<bool, String> {
 
 /// Nothing is under way in the part that leaving its tab would cut short or that waits for an
 /// answer: a dialog or tool, a feature being computed or edited, a sketch, a prompt or Home.
-fn can_finish(app: &SolveApp) -> bool {
+fn can_finish(app: &SketApp) -> bool {
     !working(app)
         && app.docs.closing.is_none()
         && app.docs.quitting.is_none()
@@ -499,7 +498,7 @@ fn can_finish(app: &SolveApp) -> bool {
 /// Each frame: a refresh that finished is taken up; an edit waiting for a part that nothing will
 /// open any more is dropped; and Finish Edit goes on once the part's save is done, in the
 /// part's own tab (a save that failed, was cancelled or went elsewhere leaves the edit as it was).
-pub(crate) fn tick(app: &mut SolveApp) {
+pub(crate) fn tick(app: &mut SketApp) {
     take_refresh(app);
     if app.edit_in_place.pending.is_some() && !app.file_load.busy() && app.network_prompt.is_none() && app.lock_prompts.is_empty() {
         app.edit_in_place.pending = None;
@@ -536,31 +535,31 @@ pub(crate) fn tick(app: &mut SolveApp) {
 }
 
 /// The agent's turn was stopped: what it asked to do once the turn ended is not done.
-pub(crate) fn forget_after_turn(app: &mut SolveApp) {
+pub(crate) fn forget_after_turn(app: &mut SketApp) {
     app.edit_in_place.finish_after_turn = None;
     app.edit_in_place.enter_after_turn = None;
 }
 
 /// The mouse's back button (or a keyboard's Back key) pressed while a part is edited in place:
 /// Finish Edit, which says why when something open in the part holds it up.
-pub(crate) fn back(app: &mut SolveApp) {
+pub(crate) fn back(app: &mut SketApp) {
     if app.edit_in_place.active.is_some() {
         finish(app);
     }
 }
 
 /// What the scene key needs of the edit: the assembly picture shown (0: none).
-pub(crate) fn scene_key(app: &SolveApp) -> usize {
+pub(crate) fn scene_key(app: &SketApp) -> usize {
     app.edit_in_place.active.as_ref().map_or(0, |c| Arc::as_ptr(&c.triangles) as usize)
 }
 
 /// The extent of the assembly around the part, when one is shown.
-pub(crate) fn bounds(app: &SolveApp) -> Option<Aabb3> {
+pub(crate) fn bounds(app: &SketApp) -> Option<Aabb3> {
     app.edit_in_place.active.as_ref().map(|c| c.bounds).filter(|b| !b.is_empty())
 }
 
 /// Draw the assembly around the part, faded and out of reach of picks.
-pub(crate) fn draw_context(app: &SolveApp, sc: &mut GpuScene) {
+pub(crate) fn draw_context(app: &SketApp, sc: &mut GpuScene) {
     let Some(context) = &app.edit_in_place.active else { return };
     let col = sc.color(crate::viewport::c4(Tokens::get().body.gamma_multiply(0.35)));
     for (p, n) in context.triangles.iter() {
@@ -570,7 +569,7 @@ pub(crate) fn draw_context(app: &SolveApp, sc: &mut GpuScene) {
 
 /// Above the browser's rows while a part is edited in place: which assembly it is in (Finish
 /// Editing is on the MODEL tab).
-pub(crate) fn browser_strip(app: &SolveApp, ui: &mut egui::Ui) {
+pub(crate) fn browser_strip(app: &SketApp, ui: &mut egui::Ui) {
     let Some(context) = &app.edit_in_place.active else { return };
     let t = Tokens::get();
     let refreshing = app.edit_in_place.refresh.as_ref().is_some_and(|r| crate::documents::same_path(&r.assembly, &context.assembly));

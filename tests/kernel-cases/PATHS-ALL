@@ -2,7 +2,7 @@
 # (scripts/ci/kernel_rig_plan.py). One git pathspec glob a line, relative to the repository root:
 # `*` stays within a folder, `**` crosses folders. Each area's own sources are in <area>/PATHS.
 #
-# The kernel: solidcore's wrapper and the schema 4 record bridge.
+# The kernel: sketcore's wrapper and the schema 4 record bridge.
 crates/smlib/**
 # The geometry every body is made of: B-rep record, curves, surfaces, meshes.
 crates/geom/**

@@ -38,8 +38,8 @@ use sketcraft_geom::prelude::*;
 use std::collections::{HashMap, HashSet};
 use std::f64::consts::TAU;
 
-use solidcore_record::Vec3;
-use solidcore_record::brep::{
+use sketcore_record::Vec3;
+use sketcore_record::brep::{
     self, Brep, Curve as BCurve, Curve2, Edge, EdgeUseRef, Face, Frame, Loop, Natural, OrientedEdge, OrientedFace, Region, Shell,
     Surface as BSurface, Vertex,
 };
@@ -1381,10 +1381,8 @@ impl<'b, 'a> Builder<'b, 'a> {
             let mut ends = Vec::with_capacity(l.len());
             for (&(_, forward), c) in l.iter().zip(pc) {
                 let [a, b] = c.interval().ok_or("pcurve interval")?;
-                let (s, e) = (
-                    sketcraft_geom::brep::pcurve::eval(c, a).ok_or("pcurve start")?,
-                    sketcraft_geom::brep::pcurve::eval(c, b).ok_or("pcurve end")?,
-                );
+                let (s, e) =
+                    (sketcraft_geom::brep::pcurve::eval(c, a).ok_or("pcurve start")?, sketcraft_geom::brep::pcurve::eval(c, b).ok_or("pcurve end")?);
                 ends.push(if forward { (s, e) } else { (e, s) });
             }
             for k in 0..ends.len() {

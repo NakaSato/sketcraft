@@ -341,7 +341,7 @@ impl Bvh {
 /// The fixed stack is included in image admission; no per-ray heap allocation.
 pub(crate) struct TraceCursor {
     ray: Ray,
-    source_plane: Option<(std::ops::Range<usize>, [solidcore_record::Vec3; 3])>,
+    source_plane: Option<(std::ops::Range<usize>, [sketcore_record::Vec3; 3])>,
     any: bool,
     stack: [usize; STACK_SLOTS],
     length: usize,
@@ -355,7 +355,7 @@ impl TraceCursor {
     }
     /// Only the opt-in general-glass route uses an exact on-surface origin.
     /// Exclude its producing plane, not an epsilon slab or a parallel face.
-    pub(crate) fn from_plane(ray: Ray, range: std::ops::Range<usize>, plane: [solidcore_record::Vec3; 3]) -> Self {
+    pub(crate) fn from_plane(ray: Ray, range: std::ops::Range<usize>, plane: [sketcore_record::Vec3; 3]) -> Self {
         let mut cursor = Self::new(ray, false);
         cursor.source_plane = Some((range, plane));
         cursor
@@ -434,8 +434,8 @@ impl TraceCursor {
 /// are conservative (an axis ray or finite segment's box); no floating ray-depth
 /// ordering, nearest-hit truncation or probability is used for the certificate.
 pub(super) struct PrimitiveScan {
-    min: solidcore_record::Vec3,
-    max: solidcore_record::Vec3,
+    min: sketcore_record::Vec3,
+    max: sketcore_record::Vec3,
     stack: [usize; STACK_SLOTS],
     length: usize,
     leaf: Option<(usize, usize)>,
@@ -447,7 +447,7 @@ pub(super) enum ScanPoll {
     Done,
 }
 impl PrimitiveScan {
-    pub(super) fn new(min: solidcore_record::Vec3, max: solidcore_record::Vec3) -> Result<Self> {
+    pub(super) fn new(min: sketcore_record::Vec3, max: sketcore_record::Vec3) -> Result<Self> {
         if !min.is_finite() || !max.is_finite() || min.x > max.x || min.y > max.y || min.z > max.z {
             return Err(TraceError::InvalidInput("CPU origin scan bounds"));
         }

@@ -2,7 +2,7 @@
 
 use crate::Session;
 use serde_json::{Value, json};
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 use sketcraft_doc::{Document, FeatureKind, RevolveConvention};
 use sketcraft_geom::prelude::*;
 use std::f64::consts::{FRAC_PI_2, PI, SQRT_2};
@@ -326,14 +326,8 @@ fn curved_targets_keep_only_the_material_before_the_post_for_both_axis_signs() {
             for side in if opposed { vec![1.0, -1.0] } else { vec![1.0] } {
                 let probe = Vec3::new(side * 12.0 * (PI / 6.0).cos(), 6.0, -2.5);
                 let arc = &arcs.iter().find(|mb| mb.body.classify_point(probe).unwrap() == sketcraft_kernel::PointClass::Inside).unwrap().body;
-                assert_eq!(
-                    arc.classify_point(Vec3::new(-side * 12.0 * (PI / 6.0).cos(), 6.0, -2.5)).unwrap(),
-                    sketcraft_kernel::PointClass::Outside
-                );
-                assert_eq!(
-                    arc.classify_point(Vec3::new(side * 12.0 * (PI / 6.0).cos(), -6.0, -2.5)).unwrap(),
-                    sketcraft_kernel::PointClass::Outside
-                );
+                assert_eq!(arc.classify_point(Vec3::new(-side * 12.0 * (PI / 6.0).cos(), 6.0, -2.5)).unwrap(), sketcraft_kernel::PointClass::Outside);
+                assert_eq!(arc.classify_point(Vec3::new(side * 12.0 * (PI / 6.0).cos(), -6.0, -2.5)).unwrap(), sketcraft_kernel::PointClass::Outside);
                 let full = PI * (225.0 - 100.0) * 5.0;
                 let angle = sketcraft_kernel::measure(arc).unwrap().volume / full * 360.0;
                 assert!(angle > 60.0 && angle < 90.0, "{angle}");

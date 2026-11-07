@@ -16,11 +16,8 @@ fn theme_traits_use_resolved_background_and_maximal_contrast() {
         palette.dialog_footer = egui::Color32::from_gray(gray);
         assert_eq!(theme_traits(&palette).dark, night, "linear luminance straddles 0.5");
     }
-    let maximal: Vec<_> = crate::theme_files::builtin()
-        .iter()
-        .filter(|f| theme_traits(&resolved_theme(&Prefs::default(), f)).high)
-        .map(|f| f.id.as_str())
-        .collect();
+    let maximal: Vec<_> =
+        crate::theme_files::builtin().iter().filter(|f| theme_traits(&resolved_theme(&Prefs::default(), f)).high).map(|f| f.id.as_str()).collect();
     assert_eq!(maximal.len(), 4, "ordinary palettes must stay Standard: {maximal:?}");
     assert!(maximal.contains(&"1-bit") && maximal.contains(&"1-bit-dark"));
 }
@@ -34,7 +31,7 @@ fn theme_slots_default_persist_allow_command_access_and_restore_with_appearance(
     let out = h.call("ui.prefs", json!({}));
     assert_eq!(out["result"]["theme_day"], "akari");
     assert_eq!(out["result"]["theme_night"], "onyx");
-    let mut restored = SolveApp::new(sketcraft_engine::Session::default(), Default::default());
+    let mut restored = SketApp::new(sketcraft_engine::Session::default(), Default::default());
     restored.load_prefs(&h.app.prefs());
     assert_eq!((restored.preferences.theme_day.as_str(), restored.preferences.theme_night.as_str()), ("akari", "onyx"));
     h.call("ui.prefs", json!({"theme_day":"clay", "theme_night":"clay-dark", "open":"Appearance"}));
@@ -136,7 +133,7 @@ fn theme_system_resolves_custom_day_and_night_by_os_including_cross_tone_slots()
 
 #[test]
 fn theme_mode_switches_preserve_the_effective_theme_and_fill_only_the_aimed_slot() {
-    let mut app = SolveApp::new(sketcraft_engine::Session::default(), Default::default());
+    let mut app = SketApp::new(sketcraft_engine::Session::default(), Default::default());
     select_theme(&mut app, "onyx");
     theme_picker::switch_mode(&mut app, true, true);
     assert_eq!((&app.preferences.theme[..], &app.preferences.theme_day[..], &app.preferences.theme_night[..]), ("system", "light", "onyx"));
@@ -158,8 +155,11 @@ fn theme_mode_switches_preserve_the_effective_theme_and_fill_only_the_aimed_slot
 
 #[test]
 fn theme_filter_counts_ignore_only_their_own_group() {
-    let mut app = SolveApp::new(sketcraft_engine::Session::default(), Default::default());
-    let file = crate::theme_files::from_value(&json!({"format":"sketcraft-theme/1", "name":"Imported maximal", "base":"dark", "colors":{"dialog_footer":"#000000", "form_ink":"#ffffff"}})).unwrap();
+    let mut app = SketApp::new(sketcraft_engine::Session::default(), Default::default());
+    let file = crate::theme_files::from_value(
+        &json!({"format":"sketcraft-theme/1", "name":"Imported maximal", "base":"dark", "colors":{"dialog_footer":"#000000", "form_ink":"#ffffff"}}),
+    )
+    .unwrap();
     crate::theme_files::add(&mut app.preferences.custom_themes, file).unwrap();
     let entries = theme_picker::entries(&app);
     let state = theme_picker::State { tone: Some(true), high: Some(false), imported: false, ..Default::default() };
@@ -234,7 +234,7 @@ fn saved_preferences_with_a_removed_setting_still_load() {
     use serde_json::json;
     for (removed, value) in [
         ("geometry_kernel", json!("smlib")),
-        ("geometry_kernel", json!("solidcore")),
+        ("geometry_kernel", json!("sketcore")),
         ("metric_tap_drill_major_less_pitch", json!(true)),
         ("surface_extrude_symmetric_per_side", json!(true)),
     ] {
@@ -251,11 +251,11 @@ fn saved_preferences_with_a_removed_setting_still_load() {
 #[test]
 fn invert_navigator_arrows_defaults_off_persists_and_resets() {
     assert!(!Prefs::default().invert_navigator_arrows);
-    let mut app = SolveApp::new(sketcraft_engine::Session::default(), Default::default());
+    let mut app = SketApp::new(sketcraft_engine::Session::default(), Default::default());
     assert!(!app.preferences.invert_navigator_arrows);
     app.preferences.invert_navigator_arrows = true;
     assert_eq!(serde_json::to_value(&app.preferences).unwrap()["invert_navigator_arrows"], true);
-    let mut restored = SolveApp::new(sketcraft_engine::Session::default(), Default::default());
+    let mut restored = SketApp::new(sketcraft_engine::Session::default(), Default::default());
     restored.load_prefs(&app.prefs());
     assert!(restored.preferences.invert_navigator_arrows);
     super::reset_preferences(&mut app.preferences, super::PAGE_NAVIGATION);
@@ -267,11 +267,11 @@ fn invert_navigator_arrows_defaults_off_persists_and_resets() {
 #[test]
 fn invert_curved_roll_arrows_defaults_off_persists_and_resets() {
     assert!(!Prefs::default().invert_curved_roll_arrows);
-    let mut app = SolveApp::new(sketcraft_engine::Session::default(), Default::default());
+    let mut app = SketApp::new(sketcraft_engine::Session::default(), Default::default());
     assert!(!app.preferences.invert_curved_roll_arrows);
     app.preferences.invert_curved_roll_arrows = true;
     assert_eq!(serde_json::to_value(&app.preferences).unwrap()["invert_curved_roll_arrows"], true);
-    let mut restored = SolveApp::new(sketcraft_engine::Session::default(), Default::default());
+    let mut restored = SketApp::new(sketcraft_engine::Session::default(), Default::default());
     restored.load_prefs(&app.prefs());
     assert!(restored.preferences.invert_curved_roll_arrows);
     super::reset_preferences(&mut app.preferences, super::PAGE_NAVIGATION);
@@ -303,7 +303,7 @@ fn keep_unsaved_in_browser_is_off_and_only_the_web_app_offers_it() {
     h.call("ui.prefs", json!({"button":"ok"}));
     assert!(h.app.preferences.keep_unsaved_in_browser);
     assert!(h.app.preferences.keep_unsaved_also_asks, "keeping work still asks unless told not to");
-    let mut restored = crate::SolveApp::new(Default::default(), Default::default());
+    let mut restored = crate::SketApp::new(Default::default(), Default::default());
     restored.load_prefs(&h.app.prefs());
     assert!(restored.preferences.keep_unsaved_in_browser, "it is saved with the settings");
 }
@@ -311,7 +311,7 @@ fn keep_unsaved_in_browser_is_off_and_only_the_web_app_offers_it() {
 #[test]
 fn trackpad_zoom_modifier_roundtrips_and_validates_control_values() {
     assert_eq!(Prefs::default().trackpad_zoom_modifier, TrackpadZoomModifier::Off);
-    let mut app = SolveApp::new(sketcraft_engine::Session::default(), Default::default());
+    let mut app = SketApp::new(sketcraft_engine::Session::default(), Default::default());
     for (id, value) in [
         ("cmd", TrackpadZoomModifier::Cmd),
         ("alt", TrackpadZoomModifier::Alt),
@@ -323,7 +323,7 @@ fn trackpad_zoom_modifier_roundtrips_and_validates_control_values() {
         let saved = serde_json::to_value(&app.preferences).unwrap();
         assert_eq!(saved["trackpad_zoom_modifier"], id);
         assert_eq!(lenient(&saved).trackpad_zoom_modifier, value);
-        let mut restored = SolveApp::new(sketcraft_engine::Session::default(), Default::default());
+        let mut restored = SketApp::new(sketcraft_engine::Session::default(), Default::default());
         restored.load_prefs(&app.prefs());
         assert_eq!(restored.preferences.trackpad_zoom_modifier, value);
     }
@@ -343,12 +343,12 @@ fn trackpad_zoom_modifier_roundtrips_and_validates_control_values() {
 #[test]
 fn command_dialog_value_memory_defaults_off_persists_and_resets() {
     assert!(!Prefs::default().remember_dialog_values);
-    let mut app = SolveApp::new(sketcraft_engine::Session::default(), Default::default());
+    let mut app = SketApp::new(sketcraft_engine::Session::default(), Default::default());
     assert!(!app.preferences.remember_dialog_values);
     app.preferences.remember_dialog_values = true;
     assert_eq!(serde_json::to_value(&app.preferences).unwrap()["remember_dialog_values"], true);
 
-    let mut restored = SolveApp::new(sketcraft_engine::Session::default(), Default::default());
+    let mut restored = SketApp::new(sketcraft_engine::Session::default(), Default::default());
     restored.load_prefs(&app.prefs());
     assert!(restored.preferences.remember_dialog_values);
     reset_preferences(&mut app.preferences, PAGE_TOOLS);
@@ -425,7 +425,7 @@ fn navigation_bar_control_reads_writes_validates_and_restores() {
         assert!(super::control(&mut h.app, &json!({"navigation_bar":bad,"zoom_reverse":true})).is_err());
         assert_eq!(h.app.preferences, before, "failed updates are atomic");
     }
-    let mut restored = crate::SolveApp::new(Default::default(), Default::default());
+    let mut restored = crate::SketApp::new(Default::default(), Default::default());
     restored.load_prefs(&h.app.prefs());
     assert_eq!(restored.preferences.navigation_bar, NavigationBar::default(), "a change that was not applied is not saved (#9730)");
     h.call("ui.prefs", json!({"button":"cancel"}));
@@ -596,10 +596,7 @@ fn navigation_bar_inspector_and_status_keep_full_width_for_every_selection() {
         let mut h = crate::scenario::Harness::new();
         h.app.home.open = false;
         h.call("ui.resize", json!({"width":width,"height":1100}));
-        h.call(
-            "ui.prefs",
-            json!({"open":"Interface/Navigation bar", "navigation_bar":{"slots":["pan","fit","visual_style","display","separator"]}}),
-        );
+        h.call("ui.prefs", json!({"open":"Interface/Navigation bar", "navigation_bar":{"slots":["pan","fit","visual_style","display","separator"]}}));
         h.frames(20);
         for slot in [None, Some("pan"), Some("fit"), Some("visual_style"), Some("display"), Some("separator")] {
             if let Some(slot) = slot {
@@ -782,121 +779,9 @@ fn navigation_bar_menu_options_cancel_defaults_and_section_reset() {
 }
 
 #[test]
-fn the_ghost_position_defaults_round_trips_and_reads_tolerantly() {
-    use super::SpaceMouseGhost::{LeftViewport as Current, LeftWindow as Left, RightViewport as Right};
-    assert_eq!(serde_json::from_value::<super::Prefs>(serde_json::json!({})).unwrap().space_mouse_ghost_position, Current);
-    for position in [Current, Left, Right] {
-        let prefs = super::Prefs { space_mouse_ghost_position: position, ..Default::default() };
-        let again: super::Prefs = serde_json::from_value(serde_json::to_value(&prefs).unwrap()).unwrap();
-        assert_eq!(again.space_mouse_ghost_position, position);
-    }
-    // A value from a newer build costs that setting only.
-    for (old, position) in [("current", Current), ("left", Left), ("right", Right)] {
-        let read = serde_json::from_value::<super::Prefs>(serde_json::json!({ "space_mouse_ghost_position": old })).unwrap();
-        assert_eq!(read.space_mouse_ghost_position, position, "{old}");
-    }
-    assert_eq!(serde_json::to_value(Left).unwrap(), "left_window");
-    let read = super::lenient(&serde_json::json!({ "space_mouse_ghost_position": "top", "space_mouse_speed": 2.0 }));
-    assert_eq!((read.space_mouse_ghost_position, read.space_mouse_speed), (Current, 2.0));
-}
-
-#[test]
-fn the_calibration_offer_record_round_trips_and_reads_tolerantly() {
-    let prefs: super::Prefs =
-        serde_json::from_value(serde_json::json!({ "space_mouse_offered": ["spacenavd", 7, null, "hid 046d:c62b"] })).unwrap();
-    assert_eq!(prefs.space_mouse_offered, ["spacenavd".to_string(), "hid 046d:c62b".to_string()].into());
-    let again: super::Prefs = serde_json::from_value(serde_json::to_value(&prefs).unwrap()).unwrap();
-    assert_eq!(again.space_mouse_offered, prefs.space_mouse_offered);
-    // Files from before it existed read as nothing offered yet.
-    assert!(serde_json::from_value::<super::Prefs>(serde_json::json!({})).unwrap().space_mouse_offered.is_empty());
-}
-
-/// The 3D mouse section is laid out inside the panel it is in, at every panel width: nothing it
-/// draws reaches past the right edge (the rows used to run off it and get clipped).
-#[test]
-fn the_3d_mouse_section_stays_inside_the_panel_at_every_width() {
-    for width in [420.0_f32, 560.0, 700.0, 900.0, 1200.0] {
-        let mut app = crate::SolveApp::new(sketcraft_engine::Session::default(), crate::Services::default());
-        app.space_mouse.device = Some("hid 046d:c62b".into());
-        app.space_mouse.drivers = Some(crate::space_mouse::DriversPresent { spacenavd: true, direct: true, denied: false });
-        app.preferences.space_mouse_in_view = true;
-        // Calibrated, so the device's picture and the test model sit side by side where there is room.
-        let axes = std::array::from_fn(|source| sketcraft_space_mouse::AxisCalibration {
-            source,
-            reversed: false,
-            rest: 0,
-            dead_zone: 0,
-            full: [350; 2],
-        });
-        app.preferences.space_mouse_calibrations.insert(
-            "hid 046d:c62b".into(),
-            sketcraft_space_mouse::Calibration { dead_zone_share: 0.0, kind: sketcraft_space_mouse::Kind::ReturnToCenter, axes },
-        );
-        let ctx = crate::fonts::test_context();
-        let panel = egui::Rect::from_min_size(egui::pos2(10.0, 10.0), egui::vec2(width, 1400.0));
-        for frame in 0..4 {
-            let input = egui::RawInput {
-                screen_rect: Some(egui::Rect::from_min_size(egui::Pos2::ZERO, egui::vec2(width + 40.0, 1500.0))),
-                focused: true,
-                ..Default::default()
-            };
-            let mut output = ctx.run_ui(input, |ui| {
-                ui.scope_builder(egui::UiBuilder::new().max_rect(panel), |ui| {
-                    super::space_mouse_section(&mut app, ui);
-                    let wide: Vec<_> = crate::scenario::rects("").into_iter().filter(|(_, r)| r.right() > panel.right() + 0.5).collect();
-                    assert!(
-                        ui.min_rect().right() <= panel.right() + 0.5,
-                        "width {width}, frame {frame}: the section reaches {}; past the panel: {wide:?}",
-                        ui.min_rect().right()
-                    );
-                });
-            });
-            output.textures_delta.clear();
-        }
-    }
-}
-
-/// The calibration window keeps its texts and sliders inside itself at the widths it can be
-/// given, for both kinds of device (the notice card is clamped to the free width by construction).
-#[test]
-fn the_calibration_window_keeps_its_contents_inside() {
-    for width in [360.0_f32, 520.0, 900.0] {
-        for kind in [sketcraft_space_mouse::Kind::ReturnToCenter, sketcraft_space_mouse::Kind::Trackball] {
-            let mut app = crate::SolveApp::new(sketcraft_engine::Session::default(), crate::Services::default());
-            app.space_mouse.device = Some("hid 046d:c62b".into());
-            crate::space_mouse_calibration::start(&mut app);
-            app.space_mouse.calibrating.as_mut().unwrap().1.choose(kind);
-            let ctx = crate::fonts::test_context();
-            for _ in 0..6 {
-                crate::scenario::clear_handles();
-                let input = egui::RawInput {
-                    screen_rect: Some(egui::Rect::from_min_size(egui::Pos2::ZERO, egui::vec2(width, 900.0))),
-                    focused: true,
-                    ..Default::default()
-                };
-                let mut output = ctx.run_ui(input, |ui| crate::space_mouse_calibration::show(&mut app, ui.ctx()));
-                output.textures_delta.clear();
-            }
-            let window = crate::scenario::rect_of("dialog:window").expect("the window is drawn");
-            for (name, rect) in crate::scenario::rects("dialog:").into_iter().filter(|(name, _)| {
-                name.starts_with("dialog:slider")
-                    || name.starts_with("dialog:widget")
-                    || name.starts_with("dialog:note")
-                    || name.starts_with("dialog:report")
-            }) {
-                assert!(
-                    rect.right() <= window.right() + 0.5 && rect.left() >= window.left() - 0.5,
-                    "width {width} {kind:?}: {name} {rect:?} is outside {window:?}"
-                );
-            }
-        }
-    }
-}
-
-#[test]
 fn preferred_units_update_only_a_blank_unsaved_design() {
     for design in ["new", "saved", "content"] {
-        let mut app = crate::SolveApp::new(sketcraft_engine::Session::default(), Default::default());
+        let mut app = crate::SketApp::new(sketcraft_engine::Session::default(), Default::default());
         match design {
             "saved" => app.session.path = Some("empty.sketcraft".into()),
             "content" => {
@@ -924,53 +809,6 @@ fn preferred_units_update_only_a_blank_unsaved_design() {
             assert!(app.session.undo.is_empty());
         }
     }
-}
-
-/// What Preferences says of the 3D mouse before one is confirmed: a reachable reader that has sent
-/// nothing yet asks for a movement; only nothing reachable says none was found.
-#[test]
-fn the_device_line_asks_for_a_movement_when_a_reader_is_reachable_and_only_then_says_none_found() {
-    use crate::space_mouse::DriversPresent;
-    let none = DriversPresent { spacenavd: false, direct: false, denied: false };
-    assert!(!waiting_for_a_record(None) && !waiting_for_a_record(Some(none)));
-    assert!(waiting_for_a_record(Some(DriversPresent { spacenavd: true, direct: false, denied: false })), "a daemon, no record yet");
-    assert!(waiting_for_a_record(Some(DriversPresent { spacenavd: false, direct: true, denied: false })), "a readable device, no record yet");
-    assert!(waiting_for_a_record(Some(DriversPresent { spacenavd: true, direct: true, denied: false })));
-    // The texts differ, and the first one is the Calibrate hint.
-    assert_ne!(crate::i18n::tr("ui.3d_mouse_none"), crate::i18n::tr("ui.3d_mouse_calibrate_wait"));
-    // A confirmed device is neither (the status names it).
-    let mut h = crate::scenario::Harness::new();
-    h.app.home.open = false;
-    h.app.space_mouse.device = Some("spacenavd".into());
-    h.app.space_mouse.drivers = Some(DriversPresent { spacenavd: true, direct: false, denied: false });
-    crate::prefs::open_at(&mut h.app, crate::prefs::PAGE_MOUSE3D);
-    h.frames(3);
-    assert!(h.app.prefs_window.open);
-}
-
-/// Calibration starts while Preferences is open, and its window is on top of it; with no device
-/// known there is nothing to start (the button is off and says why, see the hint key).
-#[test]
-fn calibration_opens_over_an_open_preferences_and_waits_for_a_device() {
-    let mut h = crate::scenario::Harness::new();
-    h.app.home.open = false;
-    // After a driver change and before any reading: no device, so nothing starts.
-    h.app.space_mouse.device = None;
-    crate::prefs::open_at(&mut h.app, crate::prefs::PAGE_MOUSE3D);
-    h.frames(5);
-    assert!(crate::i18n::tr("ui.3d_mouse_calibrate_wait").starts_with("Move the 3D mouse"));
-    crate::space_mouse_calibration::start(&mut h.app);
-    h.frames(3);
-    assert!(h.app.space_mouse.calibrating.is_none() && h.app.prefs_window.open);
-    // The device is seen: the window opens, above Preferences, which stays open.
-    h.app.space_mouse.device = Some("hid 046d:c62b".into());
-    h.frames(3);
-    crate::space_mouse_calibration::start(&mut h.app);
-    h.frames(5);
-    assert!(h.app.space_mouse.calibrating.is_some() && h.app.prefs_window.open);
-    let window = crate::scenario::rect_of("dialog:window").expect("the calibration window is the last window drawn");
-    let top = h.ctx.layer_id_at(window.center());
-    assert!(top.is_some_and(|layer| layer.id == egui::Id::unique("sc_space_mouse_calibration")), "top is {top:?}");
 }
 
 /// Scrolls vertically to the handle, then clicks after the wheel animation settles.
@@ -1005,852 +843,30 @@ fn scroll_to_and_click(h: &mut crate::scenario::Harness, handle: &str) {
 }
 
 #[test]
-fn folding_a_3d_mouse_section_does_not_move_navigation_controls() {
-    for width in [900, 1100, 1318, 1600, 1920] {
-        let mut h = crate::scenario::Harness::new();
-        h.app.home.open = false;
-        h.call("ui.resize", json!({"width":width,"height":900}));
-        open_at(&mut h.app, PAGE_NAVIGATION);
-        h.frames(6);
-        let rows = ["Middle double-click", "View navigator"];
-        let controls = || rows.map(|name| crate::scenario::rect_of(&format!("dialog:control:{name}")));
-        let before = controls();
-        assert!(before.iter().all(Option::is_some));
-        open_at(&mut h.app, PAGE_MOUSE3D);
-        h.frames(6);
-        assert!(h.widget("Middle double-click").is_none());
-        scroll_to_and_click(&mut h, "dialog:section:Device");
-        open_at(&mut h.app, PAGE_NAVIGATION);
-        h.frames(6);
-        assert_eq!(controls(), before);
-    }
-}
-
-/// The meter in a view axis row shows the motion chosen in its "driven by" menu, calibrated or not.
-#[test]
-fn an_axis_meter_follows_the_motion_that_drives_it() {
-    let raw = [0, 0, 0, 175, 0, 0];
-    let full = f32::from(crate::space_mouse::FULL_SCALE);
-    let mut source = crate::space_mouse::SAME_AXES;
-    assert_eq!(axis_meter(None, raw, source, 2).0, 0.0, "Zoom reads its own motion");
-    crate::space_mouse::reassign(&mut source, 2, 3);
-    assert_eq!(axis_meter(None, raw, source, 2), (175.0 / full, [0.0; 2]), "Zoom now shows Rotation X");
-    assert_eq!(axis_meter(None, raw, source, 3).0, 0.0, "and the row that gave Rotation X up shows what it took in exchange");
-    let axes =
-        std::array::from_fn(|source| sketcraft_space_mouse::AxisCalibration { source, reversed: false, rest: 0, dead_zone: 0, full: [350; 2] });
-    let calibration = sketcraft_space_mouse::Calibration { dead_zone_share: 0.2, kind: sketcraft_space_mouse::Kind::ReturnToCenter, axes };
-    assert_eq!(axis_meter(Some(&calibration), raw, source, 2), (0.5, [0.2; 2]), "calibrated: share of travel, with the dead zone");
-}
-
-/// Restore defaults for the 3D mouse section puts back what it lists, and nothing else.
-#[test]
-fn restoring_the_3d_mouse_section_resets_its_settings_and_keeps_the_rest() {
-    let mut h = crate::scenario::Harness::new();
-    h.app.home.open = false;
-    let axes =
-        std::array::from_fn(|source| sketcraft_space_mouse::AxisCalibration { source, reversed: false, rest: 0, dead_zone: 0, full: [350; 2] });
-    let calibration = sketcraft_space_mouse::Calibration { dead_zone_share: 0.2, kind: sketcraft_space_mouse::Kind::ReturnToCenter, axes };
-    let p = &mut h.app.preferences;
-    p.space_mouse_calibrations.insert("hid 046d:c62b".into(), calibration);
-    p.space_mouse_buttons.insert("hid 046d:c62b".into(), [(1, crate::space_mouse::ButtonJob::Settings)].into());
-    p.space_mouse_offered.insert("hid 046d:c62b".into());
-    p.space_mouse_offer_never = true;
-    p.space_mouse_enabled = false;
-    p.space_mouse_driver = SpaceMouseDriver::Direct;
-    p.space_mouse_speed = 2.5;
-    p.space_mouse_reverse = [true; 6];
-    p.space_mouse_axis_speed = [0.25; 6];
-    p.space_mouse_axis_source = [1, 0, 2, 3, 4, 5];
-    p.space_mouse_ghost_position = SpaceMouseGhost::LeftWindow;
-    p.space_mouse_in_view = true;
-    p.space_mouse_model_pivot = true;
-    p.space_mouse_sketch_orbit = true;
-    let before = h.app.preferences.clone();
-    let camera = h.app.cam;
-    restore_space_mouse_defaults(&mut h.app);
-    let d = Prefs::default();
-    let p = &h.app.preferences;
-    assert_eq!(
-        (p.space_mouse_driver, p.space_mouse_speed, p.space_mouse_reverse),
-        (d.space_mouse_driver, d.space_mouse_speed, d.space_mouse_reverse)
-    );
-    assert_eq!((p.space_mouse_axis_speed, p.space_mouse_axis_source), (d.space_mouse_axis_speed, d.space_mouse_axis_source));
-    assert_eq!((p.space_mouse_ghost_position, p.space_mouse_in_view), (d.space_mouse_ghost_position, d.space_mouse_in_view));
-    assert_eq!((p.space_mouse_model_pivot, p.space_mouse_sketch_orbit), (d.space_mouse_model_pivot, d.space_mouse_sketch_orbit));
-    // Kept: the calibration (dead zone too), the buttons, the offered set, never, enabled, the rest of the page.
-    assert_eq!(p.space_mouse_calibrations, before.space_mouse_calibrations);
-    assert_eq!(p.space_mouse_buttons, before.space_mouse_buttons);
-    assert_eq!(p.space_mouse_offered, before.space_mouse_offered);
-    assert!(p.space_mouse_offer_never && !p.space_mouse_enabled);
-    assert_eq!(p.nav, before.nav);
-    assert_eq!(h.app.cam, camera);
-    // And it asks first: the real button only arms it (see cancelling_the_restore_question_changes_nothing).
-    assert!(!h.app.space_mouse.restore_pending);
-}
-
-/// The 3D mouse's orbit is a choice of two: Classic turns around the view's centre, Traced
-/// around the model in the middle of the view.
-#[test]
-fn the_3d_mouse_orbit_is_traced_or_classic() {
-    let mut h = changed_3d_mouse_settings(None);
-    assert!(!h.app.preferences.space_mouse_model_pivot, "classic is the default");
-    scroll_to_and_click(&mut h, "prefs:3d_mouse_orbit_traced");
-    assert!(h.app.preferences.space_mouse_model_pivot, "traced is opt-in");
-    scroll_to_and_click(&mut h, "prefs:3d_mouse_orbit_classic");
-    assert!(!h.app.preferences.space_mouse_model_pivot, "classic again");
-    open_at(&mut h.app, PAGE_NAVIGATION);
-    h.frames(4);
-    assert!(!h.app.preferences.zoom_stop_at_model, "stop-at-model zoom is off by default");
-    scroll_to_and_click(&mut h, "prefs:zoom_stop_at_model");
-    assert!(h.app.preferences.zoom_stop_at_model, "stop-at-model zoom is opt-in");
-    assert!(h.app.preferences.zoom_to_cursor, "the wheel preference is unchanged");
-}
-
-#[test]
 fn model_navigation_is_opt_in_and_persists() {
     for to_cursor in [false, true] {
         let old = serde_json::from_value::<Prefs>(json!({"zoom_to_cursor": to_cursor})).unwrap();
-        assert!(!old.zoom_stop_at_model && !old.space_mouse_model_pivot, "older saved preferences keep legacy navigation");
+        assert!(!old.zoom_stop_at_model, "older saved preferences keep legacy navigation");
         assert_eq!(old.zoom_to_cursor, to_cursor);
     }
-    let mut app = SolveApp::new(sketcraft_engine::Session::default(), Default::default());
-    assert!(!app.preferences.zoom_stop_at_model && !app.preferences.space_mouse_model_pivot);
-    let enabled = json!({"open": "Navigation", "zoom_stop_at_model": true, "space_mouse_model_pivot": true});
+    let mut app = SketApp::new(sketcraft_engine::Session::default(), Default::default());
+    assert!(!app.preferences.zoom_stop_at_model);
+    let enabled = json!({"open": "Navigation", "zoom_stop_at_model": true});
     control(&mut app, &enabled).unwrap();
     control(&mut app, &json!({"button": "cancel"})).unwrap();
-    assert!(!app.preferences.zoom_stop_at_model && !app.preferences.space_mouse_model_pivot);
+    assert!(!app.preferences.zoom_stop_at_model);
     let reply = control(&mut app, &enabled).unwrap();
     assert_eq!(reply["zoom_stop_at_model"], true);
-    assert_eq!(reply["space_mouse_model_pivot"], true);
     control(&mut app, &json!({"button": "apply"})).unwrap();
-    let mut other = SolveApp::new(sketcraft_engine::Session::default(), Default::default());
+    let mut other = SketApp::new(sketcraft_engine::Session::default(), Default::default());
     other.load_prefs(&app.prefs());
-    assert!(other.preferences.zoom_stop_at_model && other.preferences.space_mouse_model_pivot);
+    assert!(other.preferences.zoom_stop_at_model);
     assert!(other.preferences.zoom_to_cursor, "enabling model navigation leaves wheel zoom alone");
     control(&mut app, &json!({"button": "defaults"})).unwrap();
     assert!(!app.preferences.zoom_stop_at_model);
-    assert!(app.preferences.space_mouse_model_pivot, "Navigation defaults leave 3D mouse settings alone");
-    control(&mut app, &json!({"open":"3D mouse", "button":"defaults"})).unwrap();
-    assert!(!app.preferences.space_mouse_model_pivot);
     assert!(app.preferences.zoom_to_cursor, "Navigation defaults still anchor the wheel");
     control(&mut app, &json!({"button": "cancel"})).unwrap();
-    assert!(app.preferences.zoom_stop_at_model && app.preferences.space_mouse_model_pivot, "Cancel restores the last Apply");
-}
-
-/// Opens Preferences on the 3D mouse page with its section open and these settings
-/// changed from their defaults, as a person who changed them would find it.
-fn changed_3d_mouse_settings(device: Option<&str>) -> crate::scenario::Harness {
-    let mut h = crate::scenario::Harness::new();
-    h.app.home.open = false;
-    h.app.space_mouse.device = device.map(str::to_owned);
-    let axes =
-        std::array::from_fn(|source| sketcraft_space_mouse::AxisCalibration { source, reversed: false, rest: 0, dead_zone: 0, full: [350; 2] });
-    let calibration = sketcraft_space_mouse::Calibration { dead_zone_share: 0.2, kind: sketcraft_space_mouse::Kind::ReturnToCenter, axes };
-    let p = &mut h.app.preferences;
-    p.space_mouse_calibrations.insert("hid 046d:c62b".into(), calibration);
-    p.space_mouse_driver = SpaceMouseDriver::Direct;
-    p.space_mouse_speed = 2.5;
-    p.space_mouse_reverse = [true; 6];
-    p.space_mouse_axis_speed = [0.25; 6];
-    p.space_mouse_axis_source = [1, 0, 2, 3, 4, 5];
-    p.space_mouse_ghost_position = SpaceMouseGhost::LeftWindow;
-    p.space_mouse_in_view = true;
-    h.call("ui.resize", serde_json::json!({"width": 1600, "height": 4000}));
-    crate::prefs::open_at(&mut h.app, crate::prefs::PAGE_MOUSE3D);
-    h.frames(36);
-    h
-}
-
-/// Axes and buttons have independent search homes and stay available when Advanced folds.
-#[test]
-fn the_3d_mouse_sections_keep_axes_and_buttons_outside_advanced() {
-    let mut h = crate::scenario::Harness::new();
-    h.app.home.open = false;
-    h.app.space_mouse.device = Some("hid 046d:c62b".into());
-    h.app.space_mouse.seen = 1;
-    h.app.space_mouse.drivers = Some(crate::space_mouse::DriversPresent { spacenavd: true, direct: true, denied: false });
-    h.call("ui.resize", json!({"width":1600,"height":4000}));
-    open_at(&mut h.app, PAGE_MOUSE3D);
-    h.frames(36);
-    let sections = ["space_mouse_device", "space_mouse_orbit", "space_mouse_axes", "space_mouse_buttons", "space_mouse_advanced"];
-    let bodies = sections.map(|key| crate::scenario::rect_of(&format!("prefs:section:{key}:body")).unwrap());
-    assert!(bodies.windows(2).all(|pair| pair[0].bottom() <= pair[1].top()));
-    assert!(crate::scenario::rect_of("dialog:row:Button 1").is_some());
-    assert!(crate::scenario::rect_of("dialog:row:Driver").is_some());
-    scroll_to_and_click(&mut h, "dialog:section:Advanced");
-    assert!(crate::scenario::rect_of("dialog:row:Driver").is_none());
-    assert!(crate::scenario::rect_of("dialog:row:Button 1").is_some());
-    assert!(crate::scenario::rect_of("prefs:space_mouse_reset_axes").is_some());
-}
-
-#[test]
-fn mouse3d_device_card_uses_content_height_and_paints_status_and_actions_at_its_top() {
-    let previous = crate::theme::is_dark();
-    for dark in [false, true] {
-        crate::theme::set_dark(dark);
-        let t = Tokens::get();
-        for width in [280.0, 646.0] {
-            for (drivers, status_id) in [
-                (None, "ui.3d_mouse_none"),
-                (Some(crate::space_mouse::DriversPresent { spacenavd: true, direct: false, denied: false }), "ui.3d_mouse_calibrate_wait"),
-                (Some(crate::space_mouse::DriversPresent { spacenavd: false, direct: true, denied: true }), "ui.3d_mouse_denied_short"),
-            ] {
-                let mut heights = Vec::new();
-                for viewport_height in [900.0, 1800.0] {
-                    let ctx = crate::fonts::test_context();
-                    let mut app = SolveApp::new(sketcraft_engine::Session::default(), Default::default());
-                    app.preferences.language = "en".into();
-                    app.space_mouse.drivers = drivers;
-                    let before = app.preferences.clone();
-                    crate::scenario::clear_handles();
-                    let output = crate::test_support::frame(
-                        &ctx,
-                        egui::RawInput {
-                            screen_rect: Some(egui::Rect::from_min_size(egui::Pos2::ZERO, egui::vec2(800.0, viewport_height))),
-                            ..Default::default()
-                        },
-                        |ui| {
-                            ui_kit::scope(ui, |ui| {
-                                ui.set_width(width);
-                                super::space_mouse_section(&mut app, ui);
-                            });
-                        },
-                    );
-                    let card = crate::scenario::rect_of("prefs:space_mouse_device_card").unwrap();
-                    let status = crate::scenario::rect_of("prefs:space_mouse_status").unwrap();
-                    let calibrate = crate::scenario::rect_of("prefs:space_mouse_calibrate").unwrap();
-                    assert!(card.height() < t.control_height * 4.0 + t.space_24 * 2.0, "{width}/{viewport_height}: compact card {card:?}");
-                    assert!(card.contains_rect(status) && card.contains_rect(calibrate));
-                    assert!(status.top() - card.top() < t.control_height, "the status belongs at the card's top");
-                    assert!(calibrate.top() - status.bottom() <= t.space_24, "actions follow the status without viewport-sized space");
-                    for label in [app.tr(status_id), app.tr("ui.3d_mouse_calibrate")] {
-                        let mut painted = 0;
-                        for clipped in &output.shapes {
-                            crate::test_support::each_shape(&clipped.shape, &mut |shape| {
-                                if let egui::Shape::Text(text) = shape
-                                    && text.galley.text() == label
-                                {
-                                    painted += 1;
-                                    let rect = text.galley.rect.translate(text.pos.to_vec2());
-                                    assert!(!text.galley.elided && card.expand(1.0).contains_rect(rect));
-                                    assert!(clipped.clip_rect.expand(1.0).contains_rect(rect), "{label} must be fully painted");
-                                }
-                            });
-                        }
-                        assert_eq!(painted, 1, "one actual {label} is visible");
-                    }
-                    assert_eq!(app.preferences, before);
-                    assert!(app.space_mouse.device.is_none() && app.space_mouse.calibrating.is_none());
-                    heights.push(card.height());
-                }
-                assert!((heights[0] - heights[1]).abs() < 0.5, "viewport height must not stretch the device card");
-            }
-        }
-    }
-    crate::theme::set_dark(previous);
-}
-
-#[test]
-fn reset_axis_assignment_preserves_gains_inversion_and_every_other_setting() {
-    for theme in ["light", "dark"] {
-        let mut h = changed_3d_mouse_settings(Some("hid 046d:c62b"));
-        h.call("ui.prefs", json!({"theme":theme}));
-        let mut expected = h.app.preferences.clone();
-        expected.space_mouse_axis_source = crate::space_mouse::SAME_AXES;
-        scroll_to_and_click(&mut h, "prefs:space_mouse_reset_axes");
-        assert_eq!(h.app.preferences, expected);
-        h.app.preferences.space_mouse_axis_source = [1, 0, 2, 3, 4, 5];
-        h.app.preferences.space_mouse_enabled = false;
-        h.frames(3);
-        let before = h.app.preferences.clone();
-        scroll_to_and_click(&mut h, "prefs:space_mouse_reset_axes");
-        assert_eq!(h.app.preferences, before, "disabled navigation cannot reset assignments");
-    }
-}
-/// The question is short, says what stays, and exists in every language.
-#[test]
-fn the_restore_question_is_short_and_says_what_stays() {
-    let english = crate::i18n::tr("ui.3d_mouse_restore_ask");
-    assert_eq!(english, "Set the 3D mouse settings back to their defaults? Your calibration and button mapping stay.");
-    for catalog in crate::i18n::LOCALES {
-        let text = crate::i18n::Locale::for_language(catalog.id).text("ui.3d_mouse_restore_ask");
-        assert!(text.chars().count() > 20 && text.chars().count() < 140 && text != "ui.3d_mouse_restore_ask", "{}", catalog.id);
-    }
-}
-
-/// Cancel on the question leaves every setting as it was, and the question goes away.
-#[test]
-fn cancelling_the_restore_question_changes_nothing() {
-    let mut h = changed_3d_mouse_settings(Some("hid 046d:c62b"));
-    let before = h.app.preferences.clone();
-    scroll_to_and_click(&mut h, "dialog:button::Restore defaults");
-    assert!(h.app.space_mouse.restore_pending, "the first click only asks");
-    assert_eq!(h.app.preferences, before, "asking changes nothing");
-    scroll_to_and_click(&mut h, "dialog:button::Cancel");
-    assert!(!h.app.space_mouse.restore_pending);
-    assert_eq!(h.app.preferences, before);
-}
-
-/// Accepting works with no device connected, and a device connecting afterwards does not bring the
-/// old values back (nothing is kept apart from the preferences, and the calibration stays).
-#[test]
-fn restoring_with_no_device_works_and_a_later_connection_brings_nothing_back() {
-    let mut h = changed_3d_mouse_settings(None);
-    let calibrations = h.app.preferences.space_mouse_calibrations.clone();
-    scroll_to_and_click(&mut h, "dialog:button::Restore defaults");
-    scroll_to_and_click(&mut h, "dialog:button::Restore defaults");
-    assert!(!h.app.space_mouse.restore_pending);
-    let d = Prefs::default();
-    let restored = |h: &crate::scenario::Harness| {
-        let p = &h.app.preferences;
-        (p.space_mouse_driver, p.space_mouse_speed, p.space_mouse_reverse, p.space_mouse_axis_speed, p.space_mouse_axis_source)
-            == (d.space_mouse_driver, d.space_mouse_speed, d.space_mouse_reverse, d.space_mouse_axis_speed, d.space_mouse_axis_source)
-            && (p.space_mouse_ghost_position, p.space_mouse_in_view) == (d.space_mouse_ghost_position, d.space_mouse_in_view)
-    };
-    assert!(restored(&h), "restored with the device away");
-    // The device connects (and its calibration applies): the defaults stay.
-    h.app.space_mouse.device = Some("hid 046d:c62b".into());
-    h.frames(30);
-    assert!(restored(&h), "still the defaults after the device connected");
-    assert_eq!(h.app.preferences.space_mouse_calibrations, calibrations, "its calibration is kept");
-}
-
-/// What a restore sets, and what the prefs file holds of it.
-fn section_is_at_defaults(app: &SolveApp) -> bool {
-    let (p, d) = (&app.preferences, Prefs::default());
-    (p.space_mouse_driver, p.space_mouse_speed, p.space_mouse_reverse, p.space_mouse_axis_speed, p.space_mouse_axis_source)
-        == (d.space_mouse_driver, d.space_mouse_speed, d.space_mouse_reverse, d.space_mouse_axis_speed, d.space_mouse_axis_source)
-        && (p.space_mouse_ghost_position, p.space_mouse_in_view) == (d.space_mouse_ghost_position, d.space_mouse_in_view)
-}
-
-/// Restore, then closing the dialog with its own Cancel while the question is up: the question is not
-/// still asked when the dialog opens again, and nothing was changed.
-#[test]
-fn closing_preferences_with_the_restore_question_up_does_not_leave_it_armed() {
-    let mut h = changed_3d_mouse_settings(Some("hid 046d:c62b"));
-    let before = h.app.preferences.clone();
-    scroll_to_and_click(&mut h, "dialog:button::Restore defaults");
-    assert!(h.app.space_mouse.restore_pending);
-    h.step(&serde_json::json!({"click": {"handle": "dialog:cancel"}})).unwrap();
-    h.frames(6);
-    assert!(!h.app.prefs_window.open, "the dialog closed");
-    crate::prefs::open_at(&mut h.app, crate::prefs::PAGE_MOUSE3D);
-    h.frames(6);
-    assert!(!h.app.space_mouse.restore_pending, "the question is not asked again on its own");
-    assert_eq!(h.app.preferences, before);
-}
-
-/// Confirming with the real buttons is what the prefs file holds afterwards: a new run that loads it
-/// has the defaults for the section and the calibration still there.
-#[test]
-fn a_confirmed_restore_is_what_the_next_run_loads() {
-    let mut h = changed_3d_mouse_settings(Some("hid 046d:c62b"));
-    let calibrations = h.app.preferences.space_mouse_calibrations.clone();
-    assert!(!section_is_at_defaults(&h.app));
-    scroll_to_and_click(&mut h, "dialog:button::Restore defaults");
-    scroll_to_and_click(&mut h, "dialog:button::Restore defaults");
-    assert!(!h.app.space_mouse.restore_pending && section_is_at_defaults(&h.app));
-    h.call("ui.prefs", json!({"button":"apply"}));
-    let saved = h.app.prefs();
-    let mut next = crate::scenario::Harness::new();
-    next.app.preferences.space_mouse_speed = 2.5;
-    assert!(!section_is_at_defaults(&next.app));
-    next.app.load_prefs(&saved);
-    assert!(section_is_at_defaults(&next.app), "the defaults are what was saved");
-    assert_eq!(next.app.preferences.space_mouse_calibrations, calibrations, "and the calibration with them");
-    assert!(!next.app.space_mouse.restore_pending);
-}
-
-/// The visible Calibrate button on the offer's card and the one in Preferences both open the wizard
-/// for the device, at its first screen, with Preferences open.
-#[test]
-fn the_calibrate_buttons_on_the_card_and_in_preferences_start_the_same_wizard() {
-    let wizard = |h: &crate::scenario::Harness| {
-        h.app.space_mouse.calibrating.as_ref().map(|(device, wizard)| (device.clone(), format!("{:?} {:?}", wizard.stage(), wizard.kind())))
-    };
-    let harness = || {
-        let mut h = crate::scenario::Harness::new();
-        h.app.home.open = false;
-        h.app.space_mouse.device = Some("spacenavd".into());
-        h.call("ui.resize", serde_json::json!({"width": 1600, "height": 4000}));
-        h
-    };
-    // The card's.
-    let mut card = harness();
-    card.frames(120);
-    assert!(card.app.space_mouse.offer_since.is_some() && card.app.space_mouse.calibrating.is_none());
-    card.step(&serde_json::json!({"widget": "Calibrate…"})).unwrap();
-    card.frames(5);
-    // Preferences'.
-    let mut prefs = harness();
-    crate::prefs::open_at(&mut prefs.app, crate::prefs::PAGE_MOUSE3D);
-    prefs.frames(6);
-    prefs.frames(30);
-    assert!(prefs.app.space_mouse.calibrating.is_none());
-    scroll_to_and_click(&mut prefs, "dialog:button:Calibration:Calibrate…");
-    assert!(card.app.prefs_window.open && prefs.app.prefs_window.open);
-    assert!(wizard(&card).is_some(), "the card's button started it");
-    assert_eq!(wizard(&card), wizard(&prefs), "and Preferences' starts the same one");
-}
-
-/// Direct or Automatic chosen with the device present but unopenable: the daemon is read, and Preferences
-/// says so next to the setting instead of leaving "Direct (hidraw)" to imply the device. Spacenavd
-/// chosen, or the device itself read, or no device: no such note.
-#[test]
-fn preferences_says_when_the_daemon_is_read_instead_of_the_device_asked_for() {
-    use SpaceMouseDriver::{Automatic, Direct, Spacenavd};
-    let note = crate::i18n::tr("ui.3d_mouse_driver_fallback").to_string();
-    assert!(note.contains("spacenavd") && note.contains("could not be opened"));
-    for catalog in crate::i18n::LOCALES {
-        let text = crate::i18n::Locale::for_language(catalog.id).text("ui.3d_mouse_driver_fallback");
-        assert!(text.chars().count() > 20 && text != "ui.3d_mouse_driver_fallback", "{}", catalog.id);
-    }
-    // (driver, device being read, device present) and whether the note shows.
-    let cases = [
-        (Direct, "spacenavd", true, true),
-        (Automatic, "spacenavd", true, true),
-        (Spacenavd, "spacenavd", true, false),
-        (Direct, "hid 046d:c62b", true, false),
-        (Automatic, "hid 046d:c62b", true, false),
-        (Direct, "spacenavd", false, false),
-    ];
-    for (driver, device, direct, shown) in cases {
-        let mut h = crate::scenario::Harness::new();
-        h.app.home.open = false;
-        h.app.preferences.space_mouse_driver = driver;
-        h.app.space_mouse.device = Some(device.into());
-        h.app.space_mouse.drivers = Some(crate::space_mouse::DriversPresent { spacenavd: true, direct, denied: false });
-        h.call("ui.resize", serde_json::json!({"width": 1600, "height": 4000}));
-        crate::prefs::open_at(&mut h.app, crate::prefs::PAGE_MOUSE3D);
-        h.frames(6);
-        h.frames(30);
-        let up = h.widget(&note).is_some();
-        assert_eq!(up, shown, "{driver:?} reading {device}, device present {direct}");
-        // Whatever it says, no calibration moves between keys.
-        assert!(h.app.preferences.space_mouse_calibrations.is_empty());
-    }
-}
-
-/// The section's buttons keep inside the page in every language, at the dialog's width (which the
-/// window does not narrow): the arming Restore button, Reset axis assignment, Reset view under the
-/// test model, and the buttons' own reset.
-#[test]
-fn the_3d_mouse_buttons_fit_the_page_in_every_language() {
-    let keys = ["ui.3d_mouse_restore", "ui.3d_mouse_reset_axes", "ui.3d_mouse_reset_view", "ui.3d_mouse_buttons_reset"];
-    let mut too_wide = Vec::new();
-    for catalog in crate::i18n::LOCALES {
-        let mut h = crate::scenario::Harness::new();
-        h.app.home.open = false;
-        h.app.preferences.language = catalog.id.to_string();
-        h.app.space_mouse.device = Some("hid 046d:c62b".into());
-        let axes = std::array::from_fn(|source| sketcraft_space_mouse::AxisCalibration {
-            source,
-            reversed: false,
-            rest: 0,
-            dead_zone: 0,
-            full: [350; 2],
-        });
-        h.app.preferences.space_mouse_calibrations.insert(
-            "hid 046d:c62b".into(),
-            sketcraft_space_mouse::Calibration { dead_zone_share: 0.0, kind: sketcraft_space_mouse::Kind::ReturnToCenter, axes },
-        );
-        h.app.preferences.space_mouse_buttons.insert("hid 046d:c62b".into(), [(1, crate::space_mouse::ButtonJob::Settings)].into());
-        // The axis assignment is changed, so its reset button is enabled and drawn.
-        h.app.preferences.space_mouse_axis_source = [1, 0, 2, 3, 4, 5];
-        h.call("ui.resize", serde_json::json!({"width": 1600, "height": 4000}));
-        crate::prefs::open_at(&mut h.app, crate::prefs::PAGE_MOUSE3D);
-        h.frames(6);
-        // The redesigned Advanced section starts expanded.
-        // The restore question is up, so its whole text can be checked too.
-        h.app.space_mouse.restore_pending = true;
-        // The frame's language is only set while it runs, so the texts come from the catalog itself.
-        let text = |key: &str| crate::i18n::Locale::for_language(catalog.id).text(key).to_string();
-        h.frames(30);
-        let body = crate::scenario::rect_of("prefs:page_body").expect("the page body");
-        // The question: all of it is laid out (its box is as tall as its wrapped text needs) and the
-        // buttons start below it.
-        let question = text("ui.3d_mouse_restore_ask");
-        match crate::scenario::rect_of("dialog:hint:space_mouse_restore_ask") {
-            Some(note) => {
-                let t = crate::theme::Tokens::get();
-                let needed = h.ctx.fonts_mut(|fonts| {
-                    fonts.layout(question.clone(), egui::FontId::proportional(t.font_small), egui::Color32::WHITE, note.width()).size().y
-                });
-                if note.height() + 0.5 < needed {
-                    too_wide.push(format!("{} question is {:.0} px tall, its text needs {needed:.0}", catalog.id, note.height()));
-                }
-                if note.left() < body.left() - 0.5 || note.right() > body.right() + 0.5 {
-                    too_wide.push(format!("{} question {:.0}..{:.0} outside the page", catalog.id, note.left(), note.right()));
-                }
-                let cancel = crate::scenario::rect_of(&format!("dialog:button::{}", text("ui.cancel")));
-                if cancel.is_some_and(|cancel| cancel.top() < note.bottom() - 0.5) {
-                    too_wide.push(format!("{} the buttons overlap the question", catalog.id));
-                }
-            }
-            None => too_wide.push(format!("{} question not drawn", catalog.id)),
-        }
-        for key in keys {
-            let label = text(key);
-            let Some(rect) = crate::scenario::rect_of(&format!("dialog:button::{label}")) else {
-                too_wide.push(format!("{} {key}: not drawn", catalog.id));
-                continue;
-            };
-            if rect.right() > body.right() + 0.5 || rect.left() < body.left() - 0.5 {
-                too_wide.push(format!(
-                    "{} {key} \"{label}\": {:.0}..{:.0} outside the page {:.0}..{:.0}",
-                    catalog.id,
-                    rect.left(),
-                    rect.right(),
-                    body.left(),
-                    body.right()
-                ));
-            }
-        }
-    }
-    assert!(too_wide.is_empty(), "{}", too_wide.join("\n"));
-}
-
-/// The widest of the card's button labels stays well inside the narrowest card (346 px wide at a 760 px
-/// window, less its padding) in every language, so a button never has to be wider than its card.
-#[test]
-fn the_offers_buttons_fit_the_narrowest_card_in_every_language() {
-    let ctx = crate::fonts::test_context();
-    ctx.run_ui(egui::RawInput::default(), |_| {}).textures_delta.clear();
-    let font = egui::FontId::proportional(crate::theme::Tokens::get().font_label);
-    let mut wide = Vec::new();
-    for catalog in crate::i18n::LOCALES {
-        use crate::space_mouse_offer::Action;
-        for key in [Action::Swap, Action::Calibrate, Action::Never, Action::Close].map(|action| action.label()) {
-            let label = crate::i18n::Locale::for_language(catalog.id).text(key).to_string();
-            let width = ctx.fonts_mut(|fonts| fonts.layout_no_wrap(label.clone(), font.clone(), egui::Color32::WHITE).size().x);
-            if width > 250.0 {
-                wide.push(format!("{} {key} \"{label}\" is {width:.0} px", catalog.id));
-            }
-        }
-    }
-    assert!(wide.is_empty(), "{}", wide.join("\n"));
-}
-
-/// The circles' tooltips come from the one function the rows' labels come from, after a
-/// reassignment, for both kinds of driver mapping (and none), and an inverted axis reads the same.
-#[test]
-fn the_circles_tooltips_say_what_the_rows_say_after_a_reassignment() {
-    use crate::space_mouse::{DriverMapping, SAME_AXES, reassign, row_label, stories};
-    let shares = [[0.1_f32, 0.2]; 6];
-    let mut inverted = DriverMapping::object_mode();
-    for rule in &mut inverted.axes {
-        rule.reversed = !rule.reversed;
-    }
-    let mappings = [Some(DriverMapping::default()), Some(DriverMapping::object_mode()), Some(inverted), None];
-    for mapping in mappings {
-        let mut source = SAME_AXES;
-        reassign(&mut source, 2, 1);
-        let said = stories("en", mapping, source);
-        let say = |row: usize| crate::i18n::Locale::for_language("en").format(row_label(mapping, row), &[("n", &(row + 1).to_string())]);
-        // Motion 1 is read by row 2 now, motion 2 by row 1; the others by their own rows.
-        assert_eq!(said[1], say(2), "{mapping:?}");
-        assert_eq!(said[2], say(1), "{mapping:?}");
-        assert_eq!(said[0], say(0));
-        let tip = crate::space_mouse_calibration::pad_tooltip(&shares, (0, 1), &said);
-        assert_eq!(tip, format!("X −10 % +20 % → {}\nY −10 % +20 % → {}", say(0), say(2)), "{mapping:?}");
-        // Invert is not in the story: the same words with every axis inverted.
-        let mut flipped = mapping;
-        if let Some(mapping) = flipped.as_mut() {
-            mapping.axes.iter_mut().for_each(|rule| rule.reversed = !rule.reversed);
-        }
-        assert_eq!(stories("en", flipped, source), said);
-    }
-    // A motion nobody reads says nothing, so no arrow.
-    let none = stories("en", Some(DriverMapping::default()), [0, 0, 0, 0, 0, 0]);
-    assert!(none[3].is_empty());
-    assert_eq!(crate::space_mouse_calibration::pad_tooltip(&shares, (3, 4), &none), "Rx −10 % +20 %\nRy −10 % +20 %");
-}
-
-/// The circles say what the view does with their axes in the rows' own words, and keep saying it
-/// after an axis is reassigned.
-#[test]
-fn the_circles_and_the_rows_tell_the_same_story_after_a_reassignment() {
-    use crate::space_mouse::{DriverMapping, SAME_AXES, motion_story, reassign, row_label};
-    let mapping = Some(DriverMapping::default());
-    // Unchanged: each motion is read by the row of its own number.
-    for motion in 0..6 {
-        assert_eq!(motion_story(mapping, SAME_AXES, motion), Some(row_label(mapping, motion)));
-    }
-    // Row 2 (lift) now reads motion 1 (push): the motion's story is that row's label, and row 1 reads motion 2.
-    let mut source = SAME_AXES;
-    reassign(&mut source, 2, 1);
-    assert_eq!(motion_story(mapping, source, 1), Some(row_label(mapping, 2)));
-    assert_eq!(motion_story(mapping, source, 2), Some(row_label(mapping, 1)));
-    assert_ne!(motion_story(mapping, source, 1), motion_story(mapping, SAME_AXES, 1));
-    // Not one motion per row: a motion nobody reads has no story.
-    assert_eq!(motion_story(mapping, [0, 0, 0, 0, 0, 0], 3), None);
-    assert!(crate::i18n::tr("ui.3d_mouse_circles_help").contains("test model"));
-}
-
-/// The "wiggle it" hint is a visible line as well as a tooltip, only while a reader is reachable and
-/// silent; the section's own header carries no badge any more.
-#[test]
-fn a_visible_line_says_what_the_3d_mouse_waits_for() {
-    assert_eq!(crate::i18n::tr("ui.3d_mouse_waiting"), "Waiting for Movement");
-    assert_eq!(crate::i18n::tr("ui.3d_mouse_reset_view"), "Reset view");
-    let mut h = crate::scenario::Harness::new();
-    h.app.home.open = false;
-    h.app.space_mouse.device = None;
-    h.app.space_mouse.drivers = Some(crate::space_mouse::DriversPresent { spacenavd: true, direct: false, denied: false });
-    h.call("ui.resize", serde_json::json!({"width": 1600, "height": 4000}));
-    crate::prefs::open_at(&mut h.app, crate::prefs::PAGE_MOUSE3D);
-    h.frames(5);
-    assert!(crate::scenario::rect_of("dialog:section:Device").is_some(), "the section is drawn with the kit's header");
-    assert!(crate::scenario::rect_of("dialog:section:Device:count").is_none());
-    assert!(h.widget(crate::i18n::tr("ui.3d_mouse_calibrate_wait")).is_some());
-}
-
-/// The boat's Reset view puts the boat back and nothing else: calibration, sensitivity, axis
-/// assignment and the document's camera stay. Clicked as a person would.
-#[test]
-fn reset_view_is_scoped_to_the_test_model() {
-    let mut h = changed_3d_mouse_settings(Some("hid 046d:c62b"));
-    h.frames(10);
-    // The boat has been turned.
-    let mut boat = crate::test_boat::Boat::new(30.0);
-    boat.cam.yaw += 1.0;
-    h.app.space_mouse.boat = Some(boat);
-    let before = (h.app.cam, h.app.preferences.clone());
-    scroll_to_and_click(&mut h, "dialog:button::Reset view");
-    assert!(
-        h.app.space_mouse.boat.is_none()
-            || h.app.space_mouse.boat.as_ref().is_some_and(|boat| boat.cam.yaw == crate::test_boat::Boat::new(30.0).cam.yaw),
-        "the boat is back"
-    );
-    assert_eq!(h.app.cam, before.0, "the document's camera");
-    assert_eq!(h.app.preferences, before.1, "every setting, calibration included");
-    assert_eq!(crate::i18n::tr("ui.3d_mouse_reset_view"), "Reset view");
-}
-
-/// The "wiggle it" hint exists in every catalog and is a visible line while no device is confirmed,
-/// gone once there is one.
-#[test]
-fn the_wiggle_hint_has_text_and_shows_until_a_device_is_confirmed() {
-    assert_eq!(crate::i18n::tr("ui.3d_mouse_wiggle"), "If you have one plugged in, wiggle it.");
-    for catalog in crate::i18n::LOCALES {
-        let text = crate::i18n::Locale::for_language(catalog.id).text("ui.3d_mouse_wiggle");
-        assert!(!text.is_empty() && text != "ui.3d_mouse_wiggle", "{}", catalog.id);
-    }
-    let mut h = changed_3d_mouse_settings(None);
-    h.app.space_mouse.drivers = Some(crate::space_mouse::DriversPresent { spacenavd: true, direct: false, denied: false });
-    h.frames(10);
-    assert!(h.widget(crate::i18n::tr("ui.3d_mouse_calibrate_wait")).is_some(), "the reader waits for a real record");
-    h.app.space_mouse.device = Some("spacenavd".into());
-    h.frames(10);
-    assert!(crate::scenario::rect_of("prefs:space_mouse_status").is_none(), "confirmed: the real device replaces the waiting status");
-}
-
-/// A 3D mouse that is there but may not be read, with no spacenavd to ask instead: Preferences says so
-/// in plain words and does not ask for a movement; with a daemon reachable it still waits for one.
-#[test]
-fn preferences_says_when_a_device_is_found_but_not_allowed() {
-    for catalog in crate::i18n::LOCALES {
-        for key in ["ui.3d_mouse_denied", "ui.3d_mouse_denied_short"] {
-            let text = crate::i18n::Locale::for_language(catalog.id).text(key);
-            assert!(text.chars().count() > 5 && text != key, "{} {key}", catalog.id);
-        }
-    }
-    assert!(crate::i18n::tr("ui.3d_mouse_denied").contains("udev"));
-    let cases = [
-        // (spacenavd there, device found, denied) and whether the denied line shows.
-        (false, true, true, true),
-        (false, true, false, false),
-        (true, true, true, false),
-        (false, false, false, false),
-    ];
-    for (spacenavd, direct, denied, shown) in cases {
-        let mut h = changed_3d_mouse_settings(None);
-        h.app.space_mouse.drivers = Some(crate::space_mouse::DriversPresent { spacenavd, direct, denied });
-        h.frames(10);
-        let said = h.widget(crate::i18n::tr("ui.3d_mouse_denied_short")).is_some();
-        assert_eq!(said, shown, "spacenavd {spacenavd}, found {direct}, denied {denied}");
-        let wiggle = h
-            .widget(crate::i18n::tr(if super::waiting_for_a_record(h.app.space_mouse.drivers) {
-                "ui.3d_mouse_calibrate_wait"
-            } else {
-                "ui.3d_mouse_none"
-            }))
-            .is_some();
-        assert_eq!(wiggle, !shown, "the hint to wiggle shows only where waiting can help");
-        assert_eq!(super::waiting_for_a_record(h.app.space_mouse.drivers), spacenavd || (direct && !denied));
-    }
-}
-
-/// The dialog's Restore Defaults on the page that holds the 3D mouse section resets the page, and the
-/// 3D mice already offered a calibration stay offered (like their calibrations and button mappings):
-/// the offer does not come back for every device.
-#[test]
-fn the_dialogs_restore_defaults_keeps_the_offered_set_with_the_calibrations() {
-    let mut h = changed_3d_mouse_settings(Some("hid 046d:c62b"));
-    h.app.preferences.space_mouse_offered.insert("hid 046d:c62b".into());
-    h.app.preferences.space_mouse_buttons.insert("hid 046d:c62b".into(), [(1, crate::space_mouse::ButtonJob::Settings)].into());
-    let (offered, calibrations, buttons) = (
-        h.app.preferences.space_mouse_offered.clone(),
-        h.app.preferences.space_mouse_calibrations.clone(),
-        h.app.preferences.space_mouse_buttons.clone(),
-    );
-    h.call("ui.prefs", serde_json::json!({"button": "defaults"}));
-    h.frames(3);
-    assert!(h.app.preferences.space_mouse_speed == Prefs::default().space_mouse_speed, "the page was reset");
-    assert_eq!(h.app.preferences.space_mouse_offered, offered);
-    assert_eq!(h.app.preferences.space_mouse_calibrations, calibrations);
-    assert_eq!(h.app.preferences.space_mouse_buttons, buttons);
-}
-
-/// The first screen of the calibration (which kind of device) fits at the window's widths:
-/// both pictures are inside it, side by side or one under the other.
-#[test]
-fn the_calibration_choose_screen_fits_at_every_width() {
-    for width in [300.0_f32, 360.0, 520.0, 900.0] {
-        let mut app = crate::SolveApp::new(sketcraft_engine::Session::default(), crate::Services::default());
-        app.space_mouse.device = Some("hid 046d:c62b".into());
-        crate::space_mouse_calibration::start(&mut app);
-        let ctx = crate::fonts::test_context();
-        for _ in 0..6 {
-            crate::scenario::clear_handles();
-            let input = egui::RawInput {
-                screen_rect: Some(egui::Rect::from_min_size(egui::Pos2::ZERO, egui::vec2(width, 900.0))),
-                focused: true,
-                ..Default::default()
-            };
-            let mut output = ctx.run_ui(input, |ui| crate::space_mouse_calibration::show(&mut app, ui.ctx()));
-            output.textures_delta.clear();
-        }
-        let window = crate::scenario::rect_of("dialog:window").expect("the window is drawn");
-        let pictures = crate::scenario::rects("space_mouse:picture");
-        assert_eq!(pictures.len(), 2, "width {width}: both kinds are offered");
-        for (_, picture) in &pictures {
-            assert!(window.contains_rect(*picture), "width {width}: {picture:?} is outside {window:?}");
-        }
-        assert!(!pictures[0].1.intersects(pictures[1].1), "width {width}: the pictures overlap");
-    }
-}
-
-/// The six readings in the calibration window are a clean grid whatever the values: each name
-/// and its number are in their own column, never wrap or overlap, each number is centred under
-/// its name, and the block is the same height for every value, so the window does not jitter.
-#[test]
-fn the_calibration_readings_are_a_clean_grid_of_constant_height() {
-    let sets: [[i16; 6]; 6] = [[0; 6], [-1; 6], [350; 6], [-350; 6], [i16::MAX; 6], [i16::MIN; 6]];
-    for width in [360.0_f32, 520.0, 900.0] {
-        let mut heights = Vec::new();
-        for values in sets {
-            let mut app = crate::SolveApp::new(sketcraft_engine::Session::default(), crate::Services::default());
-            app.space_mouse.device = Some("hid 046d:c62b".into());
-            app.space_mouse.raw = values.into();
-            crate::space_mouse_calibration::start(&mut app);
-            let ctx = crate::fonts::test_context();
-            for _ in 0..4 {
-                crate::scenario::clear_handles();
-                let input = egui::RawInput {
-                    screen_rect: Some(egui::Rect::from_min_size(egui::Pos2::ZERO, egui::vec2(width, 900.0))),
-                    focused: true,
-                    ..Default::default()
-                };
-                let mut output = ctx.run_ui(input, |ui| crate::space_mouse_calibration::show(&mut app, ui.ctx()));
-                output.textures_delta.clear();
-            }
-            let rect = |kind: &str, i: usize| crate::scenario::rect_of(&format!("space_mouse:reading_{kind}:{i}")).expect("drawn");
-            let all: Vec<egui::Rect> = (0..6).flat_map(|i| [rect("name", i), rect("value", i)]).collect();
-            for (a, first) in all.iter().enumerate() {
-                for second in &all[a + 1..] {
-                    assert!(!first.intersects(*second), "width {width} {values:?}: {first:?} overlaps {second:?}");
-                }
-            }
-            for i in 0..6 {
-                let (name, value) = (rect("name", i), rect("value", i));
-                assert!((name.center().x - value.center().x).abs() <= 1.0, "width {width} {values:?}: number {i} is not under its name");
-                assert!(value.top() >= name.bottom(), "number {i} is not on the line below");
-                assert_eq!(name.top(), rect("name", 0).top(), "the names share a baseline");
-                assert_eq!(value.top(), rect("value", 0).top(), "the numbers share a baseline");
-                assert!(value.width() <= 48.0, "{values:?}: number {i} is wider than its column");
-            }
-            heights.push(crate::scenario::rect_of("space_mouse:reading_block").expect("block").height());
-        }
-        assert!(heights.windows(2).all(|pair| pair[0] == pair[1]), "width {width}: the block's height depends on the values: {heights:?}");
-    }
-}
-
-/// On the last screen, with the pictures and pads, the window is the same size for any live reading.
-#[test]
-fn the_calibration_window_keeps_its_size_while_the_cap_moves() {
-    let mut windows = Vec::new();
-    for values in [[0_i16; 6], [-1; 6], [350; 6], [-350; 6], [i16::MAX; 6], [i16::MIN; 6], [159, -5, 0, 32, -17, 5]] {
-        let mut app = crate::SolveApp::new(sketcraft_engine::Session::default(), crate::Services::default());
-        app.space_mouse.device = Some("hid 046d:c62b".into());
-        crate::space_mouse_calibration::start(&mut app);
-        {
-            let wizard = &mut app.space_mouse.calibrating.as_mut().unwrap().1;
-            wizard.choose(sketcraft_space_mouse::Kind::ReturnToCenter);
-            let hold = |wizard: &mut sketcraft_space_mouse::Wizard, reading: [i16; 6], seconds: f64| {
-                for _ in 0..(seconds / 0.02).round() as usize {
-                    wizard.feed(reading, 0.02);
-                }
-            };
-            hold(wizard, [0; 6], 1.6);
-            hold(wizard, [0; 6], 2.6);
-            for step in sketcraft_space_mouse::STEPS {
-                let mut raw = [0_i16; 6];
-                raw[step.axis] = if step.positive { 300 } else { -300 };
-                hold(wizard, raw, 0.5);
-                hold(wizard, [0; 6], 0.1);
-            }
-            assert!(matches!(wizard.result(), Some(Ok(_))), "the calibration reached its result screen");
-        }
-        app.space_mouse.raw = values.into();
-        let ctx = crate::fonts::test_context();
-        for _ in 0..4 {
-            crate::scenario::clear_handles();
-            let input = egui::RawInput {
-                screen_rect: Some(egui::Rect::from_min_size(egui::Pos2::ZERO, egui::vec2(900.0, 900.0))),
-                focused: true,
-                ..Default::default()
-            };
-            let mut output = ctx.run_ui(input, |ui| crate::space_mouse_calibration::show(&mut app, ui.ctx()));
-            output.textures_delta.clear();
-        }
-        windows.push(crate::scenario::rect_of("dialog:window").expect("the window is drawn"));
-    }
-    assert!(windows.windows(2).all(|pair| pair[0] == pair[1]), "the window changes with the readings: {windows:?}");
-}
-
-/// One button job this build can't read (a newer release's) costs that button, not the lot.
-#[test]
-fn one_unreadable_button_job_keeps_the_others() {
-    use crate::space_mouse::{ButtonJob, ButtonKey};
-    let saved = serde_json::json!({ "space_mouse_buttons": {
-        "hid 046d:c62b": { "1": { "key": "esc" }, "2": { "teleport": 3 }, "x": "settings", "3": "settings" },
-        "hid 256f:c63a": { "4": { "view": "top" } },
-        "spacenavd": 7,
-    } });
-    let prefs: super::Prefs = serde_json::from_value(saved).expect("reads");
-    let jobs = &prefs.space_mouse_buttons;
-    assert_eq!(jobs["hid 046d:c62b"], [(1, ButtonJob::Key(ButtonKey::Esc)), (3, ButtonJob::Settings)].into());
-    assert_eq!(jobs["hid 256f:c63a"], [(4, ButtonJob::View("top".into()))].into());
-    assert!(!jobs.contains_key("spacenavd"));
-}
-
-/// A calibration as saved: the same text loads and is usable on 32 and 64 bits, and one saved
-/// with the old `usize::MAX` (64-bit native) still reads as having no source on 64 bits.
-#[test]
-fn a_saved_calibration_with_no_source_reads_the_same_on_every_width() {
-    use sketcraft_space_mouse::{Calibration, NO_SOURCE};
-    let axis = |source: &str, full: u32| format!(r#"{{"source":{source},"reversed":false,"rest":0,"dead_zone":3,"full":[{full},{full}]}}"#);
-    let json = |absent: &str| {
-        let axes = [axis("0", 300), axis("1", 300), axis("2", 300), axis(absent, 1), axis(absent, 1), axis("3", 300)].join(",");
-        format!(r#"{{"dead_zone_share":0.0,"kind":"Trackball","axes":[{axes}]}}"#)
-    };
-    let fixed: Calibration = serde_json::from_str(&json("65535")).unwrap();
-    assert_eq!(fixed.axes.map(|axis| axis.source), [0, 1, 2, NO_SOURCE, NO_SOURCE, 3]);
-    assert!(fixed.is_usable());
-    assert_eq!(serde_json::to_string(&fixed.axes[3].source).unwrap(), "65535");
-    #[cfg(target_pointer_width = "64")]
-    assert_eq!(serde_json::from_str::<Calibration>(&json("18446744073709551615")).unwrap(), fixed);
+    assert!(app.preferences.zoom_stop_at_model, "Cancel restores the last Apply");
 }
 
 #[test]
@@ -1871,7 +887,7 @@ fn changing_preferences_page_cancels_shortcut_capture() {
 
 #[test]
 fn display_quality_cards_show_increasing_facet_detail() {
-    let mut app = super::SolveApp::new(Default::default(), Default::default());
+    let mut app = super::SketApp::new(Default::default(), Default::default());
     super::open_at(&mut app, super::PAGE_GRAPHICS);
     let ctx = crate::fonts::test_context();
     let mut shapes = Vec::new();
@@ -1939,7 +955,7 @@ fn design_precision_controls_use_preferred_units_and_keep_document_and_transacti
         assert_eq!(saved_prefs(&h.app)["preferences"]["length_decimals"], original.length_decimals);
         h.call("ui.prefs", json!({"button":"apply"}));
         let applied = h.app.preferences.clone();
-        let mut restarted = SolveApp::new(Default::default(), Default::default());
+        let mut restarted = SketApp::new(Default::default(), Default::default());
         restarted.load_prefs(&h.app.prefs());
         assert_eq!(
             (
@@ -2022,7 +1038,7 @@ fn tools_ghost_and_pointer_tiles_edit_only_their_state_and_preserve_transactions
         assert_eq!(saved_prefs(&h.app)["preferences"], serde_json::to_value(&original).unwrap());
         h.call("ui.prefs", json!({"button":"apply"}));
         let applied = h.app.preferences.clone();
-        let mut restarted = SolveApp::new(Default::default(), Default::default());
+        let mut restarted = SketApp::new(Default::default(), Default::default());
         restarted.load_prefs(&h.app.prefs());
         assert_eq!(restarted.preferences, applied);
         assert!(restarted.ui.tool_cursor);
@@ -2143,9 +1159,6 @@ fn moved_preferences_reset_only_on_their_new_page() {
         ("measure_axis_distances", json!(false), PAGE_TOOLS),
         ("network_locations", json!(true), PAGE_GENERAL),
         ("network_hosts", json!(["files.studio"]), PAGE_GENERAL),
-        ("nav_bridge_enabled", json!(true), PAGE_MOUSE3D),
-        ("nav_bridge_port", json!(9876), PAGE_MOUSE3D),
-        ("space_mouse_speed", json!(2.0), PAGE_MOUSE3D),
         ("nav", json!("blender"), PAGE_NAVIGATION),
         ("look_at_anim", json!(false), PAGE_NAVIGATION),
         ("selection_shift_add_only", json!(true), PAGE_SKETCH),
@@ -2186,7 +1199,7 @@ fn page_aliases_and_transient_defaults_follow_the_new_groups() {
     }
     assert_eq!(page_index("Assistant"), Some(PAGE_ASSISTANT));
     assert_eq!(page_index("Shortcuts"), Some(PAGE_SHORTCUTS));
-    let mut app = SolveApp::new(Default::default(), Default::default());
+    let mut app = SketApp::new(Default::default(), Default::default());
     app.ui.agent_cursor.show = false;
     app.ui.pick_bodies = true;
     app.session.auto_project = false;
@@ -2195,7 +1208,7 @@ fn page_aliases_and_transient_defaults_follow_the_new_groups() {
     assert!(app.ui.pick_bodies);
     assert!(!app.session.auto_project);
     defaults(&mut app, PAGE_ASSISTANT);
-    let expected = SolveApp::new(Default::default(), Default::default()).ui.agent_cursor.show;
+    let expected = SketApp::new(Default::default(), Default::default()).ui.agent_cursor.show;
     assert_eq!(app.ui.agent_cursor.show, expected);
     defaults(&mut app, PAGE_SKETCH);
     assert!(!app.ui.pick_bodies);
@@ -2206,20 +1219,7 @@ fn page_aliases_and_transient_defaults_follow_the_new_groups() {
 fn preferences_structure_order_groups_and_unique_field_homes() {
     assert_eq!(
         PAGES,
-        [
-            "General",
-            "Appearance",
-            "Layout",
-            "Graphics",
-            "Design",
-            "Sketch",
-            "Tools",
-            "Navigation",
-            "3D mouse",
-            "Shortcuts",
-            "Assistant",
-            "Plugins"
-        ]
+        ["General", "Appearance", "Layout", "Graphics", "Design", "Sketch", "Tools", "Navigation", "Shortcuts", "Assistant", "Plugins"]
     );
     assert_eq!(WINDOW_PAGES.len(), PAGES.len());
     let groups: Vec<_> = WINDOW_PAGES.iter().enumerate().filter_map(|(i, p)| p.group.map(|g| (i, crate::i18n::tr(g)))).collect();
@@ -2274,7 +1274,6 @@ fn preferences_moved_controls_have_one_drawn_home() {
         ("Turn the view to isometric when Extrude opens", PAGE_TOOLS),
         ("Go back to the earlier view when Extrude closes", PAGE_TOOLS),
         ("Placement handles", PAGE_TOOLS),
-        ("Navigate with the 3D mouse", PAGE_MOUSE3D),
         ("Origin plane names", PAGE_DESIGN),
         ("Status bar", PAGE_LAYOUT),
         ("Color vision", PAGE_APPEARANCE),
@@ -2307,7 +1306,7 @@ fn preferences_moved_controls_have_one_drawn_home() {
 #[test]
 fn preferences_session_resets_follow_their_new_pages_only() {
     for page in 0..PAGES.len() {
-        let mut app = SolveApp::new(Default::default(), Default::default());
+        let mut app = SketApp::new(Default::default(), Default::default());
         app.autosave_minutes = 9.0;
         app.ui.dark = false;
         app.prefs_window.follow.launch = Some("theme.json".into());
@@ -2400,7 +1399,7 @@ fn hole_presets_corrupt_rows_and_limits_do_not_discard_other_preferences() {
 #[test]
 fn hole_presets_survive_application_preferences_roundtrip_and_page_resets() {
     use serde_json::json;
-    let mut app = crate::SolveApp::new(sketcraft_engine::Session::default(), crate::Services::default());
+    let mut app = crate::SketApp::new(sketcraft_engine::Session::default(), crate::Services::default());
     let mut row = hole_preset_row("Fixture");
     row["thread_options"] = json!({"full_length":false,"depth":"4 mm"});
     super::set(&mut app, &json!({"hole_presets":[row]})).unwrap();
@@ -2411,7 +1410,7 @@ fn hole_presets_survive_application_preferences_roundtrip_and_page_resets() {
     }
     assert_eq!(serde_json::to_value(&app.preferences.hole_presets).unwrap(), expected);
     let saved = app.prefs();
-    let mut other = crate::SolveApp::new(sketcraft_engine::Session::default(), crate::Services::default());
+    let mut other = crate::SketApp::new(sketcraft_engine::Session::default(), crate::Services::default());
     other.load_prefs(&saved);
     assert_eq!(serde_json::to_value(&other.preferences.hole_presets).unwrap(), expected);
     assert!(other.session.doc.features.is_empty());
@@ -2457,7 +1456,7 @@ fn personal_sheet_rules_corrupt_rows_and_limits_do_not_discard_other_preferences
 #[test]
 fn personal_sheet_rules_survive_application_preferences_roundtrip_and_page_resets() {
     use serde_json::json;
-    let mut app = crate::SolveApp::new(sketcraft_engine::Session::default(), crate::Services::default());
+    let mut app = crate::SketApp::new(sketcraft_engine::Session::default(), crate::Services::default());
     super::set(&mut app, &json!({"personal_sheet_rules":[personal_sheet_rule_row("CRS 1.6")]})).unwrap();
     let expected = serde_json::to_value(&app.preferences.personal_sheet_rules).unwrap();
     assert_eq!(expected[0]["angle_display"], "included");
@@ -2466,7 +1465,7 @@ fn personal_sheet_rules_survive_application_preferences_roundtrip_and_page_reset
     }
     assert_eq!(serde_json::to_value(&app.preferences.personal_sheet_rules).unwrap(), expected);
     let saved = app.prefs();
-    let mut other = crate::SolveApp::new(sketcraft_engine::Session::default(), crate::Services::default());
+    let mut other = crate::SketApp::new(sketcraft_engine::Session::default(), crate::Services::default());
     other.load_prefs(&saved);
     assert_eq!(serde_json::to_value(&other.preferences.personal_sheet_rules).unwrap(), expected);
     assert!(other.session.doc.sheet.rules.is_empty(), "a personal rule is not a rule of the design");
@@ -2477,7 +1476,7 @@ fn personal_sheet_rules_survive_application_preferences_roundtrip_and_page_reset
 #[test]
 fn ui_font_is_checked_saved_and_restored() {
     use serde_json::json;
-    let mut app = crate::SolveApp::new(sketcraft_engine::Session::default(), crate::Services::default());
+    let mut app = crate::SketApp::new(sketcraft_engine::Session::default(), crate::Services::default());
     assert_eq!(app.preferences.ui_font, "");
     let family = sketcraft_engine::sketch::DEFAULT_FONT_FAMILY;
     let out = super::set(&mut app, &json!({ "ui_font": family })).unwrap();
@@ -2485,7 +1484,7 @@ fn ui_font_is_checked_saved_and_restored() {
     let e = super::set(&mut app, &json!({"ui_font": "No Such Font 1290"})).unwrap_err();
     assert!(e.contains("ui_font"), "{e}");
     assert_eq!(app.preferences.ui_font, family, "a refused font leaves the choice as it was");
-    let mut other = crate::SolveApp::new(sketcraft_engine::Session::default(), crate::Services::default());
+    let mut other = crate::SketApp::new(sketcraft_engine::Session::default(), crate::Services::default());
     other.load_prefs(&app.prefs());
     assert_eq!(other.preferences.ui_font, family);
     super::defaults(&mut app, super::PAGE_APPEARANCE);
@@ -2497,7 +1496,7 @@ fn ui_font_is_checked_saved_and_restored() {
 /// shortcut the other tab doesn't have included, so both tabs then save the same settings.
 #[test]
 fn settings_loaded_over_changed_ones_replace_them_all() {
-    let new_app = || crate::SolveApp::new(sketcraft_engine::Session::default(), crate::Services::default());
+    let new_app = || crate::SketApp::new(sketcraft_engine::Session::default(), crate::Services::default());
     let mut writer = new_app();
     writer.sbox.toggle_pin("sketch.line");
     writer.ui.dark = !writer.ui.dark;
@@ -2528,7 +1527,7 @@ fn bodies_folders_is_saved_restored_and_refuses_unknown_values() {
     assert_eq!(lenient(&json!({"theme": "light"})).browser_bodies_folders, BodiesFolders::Several, "saved before it existed");
     for (mode, id) in [(BodiesFolders::Always, "always"), (BodiesFolders::Several, "several"), (BodiesFolders::Never, "never")] {
         assert_eq!(control(&mut h.app, &json!({"browser_bodies_folders": id})).unwrap()["browser_bodies_folders"], id);
-        let mut restored = SolveApp::new(Default::default(), Default::default());
+        let mut restored = SketApp::new(Default::default(), Default::default());
         restored.load_prefs(&h.app.prefs());
         assert_eq!(restored.preferences.browser_bodies_folders, mode, "{id}");
     }
@@ -2584,7 +1583,7 @@ fn theme_system_follows_the_hosts_desktop_setting() {
         })),
         ..Default::default()
     };
-    let mut app = SolveApp::new(sketcraft_engine::Session::default(), services);
+    let mut app = SketApp::new(sketcraft_engine::Session::default(), services);
     app.preferences.theme = "system".into();
     app.ui.dark = true;
     let ctx = egui::Context::default();
@@ -2627,7 +1626,7 @@ fn mcp_compact_output_is_an_ai_preference_the_server_reads() {
 /// base and Cancel takes an import back.
 #[test]
 fn system_theme_export_uses_os_slot_without_selecting_it() {
-    let mut app = SolveApp::new(sketcraft_engine::Session::default(), Default::default());
+    let mut app = SketApp::new(sketcraft_engine::Session::default(), Default::default());
     app.preferences.theme = "light".into();
     app.ui.dark = false;
     assert_eq!(theme_file(&app, "system", true)["base"], "dark");
@@ -2702,7 +1701,7 @@ fn the_3d_view_takes_the_light_or_dark_themes_colours() {
         assert_eq!(t.viewport_top, Tokens::themed(view_dark, ColorVision::Off).viewport_top, "{theme}, {view}: the view");
     }
 
-    let mut other = crate::SolveApp::new(sketcraft_engine::Session::default(), crate::Services::default());
+    let mut other = crate::SketApp::new(sketcraft_engine::Session::default(), crate::Services::default());
     other.load_prefs(&h.app.prefs());
     assert_eq!((other.preferences.theme.as_str(), other.ui.dark, other.viewport_dark()), ("light", false, true));
 
@@ -2741,7 +1740,7 @@ fn the_3d_view_takes_a_background_colour_of_its_own() {
         assert_eq!(scene.background, Some((white, white)), "{theme}: a picture of the view");
     }
 
-    let mut other = crate::SolveApp::new(sketcraft_engine::Session::default(), crate::Services::default());
+    let mut other = crate::SketApp::new(sketcraft_engine::Session::default(), crate::Services::default());
     other.load_prefs(&h.app.prefs());
     assert_eq!(other.preferences.viewport_background, Some([255, 255, 255]));
 
@@ -3645,7 +2644,7 @@ fn sketch_cards_tiles_and_session_controls_preserve_apply_defaults_and_cancel() 
         assert_eq!(saved_prefs(&h.app)["preferences"], serde_json::to_value(&original.prefs).unwrap(), "unapplied tile choices are held back");
         h.call("ui.prefs", json!({"button":"apply"}));
         let applied = Snapshot::take(&h.app);
-        let mut reloaded = SolveApp::new(Default::default(), Default::default());
+        let mut reloaded = SketApp::new(Default::default(), Default::default());
         reloaded.load_prefs(&h.app.prefs());
         assert_eq!(reloaded.preferences, h.app.preferences, "card and tile values survive the existing saved representation");
 
@@ -3767,13 +2766,17 @@ fn tabs_preferences_validate_atomically_restore_safely_and_preserve_export_defau
             assert_eq!(h.app.preferences.custom_themes[1].tabs, file.tabs);
             assert!(h.app.preferences.zoom_reverse);
         }
-        let out = control(&mut h.app, &json!({"custom_themes":[source],"theme":file.id,"theme_options":{&file.id:{"tab_colours":false,"tab_fade_ms":123}},"theme_export":true})).unwrap();
+        let out = control(
+            &mut h.app,
+            &json!({"custom_themes":[source],"theme":file.id,"theme_options":{&file.id:{"tab_colours":false,"tab_fade_ms":123}},"theme_export":true}),
+        )
+        .unwrap();
         assert_eq!(out["theme_file"]["tabs"], serde_json::to_value(&file.tabs).unwrap());
         assert_eq!(out["theme_file"]["options"][0]["default"], true);
         assert_eq!(out["theme_file"]["options"][1]["default"], 240.0);
         assert_eq!(out["theme_option_values"]["tab_fade_ms"], 123.0, "step is a control increment, never rounding");
         assert_eq!(out["theme_option_defs"].as_array().unwrap().iter().find(|o| o["id"] == "tab_fade_ms").unwrap()["step"], 20.0);
-        let mut restored = SolveApp::new(sketcraft_engine::Session::default(), crate::Services::default());
+        let mut restored = SketApp::new(sketcraft_engine::Session::default(), crate::Services::default());
         restored.load_prefs(&h.app.prefs());
         assert_eq!(restored.preferences.custom_themes, h.app.preferences.custom_themes);
         assert_eq!(restored.preferences.theme_options, h.app.preferences.theme_options);
@@ -3813,7 +2816,7 @@ fn theme_options_direct_definitions_validate_and_restore_safely() {
     let mut other = source.clone();
     other["id"] = json!("options-b");
     other["name"] = json!("Options B");
-    let mut app = SolveApp::new(sketcraft_engine::Session::default(), crate::Services::default());
+    let mut app = SketApp::new(sketcraft_engine::Session::default(), crate::Services::default());
     let invalid_tables = [
         ("options", json!((0..17).map(|i| json!({"id":format!("option_{i}"),"type":"bool","default":true})).collect::<Vec<_>>())),
         ("options", json!([{ "id":"amount","type":"range","default":5,"min":10,"max":0,"step":1 }])),
@@ -3839,7 +2842,7 @@ fn theme_options_direct_definitions_validate_and_restore_safely() {
         assert_eq!(app.preferences, before);
         assert!(!app.prefs_window.open);
 
-        let mut restored = SolveApp::new(sketcraft_engine::Session::default(), crate::Services::default());
+        let mut restored = SketApp::new(sketcraft_engine::Session::default(), crate::Services::default());
         restored.load_prefs(
             &json!({"preferences":{
                 "custom_themes":[malformed,other],"theme":"options-a","zoom_reverse":true,
@@ -3854,10 +2857,7 @@ fn theme_options_direct_definitions_validate_and_restore_safely() {
         assert!(!restored.preferences.custom_themes[1].options.is_empty());
         assert!(restored.preferences.zoom_reverse);
         apply(&mut restored, &egui::Context::default());
-        assert_eq!(
-            resolved_theme(&restored.preferences, &restored.preferences.custom_themes[0]).panel,
-            egui::Color32::from_rgb(0x11, 0x22, 0x33)
-        );
+        assert_eq!(resolved_theme(&restored.preferences, &restored.preferences.custom_themes[0]).panel, egui::Color32::from_rgb(0x11, 0x22, 0x33));
         let out = control(&mut restored, &json!({"ui_scale":1.25})).unwrap();
         assert_eq!(out["theme_option_defs"], json!([]));
         assert_eq!(out["theme_option_values"], json!({}));
@@ -3893,7 +2893,7 @@ fn theme_options_persist_isolate_reset_remove_and_export_definitions() {
     assert_eq!(out["theme_file"]["options"][0]["default"], false);
     assert_eq!(out["theme_file"]["colors"]["panel"], "#112233");
     assert_eq!(out["theme_file"]["overlays"][0]["colors"]["panel"], "#abcdef");
-    let mut other = SolveApp::new(sketcraft_engine::Session::default(), crate::Services::default());
+    let mut other = SketApp::new(sketcraft_engine::Session::default(), crate::Services::default());
     other.load_prefs(&h.app.prefs());
     assert_eq!(other.preferences.theme_options, h.app.preferences.theme_options);
     control(&mut other, &json!({"theme_options":{"options-a":{"amount":null}}})).unwrap();
@@ -3909,11 +2909,8 @@ fn theme_options_persist_isolate_reset_remove_and_export_definitions() {
     assert!(other.preferences.theme_options.is_empty());
     h.frames(2);
     assert_eq!(Tokens::get().panel, Tokens::dark().panel);
-    control(
-        &mut h.app,
-        &json!({"theme_import":option_theme_file("Options A"),"theme_options":{"options-a":{"enabled":true}},"open":"Interface"}),
-    )
-    .unwrap();
+    control(&mut h.app, &json!({"theme_import":option_theme_file("Options A"),"theme_options":{"options-a":{"enabled":true}},"open":"Interface"}))
+        .unwrap();
     control(&mut h.app, &json!({"button":"apply"})).unwrap();
     control(&mut h.app, &json!({"button":"defaults"})).unwrap();
     h.frames(2);
@@ -3945,7 +2942,7 @@ fn theme_options_saved_invalid_values_survive_with_defaults_and_notices() {
             {"id":"removed","kind":"unknown_option"}, {"id":"style","kind":"unknown_choice"}
         ])
     );
-    let mut other = SolveApp::new(sketcraft_engine::Session::default(), crate::Services::default());
+    let mut other = SketApp::new(sketcraft_engine::Session::default(), crate::Services::default());
     other.load_prefs(&h.app.prefs());
     assert_eq!(other.preferences.theme_options, h.app.preferences.theme_options);
     assert!(other.preferences.zoom_reverse);
@@ -4168,10 +3165,8 @@ fn theme_files_import_apply_export_save_and_remove() {
     h.frames(2);
     assert_eq!((Tokens::get().panel, Tokens::get().text), (egui::Color32::from_rgb(0xff, 0xfd, 0xf0), Tokens::light().text));
     assert_eq!((Tokens::get().control_radius, Tokens::get().radius_xl), (0, 16));
-    let invalid = h.call(
-        "ui.prefs",
-        json!({"theme_import": {"format": "sketcraft-theme/1", "name": "Bad", "base": "dark", "radii": {"control_radius": -1}}}),
-    );
+    let invalid =
+        h.call("ui.prefs", json!({"theme_import": {"format": "sketcraft-theme/1", "name": "Bad", "base": "dark", "radii": {"control_radius": -1}}}));
     assert!(invalid["error"].as_str().is_some_and(|e| e.contains("radii.control_radius")));
     let out = h.call(
         "ui.prefs",
@@ -4181,7 +3176,7 @@ fn theme_files_import_apply_export_save_and_remove() {
     assert_eq!(h.app.preferences.theme, "paper", "a refused file changes nothing");
     assert!(h.call("ui.prefs", json!({"theme": "no-such-theme"}))["error"].is_string());
 
-    let mut other = crate::SolveApp::new(sketcraft_engine::Session::default(), crate::Services::default());
+    let mut other = crate::SketApp::new(sketcraft_engine::Session::default(), crate::Services::default());
     other.load_prefs(&h.app.prefs());
     assert_eq!((other.preferences.theme.as_str(), other.preferences.custom_themes.len()), ("paper", 1));
     assert_eq!(other.preferences.custom_themes[0].radii, h.app.preferences.custom_themes[0].radii);
@@ -4312,10 +3307,7 @@ fn appearance_popups_own_escape_restore_focus_and_leave_cancel_to_the_next_escap
         // No pointer input: the actual combo/swatch must have regained keyboard focus.
         h.step(&json!({"key":"Enter"})).unwrap();
         h.frames(2);
-        assert!(
-            crate::scenario::handle_at(popup).is_some() || crate::scenario::rect_of(popup).is_some(),
-            "{target} reopens from its restored focus"
-        );
+        assert!(crate::scenario::handle_at(popup).is_some() || crate::scenario::rect_of(popup).is_some(), "{target} reopens from its restored focus");
         h.step(&json!({"key":"Escape"})).unwrap();
         h.frames(2);
         assert!(h.app.prefs_window.open && h.app.prefs_window.snapshot.is_some());
@@ -4371,11 +3363,11 @@ fn number_fields_take_a_decimal_point_or_a_decimal_comma() {
 #[test]
 fn render_legacy_image_defaults_round_trips_and_resets() {
     use serde_json::json;
-    let mut app = crate::SolveApp::new(Default::default(), Default::default());
+    let mut app = crate::SketApp::new(Default::default(), Default::default());
     assert!(!app.preferences.render_legacy_image_defaults);
     let out = super::set(&mut app, &json!({"render_legacy_image_defaults":true})).unwrap();
     assert_eq!(out["render_legacy_image_defaults"], true);
-    let mut restored = crate::SolveApp::new(Default::default(), Default::default());
+    let mut restored = crate::SketApp::new(Default::default(), Default::default());
     restored.load_prefs(&app.prefs());
     assert!(restored.preferences.render_legacy_image_defaults);
     super::defaults(&mut restored, super::PAGE_GRAPHICS);
@@ -4385,11 +3377,11 @@ fn render_legacy_image_defaults_round_trips_and_resets() {
 #[test]
 fn render_previous_geometry_budget_round_trips_and_resets() {
     use serde_json::json;
-    let mut app = crate::SolveApp::new(Default::default(), Default::default());
+    let mut app = crate::SketApp::new(Default::default(), Default::default());
     assert!(!app.preferences.render_previous_geometry_budget);
     let out = super::set(&mut app, &json!({"render_previous_geometry_budget":true})).unwrap();
     assert_eq!(out["render_previous_geometry_budget"], true);
-    let mut restored = crate::SolveApp::new(Default::default(), Default::default());
+    let mut restored = crate::SketApp::new(Default::default(), Default::default());
     restored.load_prefs(&app.prefs());
     assert!(restored.preferences.render_previous_geometry_budget);
     super::defaults(&mut restored, super::PAGE_GRAPHICS);
@@ -4401,7 +3393,7 @@ fn render_previous_geometry_budget_round_trips_and_resets() {
 #[test]
 fn display_quality_is_set_checked_and_restored() {
     use serde_json::json;
-    let mut app = crate::SolveApp::new(sketcraft_engine::Session::default(), crate::Services::default());
+    let mut app = crate::SketApp::new(sketcraft_engine::Session::default(), crate::Services::default());
     assert_eq!(app.preferences.display_quality, "normal");
     let out = super::set(&mut app, &json!({"display_quality": "fine"})).unwrap();
     assert_eq!(out["display_quality"], "fine");
@@ -4419,7 +3411,7 @@ fn display_quality_is_set_checked_and_restored() {
 fn validation_defaults_to_each_feature_and_follows_the_command() {
     use serde_json::json;
     use sketcraft_engine::kernel::Validation;
-    let mut app = crate::SolveApp::new(sketcraft_engine::Session::default(), crate::Services::default());
+    let mut app = crate::SketApp::new(sketcraft_engine::Session::default(), crate::Services::default());
     assert_eq!(app.preferences.validation, Validation::EachFeature);
     assert_eq!(super::lenient(&json!({"validation": "sometimes"})).validation, Validation::EachFeature);
     assert!(super::set(&mut app, &json!({"validation": "never"})).unwrap_err().contains("each_step, each_feature or off"));
@@ -4439,7 +3431,7 @@ fn validation_defaults_to_each_feature_and_follows_the_command() {
 #[test]
 fn sketch_halo_is_off_by_default_saved_and_restored() {
     use serde_json::json;
-    let mut app = crate::SolveApp::new(sketcraft_engine::Session::default(), crate::Services::default());
+    let mut app = crate::SketApp::new(sketcraft_engine::Session::default(), crate::Services::default());
     assert_eq!(serde_json::to_value(&app.preferences).unwrap()["sketch_halo"], false);
     assert_eq!(serde_json::to_value(super::lenient(&json!({}))).unwrap()["sketch_halo"], false);
     let saved = super::set(&mut app, &json!({"sketch_halo": true})).unwrap();
@@ -4453,7 +3445,7 @@ fn sketch_halo_is_off_by_default_saved_and_restored() {
 #[test]
 fn supersampling_is_off_by_default_and_checked() {
     use serde_json::json;
-    let mut app = crate::SolveApp::new(sketcraft_engine::Session::default(), crate::Services::default());
+    let mut app = crate::SketApp::new(sketcraft_engine::Session::default(), crate::Services::default());
     assert_eq!((app.preferences.supersampling, app.preferences.supersampling_adaptive), (1.0, true));
     super::set(&mut app, &json!({"supersampling": 2.0})).unwrap();
     assert_eq!(app.preferences.supersampling, 2.0);
@@ -4480,11 +3472,11 @@ fn a_value_this_version_does_not_understand_keeps_the_other_preferences() {
     let tabs = super::lenient(&json!({"hidden_toolbar_tabs": hidden}));
     assert_eq!(tabs.hidden_toolbar_tabs, ["VIEW", "SHEET METAL", "SURFACE"]);
     // Whole-app load: the other saved state is kept too, and nothing panics.
-    let mut app = crate::SolveApp::new(sketcraft_engine::Session::default(), crate::Services::default());
+    let mut app = crate::SketApp::new(sketcraft_engine::Session::default(), crate::Services::default());
     app.load_prefs(&json!({"grid": false, "preferences": saved}).to_string());
     assert!(!app.ui.show_grid && app.preferences.nav == "solidworks" && app.preferences.zoom_reverse);
     for junk in ["", "{", "[]", "null", "{\"preferences\": 7, \"recent\": {}, \"shortcuts\": 1, \"toolbar\": \"x\"}"] {
-        crate::SolveApp::new(sketcraft_engine::Session::default(), crate::Services::default()).load_prefs(junk);
+        crate::SketApp::new(sketcraft_engine::Session::default(), crate::Services::default()).load_prefs(junk);
     }
 }
 
@@ -4580,13 +3572,9 @@ fn general_files_controls_edit_real_limits_and_hosts_in_both_themes() {
             let opened = h.call("ui.prefs", json!({"open":"General"}));
             assert!(opened["error"].is_null(), "{theme} {width}: opening General failed: {opened}");
             let initial_body = crate::scenario::rect_of("prefs:page_body").unwrap();
-            for target in [
-                "dialog:widget:Profile name",
-                "prefs:profile:save",
-                "prefs:profile:import",
-                "prefs:profiles:held:row",
-                "prefs:profiles:computer:row",
-            ] {
+            for target in
+                ["dialog:widget:Profile name", "prefs:profile:save", "prefs:profile:import", "prefs:profiles:held:row", "prefs:profiles:computer:row"]
+            {
                 let rect = crate::scenario::rect_of(target).unwrap();
                 assert!(initial_body.contains_rect(rect), "{theme} {width}: {target} {rect:?} leaves {initial_body:?}");
             }
@@ -4801,7 +3789,7 @@ fn graphics_card_preference_persists_cancels_and_resets_without_changing_backend
     let path = dir.join("graphics.json");
     std::fs::write(&path, r#"{"backend":"vulkan","msaa":4}"#).unwrap();
     let services = crate::Services { graphics_path: Some(path.to_string_lossy().into()), ..Default::default() };
-    let mut app = SolveApp::new(sketcraft_engine::Session::default(), services);
+    let mut app = SketApp::new(sketcraft_engine::Session::default(), services);
     let snapshot = Snapshot::take(&app);
     set(&mut app, &json!({"graphics_adapter":"Discrete large"})).unwrap();
     let read = || serde_json::from_str::<serde_json::Value>(&std::fs::read_to_string(&path).unwrap()).unwrap();
@@ -4820,14 +3808,14 @@ fn graphics_card_preference_persists_cancels_and_resets_without_changing_backend
     std::fs::remove_dir_all(dir).unwrap();
 }
 
-/// The settings `SolveApp::prefs` would write right now, parsed.
-fn saved_prefs(app: &SolveApp) -> serde_json::Value {
+/// The settings `SketApp::prefs` would write right now, parsed.
+fn saved_prefs(app: &SketApp) -> serde_json::Value {
     serde_json::from_str(&app.prefs()).unwrap()
 }
 
 #[test]
 fn unapplied_changes_are_not_saved_while_the_dialog_is_open() {
-    let mut app = SolveApp::new(sketcraft_engine::Session::default(), crate::Services::default());
+    let mut app = SketApp::new(sketcraft_engine::Session::default(), crate::Services::default());
     assert_eq!(saved_prefs(&app)["preferences"]["theme"], "dark");
     assert_eq!(saved_prefs(&app)["preferences"]["sketch_tab_always"], false);
     // Open the dialog: the snapshot is taken as `show` and the control channel take it.
@@ -4858,7 +3846,7 @@ fn unapplied_changes_are_not_saved_while_the_dialog_is_open() {
 
 #[test]
 fn settings_the_dialog_cannot_change_keep_saving_while_it_is_open() {
-    let mut app = SolveApp::new(sketcraft_engine::Session::default(), crate::Services::default());
+    let mut app = SketApp::new(sketcraft_engine::Session::default(), crate::Services::default());
     app.prefs_window.open = true;
     app.prefs_window.snapshot = Some(Snapshot::take(&app));
     // A recent file joins while the dialog is open: not a dialog setting, so it is saved.
@@ -4868,7 +3856,7 @@ fn settings_the_dialog_cannot_change_keep_saving_while_it_is_open() {
 
 #[test]
 fn shortcut_changes_are_not_saved_while_the_dialog_is_open() {
-    let mut app = SolveApp::new(sketcraft_engine::Session::default(), crate::Services::default());
+    let mut app = SketApp::new(sketcraft_engine::Session::default(), crate::Services::default());
     app.keymap.custom.insert("file.new".into(), vec!["Ctrl+N".into()]);
     app.prefs_window.open = true;
     app.prefs_window.snapshot = Some(Snapshot::take(&app));
@@ -4895,7 +3883,7 @@ fn control_channel_holds_unapplied_changes_out_of_the_saved_settings() {
 
 #[test]
 fn startup_msaa_check_keeps_the_default_unless_fallback_is_confirmed() {
-    let mut app = SolveApp::new(sketcraft_engine::Session::default(), crate::Services::default());
+    let mut app = SketApp::new(sketcraft_engine::Session::default(), crate::Services::default());
     app.msaa_supported = vec![1, 4, 8];
     for requested in [1, 4, 8] {
         app.preferences.msaa = requested;
@@ -4920,7 +3908,7 @@ fn unsupported_saved_msaa_is_reset_to_the_default_with_a_notice() {
     let _ = std::fs::create_dir_all(&dir);
     let path = dir.join("graphics.json");
     let services = crate::Services { graphics_path: Some(path.to_string_lossy().to_string()), ..Default::default() };
-    let mut app = SolveApp::new(sketcraft_engine::Session::default(), services);
+    let mut app = SketApp::new(sketcraft_engine::Session::default(), services);
     // WebGPU's guarantee for the surface format: 8x saved, the device can only do 1x and 4x.
     app.msaa_supported = vec![1, 4];
     app.preferences.msaa = 8;
@@ -4961,7 +3949,7 @@ fn unsupported_saved_msaa_is_reset_to_the_default_with_a_notice() {
 
 #[test]
 fn control_channel_rejects_msaa_the_device_cannot_do_and_bad_saved_msaa_loads_as_default() {
-    let mut app = SolveApp::new(sketcraft_engine::Session::default(), crate::Services::default());
+    let mut app = SketApp::new(sketcraft_engine::Session::default(), crate::Services::default());
     app.msaa_supported = vec![1, 4];
     assert!(set(&mut app, &serde_json::json!({ "msaa": 8 })).is_err());
     assert!(set(&mut app, &serde_json::json!({ "msaa": 1 })).is_ok());
@@ -4974,7 +3962,7 @@ fn control_channel_rejects_msaa_the_device_cannot_do_and_bad_saved_msaa_loads_as
 #[test]
 fn agent_control_is_on_unless_saved_off() {
     assert!(Prefs::default().agent_control);
-    let mut app = SolveApp::new(sketcraft_engine::Session::default(), crate::Services::default());
+    let mut app = SketApp::new(sketcraft_engine::Session::default(), crate::Services::default());
     app.preferences.agent_control = false;
     app.load_prefs(&serde_json::json!({ "preferences": { "msaa": 4 } }).to_string());
     assert!(app.preferences.agent_control);
@@ -5018,7 +4006,7 @@ fn navigator_picker_preserves_axes_and_follows_preferences_transactions() {
     assert_eq!(h.app.preferences.nav, nav);
     assert_eq!(h.app.cam, camera);
     assert_eq!(h.app.session.doc.to_json(), design);
-    let mut restored = SolveApp::new(sketcraft_engine::Session::default(), Default::default());
+    let mut restored = SketApp::new(sketcraft_engine::Session::default(), Default::default());
     restored.load_prefs(&h.app.prefs());
     assert_eq!(restored.preferences.navigator_style, NavigatorStyle::Axes, "a change that was not applied is not saved (#9730)");
     let before = h.app.preferences.clone();
@@ -5142,7 +4130,7 @@ fn origin_plane_names_change_only_the_names_shown() {
     assert!(!texts.iter().any(|t| t == "Use XY plane"));
     crate::sketch_attachment_ui::clear(&mut h.app);
 
-    let mut restored = SolveApp::new(sketcraft_engine::Session::default(), Default::default());
+    let mut restored = SketApp::new(sketcraft_engine::Session::default(), Default::default());
     restored.load_prefs(&h.app.prefs());
     assert_eq!(restored.preferences.origin_plane_names, TopFrontRight, "the choice is saved");
     let before = h.app.preferences.clone();
@@ -5281,7 +4269,7 @@ fn history_sketches_defaults_in_order_and_follows_preferences_transactions() {
 
     let reply = h.call("ui.prefs", json!({"history_sketches": "under_feature"}));
     assert_eq!(reply["result"]["history_sketches"], "under_feature");
-    let mut restored = SolveApp::new(sketcraft_engine::Session::default(), Default::default());
+    let mut restored = SketApp::new(sketcraft_engine::Session::default(), Default::default());
     restored.load_prefs(&h.app.prefs());
     assert_eq!(restored.preferences.history_sketches, HistorySketches::UnderFeature);
     let before = h.app.preferences.clone();
@@ -5310,7 +4298,7 @@ fn dialog_buttons_default_bottom_and_follow_preferences_transactions() {
 
     let reply = h.call("ui.prefs", json!({"dialog_buttons": "top"}));
     assert_eq!(reply["result"]["dialog_buttons"], "top");
-    let mut restored = SolveApp::new(sketcraft_engine::Session::default(), Default::default());
+    let mut restored = SketApp::new(sketcraft_engine::Session::default(), Default::default());
     restored.load_prefs(&h.app.prefs());
     assert_eq!(restored.preferences.dialog_buttons, DialogButtons::Top);
     let before = h.app.preferences.clone();
@@ -5325,7 +4313,7 @@ fn dialog_buttons_default_bottom_and_follow_preferences_transactions() {
 
 #[test]
 fn navigation_legend_follows_all_presets_and_runtime_options_without_mutating_them() {
-    let mut app = SolveApp::new(sketcraft_engine::Session::default(), Default::default());
+    let mut app = SketApp::new(sketcraft_engine::Session::default(), Default::default());
     for preset in NAV_PRESETS {
         choose_nav_preset(&mut app.preferences, preset);
         let before = app.preferences.clone();
@@ -5336,9 +4324,7 @@ fn navigation_legend_follows_all_presets_and_runtime_options_without_mutating_th
         if preset.id == "creo" {
             assert!(preset.reverse_drag_zoom);
             assert_eq!(preset.mode(NavButton::Middle, Modifiers::NONE), Some(NavMode::Orbit));
-            assert!(
-                rows.iter().any(|(keys, action)| keys.iter().any(|key| key == "Ctrl/Cmd") && action == crate::i18n::tr("prefs.gesture_zoom"))
-            );
+            assert!(rows.iter().any(|(keys, action)| keys.iter().any(|key| key == "Ctrl/Cmd") && action == crate::i18n::tr("prefs.gesture_zoom")));
         }
         if preset.id == TOUCHPAD_NAV {
             assert!(
@@ -5353,9 +4339,11 @@ fn navigation_legend_follows_all_presets_and_runtime_options_without_mutating_th
     app.preferences.mouse_gestures.enabled = true;
     let rows = navigation::mapping_rows(&app);
     assert!(rows.iter().any(|(_, action)| action == crate::i18n::tr("prefs.context_menu_ring")));
-    assert!(!rows.iter().any(
-        |(keys, action)| keys.contains(&crate::i18n::tr("prefs.button_right").to_owned()) && action == crate::i18n::tr("prefs.gesture_orbit")
-    ));
+    assert!(
+        !rows.iter().any(
+            |(keys, action)| keys.contains(&crate::i18n::tr("prefs.button_right").to_owned()) && action == crate::i18n::tr("prefs.gesture_orbit")
+        )
+    );
 }
 
 #[test]
@@ -5399,8 +4387,7 @@ fn orbit_picture_cards_keep_legacy_migration_and_preferences_transactions() {
         h.call("ui.resize", json!({"width":1600,"height":1100}));
         h.call("ui.prefs", json!({"language":"en","theme":theme,"open":"Navigation"}));
         let camera = h.app.cam;
-        for (key, value) in [("Origin", OrbitAround::Origin), ("View center", OrbitAround::ViewCentre), ("Under the cursor", OrbitAround::Cursor)]
-        {
+        for (key, value) in [("Origin", OrbitAround::Origin), ("View center", OrbitAround::ViewCentre), ("Under the cursor", OrbitAround::Cursor)] {
             scroll_to_and_click(&mut h, &format!("prefs:orbit_around:{key}"));
             assert_eq!(h.app.preferences.orbit_around, value);
             assert_eq!(h.app.cam, camera, "choosing the pivot does not turn the camera");
@@ -5423,7 +4410,7 @@ fn orbit_cursor_wrap_defaults_on_and_can_be_turned_off() {
     h.step(&json!({"click":{"handle":"prefs:orbit_cursor_wrap"}})).unwrap();
     assert!(!h.app.preferences.orbit_cursor_wrap);
     h.call("ui.prefs", json!({"button":"apply"}));
-    let mut restored = SolveApp::new(sketcraft_engine::Session::default(), Default::default());
+    let mut restored = SketApp::new(sketcraft_engine::Session::default(), Default::default());
     restored.load_prefs(&h.app.prefs());
     assert!(!restored.preferences.orbit_cursor_wrap);
     h.call("ui.prefs", json!({"button":"defaults"}));
@@ -5445,7 +4432,7 @@ fn free_orbit_defaults_off_and_follows_preferences_transactions() {
     assert!(!h.app.preferences.free_orbit);
     scroll_to_and_click(&mut h, "prefs:free_orbit");
     assert!(h.app.preferences.free_orbit);
-    let mut restored = SolveApp::new(sketcraft_engine::Session::default(), Default::default());
+    let mut restored = SketApp::new(sketcraft_engine::Session::default(), Default::default());
     restored.load_prefs(&h.app.prefs());
     assert!(!restored.preferences.free_orbit, "a change that was not applied is not saved (#9730)");
     h.call("ui.prefs", json!({"button":"cancel"}));
@@ -5474,7 +4461,7 @@ fn radial_context_menu_defaults_off_and_follows_preferences_transactions() {
     }
     h.step(&json!({"widget":"Radial context menu"})).unwrap();
     assert!(h.app.preferences.radial_context_menu, "the actual checkbox enables radial menus");
-    let mut restored = SolveApp::new(sketcraft_engine::Session::default(), Default::default());
+    let mut restored = SketApp::new(sketcraft_engine::Session::default(), Default::default());
     restored.load_prefs(&h.app.prefs());
     assert!(!restored.preferences.radial_context_menu, "a change that was not applied is not saved (#9730)");
     h.call("ui.prefs", json!({"button":"cancel"}));
@@ -5489,7 +4476,7 @@ fn radial_context_menu_defaults_off_and_follows_preferences_transactions() {
 
 #[test]
 fn single_surface_analysis_live_cancel_restores_policy_without_restarting_effects() {
-    let mut app = SolveApp::new(Default::default(), Default::default());
+    let mut app = SketApp::new(Default::default(), Default::default());
     super::control(&mut app, &json!({"single_surface_analysis":false})).unwrap();
     for (command, params) in [
         ("solid.box", json!({"length":10,"width":10,"height":10})),
@@ -5535,7 +4522,7 @@ fn persistent_ribbon_pressed_preference_checkbox_control_persists_cancels_and_re
     h.call("ui.click", json!({"x":checkbox.x,"y":checkbox.y}));
     assert!(!h.app.preferences.persistent_ribbon_pressed);
     assert_eq!(h.call("ui.prefs", json!({}))["result"]["persistent_ribbon_pressed"], false);
-    let mut restored = SolveApp::new(Default::default(), Default::default());
+    let mut restored = SketApp::new(Default::default(), Default::default());
     restored.load_prefs(&h.app.prefs());
     assert!(restored.preferences.persistent_ribbon_pressed, "a change that was not applied is not saved (#9730)");
     h.call("ui.prefs", json!({"button":"cancel"}));
@@ -5567,7 +4554,7 @@ fn viewport_analysis_status_preference_checkbox_control_persists_cancels_and_res
     h.call("ui.click", json!({"x":checkbox.x,"y":checkbox.y}));
     assert!(!h.app.preferences.viewport_analysis_status);
     assert_eq!(h.call("ui.prefs", json!({}))["result"]["viewport_analysis_status"], false);
-    let mut restored = SolveApp::new(Default::default(), Default::default());
+    let mut restored = SketApp::new(Default::default(), Default::default());
     restored.load_prefs(&h.app.prefs());
     assert!(restored.preferences.viewport_analysis_status, "a change that was not applied is not saved (#9730)");
     h.call("ui.prefs", json!({"button":"cancel"}));
@@ -5587,22 +4574,20 @@ fn viewport_analysis_status_preference_checkbox_control_persists_cancels_and_res
 
 #[test]
 fn viewport_analysis_status_is_independent_of_session_policy_in_background_documents() {
-    let mut app = SolveApp::new(Default::default(), Default::default());
+    let mut app = SketApp::new(Default::default(), Default::default());
     super::set(&mut app, &json!({"single_surface_analysis":false,"persistent_ribbon_pressed":false})).unwrap();
     app.run("inspect.zebra", json!({})).unwrap();
     let mut other = sketcraft_engine::Session::default();
     other.execute("inspect.draft", &json!({})).unwrap();
     crate::documents::open_tab(&mut app, other).unwrap();
-    let before: Vec<_> =
-        std::iter::once(&app.session).chain(app.docs.background()).map(|s| (s.status_items(), s.revision, s.undo.len())).collect();
+    let before: Vec<_> = std::iter::once(&app.session).chain(app.docs.background()).map(|s| (s.status_items(), s.revision, s.undo.len())).collect();
     super::control(&mut app, &json!({"open":"Graphics","viewport_analysis_status":false})).unwrap();
     assert!(!app.preferences.viewport_analysis_status);
     assert!(!app.preferences.persistent_ribbon_pressed);
     assert!(std::iter::once(&app.session).chain(app.docs.background()).all(|s| !s.single_surface_analysis()));
     super::control(&mut app, &json!({"button":"cancel"})).unwrap();
     assert!(app.preferences.viewport_analysis_status);
-    let after: Vec<_> =
-        std::iter::once(&app.session).chain(app.docs.background()).map(|s| (s.status_items(), s.revision, s.undo.len())).collect();
+    let after: Vec<_> = std::iter::once(&app.session).chain(app.docs.background()).map(|s| (s.status_items(), s.revision, s.undo.len())).collect();
     assert_eq!(before, after, "a presentation preference never changes effects in any document");
 }
 
@@ -5620,7 +4605,7 @@ fn viewport_section_status_preference_checkbox_control_persists_cancels_and_rese
     h.call("ui.click", json!({"x":checkbox.x,"y":checkbox.y}));
     assert!(!h.app.preferences.viewport_section_status);
     assert_eq!(h.call("ui.prefs", json!({}))["result"]["viewport_section_status"], false);
-    let mut restored = SolveApp::new(Default::default(), Default::default());
+    let mut restored = SketApp::new(Default::default(), Default::default());
     restored.load_prefs(&h.app.prefs());
     assert!(restored.preferences.viewport_section_status, "a change that was not applied is not saved (#9730)");
     h.call("ui.prefs", json!({"button":"cancel"}));
@@ -5652,7 +4637,7 @@ fn viewport_status_details_preference_checkbox_control_persists_cancels_and_rese
     h.call("ui.click", json!({"x":checkbox.x,"y":checkbox.y}));
     assert!(!h.app.preferences.viewport_status_details);
     assert_eq!(h.call("ui.prefs", json!({}))["result"]["viewport_status_details"], false);
-    let mut restored = SolveApp::new(Default::default(), Default::default());
+    let mut restored = SketApp::new(Default::default(), Default::default());
     restored.load_prefs(&h.app.prefs());
     assert!(restored.preferences.viewport_status_details, "a change that was not applied is not saved (#9730)");
     h.call("ui.prefs", json!({"button":"cancel"}));
@@ -5684,7 +4669,7 @@ fn viewport_status_summary_preference_checkbox_control_persists_cancels_and_rese
     h.call("ui.click", json!({"x":checkbox.x,"y":checkbox.y}));
     assert!(!h.app.preferences.viewport_status_summary);
     assert_eq!(h.call("ui.prefs", json!({}))["result"]["viewport_status_summary"], false);
-    let mut restored = SolveApp::new(Default::default(), Default::default());
+    let mut restored = SketApp::new(Default::default(), Default::default());
     restored.load_prefs(&h.app.prefs());
     assert!(restored.preferences.viewport_status_summary, "a change that was not applied is not saved (#9730)");
     h.call("ui.prefs", json!({"button":"cancel"}));
@@ -5704,7 +4689,7 @@ fn viewport_status_summary_preference_checkbox_control_persists_cancels_and_rese
 
 #[test]
 fn viewport_section_status_is_independent_of_session_policy_in_background_documents() {
-    let mut app = SolveApp::new(Default::default(), Default::default());
+    let mut app = SketApp::new(Default::default(), Default::default());
     super::set(&mut app, &json!({"single_surface_analysis":false,"persistent_ribbon_pressed":false})).unwrap();
     app.run("inspect.zebra", json!({})).unwrap();
     app.run("inspect.section", json!({"plane":"XY","at":4})).unwrap();
@@ -5712,16 +4697,14 @@ fn viewport_section_status_is_independent_of_session_policy_in_background_docume
     other.execute("inspect.draft", &json!({})).unwrap();
     other.execute("inspect.section", &json!({"plane":"XZ","at":-3})).unwrap();
     crate::documents::open_tab(&mut app, other).unwrap();
-    let before: Vec<_> =
-        std::iter::once(&app.session).chain(app.docs.background()).map(|s| (s.status_items(), s.revision, s.undo.len())).collect();
+    let before: Vec<_> = std::iter::once(&app.session).chain(app.docs.background()).map(|s| (s.status_items(), s.revision, s.undo.len())).collect();
     super::control(&mut app, &json!({"open":"Graphics","viewport_section_status":false})).unwrap();
     assert!(!app.preferences.viewport_section_status);
     assert!(!app.preferences.persistent_ribbon_pressed);
     assert!(std::iter::once(&app.session).chain(app.docs.background()).all(|s| !s.single_surface_analysis()));
     super::control(&mut app, &json!({"button":"cancel"})).unwrap();
     assert!(app.preferences.viewport_section_status);
-    let after: Vec<_> =
-        std::iter::once(&app.session).chain(app.docs.background()).map(|s| (s.status_items(), s.revision, s.undo.len())).collect();
+    let after: Vec<_> = std::iter::once(&app.session).chain(app.docs.background()).map(|s| (s.status_items(), s.revision, s.undo.len())).collect();
     assert_eq!(before, after, "a presentation preference never changes effects in any document");
 }
 
@@ -5740,7 +4723,7 @@ fn single_surface_analysis_preference_checkbox_persists_cancels_and_resets() {
     h.call("ui.click", json!({"x":checkbox.x,"y":checkbox.y}));
     assert!(!h.app.preferences.single_surface_analysis);
     assert!(!h.app.session.single_surface_analysis());
-    let mut restored = SolveApp::new(Default::default(), Default::default());
+    let mut restored = SketApp::new(Default::default(), Default::default());
     restored.load_prefs(&h.app.prefs());
     assert!(restored.preferences.single_surface_analysis, "a change that was not applied is not saved (#9730)");
     assert!(restored.session.single_surface_analysis(), "loaded settings apply before any command");
@@ -5773,7 +4756,7 @@ fn single_surface_analysis_preference_syncs_background_designs_and_resets_effect
         s.mark_saved();
         s
     }
-    let mut app = SolveApp::new(Default::default(), Default::default());
+    let mut app = SketApp::new(Default::default(), Default::default());
     super::set(&mut app, &json!({"single_surface_analysis":false})).unwrap();
     app.session = legacy_session();
     crate::documents::open_tab(&mut app, legacy_session()).unwrap();
@@ -5834,7 +4817,7 @@ fn cosmetic_threads_default_off_and_follow_preferences_transactions() {
     let checkbox = crate::scenario::handle_at("prefs:cosmetic_threads").unwrap();
     h.call("ui.click", json!({"x":checkbox.x,"y":checkbox.y}));
     assert!(h.app.preferences.cosmetic_threads, "the actual checkbox enables the optional markings");
-    let mut restored = SolveApp::new(sketcraft_engine::Session::default(), Default::default());
+    let mut restored = SketApp::new(sketcraft_engine::Session::default(), Default::default());
     restored.load_prefs(&h.app.prefs());
     assert!(!restored.preferences.cosmetic_threads, "a change that was not applied is not saved (#9730)");
     h.call("ui.prefs", json!({"button":"cancel"}));
@@ -5863,7 +4846,7 @@ fn hidden_edge_preference_defaults_persists_and_uses_real_checkbox() {
     h.call("ui.prefs", json!({"button":"cancel"}));
     assert!(!h.app.preferences.select_hidden_edges);
     h.call("ui.prefs", json!({"open":"Sketch","select_hidden_edges":true,"button":"apply"}));
-    let mut restored = SolveApp::new(sketcraft_engine::Session::default(), Default::default());
+    let mut restored = SketApp::new(sketcraft_engine::Session::default(), Default::default());
     restored.load_prefs(&h.app.prefs());
     assert!(restored.preferences.select_hidden_edges);
     h.call("ui.prefs", json!({"button":"defaults"}));
@@ -5887,7 +4870,7 @@ fn ground_shadow_placement_follows_preferences_transactions() {
     let checkbox = crate::scenario::handle_at("prefs:ground_shadow_follows_model").unwrap();
     h.call("ui.click", json!({"x":checkbox.x,"y":checkbox.y}));
     assert!(h.app.preferences.ground_shadow_follows_model);
-    let mut restored = SolveApp::new(sketcraft_engine::Session::default(), Default::default());
+    let mut restored = SketApp::new(sketcraft_engine::Session::default(), Default::default());
     restored.load_prefs(&h.app.prefs());
     assert!(!restored.preferences.ground_shadow_follows_model, "an unapplied change is not saved");
     h.call("ui.prefs", json!({"button":"cancel"}));
@@ -5919,7 +4902,7 @@ fn tool_modifier_prefs_default_classic_and_persist() {
     assert_eq!(old.suppress_sketch_snap, ModifierCombo::CTRL_ALT);
     assert!(!old.selection_shift_add_only);
     // Classic default: Ctrl/Cmd or Alt each suppress (`command` is primary on all hosts).
-    let mut app = SolveApp::new(sketcraft_engine::Session::default(), Default::default());
+    let mut app = SketApp::new(sketcraft_engine::Session::default(), Default::default());
     let ctrl = Modifiers { ctrl: true, command: true, ..Default::default() };
     let alt = Modifiers { alt: true, ..Default::default() };
     let shift = Modifiers { shift: true, ..Default::default() };
@@ -5937,7 +4920,7 @@ fn tool_modifier_prefs_default_classic_and_persist() {
     assert_eq!(app.preferences.suppress_sketch_snap, ModifierCombo::CTRL);
     assert!(!app.preferences.manipulator_free_alt);
     assert!(app.preferences.selection_shift_add_only);
-    let mut other = SolveApp::new(sketcraft_engine::Session::default(), Default::default());
+    let mut other = SketApp::new(sketcraft_engine::Session::default(), Default::default());
     other.load_prefs(&app.prefs());
     assert_eq!(other.preferences.suppress_sketch_snap, ModifierCombo::CTRL);
     assert!(!other.preferences.manipulator_free_alt);
@@ -5953,7 +4936,7 @@ fn tool_modifier_prefs_default_classic_and_persist() {
 #[test]
 fn wheel_smoothing_persists_and_follows_dialog_buttons() {
     assert!(serde_json::from_value::<Prefs>(json!({})).unwrap().smooth_wheel_zoom);
-    let mut app = SolveApp::new(sketcraft_engine::Session::default(), Default::default());
+    let mut app = SketApp::new(sketcraft_engine::Session::default(), Default::default());
     control(&mut app, &json!({"open":"Navigation", "smooth_wheel_zoom":false})).unwrap();
     control(&mut app, &json!({"button":"cancel"})).unwrap();
     assert!(app.preferences.smooth_wheel_zoom);
@@ -5961,7 +4944,7 @@ fn wheel_smoothing_persists_and_follows_dialog_buttons() {
     control(&mut app, &json!({"button":"apply"})).unwrap();
     control(&mut app, &json!({"smooth_wheel_zoom":true, "button":"cancel"})).unwrap();
     assert!(!app.preferences.smooth_wheel_zoom);
-    let mut other = SolveApp::new(sketcraft_engine::Session::default(), Default::default());
+    let mut other = SketApp::new(sketcraft_engine::Session::default(), Default::default());
     other.load_prefs(&app.prefs());
     assert!(!other.preferences.smooth_wheel_zoom);
     control(&mut app, &json!({"open":"Navigation", "button":"defaults"})).unwrap();
@@ -5972,14 +4955,14 @@ fn wheel_smoothing_persists_and_follows_dialog_buttons() {
 
 #[test]
 fn touchpad_preset_persists_and_obeys_preference_transactions() {
-    let mut app = SolveApp::new(sketcraft_engine::Session::default(), Default::default());
+    let mut app = SketApp::new(sketcraft_engine::Session::default(), Default::default());
     control(&mut app, &json!({"open":"Navigation", "nav":"touchpad"})).unwrap();
     assert_eq!(app.preferences.nav, "touchpad");
     assert!(app.preferences.trackpad_pan, "choosing Touchpad must not overwrite the saved scroll preference");
     control(&mut app, &json!({"button":"cancel"})).unwrap();
     assert_eq!(app.preferences.nav, "fusion");
     control(&mut app, &json!({"open":"Navigation", "nav":"touchpad", "button":"apply"})).unwrap();
-    let mut other = SolveApp::new(sketcraft_engine::Session::default(), Default::default());
+    let mut other = SketApp::new(sketcraft_engine::Session::default(), Default::default());
     other.load_prefs(&app.prefs());
     assert_eq!(other.preferences.nav, "touchpad");
     control(&mut app, &json!({"button":"defaults"})).unwrap();
@@ -5991,7 +4974,7 @@ fn touchpad_preset_persists_and_obeys_preference_transactions() {
 #[test]
 fn choosing_the_solidworks_preset_frees_the_right_button_and_fits_on_middle_double_click() {
     let none = Modifiers::default();
-    let mut app = SolveApp::new(sketcraft_engine::Session::default(), Default::default());
+    let mut app = SketApp::new(sketcraft_engine::Session::default(), Default::default());
     app.preferences.middle_double_click = "off".into();
     set(&mut app, &json!({"nav": "solidworks"})).unwrap();
     assert!(app.preferences.right_drag_orbits, "a saved SolidWorks preset keeps its right-drag orbit");
@@ -6012,17 +4995,14 @@ fn choosing_the_solidworks_preset_frees_the_right_button_and_fits_on_middle_doub
 
 #[test]
 fn creo_preset_maps_navigation_and_persists() {
-    let mut app = SolveApp::new(sketcraft_engine::Session::default(), Default::default());
+    let mut app = SketApp::new(sketcraft_engine::Session::default(), Default::default());
     assert_eq!(app.preferences.nav, "fusion");
     choose_nav_preset(&mut app.preferences, nav_preset("creo"));
     assert_eq!(app.preferences.nav, "creo");
     assert!(!app.preferences.zoom_reverse);
-    for (mods, mode) in [
-        (Modifiers::NONE, NavMode::Orbit),
-        (Modifiers::SHIFT, NavMode::Pan),
-        (Modifiers::CTRL, NavMode::Zoom),
-        (Modifiers::COMMAND, NavMode::Zoom),
-    ] {
+    for (mods, mode) in
+        [(Modifiers::NONE, NavMode::Orbit), (Modifiers::SHIFT, NavMode::Pan), (Modifiers::CTRL, NavMode::Zoom), (Modifiers::COMMAND, NavMode::Zoom)]
+    {
         assert_eq!(nav_mode(&app, NavButton::Middle, mods), Some(mode));
     }
     for button in [NavButton::Left, NavButton::Right] {
@@ -6032,7 +5012,7 @@ fn creo_preset_maps_navigation_and_persists() {
     for preset in NAV_PRESETS.iter().filter(|p| p.id != "creo") {
         assert!(!preset.reverse_drag_zoom, "{} keeps its drag zoom direction", preset.id);
     }
-    let mut other = SolveApp::new(sketcraft_engine::Session::default(), Default::default());
+    let mut other = SketApp::new(sketcraft_engine::Session::default(), Default::default());
     other.load_prefs(&app.prefs());
     assert_eq!(other.preferences.nav, "creo");
     assert_eq!(nav_mode(&other, NavButton::Middle, Modifiers::NONE), Some(NavMode::Orbit));
@@ -6041,7 +5021,7 @@ fn creo_preset_maps_navigation_and_persists() {
 #[test]
 fn creo_navigation_settings_show_localised_bindings() {
     let _language = crate::i18n::scope("de");
-    let mut app = SolveApp::new(sketcraft_engine::Session::default(), Default::default());
+    let mut app = SketApp::new(sketcraft_engine::Session::default(), Default::default());
     control(&mut app, &json!({"open":"Navigation", "nav":"creo", "language":"de"})).unwrap();
     let ctx = crate::fonts::test_context();
     let screen = egui::Rect::from_min_size(Pos2::ZERO, egui::vec2(1400.0, 1000.0));
@@ -6071,7 +5051,7 @@ fn creo_navigation_settings_show_localised_bindings() {
 
 #[test]
 fn creo_preset_obeys_preference_transactions() {
-    let mut app = SolveApp::new(sketcraft_engine::Session::default(), Default::default());
+    let mut app = SketApp::new(sketcraft_engine::Session::default(), Default::default());
     control(&mut app, &json!({"open":"Navigation", "nav":"creo"})).unwrap();
     assert_eq!(app.preferences.nav, "creo");
     control(&mut app, &json!({"button":"cancel"})).unwrap();
@@ -6085,14 +5065,14 @@ fn creo_preset_obeys_preference_transactions() {
 
 #[test]
 fn openscad_preset_maps_navigation_and_persists() {
-    let mut app = SolveApp::new(sketcraft_engine::Session::default(), Default::default());
+    let mut app = SketApp::new(sketcraft_engine::Session::default(), Default::default());
     set(&mut app, &json!({"nav": OPENSCAD_NAV})).unwrap();
     for button in [NavButton::Middle, NavButton::Right] {
         assert_eq!(nav_mode(&app, button, Modifiers::default()), Some(NavMode::Pan));
         assert_eq!(nav_mode(&app, button, Modifiers { shift: true, ..Default::default() }), Some(NavMode::Zoom));
     }
     assert_eq!(nav_mode(&app, NavButton::Left, Modifiers::default()), Some(NavMode::Orbit));
-    let mut other = SolveApp::new(sketcraft_engine::Session::default(), Default::default());
+    let mut other = SketApp::new(sketcraft_engine::Session::default(), Default::default());
     other.load_prefs(&app.prefs());
     assert_eq!(other.preferences.nav, OPENSCAD_NAV);
 }
@@ -6100,11 +5080,11 @@ fn openscad_preset_maps_navigation_and_persists() {
 #[test]
 fn pan_reverse_x_defaults_off_persists_and_flips_the_sign() {
     assert!(!serde_json::from_value::<Prefs>(json!({})).unwrap().pan_reverse_x);
-    let mut app = SolveApp::new(sketcraft_engine::Session::default(), Default::default());
+    let mut app = SketApp::new(sketcraft_engine::Session::default(), Default::default());
     assert_eq!(pan_sign_x(&app), 1.0);
     set(&mut app, &json!({"pan_reverse_x": true})).unwrap();
     assert_eq!(pan_sign_x(&app), -1.0);
-    let mut other = SolveApp::new(sketcraft_engine::Session::default(), Default::default());
+    let mut other = SketApp::new(sketcraft_engine::Session::default(), Default::default());
     other.load_prefs(&app.prefs());
     assert!(other.preferences.pan_reverse_x);
 }
@@ -6112,12 +5092,12 @@ fn pan_reverse_x_defaults_off_persists_and_flips_the_sign() {
 #[test]
 fn orbit_reverse_defaults_off_persists_and_flips_the_sign() {
     assert!(!serde_json::from_value::<Prefs>(json!({})).unwrap().orbit_reverse);
-    let mut app = SolveApp::new(sketcraft_engine::Session::default(), Default::default());
+    let mut app = SketApp::new(sketcraft_engine::Session::default(), Default::default());
     assert_eq!(orbit_sign(&app), 1.0);
     set(&mut app, &json!({"orbit_reverse": true})).unwrap();
     assert_eq!(orbit_sign(&app), -1.0);
     assert_eq!((pan_sign_x(&app), pan_sign_y(&app)), (1.0, 1.0));
-    let mut other = SolveApp::new(sketcraft_engine::Session::default(), Default::default());
+    let mut other = SketApp::new(sketcraft_engine::Session::default(), Default::default());
     other.load_prefs(&app.prefs());
     assert!(other.preferences.orbit_reverse);
 }
@@ -6125,7 +5105,7 @@ fn orbit_reverse_defaults_off_persists_and_flips_the_sign() {
 #[test]
 fn pan_reverse_y_defaults_off_persists_and_flips_the_sign() {
     assert!(!serde_json::from_value::<Prefs>(json!({})).unwrap().pan_reverse_y);
-    let mut app = SolveApp::new(sketcraft_engine::Session::default(), Default::default());
+    let mut app = SketApp::new(sketcraft_engine::Session::default(), Default::default());
     assert_eq!(pan_sign_y(&app), 1.0);
     set(&mut app, &json!({"pan_reverse_y": true})).unwrap();
     assert_eq!(pan_sign_y(&app), -1.0);
@@ -6134,7 +5114,7 @@ fn pan_reverse_y_defaults_off_persists_and_flips_the_sign() {
     assert_eq!(pan_sign_x(&app), -1.0);
     assert_eq!(pan_sign_y(&app), 1.0);
     set(&mut app, &json!({"pan_reverse_y": true})).unwrap();
-    let mut other = SolveApp::new(sketcraft_engine::Session::default(), Default::default());
+    let mut other = SketApp::new(sketcraft_engine::Session::default(), Default::default());
     other.load_prefs(&app.prefs());
     assert!(other.preferences.pan_reverse_y);
 }
@@ -6143,14 +5123,14 @@ fn pan_reverse_y_defaults_off_persists_and_flips_the_sign() {
 fn trackpad_pan_defaults_on_persists_and_follows_dialog_buttons() {
     assert!(serde_json::from_value::<Prefs>(json!({})).unwrap().trackpad_pan);
     assert!(Prefs::default().trackpad_pan);
-    let mut app = SolveApp::new(sketcraft_engine::Session::default(), Default::default());
+    let mut app = SketApp::new(sketcraft_engine::Session::default(), Default::default());
     control(&mut app, &json!({"open":"Navigation", "trackpad_pan":false})).unwrap();
     control(&mut app, &json!({"button":"cancel"})).unwrap();
     assert!(app.preferences.trackpad_pan);
     control(&mut app, &json!({"open":"Navigation", "trackpad_pan":false})).unwrap();
     control(&mut app, &json!({"button":"apply"})).unwrap();
     assert!(!app.preferences.trackpad_pan);
-    let mut other = SolveApp::new(sketcraft_engine::Session::default(), Default::default());
+    let mut other = SketApp::new(sketcraft_engine::Session::default(), Default::default());
     other.load_prefs(&app.prefs());
     assert!(!other.preferences.trackpad_pan);
     control(&mut app, &json!({"open":"Navigation", "button":"defaults"})).unwrap();
@@ -6164,7 +5144,7 @@ fn blender_preset_moves_the_camera_with_the_middle_button_only() {
     // #1090: orbit, pan and zoom all on the middle button; no left or right drag binding, so
     // those stay selection and the context menu (Ctrl+left on empty space orbits in every
     // preset, outside the bindings).
-    let mut app = SolveApp::new(sketcraft_engine::Session::default(), Default::default());
+    let mut app = SketApp::new(sketcraft_engine::Session::default(), Default::default());
     set(&mut app, &json!({"nav": "blender"})).unwrap();
     let none = Modifiers::default();
     let shift = Modifiers { shift: true, ..Default::default() };
@@ -6177,14 +5157,14 @@ fn blender_preset_moves_the_camera_with_the_middle_button_only() {
         assert_eq!(nav_mode(&app, NavButton::Right, mods), None);
     }
     assert_eq!(zoom_sign(&app), 1.0, "the wheel turns the usual way");
-    let mut other = SolveApp::new(sketcraft_engine::Session::default(), Default::default());
+    let mut other = SketApp::new(sketcraft_engine::Session::default(), Default::default());
     other.load_prefs(&app.prefs());
     assert_eq!(other.preferences.nav, "blender");
 }
 
 #[test]
 fn presets_map_the_mouse_and_prefs_round_trip() {
-    let mut app = SolveApp::new(sketcraft_engine::Session::default(), Default::default());
+    let mut app = SketApp::new(sketcraft_engine::Session::default(), Default::default());
     let shift = Modifiers { shift: true, ..Default::default() };
     let ctrl = Modifiers { ctrl: true, ..Default::default() };
     let none = Modifiers::default();
@@ -6211,7 +5191,7 @@ fn presets_map_the_mouse_and_prefs_round_trip() {
     assert!(set(&mut app, &json!({"default_units": "furlong"})).is_err());
     assert!(set(&mut app, &json!({"nope": 1})).is_err());
     // Kept between runs.
-    let mut other = SolveApp::new(sketcraft_engine::Session::default(), Default::default());
+    let mut other = SketApp::new(sketcraft_engine::Session::default(), Default::default());
     other.load_prefs(&app.prefs());
     assert_eq!(other.preferences, app.preferences);
     assert_eq!(format_length(25.4, "in", 3), "1.000 in");
@@ -6222,7 +5202,7 @@ fn presets_map_the_mouse_and_prefs_round_trip() {
 /// from empty space every preset has, so a Ctrl+click on geometry still adds to the selection.
 #[test]
 fn maya_and_hfss_presets_navigate_with_alt() {
-    let mut app = SolveApp::new(sketcraft_engine::Session::default(), Default::default());
+    let mut app = SketApp::new(sketcraft_engine::Session::default(), Default::default());
     let none = Modifiers::default();
     let alt = Modifiers { alt: true, ..Default::default() };
     let shift_alt = Modifiers { shift: true, alt: true, ..Default::default() };
@@ -6240,7 +5220,7 @@ fn maya_and_hfss_presets_navigate_with_alt() {
     assert_eq!(nav_mode(&app, NavButton::Left, none), None);
     assert_eq!(nav_mode(&app, NavButton::Left, ctrl), None);
     assert_eq!(zoom_sign(&app), 1.0);
-    let mut other = SolveApp::new(sketcraft_engine::Session::default(), Default::default());
+    let mut other = SketApp::new(sketcraft_engine::Session::default(), Default::default());
     other.load_prefs(&app.prefs());
     assert_eq!(other.preferences.nav, "hfss");
 }
@@ -6249,7 +5229,7 @@ fn maya_and_hfss_presets_navigate_with_alt() {
 /// keeps them, Restore Defaults resets one page, and the shortcuts menus open its page.
 #[test]
 fn preferences_dialog_cancel_apply_and_defaults() {
-    let mut app = SolveApp::new(sketcraft_engine::Session::default(), Default::default());
+    let mut app = SketApp::new(sketcraft_engine::Session::default(), Default::default());
     control(&mut app, &json!({"open": "general"})).unwrap();
     assert!(app.prefs_window.open && app.prefs_window.section == 0);
     control(&mut app, &json!({"theme": "light", "ui_scale": 1.25, "zoom_to_cursor": false})).unwrap();
@@ -6296,14 +5276,14 @@ fn preferences_dialog_cancel_apply_and_defaults() {
 /// enabled by a change, and disabled again by Apply (#8561).
 #[test]
 fn apply_is_enabled_only_while_something_changed() {
-    let mut app = SolveApp::new(sketcraft_engine::Session::default(), Default::default());
+    let mut app = SketApp::new(sketcraft_engine::Session::default(), Default::default());
     let ctx = crate::fonts::test_context();
     let input = || egui::RawInput {
         screen_rect: Some(egui::Rect::from_min_size(egui::Pos2::ZERO, egui::vec2(1600.0, 1000.0))),
         focused: true,
         ..Default::default()
     };
-    let draw = |app: &mut SolveApp, events: Vec<egui::Event>| {
+    let draw = |app: &mut SketApp, events: Vec<egui::Event>| {
         crate::test_support::frame(&ctx, egui::RawInput { events, ..input() }, |ui| show(app, ui.ctx()));
         crate::scenario::count_of("dialog:apply:enabled")
     };
@@ -6350,7 +5330,7 @@ fn apply_is_enabled_only_while_something_changed() {
 
 #[test]
 fn language_preference_switches_and_persists() {
-    let mut app = SolveApp::new(sketcraft_engine::Session::default(), Default::default());
+    let mut app = SketApp::new(sketcraft_engine::Session::default(), Default::default());
     // A first start follows the system (#10138), which is English in a test.
     assert_eq!(app.preferences.language, crate::i18n::SYSTEM);
     assert_eq!(app.tr("ui.preferences"), "Preferences");
@@ -6365,7 +5345,7 @@ fn language_preference_switches_and_persists() {
     assert_eq!(app.tr("ui.extrude"), "押し出し");
 
     // Preferences round-trip
-    let mut other = SolveApp::new(sketcraft_engine::Session::default(), Default::default());
+    let mut other = SketApp::new(sketcraft_engine::Session::default(), Default::default());
     other.load_prefs(&app.prefs());
     assert_eq!(other.preferences.language, "ja");
     assert!(other.preferences.timeline_left);
@@ -6379,11 +5359,11 @@ fn a_y_up_step_file_can_be_stood_up() {
     let dir = std::env::temp_dir().join(format!("sketcraft-standup-{}", std::process::id()));
     let _ = std::fs::create_dir_all(&dir);
     let path = dir.join("tall_in_y.step").to_string_lossy().to_string();
-    let mut src = SolveApp::new(sketcraft_engine::Session::default(), Default::default());
+    let mut src = SketApp::new(sketcraft_engine::Session::default(), Default::default());
     src.run("solid.box", json!({"length": 10, "width": 40, "height": 5})).unwrap();
     src.run("file.export", json!({"path": path})).unwrap();
 
-    let mut app = SolveApp::new(sketcraft_engine::Session::default(), Default::default());
+    let mut app = SketApp::new(sketcraft_engine::Session::default(), Default::default());
     app.open_path(&path);
     assert!(app.stand_up.is_none(), "SketCraft's own exports already have Z up");
     // Another originating system is offered (asked in the dialog, without looking at how the
@@ -6394,7 +5374,7 @@ fn a_y_up_step_file_can_be_stood_up() {
     app.open_path(&path);
     let offered = app.stand_up.clone().unwrap_or_default();
     assert_eq!(offered.len(), 1, "the file's body is offered");
-    let size = |app: &SolveApp| sketcraft_engine::view::bounds(&app.session).unwrap();
+    let size = |app: &SketApp| sketcraft_engine::view::bounds(&app.session).unwrap();
     assert!((size(&app).max.y - size(&app).min.y - 40.0).abs() < 1e-6);
     control(&mut app, &json!({"stand_up": true})).unwrap();
     let b = size(&app);
@@ -6404,11 +5384,11 @@ fn a_y_up_step_file_can_be_stood_up() {
     assert!((size(&app).max.y - size(&app).min.y - 40.0).abs() < 1e-6, "one undo step");
 
     // Not offered when turned off, or with Y up as the default orientation.
-    let mut app = SolveApp::new(sketcraft_engine::Session::default(), Default::default());
+    let mut app = SketApp::new(sketcraft_engine::Session::default(), Default::default());
     app.preferences.offer_stand_up = false;
     app.open_path(&path);
     assert!(app.stand_up.is_none());
-    let mut app = SolveApp::new(sketcraft_engine::Session::default(), Default::default());
+    let mut app = SketApp::new(sketcraft_engine::Session::default(), Default::default());
     app.preferences.up_axis = "y".into();
     app.open_path(&path);
     assert!(app.stand_up.is_none());
@@ -6419,7 +5399,7 @@ fn a_y_up_step_file_can_be_stood_up() {
 /// moved it off to the side.
 #[test]
 fn orbiting_around_the_origin_keeps_it_still() {
-    let mut app = SolveApp::new(sketcraft_engine::Session::default(), Default::default());
+    let mut app = SketApp::new(sketcraft_engine::Session::default(), Default::default());
     app.run("solid.box", json!({"length": 40, "width": 40, "height": 40})).unwrap();
     let rect = egui::Rect::from_min_size(egui::Pos2::ZERO, egui::vec2(800.0, 600.0));
     app.fit_view();
@@ -6443,7 +5423,7 @@ fn saved_cursor_preference_migrates_to_the_origin_option() {
     assert_eq!(lenient(&json!({})).orbit_around, OrbitAround::ViewCentre);
     assert_eq!(lenient(&json!({"orbit_around": "origin"})).orbit_around, OrbitAround::Origin);
 
-    let mut app = SolveApp::new(sketcraft_engine::Session::default(), Default::default());
+    let mut app = SketApp::new(sketcraft_engine::Session::default(), Default::default());
     set(&mut app, &json!({"orbit_around": "origin"})).unwrap();
     assert_eq!(app.preferences.orbit_around, OrbitAround::Origin);
     set(&mut app, &json!({"orbit_cursor": true})).unwrap();
@@ -6460,7 +5440,7 @@ fn the_agent_chat_limit_is_off_unless_chosen() {
 
 #[test]
 fn orbiting_around_the_cursor_keeps_that_point_still() {
-    let mut app = SolveApp::new(sketcraft_engine::Session::default(), Default::default());
+    let mut app = SketApp::new(sketcraft_engine::Session::default(), Default::default());
     app.run("solid.box", json!({"length": 40, "width": 40, "height": 40})).unwrap();
     app.preferences.orbit_around = OrbitAround::Cursor;
     let rect = egui::Rect::from_min_size(egui::Pos2::ZERO, egui::vec2(800.0, 600.0));
@@ -6477,7 +5457,7 @@ fn orbiting_around_the_cursor_keeps_that_point_still() {
 #[test]
 fn orbiting_from_an_edge_turns_around_the_point_under_the_cursor() {
     use crate::viewport::Hit;
-    let mut app = SolveApp::new(sketcraft_engine::Session::default(), Default::default());
+    let mut app = SketApp::new(sketcraft_engine::Session::default(), Default::default());
     app.run("solid.box", json!({"length": 200, "width": 40, "height": 40})).unwrap();
     app.preferences.orbit_around = OrbitAround::Cursor;
     let rect = egui::Rect::from_min_size(egui::Pos2::ZERO, egui::vec2(800.0, 600.0));
@@ -6508,7 +5488,7 @@ fn orbiting_from_an_edge_turns_around_the_point_under_the_cursor() {
 /// On a sketch line too: the line's point under the cursor, not the view's middle.
 #[test]
 fn orbiting_from_a_sketch_line_turns_around_the_point_under_the_cursor() {
-    let mut app = SolveApp::new(sketcraft_engine::Session::default(), Default::default());
+    let mut app = SketApp::new(sketcraft_engine::Session::default(), Default::default());
     app.run("sketch.create", json!({"plane": "XY"})).unwrap();
     app.run("sketch.line", json!({"points": [[-100, 0], [100, 0]]})).unwrap();
     app.run("sketch.finish", json!({})).unwrap();
@@ -6526,7 +5506,7 @@ fn orbiting_from_a_sketch_line_turns_around_the_point_under_the_cursor() {
 /// point far off to the side; with nothing visible it turns around the view's centre.
 #[test]
 fn orbiting_from_empty_space_turns_around_the_visible_geometry() {
-    let mut app = SolveApp::new(sketcraft_engine::Session::default(), Default::default());
+    let mut app = SketApp::new(sketcraft_engine::Session::default(), Default::default());
     app.run("solid.box", json!({"length": 40, "width": 40, "height": 40})).unwrap();
     app.preferences.orbit_around = OrbitAround::Cursor;
     let rect = egui::Rect::from_min_size(egui::Pos2::ZERO, egui::vec2(800.0, 600.0));
@@ -6540,18 +5520,18 @@ fn orbiting_from_empty_space_turns_around_the_visible_geometry() {
     orbit(&mut app, rect, 40.0, 25.0, Some(corner));
     assert_eq!(app.viewport.orbit_pivot, Some(centre));
 
-    let mut app = SolveApp::new(sketcraft_engine::Session::default(), Default::default());
+    let mut app = SketApp::new(sketcraft_engine::Session::default(), Default::default());
     app.preferences.orbit_around = OrbitAround::Cursor;
-    app.cam.target = solidcore_record::Vec3::new(5.0, -3.0, 2.0);
+    app.cam.target = sketcore_record::Vec3::new(5.0, -3.0, 2.0);
     orbit(&mut app, rect, 40.0, 25.0, Some(corner));
-    assert_eq!(app.viewport.orbit_pivot, Some(solidcore_record::Vec3::new(5.0, -3.0, 2.0)));
+    assert_eq!(app.viewport.orbit_pivot, Some(sketcore_record::Vec3::new(5.0, -3.0, 2.0)));
 }
 
 /// The Y up preference turns the view: the camera's up axis follows it, startup included.
 #[test]
 fn up_axis_preference_turns_the_view() {
     use sketcraft_engine::render::UpAxis;
-    let mut app = SolveApp::new(sketcraft_engine::Session::default(), crate::Services::default());
+    let mut app = SketApp::new(sketcraft_engine::Session::default(), crate::Services::default());
     let ctx = crate::fonts::test_context();
     apply(&mut app, &ctx);
     assert_eq!(app.cam.up, UpAxis::Z);

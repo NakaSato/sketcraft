@@ -9,10 +9,10 @@ use std::cell::{Cell, RefCell};
 
 use egui::{FontId, Stroke};
 use serde_json::{Value, json};
-use solidcore_record::Vec2;
+use sketcore_record::Vec2;
 use sketcraft_engine::sketch::{ConstraintKind, CurveKind, Sketch};
 
-use crate::SolveApp;
+use crate::SketApp;
 use crate::theme::Tokens;
 use crate::viewport::Proj;
 
@@ -244,7 +244,7 @@ pub fn release() -> Option<Value> {
 }
 
 /// The snap of the drag in progress: its dashed guides, a ring on the target and its label.
-pub fn show(app: &SolveApp, painter: &egui::Painter, proj: &Proj) {
+pub fn show(app: &SketApp, painter: &egui::Painter, proj: &Proj) {
     if app.viewport.point_drag.is_none() {
         return;
     }

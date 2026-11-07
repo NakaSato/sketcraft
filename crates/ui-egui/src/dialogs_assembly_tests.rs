@@ -6,13 +6,13 @@ use crate::Services;
 use crate::dialogs::{apply_commands, edge_sel, face_sel, preview_commands};
 
 /// Components A (grounded) and B: a 20 x 20 x 10 box each, B 30 mm along X.
-fn two_boxes() -> SolveApp {
+fn two_boxes() -> SketApp {
     let mut s = Session::default();
     crate::test_support::grounded_boxes(&[("A", 0), ("B", 30)], |id, p| s.execute(id, &p).unwrap());
-    SolveApp::new(s, Services::default())
+    SketApp::new(s, Services::default())
 }
 
-fn occ(app: &SolveApp, name: &str) -> u64 {
+fn occ(app: &SketApp, name: &str) -> u64 {
     let c = app.session.doc.find_component(name).unwrap();
     app.session.doc.occurrence_of(c).unwrap().id
 }
@@ -123,7 +123,7 @@ fn revolute_joint_uses_the_picked_straight_edges() {
     let a = app.session.doc.find_component("A").unwrap();
     let b = app.session.doc.find_component("B").unwrap();
     let ground = app.session.doc.occurrence_of(a).unwrap().transform;
-    let placed = |app: &SolveApp, p| sketcraft_engine::doc::apply_point(&app.session.doc.occurrence_of(b).unwrap().transform, p);
+    let placed = |app: &SketApp, p| sketcraft_engine::doc::apply_point(&app.session.doc.occurrence_of(b).unwrap().transform, p);
     let ends = [Vec3::new(30.0, 0.0, 10.0), Vec3::new(30.0, 20.0, 10.0)];
     let before = ends.map(|p| placed(&app, p));
     let off_axis = Vec3::new(50.0, 10.0, 10.0);
@@ -157,7 +157,7 @@ fn arms_jointed_at_edges_and_corners_follow_a_thicker_arm() {
             s.execute("solid.cylinder", &json!({"diameter": 6, "height": 100, "base": [x, 0, -50], "operation": "cut"})).unwrap();
         }
         s.execute("component.activate", &json!({"component": "root"})).unwrap();
-        let mut app = SolveApp::new(s, Services::default());
+        let mut app = SketApp::new(s, Services::default());
         let a = occ(&app, "Arm");
         app.run("occurrence.ground", json!({"occurrence": a, "grounded": true})).unwrap();
         let b = app.run("occurrence.copy", json!({"occurrence": a, "translate": [0, 60, 0]})).unwrap()["occurrence"].as_u64().unwrap();
@@ -178,7 +178,7 @@ fn arms_jointed_at_edges_and_corners_follow_a_thicker_arm() {
         for (id, p) in apply_commands(&app, &d).unwrap() {
             app.run(&id, p).unwrap();
         }
-        let world = |app: &SolveApp, o: u64, p: Vec3| {
+        let world = |app: &SketApp, o: u64, p: Vec3| {
             sketcraft_engine::doc::apply_point(&sketcraft_engine::doc::joints::occurrence_world(&app.session.doc, o), p)
         };
         // The spots: a round edge's centre, else the pick; B's in the arm's own coordinates.
@@ -285,7 +285,7 @@ fn editing_a_saved_joint_keeps_its_explicit_axis() {
     .unwrap();
     let joint = app.session.doc.assembly.joints[0].clone();
     let saved = app.session.doc.to_json();
-    app = SolveApp::new(Session::new(sketcraft_engine::doc::format::read(&saved).unwrap()), Services::default());
+    app = SketApp::new(Session::new(sketcraft_engine::doc::format::read(&saved).unwrap()), Services::default());
     let mut d = edit_joint(&app, joint.id).unwrap();
     if let Kind::Assembly(Asm::Joint(f)) = &mut d.kind {
         f.flip = true;
@@ -416,7 +416,7 @@ fn edit_joint_shows_components_for_point_and_frame_origins() {
 
 #[test]
 fn edit_joint_component_labels_keep_the_nested_instance_and_root() {
-    let mut app = SolveApp::new(Session::default(), Services::default());
+    let mut app = SketApp::new(Session::default(), Services::default());
     let parent = app.run("component.create", json!({"name": "Assembly", "activate": false})).unwrap()["occurrence"].as_u64().unwrap();
     let first =
         app.run("component.create", json!({"name": "Part", "parent": "Assembly", "activate": false})).unwrap()["occurrence"].as_u64().unwrap();
@@ -450,7 +450,7 @@ fn a_hole_side_shows_its_wall_not_the_plate_beside_it() {
     s.execute("component.create", &json!({"name": "Peg"})).unwrap();
     s.execute("solid.box", &json!({"length": 10, "width": 10, "height": 10, "corner": [60, 0, 0]})).unwrap();
     s.execute("component.activate", &json!({"component": "root"})).unwrap();
-    let mut app = SolveApp::new(s, Services::default());
+    let mut app = SketApp::new(s, Services::default());
     let (plate, peg) = (occ(&app, "Plate"), occ(&app, "Peg"));
     app.run("occurrence.ground", json!({"occurrence": plate, "grounded": true})).unwrap();
     app.run(
@@ -615,7 +615,7 @@ fn ok_click_survives_a_busy_preview() {
     app.dialog = Some(d);
     let ctx = crate::fonts::test_context();
     let screen = egui::Rect::from_min_size(egui::Pos2::ZERO, egui::vec2(1600.0, 1000.0));
-    let frame = |app: &mut SolveApp, busy: bool, events: Vec<egui::Event>| {
+    let frame = |app: &mut SketApp, busy: bool, events: Vec<egui::Event>| {
         app.preview.busy = busy;
         let input = egui::RawInput { screen_rect: Some(screen), events, ..Default::default() };
         let mut out = ctx.run_ui(input, |ui| crate::dialogs::show(app, ui.ctx()));
@@ -642,7 +642,7 @@ fn picks_on_one_component_say_why_and_offer_components() {
     let mut s = Session::default();
     s.execute("solid.box", &json!({"length": 20, "width": 20, "height": 10})).unwrap();
     s.execute("solid.box", &json!({"length": 20, "width": 20, "height": 10, "corner": [30, 0, 0]})).unwrap();
-    let mut app = SolveApp::new(s, Services::default());
+    let mut app = SketApp::new(s, Services::default());
     let bodies = vec!["Body1".to_string(), "Body2".to_string()];
     // As-built: two bodies of one component are one component.
     app.session.selection = vec![Sel::Body { name: "Body1".into() }, Sel::Body { name: "Body2".into() }];
@@ -667,7 +667,7 @@ fn picks_on_one_component_say_why_and_offer_components() {
     app.dialog = Some(d);
     let ctx = crate::fonts::test_context();
     let screen = egui::Rect::from_min_size(egui::Pos2::ZERO, egui::vec2(1600.0, 1000.0));
-    let frame = |app: &mut SolveApp, events: Vec<egui::Event>| {
+    let frame = |app: &mut SketApp, events: Vec<egui::Event>| {
         let input = egui::RawInput { screen_rect: Some(screen), events, ..Default::default() };
         let mut out = ctx.run_ui(input, |ui| crate::dialogs::show(app, ui.ctx()));
         // Nothing is painted: drop the texture changes (an unapplied delta panics on drop).
@@ -704,7 +704,7 @@ fn rigid_group_bodies_in_one_component_explain_how_to_separate_them() {
         for x in [0, 30, 60, 90, 120] {
             s.execute("solid.box", &json!({"length": 10, "width": 10, "height": 10, "corner": [x, 0, 0]})).unwrap();
         }
-        let mut app = SolveApp::new(s, Services::default());
+        let mut app = SketApp::new(s, Services::default());
         app.session.selection = (1..=5).map(|i| Sel::Body { name: format!("Body{i}") }).collect();
         app.start("joint.rigid_group");
         let d = app.dialog.take().unwrap();
@@ -724,7 +724,7 @@ fn rigid_group_preserves_two_instances_of_one_component() {
     s.execute("solid.box", &json!({"length": 10, "width": 10, "height": 10})).unwrap();
     let second = s.execute("occurrence.copy", &json!({"occurrence": first, "translate": [30, 0, 0]})).unwrap()["occurrence"].as_u64().unwrap();
     s.selection = [first, second].into_iter().map(|id| Sel::Body { name: s.occurrence_bodies(&[id], false).unwrap()[0].clone() }).collect();
-    let mut app = SolveApp::new(s, Services::default());
+    let mut app = SketApp::new(s, Services::default());
     app.start("joint.rigid_group");
     let d = app.dialog.take().unwrap();
     let commands = apply_commands(&app, &d).unwrap();
@@ -774,7 +774,7 @@ fn drive_value_takes_the_keyboard() {
     app.start("joint.drive");
     let ctx = crate::fonts::test_context();
     let screen = egui::Rect::from_min_size(egui::Pos2::ZERO, egui::vec2(1600.0, 1000.0));
-    let frame = |app: &mut SolveApp, events: Vec<egui::Event>| {
+    let frame = |app: &mut SketApp, events: Vec<egui::Event>| {
         let input = egui::RawInput { screen_rect: Some(screen), events, ..Default::default() };
         // Nothing renders here: drop the frame's texture changes deliberately.
         ctx.run_ui(input, |ui| crate::dialogs::show(app, ui.ctx())).textures_delta.clear();
@@ -913,7 +913,7 @@ fn slider_drag_does_not_open_suggestions_over_the_slider() {
 fn joint_origins_follow_their_component() {
     let mut app = two_boxes();
     app.session.execute("joint.origin", &json!({"name": "Top of B", "face": [40, 10, 10]})).unwrap();
-    let at = |app: &SolveApp| {
+    let at = |app: &SketApp| {
         let v = origins_world(&app.session);
         let (_, m) = v.iter().find(|(n, _)| n == "Top of B").unwrap();
         sketcraft_engine::doc::apply_point(m, Vec3::ZERO)
@@ -978,7 +978,7 @@ fn edit_feature_on_a_moved_component_refills_in_the_world() {
 
 /// A crank-rocker four-bar (crank 20, coupler 50, rocker 40, ground pivots 45 apart), built as
 /// it stands with the crank at 90°: joints Crank, Crank pin, Rocker pin, Rocker.
-fn four_bar() -> SolveApp {
+fn four_bar() -> SketApp {
     let mut s = Session::default();
     let (p0, o4) = ([0.0, 20.0], [45.0, 0.0]);
     // The rocker pin: where the coupler (50 from the crank pin) meets the rocker (40 from O4).
@@ -1003,7 +1003,7 @@ fn four_bar() -> SolveApp {
         let at = |o: &str| json!({"occurrence": o, "point": [p[0], p[1], 0], "z": [0, 0, 1]});
         s.execute("joint.create", &json!({"type": "revolute", "a": at(a), "b": at(b), "flip": true, "name": name})).unwrap();
     }
-    SolveApp::new(s, Services::default())
+    SketApp::new(s, Services::default())
 }
 
 /// Drive Joints says where a drive stopped short and why: the preview names the loop that can't
@@ -1095,7 +1095,7 @@ fn drive_says_when_its_joint_is_joined_to_nothing_grounded() {
 #[test]
 fn drive_opens_on_the_picked_joint() {
     let mut app = four_bar();
-    let drive_on = |app: &mut SolveApp| {
+    let drive_on = |app: &mut SketApp| {
         app.dialog = None;
         app.start("joint.drive");
         match &app.dialog.as_ref().unwrap().kind {
@@ -1164,7 +1164,7 @@ fn drive_preset_refuses_a_rigid_joint() {
 fn motion_trace_keeps_the_picked_point_path() {
     let mut app = four_bar();
     let coupler = occ(&app, "Coupler");
-    let top = |app: &SolveApp| {
+    let top = |app: &SketApp| {
         let b = occurrence_bounds(&app.session, &[coupler]);
         Vec3::new((b.min.x + b.max.x) / 2.0, (b.min.y + b.max.y) / 2.0, b.max.z)
     };
@@ -1329,20 +1329,20 @@ fn find_limits_fills_the_limits_from_where_the_door_meets_the_block() {
     }
     let hinge = json!({"type": "revolute", "a": {"occurrence": 0, "point": [0, 0, 0]}, "b": {"occurrence": "Door", "point": [0, 0, 0]}, "flip": true, "name": "Hinge"});
     s.execute("joint.create", &hinge).unwrap();
-    let mut app = SolveApp::new(s, Services::default());
+    let mut app = SketApp::new(s, Services::default());
     let id = app.session.doc.assembly.joints[0].id;
     app.dialog = edit_joint(&app, id);
     let before = app.session.doc.clone();
     let ctx = crate::fonts::test_context();
     let screen = egui::Rect::from_min_size(egui::Pos2::ZERO, egui::vec2(1600.0, 1000.0));
-    let frame = |app: &mut SolveApp, events: Vec<egui::Event>| {
+    let frame = |app: &mut SketApp, events: Vec<egui::Event>| {
         let input = egui::RawInput { screen_rect: Some(screen), events, ..Default::default() };
         let mut out = ctx.run_ui(input, |ui| crate::dialogs::show(app, ui.ctx()));
         // Nothing is painted: drop the texture changes (an unapplied delta panics on drop).
         out.textures_delta.clear();
         out
     };
-    let click = |app: &mut SolveApp, text: &str| {
+    let click = |app: &mut SketApp, text: &str| {
         // The auto-sized dialog takes a few frames to settle.
         for _ in 0..3 {
             frame(app, vec![]);
@@ -1434,17 +1434,17 @@ fn interference_meshes_each_overlap_on_the_kernels_stack() {
 fn interference_checks_off_the_window_thread_and_drops_a_check_of_a_changed_design() {
     let mut s = Session::default();
     crate::test_support::grounded_boxes(&[("A", 0), ("B", 10)], |id, p| s.execute(id, &p).unwrap());
-    let mut app = SolveApp::new(s, Services::default());
+    let mut app = SketApp::new(s, Services::default());
     app.apply_off_thread = Some(std::time::Duration::ZERO);
     app.start("inspect.interference");
     let ctx = crate::fonts::test_context();
     let screen = egui::Rect::from_min_size(egui::Pos2::ZERO, egui::vec2(1600.0, 1000.0));
-    let state = |app: &SolveApp| match app.dialog.as_ref().map(|d| &d.kind) {
+    let state = |app: &SketApp| match app.dialog.as_ref().map(|d| &d.kind) {
         Some(Kind::Assembly(Asm::Interference { result, overlaps, check, .. })) => (result.clone(), overlaps.len(), check.is_some()),
         _ => panic!("the dialog stays open"),
     };
     // Compute as its button starts it, then frames until its reply is read.
-    let compute = |app: &mut SolveApp, change: bool| {
+    let compute = |app: &mut SketApp, change: bool| {
         let c = interference(app, &[], "0");
         if let Some(Kind::Assembly(Asm::Interference { result, overlaps, check, .. })) = app.dialog.as_mut().map(|d| &mut d.kind) {
             (*result, *overlaps, *check) = (None, Vec::new(), Some(c));

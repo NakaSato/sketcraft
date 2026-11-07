@@ -59,7 +59,7 @@ use sketcraft_geom::prelude::*;
 use std::collections::btree_map::Entry;
 use std::collections::{BTreeMap, BTreeSet, VecDeque};
 
-use solidcore_record::Vec2;
+use sketcore_record::Vec2;
 
 use crate::loci::{Locus, Reading, Rel, Span, View, crossing, mag, place, side};
 use crate::union_find::{find, union};

@@ -6,7 +6,7 @@ use schemars::{JsonSchema, Schema, SchemaGenerator, json_schema};
 use serde::de::Error as _;
 use serde::{Deserialize, Deserializer, Serialize};
 use serde_json::Value;
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 
 use super::check::whole;
 use super::types::Point3;

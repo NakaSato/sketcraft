@@ -7,10 +7,10 @@ use std::collections::HashMap;
 use std::sync::Arc;
 
 use egui::{Color32, Mesh, Shape, TextureHandle, TextureId, pos2};
-use solidcore_record::Vec2;
+use sketcore_record::Vec2;
 use sketcraft_engine::doc::canvas::Canvas;
 
-use crate::SolveApp;
+use crate::SketApp;
 use crate::gpu::GpuImage;
 use crate::viewport::Proj;
 
@@ -60,14 +60,14 @@ fn pixels(c: &Canvas) -> Option<Decoded> {
     })
 }
 
-fn forget_removed(app: &SolveApp) {
+fn forget_removed(app: &SketApp) {
     let doc = &app.session.doc;
     PIXELS.with(|m| m.borrow_mut().retain(|id, _| doc.canvases.iter().any(|c| c.id == *id)));
     TEX.with(|t| t.borrow_mut().retain(|id, _| doc.canvases.iter().any(|c| c.id == *id)));
 }
 
 /// The visible canvases as GPU quads.
-pub fn gpu_images(app: &SolveApp) -> Vec<GpuImage> {
+pub fn gpu_images(app: &SketApp) -> Vec<GpuImage> {
     forget_removed(app);
     let doc = &app.session.doc;
     if doc.canvases.is_empty() || app.session.folder_hidden(crate::browser::CANVASES) {
@@ -104,7 +104,7 @@ fn texture(ctx: &egui::Context, c: &Canvas) -> Option<TextureId> {
 }
 
 /// CPU viewport only: the images over the rendered model.
-pub fn show(app: &SolveApp, ui: &egui::Ui, painter: &egui::Painter, proj: &Proj) {
+pub fn show(app: &SketApp, ui: &egui::Ui, painter: &egui::Painter, proj: &Proj) {
     if app.viewport.gpu.is_some() {
         return;
     }

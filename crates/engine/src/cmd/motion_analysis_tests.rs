@@ -2,7 +2,7 @@
 //! `motion.interference` on two blocks pushed through each other at a known step.
 
 use serde_json::{Value, json};
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 
 use super::{four_bar, occ, part, pin, rocker_pin, run, slider_crank};
 use crate::Session;

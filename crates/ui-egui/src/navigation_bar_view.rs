@@ -4,7 +4,7 @@ use crate::navigation_bar::{self, Edge, Idle, Kind, Labels, MenuDisplay, Navigat
 use crate::theme::Tokens;
 use crate::ui_kit::BackingTooltipExt as _;
 use crate::ui_kit::{self, Container, Surface};
-use crate::{SolveApp, viewport::NavMode};
+use crate::{SketApp, viewport::NavMode};
 use egui::{Align2, Rect, pos2, vec2};
 use serde_json::json;
 
@@ -136,7 +136,7 @@ pub(crate) fn editor_layout(stage: Rect, prefs: &NavigationBar, label_width: imp
     bar
 }
 
-pub(crate) fn measured(app: &SolveApp, ctx: &egui::Context, content: Rect) -> BarLayout {
+pub(crate) fn measured(app: &SketApp, ctx: &egui::Context, content: Rect) -> BarLayout {
     let t = Tokens::get();
     let label_width = |slot: &Slot| {
         ctx.fonts_mut(|fonts| fonts.layout_no_wrap(slot_text(app, slot).to_owned(), crate::fonts::medium(ui_kit::NAV_TEXT), t.form_ink).size().x)
@@ -216,7 +216,7 @@ pub(crate) fn measured(app: &SolveApp, ctx: &egui::Context, content: Rect) -> Ba
     bar
 }
 
-fn selected(app: &SolveApp, id: &str) -> bool {
+fn selected(app: &SketApp, id: &str) -> bool {
     match id {
         "orbit" => app.viewport.nav == Some(NavMode::Orbit),
         "pan" => app.viewport.nav == Some(NavMode::Pan),
@@ -231,18 +231,18 @@ fn selected(app: &SolveApp, id: &str) -> bool {
 }
 
 /// A sketch is always drawn orthographic, so the projection controls stay inert until it ends (#2144).
-fn projection_locked(app: &SolveApp) -> bool {
+fn projection_locked(app: &SketApp) -> bool {
     app.session.active_sketch.is_some()
 }
 
 /// #6143 will replace this single compatibility path with a registered command.
-fn toggle_projection(app: &mut SolveApp) {
+fn toggle_projection(app: &mut SketApp) {
     if !projection_locked(app) {
         app.ui.perspective = !app.ui.perspective;
     }
 }
 
-fn activate(app: &mut SolveApp, slot: &Slot) {
+fn activate(app: &mut SketApp, slot: &Slot) {
     match slot.id {
         "look_at" => crate::viewport::look_at_selection(app),
         "projection" => toggle_projection(app),
@@ -259,7 +259,7 @@ fn activate(app: &mut SolveApp, slot: &Slot) {
     }
 }
 
-fn tooltip(app: &SolveApp, response: egui::Response, slot: &Slot, hidden: Option<&str>, along: Rect, edge: Edge) -> egui::Response {
+fn tooltip(app: &SketApp, response: egui::Response, slot: &Slot, hidden: Option<&str>, along: Rect, edge: Edge) -> egui::Response {
     let key = slot.command.and_then(|id| crate::keymap::display_for(app, id));
     let label = if let Some(hidden) = hidden {
         app.tr(hidden).to_owned()
@@ -276,7 +276,7 @@ fn tooltip(app: &SolveApp, response: egui::Response, slot: &Slot, hidden: Option
     response
 }
 
-pub(crate) fn show(app: &mut SolveApp, ui: &mut egui::Ui, rect: Rect) {
+pub(crate) fn show(app: &mut SketApp, ui: &mut egui::Ui, rect: Rect) {
     if !navigation_bar::shown(app) {
         return;
     }
@@ -384,7 +384,7 @@ pub(crate) fn show(app: &mut SolveApp, ui: &mut egui::Ui, rect: Rect) {
     ui.data_mut(|d| d.insert_temp(menu_id, open));
 }
 
-pub(crate) fn current_style(app: &SolveApp) -> &str {
+pub(crate) fn current_style(app: &SketApp) -> &str {
     app.tr(match app.ui.visual_style {
         1 => "navbar.style.shaded",
         2 => "navbar.style.wireframe",
@@ -394,7 +394,7 @@ pub(crate) fn current_style(app: &SolveApp) -> &str {
     })
 }
 
-pub(crate) fn slot_text<'a>(app: &'a SolveApp, slot: &Slot) -> &'a str {
+pub(crate) fn slot_text<'a>(app: &'a SketApp, slot: &Slot) -> &'a str {
     if slot.id == "visual_style" && app.preferences.navigation_bar.menu_display(slot.id) == MenuDisplay::IconAndValue {
         current_style(app)
     } else {
@@ -404,7 +404,7 @@ pub(crate) fn slot_text<'a>(app: &'a SolveApp, slot: &Slot) -> &'a str {
 
 /// Both viewport and Preferences call this painter. Editing changes interaction and outlines only.
 pub(crate) fn paint_row(
-    app: &SolveApp,
+    app: &SketApp,
     ui: &mut egui::Ui,
     bar: &BarLayout,
     open: &str,
@@ -479,7 +479,7 @@ pub(crate) fn paint_row(
     responses
 }
 
-pub(crate) fn context_menu(app: &mut SolveApp, response: &egui::Response, index: Option<usize>) {
+pub(crate) fn context_menu(app: &mut SketApp, response: &egui::Response, index: Option<usize>) {
     ui_kit::navigation_context(response, |ui| {
         for id in if index.is_none() { &["customise", "hide", "reset"][..] } else { &[][..] } {
             let key = format!("navbar.custom.{id}");
@@ -512,7 +512,7 @@ pub(crate) fn context_menu(app: &mut SolveApp, response: &egui::Response, index:
     });
 }
 
-fn style_menu(app: &mut SolveApp, ui: &mut egui::Ui) -> bool {
+fn style_menu(app: &mut SketApp, ui: &mut egui::Ui) -> bool {
     let mut chosen = false;
     for (index, style) in navigation_bar::VISUAL_STYLES.iter().map(|(style, _)| *style).enumerate() {
         let label = format!("navbar.style.{style}");
@@ -528,7 +528,7 @@ fn style_menu(app: &mut SolveApp, ui: &mut egui::Ui) -> bool {
     chosen
 }
 
-fn overflow_menu(app: &mut SolveApp, ui: &mut egui::Ui, slots: &[&Slot], open: &mut String) {
+fn overflow_menu(app: &mut SketApp, ui: &mut egui::Ui, slots: &[&Slot], open: &mut String) {
     for slot in slots {
         if slot.kind == Kind::Separator {
             let start = ui.next_widget_position();
@@ -559,7 +559,7 @@ fn overflow_menu(app: &mut SolveApp, ui: &mut egui::Ui, slots: &[&Slot], open: &
     }
 }
 
-fn display_menu(app: &mut SolveApp, ui: &mut egui::Ui) {
+fn display_menu(app: &mut SketApp, ui: &mut egui::Ui) {
     use ui_kit::{NavigationMenuRow, navigation_menu_heading as heading, navigation_menu_separator as separator};
     heading(ui, app.tr("navbar.graphics"));
     let current = crate::prefs::graphics_preset(&app.preferences);

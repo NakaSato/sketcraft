@@ -207,9 +207,7 @@ fn paint_bars(painter: &egui::Painter, rect: Rect, axis: [f64; 2], bars: &Bars, 
                 continue;
             }
             let colour = match bars.ramp {
-                Some([a, z]) if z > a => {
-                    crate::theme::model_color(sketcraft_engine::doc::point_cloud::height_ramp((lo + width / 2.0 - a) / (z - a)))
-                }
+                Some([a, z]) if z > a => crate::theme::model_color(sketcraft_engine::doc::point_cloud::height_ramp((lo + width / 2.0 - a) / (z - a))),
                 _ => bars.colours.get(s).copied().unwrap_or(ink),
             };
             mesh.add_colored_rect(Rect::from_min_max(Pos2::new(x0, y - h), Pos2::new(x1, y)), colour);

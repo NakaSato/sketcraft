@@ -8,7 +8,7 @@
 //! Control point splines take no new points yet: their knots are uniform, so one more control
 //! point re-spreads every span and the whole curve moves, wherever the point goes.
 
-use solidcore_record::Vec2;
+use sketcore_record::Vec2;
 use sketcraft_geom::prelude::*;
 
 use crate::model::{ConstraintKind, CurveKind, Result, Sketch, SketchError};

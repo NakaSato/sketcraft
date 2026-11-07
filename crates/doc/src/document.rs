@@ -1,5 +1,5 @@
 use serde::{Deserialize, Serialize};
-use solidcore_record::{Plane, Vec2, Vec3};
+use sketcore_record::{Plane, Vec2, Vec3};
 use sketcraft_geom::prelude::*;
 use sketcraft_kernel::Continuity;
 use sketcraft_sketch::Sketch;
@@ -3327,7 +3327,7 @@ impl Visibility {
 pub struct NamedView {
     #[serde(default)]
     pub name: String,
-    pub target: solidcore_record::Vec3,
+    pub target: sketcore_record::Vec3,
     pub yaw: f64,
     pub pitch: f64,
     pub distance: f64,

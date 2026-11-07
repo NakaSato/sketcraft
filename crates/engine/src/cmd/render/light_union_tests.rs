@@ -43,9 +43,7 @@ fn normalized_twenty_source_preflight_has_one_metadata_authority_and_no_reservat
         reply["retained_request_bytes"],
         json!(
             options.retained_bytes().unwrap()
-                + serde_json::from_value::<sketcraft_render::job::ImageRequest>(reply["request"].clone())
-                    .unwrap()
-                    .retained_resource_metadata_bytes()
+                + serde_json::from_value::<sketcraft_render::job::ImageRequest>(reply["request"].clone()).unwrap().retained_resource_metadata_bytes()
         )
     );
     assert_eq!(host.admitted_bytes(), 0);

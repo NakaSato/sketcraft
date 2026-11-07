@@ -4,7 +4,7 @@
 
 use crate::{Result, guard};
 
-/// The stack of a thread that runs kernel work: solidcore's algorithms recurse (subdivision,
+/// The stack of a thread that runs kernel work: sketcore's algorithms recurse (subdivision,
 /// intersection, filleting), and its README asks for 8 MiB, a native main thread's stack, where
 /// Rust starts other threads with 2 MiB.
 pub const KERNEL_STACK: usize = 8 << 20;
@@ -198,7 +198,7 @@ mod tests {
         if depth == 0 { here } else { here + deep(depth - 1) }
     }
 
-    /// Kernel work recurses as deep as solidcore's algorithms do on every thread the kernel runs
+    /// Kernel work recurses as deep as sketcore's algorithms do on every thread the kernel runs
     /// it on: a kernel thread, the pool's workers, and the helpers of `map_on_threads`.
     #[cfg(not(target_arch = "wasm32"))]
     #[test]

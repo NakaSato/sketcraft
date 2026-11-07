@@ -1,13 +1,13 @@
 //! Shared numerical editors for bounded camera sampling and GPU transport extensions.
-use crate::{SolveApp, ui_kit};
+use crate::{SketApp, ui_kit};
 
 /// Pilot allocation and conditional transmission sampling share portable intent.
 #[cfg(test)]
-pub(super) fn sampling_controls(app: &mut SolveApp, ui: &mut egui::Ui) {
+pub(super) fn sampling_controls(app: &mut SketApp, ui: &mut egui::Ui) {
     adaptive_controls(app, ui);
     glass_controls(app, ui);
 }
-pub(super) fn adaptive_controls(app: &mut SolveApp, ui: &mut egui::Ui) {
+pub(super) fn adaptive_controls(app: &mut SketApp, ui: &mut egui::Ui) {
     let before = app.render_workspace.view.studio.adaptive;
     let mut enabled = before.is_some();
     let response = ui_kit::checkbox(ui, app.tr("render.adaptive_enable"), &mut enabled);
@@ -55,7 +55,7 @@ pub(super) fn adaptive_controls(app: &mut SolveApp, ui: &mut egui::Ui) {
     ui_kit::text(ui, app.tr("render.adaptive_help"), ui_kit::Text::Note("render.adaptive_help"));
     app.render_workspace.view.dirty |= before != app.render_workspace.view.studio.adaptive;
 }
-pub(super) fn glass_controls(app: &mut SolveApp, ui: &mut egui::Ui) {
+pub(super) fn glass_controls(app: &mut SketApp, ui: &mut egui::Ui) {
     caustics_controls(app, ui);
     if app.render_workspace.view.method == super::ImageMethod::CpuRaytrace {
         cpu_glass_controls(app, ui);
@@ -84,7 +84,7 @@ pub(super) fn glass_controls(app: &mut SolveApp, ui: &mut egui::Ui) {
         before != (app.render_workspace.view.studio.nested_media, app.render_workspace.view.studio.transmission_samples);
 }
 
-fn caustics_controls(app: &mut SolveApp, ui: &mut egui::Ui) {
+fn caustics_controls(app: &mut SketApp, ui: &mut egui::Ui) {
     let before = app.render_workspace.view.studio.caustics;
     let mut enabled = before.is_some();
     let can_enable = app.render_workspace.view.method == super::ImageMethod::GpuRaytrace
@@ -126,7 +126,7 @@ fn caustics_controls(app: &mut SolveApp, ui: &mut egui::Ui) {
 
 /// CPU has one progressive Fresnel event per film ordinal. GPU strata and its
 /// nested-media flag are deliberately absent from this method's controls.
-fn cpu_glass_controls(app: &mut SolveApp, ui: &mut egui::Ui) {
+fn cpu_glass_controls(app: &mut SketApp, ui: &mut egui::Ui) {
     ui_kit::text(ui, app.tr("render.material_cpu_optics_limits"), ui_kit::Text::Note("render.cpu_glass_limits"));
     if app.render_workspace.view.raytrace.progressive.is_none() {
         let reason = super::cpu::progressive_adoption_reason(app);

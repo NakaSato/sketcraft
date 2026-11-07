@@ -21,8 +21,8 @@ use super::eval::{CurveEval, SurfaceEval};
 use crate::bspline::{HPoint, segment};
 use crate::prelude::*;
 use crate::tess::uv::{self, Domain};
-use solidcore_record::Vec3;
-use solidcore_record::brep::{Budget, Curve, Curve2, Surface, check_curve, check_curve2, check_interval, check_surface};
+use sketcore_record::Vec3;
+use sketcore_record::brep::{Budget, Curve, Curve2, Surface, check_curve, check_curve2, check_interval, check_surface};
 
 /// Why no pcurves: the records are malformed or out of bounds (`Invalid`), no pcurve within
 /// the tolerance was found or the geometry is not supported (`Failed`), or the fit would exceed

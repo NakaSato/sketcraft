@@ -3,7 +3,7 @@
 use sketcraft_geom::prelude::*;
 use std::f64::consts::FRAC_PI_2;
 
-use solidcore_record::{Loop2, Plane, Seg2, Vec2, Vec3};
+use sketcore_record::{Loop2, Plane, Seg2, Vec2, Vec3};
 use sketcraft_geom::brep::eval::SurfaceEval;
 
 use crate::*;

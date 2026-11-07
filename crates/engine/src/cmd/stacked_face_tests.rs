@@ -41,7 +41,7 @@ fn two_extrudes(circle: bool, full: bool, on_face: bool, operation: &str) -> Ses
     s
 }
 
-fn healthy(s: &Session, sketch: &str) -> solidcore_record::Plane {
+fn healthy(s: &Session, sketch: &str) -> sketcore_record::Plane {
     let id = s.doc.find_feature(sketch).map(|f| f.id).unwrap();
     match s.placed_document().sketch_face_attachment(id, &s.model) {
         FaceAttachmentStatus::Healthy { plane, .. } => plane,

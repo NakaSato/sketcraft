@@ -315,7 +315,7 @@ fn selected_row_paints_tab_soft_fill_and_accent_text_in_both_layouts() {
         for mode in [LayoutMode::Floating, LayoutMode::Docked] {
             for tab in ["MODEL", "SKETCH", "SURFACE", "MESH", "FORM", "SHEET METAL", "RENDER"] {
                 let ctx = crate::fonts::test_context();
-                let mut app = SolveApp::new(Default::default(), Default::default());
+                let mut app = SketApp::new(Default::default(), Default::default());
                 app.ui.layout = mode;
                 app.ui.tab = tab.into();
                 crate::theme::TabAccent::publish(&app, &ctx);
@@ -475,7 +475,7 @@ fn the_folded_browser_is_remembered_across_runs() {
     let at = handle_at("browser:header").unwrap();
     next.call("ui.click", json!({"x":at.x,"y":at.y}));
     next.settle();
-    let mut after = SolveApp::new(Default::default(), Default::default());
+    let mut after = SketApp::new(Default::default(), Default::default());
     after.load_prefs(&next.app.prefs());
     assert!(!after.preferences.browser_collapsed, "unfolding is remembered too");
 }
@@ -533,7 +533,7 @@ fn a_browser_that_reveals_on_hover_shows_and_hides_with_the_pointer() {
         h.settle();
         assert!(!h.app.shell.browser_hidden);
         assert!(rect_of("browser:card").unwrap().height() < 60.0, "{mode:?}: Shown folds it again as it was left");
-        let mut restored = SolveApp::new(Default::default(), Default::default());
+        let mut restored = SketApp::new(Default::default(), Default::default());
         h.app.preferences.browser_show = BrowserShow::Hover;
         restored.load_prefs(&h.app.prefs());
         assert_eq!(restored.preferences.browser_show, BrowserShow::Hover);
@@ -590,7 +590,7 @@ fn one_browser_keeps_its_resized_width_across_layouts_and_overlay_preferences() 
 #[test]
 fn browser_title_uses_a_single_semibold_run() {
     let ctx = crate::fonts::test_context();
-    let mut app = SolveApp::new(Default::default(), Default::default());
+    let mut app = SketApp::new(Default::default(), Default::default());
     let output = crate::test_support::frame(&ctx, egui::RawInput::default(), |ui| {
         ui.set_width(250.0);
         browser_header(&mut app, ui, true);
@@ -631,7 +631,7 @@ fn resizing_browser_card_and_column_persists_width_including_floating_preference
         assert!(width > crate::prefs::DEFAULT_BROWSER_WIDTH + 40.0, "{mode:?}, float={float}, width={width}");
         assert!((rect_of("browser:card").unwrap().width() - width).abs() < 1.0);
         assert_eq!(h.app.viewport.rect.unwrap(), before, "browser resizing leaves the projection intact");
-        let mut restored = SolveApp::new(Default::default(), Default::default());
+        let mut restored = SketApp::new(Default::default(), Default::default());
         restored.load_prefs(&h.app.prefs());
         assert_eq!(restored.preferences.browser_width, width);
         assert_eq!(restored.preferences.browser_float, float);
@@ -673,13 +673,13 @@ fn collapsed_rail_shares_header_hover_inset_and_expands_from_its_whole_card() {
         for collapsed in [false, true] {
             let ctx = crate::fonts::test_context();
             ctx.global_style_mut(|style| style.animation_time = 0.0);
-            let mut app = SolveApp::new(Default::default(), Default::default());
+            let mut app = SketApp::new(Default::default(), Default::default());
             app.ui.tab = "SURFACE".into();
             app.preferences.timeline_left = true;
             app.preferences.timeline_left_browser_collapsed = collapsed;
             crate::theme::TabAccent::publish(&app, &ctx);
             let bounds = Rect::from_min_size(Pos2::ZERO, vec2(600.0, 700.0));
-            let draw = |app: &mut SolveApp, events| {
+            let draw = |app: &mut SketApp, events| {
                 crate::test_support::frame(&ctx, egui::RawInput { screen_rect: Some(bounds), events, ..Default::default() }, |ui| {
                     browser(app, ui);
                 })
@@ -725,7 +725,7 @@ fn collapsed_rail_shares_header_hover_inset_and_expands_from_its_whole_card() {
 /// #6907: a mesh body's row has its own icon and tooltip, so it can be told from a solid one.
 #[test]
 fn mesh_and_solid_body_rows_have_different_icons_and_tooltips() {
-    use solidcore_record::Vec3;
+    use sketcore_record::Vec3;
     use sketcraft_engine::doc::{Document, FeatureKind, MeshData};
     let solid = sketcraft_engine::kernel::box_solid(Vec3::ZERO, Vec3::new(10., 10., 10.)).unwrap();
     let mesh = solid.mesh(&sketcraft_engine::kernel::MeshTolerance::chord(0.01)).unwrap();
@@ -2172,7 +2172,7 @@ fn unpresented_app_requests_have_provenance_before_a_direct_session_replacement(
     let mut h = Harness::new();
     three_bodies(&mut h);
     let document = (*h.app.session.doc).clone();
-    h.app = crate::SolveApp::new(sketcraft_engine::Session::new(document.clone()), crate::Services::default());
+    h.app = crate::SketApp::new(sketcraft_engine::Session::new(document.clone()), crate::Services::default());
     // Existing callers can set the public request fields before the first UI frame.
     h.app.tree.reveal = Some("Three".into());
     h.app.tree.timeline_reveal = Some(document.features[2].id);

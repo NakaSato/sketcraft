@@ -7,7 +7,7 @@ use std::sync::Arc;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use web_time::Instant;
 
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 use sketcraft_doc::apply_point;
 use sketcraft_geom::{Aabb3, Mesh};
 use sketcraft_render::Camera;
@@ -619,7 +619,7 @@ mod tests {
     }
 
     fn canonical(lines: Vec<Line>) -> Vec<([i64; 2], [i64; 2], bool)> {
-        let k = |p: solidcore_record::Vec2| [(p.x * 1e6).round() as i64, (p.y * 1e6).round() as i64];
+        let k = |p: sketcore_record::Vec2| [(p.x * 1e6).round() as i64, (p.y * 1e6).round() as i64];
         let mut result = lines
             .into_iter()
             .map(|l| {

@@ -1,5 +1,5 @@
 //! Bounded optical data and original f64 dielectric transport oracles. Units are mm.
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 use sketcraft_geom::prelude::*;
 #[path = "subsurface.rs"]
 pub mod subsurface;

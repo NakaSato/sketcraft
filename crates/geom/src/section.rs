@@ -25,7 +25,7 @@ use crate::prelude::*;
 use serde::{Deserialize, Serialize};
 
 use crate::profile::coordinates;
-use solidcore_record::{Loop2, Plane, Region2, Seg2, Vec2, Vec3};
+use sketcore_record::{Loop2, Plane, Region2, Seg2, Vec2, Vec3};
 
 /// Aggregate input records/references, and the selected conversion's output items, at most.
 /// Input counts curves, wires, regions, contacts, curve uses and hole references together.

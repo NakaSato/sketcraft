@@ -10,7 +10,7 @@
 //! puts them; every other line is set glyph by glyph, as it always was.
 
 use serde::{Deserialize, Serialize};
-use solidcore_record::Vec2;
+use sketcore_record::Vec2;
 use sketcraft_geom::Ring;
 use sketcraft_geom::prelude::*;
 

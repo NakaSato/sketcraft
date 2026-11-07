@@ -8,14 +8,14 @@ use crate::ui_kit::BackingTooltipExt as _;
 use crate::ui_kit::{choice_row, expr_row, hint_row};
 use egui::{Align2, Color32, FontId, Pos2, Rect, RichText, Stroke, pos2, vec2};
 use serde_json::{Map, Value, json};
-use solidcore_record::{Vec2, Vec3};
+use sketcore_record::{Vec2, Vec3};
 use sketcraft_engine::Sel;
 use sketcraft_engine::doc::expr::Kind as ValueKind;
 use sketcraft_engine::doc::sheet::SheetRule;
 use sketcraft_engine::doc::{FeatureKind, ProfileSel};
 use sketcraft_engine::geom::prelude::*;
 
-use crate::SolveApp;
+use crate::SketApp;
 use crate::dialogs::{Dialog, Kind, edge_sel, face_sel, form_row, profile_indices};
 use crate::selection::{AXES, BODIES, CURVES, EDGES, FACES, PLANAR_FACES, PROFILES, SelInput, SelectionExt as _, items, point_value as pt};
 use crate::theme::Tokens;
@@ -168,7 +168,7 @@ impl Sm {
     }
 }
 
-fn new_flange(app: &SolveApp, ty: usize) -> Sm {
+fn new_flange(app: &SketApp, ty: usize) -> Sm {
     Sm::Flange {
         ty,
         height: crate::dialogs::length_default(&app.session, "10"),
@@ -188,7 +188,7 @@ fn new_flange(app: &SolveApp, ty: usize) -> Sm {
 }
 
 /// The dialog for a sheet metal command.
-pub fn start(app: &SolveApp, id: &str) -> Option<(Kind, Vec<SelInput>)> {
+pub fn start(app: &SketApp, id: &str) -> Option<(Kind, Vec<SelInput>)> {
     let (sm, inputs) = match id {
         "sheet.flange" => (new_flange(app, 0), vec![SelInput::new("Profile / Edges", PROFILES | EDGES | CURVES, true)]),
         "sheet.unfold" => (Sm::Unfold { refold: false }, vec![SelInput::new("Body (last if none)", BODIES, false)]),
@@ -209,7 +209,7 @@ pub fn start(app: &SolveApp, id: &str) -> Option<(Kind, Vec<SelInput>)> {
 }
 
 /// The design's rules (the default steel rule when it has none).
-fn rule_list(app: &SolveApp) -> Vec<SheetRule> {
+fn rule_list(app: &SketApp) -> Vec<SheetRule> {
     design_rules(&app.session.doc)
 }
 
@@ -221,11 +221,11 @@ pub(crate) fn design_rules(doc: &sketcraft_engine::doc::Document) -> Vec<SheetRu
 }
 
 /// "(active rule)" and the rule names, for a rule box.
-fn rule_names(app: &SolveApp) -> Vec<String> {
+fn rule_names(app: &SketApp) -> Vec<String> {
     std::iter::once("(active rule)".to_string()).chain(rule_list(app).into_iter().map(|r| r.name)).collect()
 }
 
-fn rule_combo(app: &SolveApp, ui: &mut egui::Ui, id: &str, rule: &mut usize) {
+fn rule_combo(app: &SketApp, ui: &mut egui::Ui, id: &str, rule: &mut usize) {
     let names = rule_names(app);
     let refs: Vec<&str> = names.iter().map(String::as_str).collect();
     choice_row(ui, "Rule", id, rule, &refs);
@@ -244,7 +244,7 @@ fn flange_type(inputs: &[SelInput]) -> usize {
 }
 
 /// The dialog's own rows (after the selection inputs); true when Enter was pressed in a value.
-pub fn rows(app: &mut SolveApp, ui: &mut egui::Ui, k: &mut Sm, inputs: &mut [SelInput]) -> bool {
+pub fn rows(app: &mut SketApp, ui: &mut egui::Ui, k: &mut Sm, inputs: &mut [SelInput]) -> bool {
     let t = Tokens::get();
     let mut enter = false;
     match k {
@@ -496,7 +496,7 @@ pub fn rows(app: &mut SolveApp, ui: &mut egui::Ui, k: &mut Sm, inputs: &mut [Sel
 
 /// The ribbon exports use the same save picker as the flat-pattern panel. Keep the
 /// commands' default target (the last sheet body) and leave programmatic calls headless.
-pub fn start_export(app: &mut SolveApp, id: &str) -> bool {
+pub fn start_export(app: &mut SketApp, id: &str) -> bool {
     let extension = match id {
         "sheet.export_dxf" => "dxf",
         "sheet.export_bend_table" => "csv",
@@ -514,7 +514,7 @@ pub fn start_export(app: &mut SolveApp, id: &str) -> bool {
     true
 }
 
-fn export_flat(app: &mut SolveApp, body: &str, extension: &str) -> String {
+fn export_flat(app: &mut SketApp, body: &str, extension: &str) -> String {
     let name = format!("{}-{body}.{extension}", app.session.doc.name);
     let body = body.to_string();
     let command = if extension == "csv" { "sheet.export_bend_table" } else { "sheet.export_dxf" };
@@ -541,13 +541,13 @@ fn export_flat(app: &mut SolveApp, body: &str, extension: &str) -> String {
 
 // ---- commands ----
 
-fn rule_value(app: &SolveApp, rule: usize) -> Option<String> {
+fn rule_value(app: &SketApp, rule: usize) -> Option<String> {
     rule.checked_sub(1).and_then(|i| rule_list(app).get(i).map(|r| r.name.clone()))
 }
 
 /// A path flange's path is a chain: a line picked into Path brings every line joined to it end
 /// to end, so one click takes the whole path.
-fn path_chain(app: &SolveApp, inputs: &mut [SelInput]) {
+fn path_chain(app: &SketApp, inputs: &mut [SelInput]) {
     let edge = inputs.first().and_then(|i| i.items.edge_points().first().copied());
     let Some(input) = inputs.get_mut(1) else { return };
     let st = crate::open_meshing::session_world(&app.session);
@@ -587,7 +587,7 @@ fn path_chain(app: &SolveApp, inputs: &mut [SelInput]) {
 }
 
 /// The lengths of the path's lines, in the order picked (mm).
-fn path_lengths(app: &SolveApp, inputs: &[SelInput]) -> Vec<f64> {
+fn path_lengths(app: &SketApp, inputs: &[SelInput]) -> Vec<f64> {
     let st = crate::open_meshing::session_world(&app.session);
     let picks = items(inputs, 1);
     let Some(ss) = crate::dialogs::picks_sketch(app, picks, None).and_then(|k| st.sketch(k)) else { return Vec::new() };
@@ -640,7 +640,7 @@ fn flange_edges(inputs: &[SelInput], own: &[(Vec3, String, String)]) -> Vec<Valu
 }
 
 /// The commands the dialog's OK runs (`extra`: parameters kept from the feature being edited).
-pub fn commands(app: &SolveApp, k: &Sm, inputs: &[SelInput], extra: &Map<String, Value>) -> Result<Vec<(String, Value)>, String> {
+pub fn commands(app: &SketApp, k: &Sm, inputs: &[SelInput], extra: &Map<String, Value>) -> Result<Vec<(String, Value)>, String> {
     let s = &app.session;
     let (cmd, mut p): (&str, Value) = match k {
         Sm::Flange { height, angle, radius, position, height_from, flip, distance, reverse, rule, own, relief, relief_size, then, .. } => {
@@ -790,7 +790,7 @@ pub fn commands(app: &SolveApp, k: &Sm, inputs: &[SelInput], extra: &Map<String,
 }
 
 /// The dialog editing a sheet metal feature, filled from it.
-pub fn for_feature(app: &SolveApp, kind: &FeatureKind) -> Option<(Kind, Vec<SelInput>, Map<String, Value>)> {
+pub fn for_feature(app: &SketApp, kind: &FeatureKind) -> Option<(Kind, Vec<SelInput>, Map<String, Value>)> {
     let s = &app.session;
     let st = crate::open_meshing::session_world(s);
     let rule_index = |r: &Option<String>| r.as_ref().and_then(|n| rule_list(app).iter().position(|x| &x.name == n)).map_or(0, |i| i + 1);
@@ -944,7 +944,7 @@ pub fn for_feature(app: &SolveApp, kind: &FeatureKind) -> Option<(Kind, Vec<SelI
 /// The direction an edge flange grows from its first edge: out of the sheet's larger
 /// neighbouring face (flipped with Flip). A hem's handle runs along the hem instead
 /// ([`hem_handle`]).
-pub fn arrow(app: &SolveApp, d: &Dialog) -> Option<Vec3> {
+pub fn arrow(app: &SketApp, d: &Dialog) -> Option<Vec3> {
     let Kind::Sheet(k) = &d.kind else { return None };
     let flip = match k {
         Sm::Flange { ty: 1, flip, .. } => *flip,
@@ -958,7 +958,7 @@ pub fn arrow(app: &SolveApp, d: &Dialog) -> Option<Vec3> {
 /// The sheet at the dialog's first picked edge: the unit normal of the larger neighbouring face
 /// (out of the sheet), the unit normal of the other neighbour (the edge's end face, pointing away
 /// from the sheet), and the sheet's thickness along the first.
-fn edge_frame(app: &SolveApp, d: &Dialog) -> Option<(Vec3, Vec3, f64)> {
+fn edge_frame(app: &SketApp, d: &Dialog) -> Option<(Vec3, Vec3, f64)> {
     let Sel::Edge { body, index, point } = d.inputs.first()?.items.first()? else { return None };
     let st = crate::open_meshing::session_world(&app.session);
     let m = st.body(body)?.mesh();
@@ -996,7 +996,7 @@ fn edge_frame(app: &SolveApp, d: &Dialog) -> Option<(Vec3, Vec3, f64)> {
 /// that face and runs along the hem toward the tip: square to the picked edge, back over the sheet.
 /// The layer lies on the far side of the sheet from the larger face unless flipped. The Gap is
 /// taken from the dialog when it holds a number; otherwise the layer sits flat against the sheet.
-pub fn hem_handle(app: &SolveApp, d: &Dialog) -> Option<(Vec3, Vec3)> {
+pub fn hem_handle(app: &SketApp, d: &Dialog) -> Option<(Vec3, Vec3)> {
     let Kind::Sheet(Sm::Hem { gap, flip, .. }) = &d.kind else { return None };
     let Sel::Edge { point, .. } = d.inputs.first()?.items.first()? else { return None };
     let (n, end, thickness) = edge_frame(app, d)?;
@@ -1017,7 +1017,7 @@ fn bend_colors() -> (Color32, Color32) {
 
 /// The flat pattern view: outline, cut-outs, perforations and bend lines (up and down in
 /// their colours), fitted over the viewport. True when the dialog is a flat pattern.
-pub fn overlay(app: &mut SolveApp, painter: &egui::Painter, rect: Rect, d: &Dialog) -> bool {
+pub fn overlay(app: &mut SketApp, painter: &egui::Painter, rect: Rect, d: &Dialog) -> bool {
     let Kind::Sheet(Sm::FlatPattern { data, .. }) = &d.kind else { return false };
     let t = Tokens::get();
     let (up_col, down_col) = bend_colors();
@@ -1221,14 +1221,14 @@ impl FlatView {
 }
 
 /// The Create Flat Pattern dialog is open, so the viewport shows its 2D view.
-pub(crate) fn flat_active(app: &SolveApp) -> bool {
+pub(crate) fn flat_active(app: &SketApp) -> bool {
     matches!(app.dialog.as_ref().map(|d| &d.kind), Some(Kind::Sheet(Sm::FlatPattern { .. })))
 }
 
 /// Camera input for the flat pattern: the shared navigation without orbit, driving the flat view
 /// instead of the Design camera. The result reports nothing under the pointer, so the model
 /// beneath neither hovers, selects nor navigates.
-pub(crate) fn navigate(app: &mut SolveApp, ui: &mut egui::Ui, rect: Rect, resp: &egui::Response) -> crate::navigation::CameraInput {
+pub(crate) fn navigate(app: &mut SketApp, ui: &mut egui::Ui, rect: Rect, resp: &egui::Response) -> crate::navigation::CameraInput {
     use crate::navigation::{NavCaps, handle};
     let design = std::mem::replace(&mut app.cam, app.flat_view.cam);
     let mut input = handle(app, ui, rect, resp, NavCaps { orbit: false, pick: false });
@@ -1239,7 +1239,7 @@ pub(crate) fn navigate(app: &mut SolveApp, ui: &mut egui::Ui, rect: Rect, resp: 
     input
 }
 
-fn pocket_label(app: &SolveApp, pocket: &Value) -> Option<String> {
+fn pocket_label(app: &SketApp, pocket: &Value) -> Option<String> {
     let depth = pocket["depth_mm"].as_f64()?;
     if !depth.is_finite() || depth <= 0.0 {
         return None;

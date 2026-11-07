@@ -3,7 +3,7 @@
 use sketcraft_geom::prelude::*;
 use std::f64::consts::PI;
 
-use solidcore_record::{Loop2, Plane, Region2, Vec2, Vec3};
+use sketcore_record::{Loop2, Plane, Region2, Vec2, Vec3};
 
 use crate::{Body, loft_regions, measure, step_export, step_import};
 
@@ -91,7 +91,7 @@ fn loft_regions_bound_segments_after_matching() {
     // would exceed it in every section. Refuse before allocating the topology.
     let circle = |x, n| Loop2 {
         segs: (0..n)
-            .map(|i| solidcore_record::Seg2::Arc {
+            .map(|i| sketcore_record::Seg2::Arc {
                 center: Vec2::new(x, 0.0),
                 radius: 1.0,
                 start: i as f64 * std::f64::consts::TAU / n as f64,

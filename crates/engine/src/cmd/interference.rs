@@ -14,7 +14,7 @@ use std::collections::HashSet;
 use std::sync::Arc;
 
 use serde_json::{Value, json};
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 use sketcraft_geom::mesh_distance::TriangleSet;
 use sketcraft_geom::{Aabb3, Mesh};
 use sketcraft_kernel::Body;

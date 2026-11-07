@@ -29,22 +29,12 @@ fn a_profile_holds_input_and_interface_settings_but_not_the_machine() {
         "ui_scale",
         "ui_font",
         "navigator_style",
-        "nav_bridge_enabled",
-        "nav_bridge_port",
         "language",
         "suppress_sketch_snap",
     ] {
         assert!(keys.contains(&key), "{key} belongs in a profile");
     }
     for key in [
-        "space_mouse_calibrations",
-        "space_mouse_driver",
-        "space_mouse_speed",
-        "space_mouse_axis_source",
-        "space_mouse_axis_speed",
-        "space_mouse_reverse",
-        "space_mouse_buttons",
-        "space_mouse_enabled",
         "dark_parts_shading",
         "msaa",
         "window_system",
@@ -139,7 +129,7 @@ fn profiles_and_the_active_one_are_kept_between_runs() {
     let mut h = Harness::new();
     h.app.preferences.ui_scale = 1.25;
     run(&mut h, "settings.profile.save", json!({"name": "Laptop"}));
-    let mut other = crate::SolveApp::new(sketcraft_engine::Session::default(), crate::Services::default());
+    let mut other = crate::SketApp::new(sketcraft_engine::Session::default(), crate::Services::default());
     other.load_prefs(&h.app.prefs());
     assert_eq!(other.settings_profiles.names(), ["Laptop"]);
     assert_eq!(other.settings_profiles.active.as_deref(), Some("Laptop"));
@@ -776,8 +766,6 @@ fn profile_keys_preserve_the_baseline_and_explicit_additions() {
         "middle_double_click",
         "mouse_gestures",
         "nav",
-        "nav_bridge_enabled",
-        "nav_bridge_port",
         "navigation_bar",
         "navigator_fit",
         "navigator_style",
@@ -861,8 +849,6 @@ fn moved_profile_settings_survive_saved_roundtrip_and_apply() {
         let homes: Vec<_> = crate::prefs::FIELD_PAGES.iter().filter_map(|(field, page)| (*field == key).then_some(*page)).collect();
         assert_eq!(homes, [Some(page)], "{key} keeps its new page home");
     }
-    h.app.preferences.nav_bridge_enabled = true;
-    h.app.preferences.nav_bridge_port = 9876;
     h.app.preferences.origin_plane_names = crate::prefs::OriginPlaneNames::TopFrontRight;
     h.app.preferences.direct_interaction = true;
     h.app.preferences.quick_measure = true;
@@ -902,8 +888,6 @@ fn moved_profile_settings_survive_saved_roundtrip_and_apply() {
     run(&mut h, "settings.profile.delete", json!({"name":"Moved"}));
     assert_eq!(run(&mut h, "settings.profile.import", json!({"path":path})), json!({"name":"Moved"}));
     assert_eq!(h.app.settings_profiles.list[0], doc, "file import retains the complete profile");
-    h.app.preferences.nav_bridge_enabled = false;
-    h.app.preferences.nav_bridge_port = 8765;
     h.app.preferences.origin_plane_names = crate::prefs::OriginPlaneNames::Xyz;
     h.app.preferences.direct_interaction = false;
     h.app.preferences.quick_measure = false;

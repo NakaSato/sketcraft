@@ -14,7 +14,7 @@ use std::sync::Arc;
 use sketcraft_engine::doc::TimelineGroup;
 
 use super::{TimelineItem, group_path, sketches_key};
-use crate::SolveApp;
+use crate::SketApp;
 use crate::history_rows::{HistoryFeature, HistoryRows};
 use crate::timeline::{TimelineKind, icon_of};
 
@@ -35,7 +35,7 @@ struct PlanKey {
 }
 
 impl PlanKey {
-    fn of(app: &SolveApp, under_feature: bool) -> Self {
+    fn of(app: &SketApp, under_feature: bool) -> Self {
         let doc = &app.session.doc;
         Self {
             session: app.session.uid,
@@ -105,7 +105,7 @@ pub(super) struct RowPlan {
 
 impl RowPlan {
     /// The plan for the design as it is, kept until it changes.
-    pub(super) fn cached(app: &SolveApp, ui: &egui::Ui, under_feature: bool) -> Arc<Self> {
+    pub(super) fn cached(app: &SketApp, ui: &egui::Ui, under_feature: bool) -> Arc<Self> {
         let id = egui::Id::unique("sc_history_row_plan");
         let key = PlanKey::of(app, under_feature);
         if let Some(plan) = ui.data(|data| data.get_temp::<Arc<Self>>(id)).filter(|plan| plan.key == key) {
@@ -117,7 +117,7 @@ impl RowPlan {
     }
 
     /// Build the plan from the design.
-    pub(super) fn of(app: &SolveApp, under_feature: bool) -> Self {
+    pub(super) fn of(app: &SketApp, under_feature: bool) -> Self {
         let doc = &app.session.doc;
         let features: Vec<FeatureInfo> = doc
             .features
@@ -366,7 +366,7 @@ impl RowPlan {
     }
 
     /// Which folders and folds are open now.
-    pub(super) fn folds(&self, app: &SolveApp) -> Folds {
+    pub(super) fn folds(&self, app: &SketApp) -> Folds {
         // A folder shows open here until it is folded (`timeline_folders::is_open`).
         let closed = self.fold_keys.iter().filter(|(_, key)| !crate::history_folds::is_open(app, key, true)).map(|(id, _)| *id).collect();
         let open_hosts = self.host_keys.iter().filter(|(_, key)| crate::browser::is_open(app, key, false)).map(|(feature, _)| *feature).collect();

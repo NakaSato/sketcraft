@@ -485,7 +485,7 @@ fn recent_list_is_capped_unique_and_synced_with_the_saved_one() {
 #[test]
 fn recent_colours_are_saved_with_the_preferences_and_hostile_entries_dropped() {
     use serde_json::json;
-    let mut app = crate::SolveApp::new(sketcraft_engine::Session::default(), Default::default());
+    let mut app = crate::SketApp::new(sketcraft_engine::Session::default(), Default::default());
     let mut list = vec![json!([1, 2, 3]), json!([300, 0, 0]), json!("red"), json!([1, 2]), json!(null)];
     list.extend((0..50).map(|i| json!([i, i, i])));
     app.load_prefs(&json!({ "recent_colors": list }).to_string());
@@ -495,7 +495,7 @@ fn recent_colours_are_saved_with_the_preferences_and_hostile_entries_dropped() {
     crate::recent_colors::share(&ctx, &mut app.ui.recent_colors);
     remember_color(&ctx, [9, 8, 7], None);
     crate::recent_colors::share(&ctx, &mut app.ui.recent_colors);
-    let mut restored = crate::SolveApp::new(sketcraft_engine::Session::default(), Default::default());
+    let mut restored = crate::SketApp::new(sketcraft_engine::Session::default(), Default::default());
     restored.load_prefs(&app.prefs());
     assert_eq!(restored.ui.recent_colors.first(), Some(&[9, 8, 7]));
     assert_eq!(restored.ui.recent_colors.get(1), Some(&[1, 2, 3]));

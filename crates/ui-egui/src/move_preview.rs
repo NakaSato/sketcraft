@@ -7,12 +7,12 @@ use sketcraft_engine::geom::prelude::*;
 use std::sync::Arc;
 
 use serde_json::Value;
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 use sketcraft_engine::doc::{Document, Mat, apply_point, apply_vector, expr::Kind, rigid};
 use sketcraft_engine::geom::{Aabb3, Mesh};
 
 use crate::{
-    SolveApp,
+    SketApp,
     gpu::GpuScene,
     preview::{Built, Colors},
 };
@@ -41,7 +41,7 @@ impl MovePreview {
 
     /// The preview of a `solid.move` (or its edit), or `None` to leave it to the scratch design:
     /// another command, values that don't evaluate, a body not shown, or too many triangles.
-    pub(crate) fn compute(&mut self, app: &SolveApp, commands: &[(String, Value)], colors: Colors) -> Option<Result<Built, String>> {
+    pub(crate) fn compute(&mut self, app: &SketApp, commands: &[(String, Value)], colors: Colors) -> Option<Result<Built, String>> {
         let [(id, params)] = commands else { return None };
         let params = match id.as_str() {
             "solid.move" => params,
@@ -164,17 +164,17 @@ fn draw(scene: &mut GpuScene, mesh: &Mesh, m: &Mat, colors: Colors, bounds: &mut
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{Services, SolveApp};
+    use crate::{Services, SketApp};
     use serde_json::json;
     use sketcraft_engine::Session;
 
-    fn app() -> SolveApp {
+    fn app() -> SketApp {
         let mut s = Session::default();
         s.execute("solid.box", &json!({"length": 20, "width": 10, "height": 5, "body_name": "Plate"})).unwrap();
-        SolveApp::new(s, Services::default())
+        SketApp::new(s, Services::default())
     }
 
-    fn colors(app: &SolveApp) -> Colors {
+    fn colors(app: &SketApp) -> Colors {
         let _ = app;
         Colors::from_tokens(&crate::theme::Tokens::get())
     }
@@ -232,7 +232,7 @@ mod tests {
         s.execute("solid.box", &json!({"length": 20, "width": 10, "height": 15, "body_name": "Peg"})).unwrap();
         s.execute("component.activate", &json!({"component": "root"})).unwrap();
         let occurrence = made["occurrence"].as_u64().unwrap();
-        let app = SolveApp::new(s, Services::default());
+        let app = SketApp::new(s, Services::default());
         let c = colors(&app);
         let mut pv = MovePreview::default();
         // The component's box is 0..20 along X; the copy lands 50 mm along.

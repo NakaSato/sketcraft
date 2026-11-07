@@ -3,7 +3,7 @@
 
 use super::*;
 use serde_json::json;
-use solidcore_record::Vec2;
+use sketcore_record::Vec2;
 use sketcraft_sketch::{LinkGeom, LinkKind, LinkSource};
 
 /// #4214: the grid's fade is at full strength in the middle of the view, and gone before the

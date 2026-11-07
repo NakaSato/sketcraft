@@ -13,7 +13,7 @@
 //! contains the saved pick and comes directly from its original construction feature.
 //! This check is local to manual sketch projection.
 
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 use sketcraft_geom::Mesh;
 use sketcraft_geom::brep::eval::SurfaceEval;
 use sketcraft_geom::prelude::*;

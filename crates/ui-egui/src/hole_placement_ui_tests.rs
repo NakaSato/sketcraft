@@ -6,7 +6,7 @@
 //! looks the face up once for every point near the cursor.
 
 use serde_json::{Value, json};
-use solidcore_record::{Vec2, Vec3};
+use sketcore_record::{Vec2, Vec3};
 use sketcraft_engine::Sel;
 use sketcraft_engine::doc::FeatureKind;
 use sketcraft_engine::geom::Aabb3;
@@ -259,7 +259,7 @@ fn hole_presets_save_rename_delete_and_enter_only_change_the_form_or_profile() {
     h.step(&json!({"widget":"Confirm delete"})).unwrap();
     assert_eq!(serde_json::to_value(&h.app.preferences.hole_presets).unwrap(), json!([]));
     assert_eq!(h.app.session.doc.features.len(), 1);
-    let mut other = crate::SolveApp::new(Default::default(), Default::default());
+    let mut other = crate::SketApp::new(Default::default(), Default::default());
     other.load_prefs(&saved);
     assert_eq!(serde_json::to_value(&other.preferences.hole_presets).unwrap()[0]["name"], "Workshop");
 }

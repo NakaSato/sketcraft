@@ -3,7 +3,7 @@
 //! profile.
 
 use serde_json::{Value, json};
-use solidcore_record::Vec2;
+use sketcore_record::Vec2;
 use sketcraft_geom::prelude::*;
 use sketcraft_sketch::{CurveKind, Sketch};
 

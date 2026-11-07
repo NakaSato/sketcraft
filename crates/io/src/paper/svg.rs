@@ -22,7 +22,7 @@
 use sketcraft_geom::prelude::*;
 use std::fmt::Write;
 
-use solidcore_record::{Region2, Seg2, Vec2};
+use sketcore_record::{Region2, Seg2, Vec2};
 use sketcraft_geom::paper::{Item, Prepared, arc_pieces};
 
 use crate::{IoError, MAX_DRAWING_BYTES, Result};

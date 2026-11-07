@@ -1,10 +1,10 @@
 //! Rest: the marker moves the pad, the ring turns a rectangular one in 5° steps, pulled onto the
 //! face's compass points when near one (Alt or Ctrl held: free), kept as the command's `along`.
 
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 
 use super::{Spec, Turn, angle_of, circle, dir_at, len, pt, pulled, rect, vec3_of};
-use crate::SolveApp;
+use crate::SketApp;
 use crate::dialogs::{Dialog, Kind};
 use crate::dialogs_plastic::Pl;
 
@@ -24,7 +24,7 @@ const STEP_DEG: f64 = 5.0;
 
 /// The pad's footprint: a circle of the diameter, or the rectangle of the length along `along`
 /// and the width across it.
-fn footprint(app: &SolveApp, d: &Dialog, base: Vec3, n: Vec3) -> Vec<Vec3> {
+fn footprint(app: &SketApp, d: &Dialog, base: Vec3, n: Vec3) -> Vec<Vec3> {
     let Kind::Plastic(Pl::Rest { round, width, length, .. }) = &d.kind else { return Vec::new() };
     if *round {
         circle(base, n, len(app, width) * 0.5)
@@ -34,17 +34,17 @@ fn footprint(app: &SolveApp, d: &Dialog, base: Vec3, n: Vec3) -> Vec<Vec3> {
 }
 
 /// Half the length of a rectangular pad; a round one has no ring.
-fn reach(app: &SolveApp, d: &Dialog) -> Option<f64> {
+fn reach(app: &SketApp, d: &Dialog) -> Option<f64> {
     let Kind::Plastic(Pl::Rest { round: false, length, .. }) = &d.kind else { return None };
     Some(len(app, length) * 0.5)
 }
 
 /// The stored `along` as an angle about `n` from the engine's default direction.
-fn angle(_: &SolveApp, d: &Dialog, n: Vec3) -> f64 {
+fn angle(_: &SketApp, d: &Dialog, n: Vec3) -> f64 {
     d.extra.get("along").and_then(vec3_of).map(|a| angle_of(a, n)).unwrap_or(0.0)
 }
 
-fn set(_: &SolveApp, d: &mut Dialog, n: Vec3, raw: f64, free: bool) -> f64 {
+fn set(_: &SketApp, d: &mut Dialog, n: Vec3, raw: f64, free: bool) -> f64 {
     let a = pulled(raw.to_degrees(), n, STEP_DEG, free).to_radians();
     d.extra.insert("along".into(), pt(dir_at(n, a)));
     a

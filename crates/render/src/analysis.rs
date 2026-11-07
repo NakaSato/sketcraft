@@ -1,6 +1,6 @@
 //! Surface analysis as a view draws it: the shading mode and the colours it uses.
 
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 
 /// Surface analysis colours, straight sRGB 0..1 as the shader takes them.
 #[derive(Clone, Copy, Debug, PartialEq)]

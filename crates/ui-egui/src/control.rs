@@ -57,7 +57,7 @@ use sketcraft_engine::render::{Camera, StandardView};
 use sketcraft_engine::schema::ParamCheck;
 use sketcraft_engine::{batch_params, timing};
 
-use crate::SolveApp;
+use crate::SketApp;
 
 pub type ControlResponse = Value;
 
@@ -164,7 +164,7 @@ impl Drop for Subscriber {
 /// Publish the active design for subscribed connections ([`DesignWatch`]). Called at the end of
 /// each frame's logic (which runs while the window is hidden too) and of its drawing, so a
 /// change made in either goes out in that frame.
-pub(crate) fn publish_design(app: &mut SolveApp, watch: &DesignWatch) {
+pub(crate) fn publish_design(app: &mut SketApp, watch: &DesignWatch) {
     if watch.subscribed() {
         let revision = app.session.design_revision();
         watch.publish(&app.session.document_id, revision);
@@ -199,7 +199,7 @@ const SKETCHES_FOLDER: &str = "c0/sketches";
 
 /// The open dialog as `ui.inspect`, `ui.start` and `ui.editFeature` report it: its command, its
 /// picks and what OK runs, in the commands' own terms rather than the form's internals (#9087).
-fn dialog_state(app: &SolveApp) -> Value {
+fn dialog_state(app: &SketApp) -> Value {
     let Some(d) = app.dialog.as_ref() else { return Value::Null };
     let runs = crate::dialogs::apply_commands(app, d);
     json!({
@@ -215,7 +215,7 @@ fn dialog_state(app: &SolveApp) -> Value {
 
 /// The windows open beside the model (#9087), each named by what opens it: the command
 /// `ui.start` takes, or the `ui.help` item.
-fn open_windows(app: &SolveApp) -> Vec<&'static str> {
+fn open_windows(app: &SketApp) -> Vec<&'static str> {
     [
         (app.params.is_some(), "parameters.change"),
         (app.design_properties.is_some(), "document.metadata"),
@@ -236,7 +236,7 @@ fn open_windows(app: &SolveApp) -> Vec<&'static str> {
 
 /// What a start or an edit opened: the tool, the dialog and the windows. `pending` while it
 /// waits for the history to compute first; it opens on a later frame (`ui.inspect` shows it).
-fn started(app: &SolveApp) -> Value {
+fn started(app: &SketApp) -> Value {
     json!({
         "tool": app.tool.as_ref().map(|t| t.cmd),
         "dialog": dialog_state(app),
@@ -248,7 +248,7 @@ fn started(app: &SolveApp) -> Value {
 
 /// `UiState` as `ui.inspect` and `ui.set` report it, with the browser's view of the design
 /// (kept in the session) under the names the UI state used to give it.
-fn ui_state(app: &SolveApp) -> Value {
+fn ui_state(app: &SketApp) -> Value {
     let mut u = serde_json::to_value(&app.ui).unwrap_or_default();
     let v = &app.session.visibility;
     if let Some(o) = u.as_object_mut() {
@@ -274,7 +274,7 @@ fn key_from(name: &str) -> Option<egui::Key> {
 
 /// Run one command as `engine.execute` does: through `app.run`, then the first-body fit and the
 /// camera the command asked for.
-fn execute(app: &mut SolveApp, id: &str, params: Value) -> Result<Value, String> {
+fn execute(app: &mut SketApp, id: &str, params: Value) -> Result<Value, String> {
     if sketcraft_engine::panels::commands::is_command(id) {
         // No first-body meshing, camera-follow or fit tail for application layout.
         return app.run(id, params);
@@ -403,7 +403,7 @@ pub(crate) fn batch_step_command(step: &Value) -> Option<&str> {
 /// `rollback` (the default), the design goes back to its checkpoint. Step failures are part of
 /// the reply; refusals (`engine.batch unavailable: …`) come before anything runs, so the client
 /// can send the steps one by one instead.
-fn batch(app: &mut SolveApp, p: &Value) -> Outcome {
+fn batch(app: &mut SketApp, p: &Value) -> Outcome {
     let Some(steps) = p.get("commands").and_then(Value::as_array).filter(|s| s.len() <= MAX_BATCH) else {
         return err(format!("engine.batch: commands must be an array of at most {MAX_BATCH} steps"));
     };
@@ -513,7 +513,7 @@ fn with_timings(mut reply: Value, timed: bool, rows: Vec<Value>, total_ms: f64) 
 
 /// A request from an MCP server carries the folders its agent may use (`allow_paths`); every
 /// file the request reaches must lie inside them (docs/mcp.md). `None`: it names none.
-pub fn request_scope(app: &SolveApp, params: &Value) -> Result<Option<vfs::PathScope>, String> {
+pub fn request_scope(app: &SketApp, params: &Value) -> Result<Option<vfs::PathScope>, String> {
     let Some(allowed) = params.get("allow_paths") else { return Ok(None) };
     let folders = |v: &Value| v.as_array().and_then(|a| a.iter().map(|r| r.as_str().map(std::path::PathBuf::from)).collect::<Option<Vec<_>>>());
     let Some(roots) = folders(allowed) else {
@@ -535,7 +535,7 @@ pub fn request_scope(app: &SolveApp, params: &Value) -> Result<Option<vfs::PathS
 /// What a picture of the view shows: the model as the window shows it (theme and colour vision
 /// mode, the section the viewport shows: an open Section Analysis dialog's preview, a sketch's
 /// Slice), with the grid and the origin's axes as `guides` says.
-pub(crate) fn view_scene(app: &SolveApp, guides: sketcraft_engine::view::Guides) -> Result<sketcraft_engine::render::Scene, String> {
+pub(crate) fn view_scene(app: &SketApp, guides: sketcraft_engine::view::Guides) -> Result<sketcraft_engine::render::Scene, String> {
     let mut palette = crate::viewport::scene_palette(app.viewport_dark(), app.preferences.color_vision);
     // The view's own background colour (#7688).
     if let Some([r, g, b]) = app.preferences.viewport_background {
@@ -559,7 +559,7 @@ pub(crate) fn view_scene(app: &SolveApp, guides: sketcraft_engine::view::Guides)
 }
 
 /// The grid and the origin's axes as the window shows them (the Grid and Origin switches).
-pub(crate) fn window_guides(app: &SolveApp) -> sketcraft_engine::view::Guides {
+pub(crate) fn window_guides(app: &SketApp) -> sketcraft_engine::view::Guides {
     sketcraft_engine::view::Guides {
         grid: (app.session.active_sketch.is_some() || app.ui.show_grid) && !crate::viewport::active_view(app).hide_grid,
         axes: app.origin_visible(),
@@ -568,21 +568,21 @@ pub(crate) fn window_guides(app: &SolveApp) -> sketcraft_engine::view::Guides {
 
 /// A picture of the view as the window shows it, RGBA, drawn on the GPU with the viewport's
 /// pipelines (the renderer the app installs).
-pub(crate) fn view_rgba(app: &SolveApp, w: u32, h: u32) -> Result<Vec<u8>, String> {
+pub(crate) fn view_rgba(app: &SketApp, w: u32, h: u32) -> Result<Vec<u8>, String> {
     sketcraft_engine::capture::rgba(&view_scene(app, window_guides(app))?, &app.cam, w, h).map(|p| p.rgba)
 }
 
 /// [`view_rgba`] as PNG.
-pub fn view_png(app: &SolveApp, w: u32, h: u32) -> Result<Vec<u8>, String> {
+pub fn view_png(app: &SketApp, w: u32, h: u32) -> Result<Vec<u8>, String> {
     let rgba = view_rgba(app, w, h)?;
     sketcraft_engine::render::png(w as usize, h as usize, rgba).ok_or_else(|| "PNG encoding failed".to_string())
 }
 
-pub fn handle(app: &mut SolveApp, ctx: &egui::Context, req: &ControlRequest) -> Outcome {
+pub fn handle(app: &mut SketApp, ctx: &egui::Context, req: &ControlRequest) -> Outcome {
     crate::agent_chat::with_tool_request(app, req.chat_turn.as_ref(), |app| handle_request(app, ctx, req))
 }
 
-fn handle_request(app: &mut SolveApp, ctx: &egui::Context, req: &ControlRequest) -> Outcome {
+fn handle_request(app: &mut SketApp, ctx: &egui::Context, req: &ControlRequest) -> Outcome {
     let level = match request_param_check(&req.method, &req.params) {
         Ok(level) => level,
         Err(e) => return err(e),
@@ -600,7 +600,7 @@ fn handle_request(app: &mut SolveApp, ctx: &egui::Context, req: &ControlRequest)
         o.remove("design_folders");
         o.remove("param_check");
     }
-    let run = |app: &mut SolveApp| match level {
+    let run = |app: &mut SketApp| match level {
         Some(level) => dispatch_checked(app, ctx, &req.method, &p, level),
         None => dispatch(app, ctx, &req.method, &p),
     };
@@ -626,7 +626,7 @@ pub(crate) fn request_param_check(method: &str, params: &Value) -> Result<Option
 /// `dispatch` of an `engine.execute`, `engine.batch` or `engine.script` with its commands checked
 /// at `level`, echoed in the reply as `param_check`, so a client can tell an app that checked
 /// from an older one that ignored the field. The session goes back to its own level afterwards.
-fn dispatch_checked(app: &mut SolveApp, ctx: &egui::Context, method: &str, p: &Value, level: ParamCheck) -> Outcome {
+fn dispatch_checked(app: &mut SketApp, ctx: &egui::Context, method: &str, p: &Value, level: ParamCheck) -> Outcome {
     let mut out = if switches_design(p).is_some() {
         switch_checked(app, ctx, method, p, level)
     } else {
@@ -644,7 +644,7 @@ fn dispatch_checked(app: &mut SolveApp, ctx: &egui::Context, method: &str, p: &V
 
 /// A command that switches to another design, checked at `level` before it runs: it runs at the
 /// app's own level, since the session it leaves and the one it brings in each keep theirs.
-fn switch_checked(app: &mut SolveApp, ctx: &egui::Context, method: &str, p: &Value, level: ParamCheck) -> Outcome {
+fn switch_checked(app: &mut SketApp, ctx: &egui::Context, method: &str, p: &Value, level: ParamCheck) -> Outcome {
     let warnings = match contract_check_before_run(command(p).unwrap_or_default(), p.get("params").unwrap_or(&Value::Null), level) {
         Ok(warnings) => warnings,
         Err(e) => return err(e),
@@ -677,7 +677,7 @@ pub(crate) fn add_param_warnings(reply: &mut Value, warnings: Vec<String>) {
     }
 }
 
-fn dispatch(app: &mut SolveApp, ctx: &egui::Context, method: &str, p: &Value) -> Outcome {
+fn dispatch(app: &mut SketApp, ctx: &egui::Context, method: &str, p: &Value) -> Outcome {
     crate::render_workspace::sync_backend(app);
     let s = |k: &str| p.get(k).and_then(Value::as_str);
     let f = |k: &str| p.get(k).and_then(Value::as_f64).filter(|x| x.is_finite());
@@ -1230,10 +1230,10 @@ fn dispatch(app: &mut SolveApp, ctx: &egui::Context, method: &str, p: &Value) ->
             let proj = crate::viewport::projection(app, rect);
             let num = |v: &Value, i: usize| v.get(i).and_then(Value::as_f64).unwrap_or(0.0);
             let world = if let Some(w) = p.get("world") {
-                Some(solidcore_record::Vec3::new(num(w, 0), num(w, 1), num(w, 2)))
+                Some(sketcore_record::Vec3::new(num(w, 0), num(w, 1), num(w, 2)))
             } else if let Some(s) = p.get("sketch") {
                 let st = crate::open_meshing::session_world(&app.session);
-                app.session.active_sketch.and_then(|id| st.sketch(id)).map(|ss| ss.plane.to_world(solidcore_record::Vec2::new(num(s, 0), num(s, 1))))
+                app.session.active_sketch.and_then(|id| st.sketch(id)).map(|ss| ss.plane.to_world(sketcore_record::Vec2::new(num(s, 0), num(s, 1))))
             } else if let Some(n) = p.get("plane").and_then(Value::as_str) {
                 crate::viewport::origin_plane_target(app, &proj, n)
             } else if let Some(n) = p.get("axis").and_then(Value::as_str) {
@@ -1243,7 +1243,7 @@ fn dispatch(app: &mut SolveApp, ctx: &egui::Context, method: &str, p: &Value) ->
             } else if let Some(n) = p.get("gizmo").and_then(Value::as_str) {
                 // A handle of the move triad ("x", "xy", "rz", "ball"), moved `by` [x,y,z] mm or
                 // turned `turn` degrees (rings).
-                let by = p.get("by").map(|b| solidcore_record::Vec3::new(num(b, 0), num(b, 1), num(b, 2))).unwrap_or_default();
+                let by = p.get("by").map(|b| sketcore_record::Vec3::new(num(b, 0), num(b, 1), num(b, 2))).unwrap_or_default();
                 crate::gizmo::handle_point(n, by, p.get("turn").and_then(Value::as_f64).unwrap_or(0.0))
             } else {
                 None
@@ -1264,7 +1264,7 @@ fn dispatch(app: &mut SolveApp, ctx: &egui::Context, method: &str, p: &Value) ->
                 .take(1000)
                 .map(|v| {
                     let c = |i: usize| v.get(i).and_then(Value::as_f64).unwrap_or(0.0);
-                    proj.to_screen(solidcore_record::Vec3::new(c(0), c(1), c(2))).map_or(Value::Null, |q| json!([q.x, q.y]))
+                    proj.to_screen(sketcore_record::Vec3::new(c(0), c(1), c(2))).map_or(Value::Null, |q| json!([q.x, q.y]))
                 })
                 .collect();
             ok(json!(pts))
@@ -1284,7 +1284,7 @@ fn dispatch(app: &mut SolveApp, ctx: &egui::Context, method: &str, p: &Value) ->
                 .take(1000)
                 .map(|v| {
                     let c = |i: usize| v.get(i).and_then(Value::as_f64).unwrap_or(0.0);
-                    let q = solidcore_record::Vec2::new(c(0), c(1));
+                    let q = sketcore_record::Vec2::new(c(0), c(1));
                     proj.to_screen(ss.plane.to_world(q)).map_or(Value::Null, |p| json!([p.x, p.y]))
                 })
                 .collect();
@@ -1407,7 +1407,7 @@ fn dispatch(app: &mut SolveApp, ctx: &egui::Context, method: &str, p: &Value) ->
         "ui.shortcut" => {
             let Some(id) = s("command") else { return err("missing `command`") };
             let slot = p.get("slot").and_then(Value::as_u64).map(|n| usize::try_from(n).unwrap_or(usize::MAX));
-            let report = |app: &SolveApp| ok(json!({"command": id, "key": crate::keymap::effective(app, id), "keys": crate::keymap::keys(app, id)}));
+            let report = |app: &SketApp| ok(json!({"command": id, "key": crate::keymap::effective(app, id), "keys": crate::keymap::keys(app, id)}));
             match s("key") {
                 Some(k) => match crate::keymap::bind_at(app, id, slot, k, b("replace")) {
                     Ok(()) => report(app),
@@ -1521,7 +1521,7 @@ fn dispatch(app: &mut SolveApp, ctx: &egui::Context, method: &str, p: &Value) ->
 /// `root`: the bodies outside every component), or everything (`true`), keeping the direction;
 /// `false` frames nothing.
 /// Nothing changes when a field is refused.
-fn camera(app: &mut SolveApp, p: &Value) -> Result<Value, String> {
+fn camera(app: &mut SketApp, p: &Value) -> Result<Value, String> {
     const FIELDS: [&str; 8] = ["target", "yaw", "pitch", "roll", "distance", "fov", "up", "fit"];
     let o = match p {
         Value::Null => serde_json::Map::new(),
@@ -1586,9 +1586,9 @@ fn camera(app: &mut SolveApp, p: &Value) -> Result<Value, String> {
     serde_json::to_value(drawn(app)).map_err(|e| e.to_string())
 }
 
-/// The camera as the window draws it: with the view's angle ([`SolveApp::view_fov`]), or in Render
+/// The camera as the window draws it: with the view's angle ([`SketApp::view_fov`]), or in Render
 /// with the Render camera's own.
-fn drawn(app: &SolveApp) -> Camera {
+fn drawn(app: &SketApp) -> Camera {
     let mut cam = app.cam;
     if !crate::render_workspace::active(app) {
         cam.fov = app.view_fov();
@@ -1644,23 +1644,23 @@ pub(crate) fn write_screenshot(image: &egui::ColorImage, path: &str) -> Result<(
 
 #[cfg(test)]
 mod tests {
-    fn panel_command_app() -> crate::SolveApp {
+    fn panel_command_app() -> crate::SketApp {
         use crate::panel_runtime::*;
         let h = PanelMountHarness::new(false).unwrap();
         let catalogue = sketcraft_engine::panels::fixture_command_catalogue(h.runtime.layout().registry()).unwrap();
-        let mut app = crate::SolveApp::new(sketcraft_engine::Session::default(), Default::default());
+        let mut app = crate::SketApp::new(sketcraft_engine::Session::default(), Default::default());
         app.enable_panel_runtime(h.runtime, Box::<FakeAppPanelServices>::default()).unwrap();
         app.panel_runtime_mut().unwrap().set_command_adapters(Box::new(catalogue), Box::new(FakeNativeAdapter::new(false))).unwrap();
         app.enable_universal_panel_host(HostOptions::default()).unwrap();
         prepare_panel_commands(&mut app);
         app
     }
-    fn prepare_panel_commands(app: &mut crate::SolveApp) {
+    fn prepare_panel_commands(app: &mut crate::SketApp) {
         use sketcraft_engine::panels::{LogicalRect, Point, Size};
         let capacity = LogicalRect { origin: Point { x: 0.0, y: 0.0 }, size: Size { width: 1400.0, height: 1000.0 } };
         app.panel_runtime.as_mut().unwrap().prepare_host(&app.session, capacity).unwrap();
     }
-    fn panel_control(app: &mut crate::SolveApp, method: &str, params: serde_json::Value) -> serde_json::Value {
+    fn panel_control(app: &mut crate::SketApp, method: &str, params: serde_json::Value) -> serde_json::Value {
         let (request, _) = super::ControlRequest::new(method, params);
         match super::handle(app, &egui::Context::default(), &request) {
             super::Outcome::Done(reply) => reply,
@@ -1717,7 +1717,7 @@ mod tests {
     #[test]
     fn panel_control_reports_structured_missing_capability_unknown_fields_and_lifecycle_batch_errors() {
         use sketcraft_engine::panels::ActionSink;
-        let mut disabled = crate::SolveApp::new(sketcraft_engine::Session::default(), Default::default());
+        let mut disabled = crate::SketApp::new(sketcraft_engine::Session::default(), Default::default());
         let reply = panel_control(&mut disabled, "engine.execute", json!({"command":"layout.get"}));
         assert_eq!(reply["ok"], false);
         assert_eq!(reply["panel_error"]["rule"], "capability");
@@ -1878,7 +1878,7 @@ mod tests {
 
     #[test]
     fn panel_fixture_validates_whole_request_before_activation() {
-        let mut app = SolveApp::new(Session::default(), Services::default());
+        let mut app = SketApp::new(Session::default(), Services::default());
         let doc = app.session.doc.clone();
         let model = app.session.model.state();
         let camera = app.cam;
@@ -2027,7 +2027,7 @@ mod tests {
                 crate::panel_runtime::ContentServices { models: &self.models, commands: &mut self.commands, local: &mut self.local }
             }
         }
-        let mut app = SolveApp::new(Session::default(), Services::default());
+        let mut app = SketApp::new(Session::default(), Services::default());
         app.panel_runtime = Some(crate::panel_runtime::AppPanelRuntime::new(harness.runtime, Box::<Provider>::default()).unwrap());
         let before = app.panel_runtime().unwrap().layout().inspect();
         for params in [json!({"enabled":true}), json!({"enabled":false})] {
@@ -2086,7 +2086,7 @@ mod tests {
     /// `ctrl` the wheel stays a line wheel on the mouse path.
     #[test]
     fn scroll_sends_a_native_pinch_with_ctrl() {
-        let mut app = SolveApp::new(Session::default(), Services::default());
+        let mut app = SketApp::new(Session::default(), Services::default());
         let ctx = crate::fonts::test_context();
         let (req, _) = ControlRequest::new("ui.scroll", json!({"x":200,"y":300,"delta":40,"ctrl":true}));
         assert!(matches!(handle(&mut app, &ctx, &req), Outcome::Done(_)));
@@ -2141,7 +2141,7 @@ mod tests {
 
     #[test]
     fn scroll_rejects_invalid_input_without_queuing_events() {
-        let mut app = SolveApp::new(Session::default(), Services::default());
+        let mut app = SketApp::new(Session::default(), Services::default());
         let ctx = crate::fonts::test_context();
         for invalid in
             [json!({"unit":"invalid"}), json!({"unit":42}), json!({"unit":null}), json!({"x":1e300}), json!({"y":-1e300}), json!({"delta":1e300})]
@@ -2173,7 +2173,7 @@ mod tests {
 
     #[test]
     fn touchpad_text_prefix_does_not_collapse_queued_pointer_frames() {
-        let mut app = SolveApp::new(Session::default(), Services::default());
+        let mut app = SketApp::new(Session::default(), Services::default());
         let ctx = crate::fonts::test_context();
         let (req, _) = ControlRequest::new("ui.text", json!({"text":"prefix"}));
         assert!(matches!(handle(&mut app, &ctx, &req), Outcome::Done(_)));
@@ -2197,7 +2197,7 @@ mod tests {
 
     #[test]
     fn touchpad_automation_preserves_each_queued_moves_modifiers() {
-        let mut app = SolveApp::new(Session::default(), Services::default());
+        let mut app = SketApp::new(Session::default(), Services::default());
         let ctx = crate::fonts::test_context();
         for params in [json!({"x":10,"y":10,"shift":true}), json!({"x":20,"y":20,"alt":true}), json!({"x":30,"y":30})] {
             let (req, _) = ControlRequest::new("ui.move", params);
@@ -2313,7 +2313,7 @@ mod tests {
         assert!(!WATCH.subscribed());
     }
 
-    fn render(app: &mut SolveApp, path: &std::path::Path) -> Vec<u8> {
+    fn render(app: &mut SketApp, path: &std::path::Path) -> Vec<u8> {
         let (req, _rx) = ControlRequest::new("ui.render", json!({"path": path.to_string_lossy(), "width": 200, "height": 140}));
         match handle(app, &crate::fonts::test_context(), &req) {
             Outcome::Done(v) => assert_eq!(v["ok"], true, "{v}"),
@@ -2331,7 +2331,7 @@ mod tests {
         }
         let mut s = Session::default();
         s.execute("solid.box", &json!({"length": 40, "width": 30, "height": 20})).unwrap();
-        let mut app = SolveApp::new(s, Services::default());
+        let mut app = SketApp::new(s, Services::default());
         let dir = std::env::temp_dir().join(format!("sketcraft-render-theme-{}", std::process::id()));
         std::fs::create_dir_all(&dir).unwrap();
         use crate::theme::ViewportTheme;
@@ -2366,7 +2366,7 @@ mod tests {
         }
         let mut s = Session::default();
         s.execute("solid.box", &json!({"length": 40, "width": 30, "height": 20})).unwrap();
-        let mut app = SolveApp::new(s, Services::default());
+        let mut app = SketApp::new(s, Services::default());
         let dir = std::env::temp_dir().join(format!("sketcraft-render-section-{}", std::process::id()));
         std::fs::create_dir_all(&dir).unwrap();
         let whole = render(&mut app, &dir.join("whole.png"));
@@ -2386,7 +2386,7 @@ mod tests {
 
     #[test]
     fn model_render_cosmetic_threads_preserve_section_hatch_preview() {
-        let mut app = SolveApp::new(Session::default(), Services::default());
+        let mut app = SketApp::new(Session::default(), Services::default());
         for cosmetic_threads in [false, true] {
             app.preferences.cosmetic_threads = cosmetic_threads;
             for hatch in [false, true] {
@@ -2410,7 +2410,7 @@ mod tests {
 
     /// `ui.render` with extra request parameters.
     /// A `ui.render` of `app` to `path` with `extra` parameters: the PNG, and what drew it.
-    fn render_with(app: &mut SolveApp, path: &std::path::Path, extra: serde_json::Value) -> (Vec<u8>, String) {
+    fn render_with(app: &mut SketApp, path: &std::path::Path, extra: serde_json::Value) -> (Vec<u8>, String) {
         let mut params = json!({"path": path.to_string_lossy(), "width": 200, "height": 140});
         for (k, v) in extra.as_object().into_iter().flatten() {
             params[k.as_str()] = v.clone();
@@ -2436,14 +2436,14 @@ mod tests {
         }
         let mut s = Session::default();
         s.execute("solid.box", &json!({"length": 40, "width": 30, "height": 20, "corner": [10, -15, -10]})).unwrap();
-        let mut app = SolveApp::new(s, Services::default());
+        let mut app = SketApp::new(s, Services::default());
         app.cam.set_view(sketcraft_engine::render::StandardView::Front);
         let dir = std::env::temp_dir().join(format!("sketcraft-render-guides-{}", std::process::id()));
         std::fs::create_dir_all(&dir).unwrap();
         let path = dir.join("shot.png");
         // Every picture is compared byte for byte, so each must come from the same renderer.
         let drawn_by = std::cell::RefCell::new(Vec::new());
-        let shot = |app: &mut SolveApp, extra: serde_json::Value| {
+        let shot = |app: &mut SketApp, extra: serde_json::Value| {
             let (png, renderer) = render_with(app, &path, extra);
             drawn_by.borrow_mut().push(renderer);
             png
@@ -3059,7 +3059,7 @@ mod tests {
     fn requests_with_allow_paths_stay_inside_them() {
         let mut s = Session::default();
         s.execute("solid.box", &json!({"length": 10, "width": 10, "height": 10})).unwrap();
-        let mut app = SolveApp::new(s, Services::default());
+        let mut app = SketApp::new(s, Services::default());
         let base = vfs::temp_dir().join(format!("sketcraft-control-scope-{}", std::process::id()));
         let (root, out) = (base.join("root"), base.join("out"));
         std::fs::create_dir_all(&root).unwrap();
@@ -3151,7 +3151,7 @@ mod tests {
     fn a_requests_design_folders_count_as_the_open_designs() {
         let mut s = Session::default();
         s.execute("solid.box", &json!({"length": 10, "width": 10, "height": 10})).unwrap();
-        let mut app = SolveApp::new(s, Services::default());
+        let mut app = SketApp::new(s, Services::default());
         let base = vfs::temp_dir().join(format!("sketcraft-control-design-folders-{}", std::process::id()));
         let (root, proj, out) = (base.join("root"), base.join("proj"), base.join("out"));
         for d in [&root, &proj.join(".git"), &out] {
@@ -3197,7 +3197,7 @@ mod tests {
         }
         s.execute("component.activate", &json!({"component": "root"})).unwrap();
         let mut h = crate::scenario::Harness::new();
-        h.app = SolveApp::new(s, Services::default());
+        h.app = SketApp::new(s, Services::default());
         h.frames(2);
         let before = h.app.cam;
         // Reading during an animated view change leaves it running (no frames run between).
@@ -3299,7 +3299,7 @@ mod tests {
         s.execute("joint.create", &json!({"type": "revolute", "a": at("A", 25), "b": at("B", 25), "flip": true, "name": "Hinge"})).unwrap();
         s.execute("joint.create", &json!({"type": "slider", "a": at("B", 55), "b": at("C", 55), "flip": true, "name": "Rail"})).unwrap();
         let mut h = crate::scenario::Harness::new();
-        h.app = SolveApp::new(s, Services::default());
+        h.app = SketApp::new(s, Services::default());
         let before = h.app.session.doc.clone();
         let drive = |h: &crate::scenario::Harness| match h.app.dialog.as_ref().map(|d| &d.kind) {
             Some(crate::dialogs::Kind::Assembly(crate::dialogs_assembly::Asm::Drive { joint, values, .. })) => {
@@ -3334,7 +3334,7 @@ mod tests {
         let mut s = Session::default();
         s.execute("solid.box", &json!({"length": 40, "width": 30, "height": 20})).unwrap();
         let mut h = crate::scenario::Harness::new();
-        h.app = SolveApp::new(s, Services::default());
+        h.app = SketApp::new(s, Services::default());
         let r = h.call("ui.start", json!({"command": "solid.fillet"}));
         let d = &r["result"]["dialog"];
         assert_eq!((&d["command"], &d["title"], &d["editing"]), (&json!("solid.fillet"), &json!("FILLET"), &Value::Null), "{r}");
@@ -3370,7 +3370,7 @@ mod tests {
         );
 
         // What is under the pointer is a selection-like item, not the viewport's Debug text.
-        h.app.viewport.hover = Some(crate::viewport::Hit::Face { body: "Body1".into(), index: 2, point: solidcore_record::Vec3::new(1.0, 2.0, 3.0) });
+        h.app.viewport.hover = Some(crate::viewport::Hit::Face { body: "Body1".into(), index: 2, point: sketcore_record::Vec3::new(1.0, 2.0, 3.0) });
         let hover = json!({"type": "face", "body": "Body1", "index": 2, "point": [1.0, 2.0, 3.0]});
         assert_eq!(h.call("ui.selection", json!({}))["result"]["hover"], hover);
     }

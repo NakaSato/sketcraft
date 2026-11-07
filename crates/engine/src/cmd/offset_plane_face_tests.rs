@@ -1,7 +1,7 @@
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 use crate::Session;
 use serde_json::{Value, json};
-use solidcore_record::Plane;
+use sketcore_record::Plane;
 use sketcraft_doc::construct::ConstructGeom;
 use sketcraft_doc::{Document, FeatureKind, PlaneRef};
 use sketcraft_geom::prelude::*;

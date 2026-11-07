@@ -9,10 +9,10 @@ use std::cell::RefCell;
 
 use egui::{Align2, CursorIcon, FontId, Painter, Pos2, Rect, Stroke, StrokeKind, vec2};
 use serde_json::json;
-use solidcore_record::Vec2;
+use sketcore_record::Vec2;
 use sketcraft_engine::sketch::{CurveKind, LinkKind, LinkSource};
 
-use crate::SolveApp;
+use crate::SketApp;
 use crate::theme::Tokens;
 use crate::viewport::{Hit, Proj};
 
@@ -88,7 +88,7 @@ thread_local! {
 
 /// The text the handles are for: the one selected text, while nothing else (a tool, a
 /// dialog) is going on.
-fn target(app: &SolveApp) -> Option<String> {
+fn target(app: &SketApp) -> Option<String> {
     if let Some(d) = DRAG.with(|d| d.borrow().clone()) {
         return Some(d.start.link);
     }
@@ -101,7 +101,7 @@ fn target(app: &SolveApp) -> Option<String> {
 }
 
 /// The frame of text `link` in the active sketch, as shown (solved).
-fn frame(app: &SolveApp, link: &str) -> Option<Frame> {
+fn frame(app: &SketApp, link: &str) -> Option<Frame> {
     let sid = app.session.active_sketch?;
     let state = crate::open_meshing::session_world(&app.session);
     let sk = &state.sketch(sid)?.sketch;
@@ -146,7 +146,7 @@ struct Screen {
     knob_base: Pos2,
 }
 
-fn screen(app: &SolveApp, proj: &Proj, f: &Frame) -> Option<Screen> {
+fn screen(app: &SketApp, proj: &Proj, f: &Frame) -> Option<Screen> {
     let sid = app.session.active_sketch?;
     let state = crate::open_meshing::session_world(&app.session);
     let plane = state.sketch(sid)?.plane;
@@ -162,7 +162,7 @@ fn screen(app: &SolveApp, proj: &Proj, f: &Frame) -> Option<Screen> {
 }
 
 /// The handle under a screen position.
-fn hit(app: &SolveApp, proj: &Proj, pos: Pos2) -> Option<(Frame, Grab)> {
+fn hit(app: &SketApp, proj: &Proj, pos: Pos2) -> Option<(Frame, Grab)> {
     let f = frame(app, &target(app)?)?;
     let s = screen(app, proj, &f)?;
     if s.knob.distance(pos) <= GRAB_PX {
@@ -173,13 +173,13 @@ fn hit(app: &SolveApp, proj: &Proj, pos: Pos2) -> Option<(Frame, Grab)> {
 }
 
 /// Is a handle under the pointer? (A click there does not change the selection.)
-pub(crate) fn over(app: &SolveApp, proj: &Proj, pos: Pos2) -> bool {
+pub(crate) fn over(app: &SketApp, proj: &Proj, pos: Pos2) -> bool {
     hit(app, proj, pos).is_some()
 }
 
 /// The selected text's curve, as a drag from `pos` grabs it, when `pos` is inside the text's
 /// frame: a drag from anywhere in the frame moves the text, not only one from a letter (#8835).
-pub(crate) fn grab_inside(app: &SolveApp, proj: &Proj, pos: Pos2) -> Option<Hit> {
+pub(crate) fn grab_inside(app: &SketApp, proj: &Proj, pos: Pos2) -> Option<Hit> {
     let sketch = app.session.active_sketch?;
     let f = frame(app, &target(app)?)?;
     let at = on_plane(app, proj, pos)?;
@@ -196,7 +196,7 @@ pub(crate) fn grab_inside(app: &SolveApp, proj: &Proj, pos: Pos2) -> Option<Hit>
 }
 
 /// Where the pointer is on the active sketch's plane.
-fn on_plane(app: &SolveApp, proj: &Proj, pos: Pos2) -> Option<Vec2> {
+fn on_plane(app: &SketApp, proj: &Proj, pos: Pos2) -> Option<Vec2> {
     let state = crate::open_meshing::session_world(&app.session);
     let ss = state.sketch(app.session.active_sketch?)?;
     let (o, d) = proj.ray(pos);
@@ -204,7 +204,7 @@ fn on_plane(app: &SolveApp, proj: &Proj, pos: Pos2) -> Option<Vec2> {
 }
 
 /// A drag starting on a handle (true: the handles took it).
-pub(crate) fn drag_start(app: &mut SolveApp, proj: &Proj, press: Pos2) -> bool {
+pub(crate) fn drag_start(app: &mut SketApp, proj: &Proj, press: Pos2) -> bool {
     let Some((start, grab)) = hit(app, proj, press) else { return false };
     let Some(at) = on_plane(app, proj, press) else { return false };
     let Ok(result) = app.session.execute("edit.checkpoint", &json!({})) else { return false };
@@ -216,7 +216,7 @@ pub(crate) fn drag_start(app: &mut SolveApp, proj: &Proj, press: Pos2) -> bool {
 
 /// Is a handle being dragged? A drag the text move machinery ended (Esc, another command, a
 /// document switch) is over here too.
-pub(crate) fn dragging(app: &SolveApp) -> bool {
+pub(crate) fn dragging(app: &SketApp) -> bool {
     let on = DRAG.with(|d| d.borrow().is_some());
     if on && app.viewport.text_drag.is_none() {
         DRAG.with(|d| *d.borrow_mut() = None);
@@ -260,7 +260,7 @@ fn follow(d: &Drag, to: Vec2, shift: bool) -> Option<(Vec2, f64, f64)> {
 }
 
 /// Follow the pointer: the text's source changes live; one undo step for the whole drag.
-pub(crate) fn drag_to(app: &mut SolveApp, proj: &Proj, pos: Pos2, shift: bool) {
+pub(crate) fn drag_to(app: &mut SketApp, proj: &Proj, pos: Pos2, shift: bool) {
     let Some(d) = DRAG.with(|d| d.borrow().clone()) else { return };
     let Some(to) = on_plane(app, proj, pos) else { return };
     let Some((at, height, angle)) = follow(&d, to, shift) else { return };
@@ -278,7 +278,7 @@ pub(crate) fn drag_to(app: &mut SolveApp, proj: &Proj, pos: Pos2, shift: bool) {
 }
 
 /// The drag is over: the model follows the text once, and the gesture is kept.
-pub(crate) fn drag_end(app: &mut SolveApp) {
+pub(crate) fn drag_end(app: &mut SketApp) {
     let Some(d) = DRAG.with(|d| d.borrow_mut().take()) else { return };
     let _ = app.session.execute("sketch.drag_end", &json!({}));
     app.session.undo.truncate(d.depth + 1);
@@ -286,7 +286,7 @@ pub(crate) fn drag_end(app: &mut SolveApp) {
 }
 
 /// Draw the frame and its handles (and, while dragging, the value being changed).
-pub(crate) fn show(app: &SolveApp, ui: &egui::Ui, painter: &Painter, proj: &Proj, hover: Option<Pos2>) {
+pub(crate) fn show(app: &SketApp, ui: &egui::Ui, painter: &Painter, proj: &Proj, hover: Option<Pos2>) {
     let Some(link) = target(app) else { return };
     let Some(f) = frame(app, &link) else { return };
     let Some(s) = screen(app, proj, &f) else { return };

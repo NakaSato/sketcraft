@@ -16,7 +16,7 @@ use std::collections::HashMap;
 
 use egui::Color32;
 
-use crate::SolveApp;
+use crate::SketApp;
 use crate::theme::Tokens;
 
 /// A sketch's state as its last solve reports it.
@@ -76,7 +76,7 @@ pub(crate) struct SketchStates(HashMap<u64, SketchState>);
 
 impl SketchStates {
     /// Nothing while the preference is off.
-    pub(crate) fn of(app: &SolveApp) -> SketchStates {
+    pub(crate) fn of(app: &SketApp) -> SketchStates {
         if !app.preferences.sketch_state_icons {
             return SketchStates::default();
         }

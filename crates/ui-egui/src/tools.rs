@@ -3,10 +3,10 @@
 
 use egui::{Pos2, Stroke};
 use serde_json::{Value, json};
-use solidcore_record::Vec2;
+use sketcore_record::Vec2;
 use sketcraft_engine::geom::prelude::*;
 
-use crate::SolveApp;
+use crate::SketApp;
 use crate::i18n::tr;
 use crate::tool_modifiers::{Audit, Scope, ToolModifiers};
 use crate::viewport::{Hit, Proj, pick_for_tool as pick, sketch_point_at};
@@ -198,7 +198,7 @@ fn xy(p: &(Vec2, Option<String>)) -> Value {
 }
 
 /// Shift exposes a line midpoint as a point target, only in the alignment tool.
-fn midpoint_at(app: &SolveApp, proj: &Proj, pos: Pos2, radius: f32) -> Option<(Vec2, String)> {
+fn midpoint_at(app: &SketApp, proj: &Proj, pos: Pos2, radius: f32) -> Option<(Vec2, String)> {
     let sid = app.session.active_sketch?;
     let state = crate::open_meshing::session_world(&app.session);
     let ss = state.sketch(sid)?;
@@ -215,7 +215,7 @@ fn midpoint_at(app: &SolveApp, proj: &Proj, pos: Pos2, radius: f32) -> Option<(V
     })
 }
 
-pub fn on_hover(app: &mut SolveApp, proj: &Proj, pos: Pos2, shift: bool) {
+pub fn on_hover(app: &mut SketApp, proj: &Proj, pos: Pos2, shift: bool) {
     crate::sketch3d::on_hover(app, proj, pos);
     if let Some(mut tool) = app.tool.take() {
         crate::sketch_line_arc::rejoin(app, &mut tool);
@@ -272,7 +272,7 @@ pub(crate) fn center_arc_sweep(t: &Tool, end: Vec2) -> f64 {
     if t.arc_turn < 0.0 && ccw > 0.0 { ccw - std::f64::consts::TAU } else { ccw }
 }
 
-pub fn on_click(app: &mut SolveApp, proj: &Proj, pos: Pos2, shift: bool) {
+pub fn on_click(app: &mut SketApp, proj: &Proj, pos: Pos2, shift: bool) {
     // A click away dismisses the inline editor; it must not also pick the first entity of
     // the next dimension before that cancellation has been processed. The type-first value
     // of the Dimension tool takes clicks itself (a second pick, or where its text goes).
@@ -506,7 +506,7 @@ fn dimension_picks(tool: &Tool, id: String, midpoint: Option<&str>, midpoint_tar
 
 /// Put down the next point of the shape being drawn; the last point runs the command (with
 /// the typed values as dimension constraints).
-pub fn place(app: &mut SolveApp, p: (Vec2, Option<String>)) {
+pub fn place(app: &mut SketApp, p: (Vec2, Option<String>)) {
     let Some(mut tool) = app.tool.take() else { return };
     crate::sketch_line_arc::rejoin(app, &mut tool);
     if tool.kind == Kind::Ext {
@@ -591,7 +591,7 @@ pub fn place(app: &mut SolveApp, p: (Vec2, Option<String>)) {
 /// placed until fully constrained; the engine's `dimension_roles` decides which shapes those are.
 /// This is the one place drawing tools commit through: the 3D tools (`sketch3d`) take part by
 /// committing here once their creators are listed there.
-pub(crate) fn draw(app: &mut SolveApp, t: &Tool, params: Value) -> Result<Value, String> {
+pub(crate) fn draw(app: &mut SketApp, t: &Tool, params: Value) -> Result<Value, String> {
     let dimensions = crate::sketch_dims::dimensions(t);
     let as_drawn = app.preferences.sketch_auto_dimensions && sketcraft_engine::dimension_roles(t.cmd).is_some();
     let locate = as_drawn && app.preferences.sketch_auto_locate;
@@ -616,7 +616,7 @@ pub(crate) fn draw(app: &mut SolveApp, t: &Tool, params: Value) -> Result<Value,
     }
 }
 
-fn run_shape(app: &mut SolveApp, t: &Tool) -> Result<Vec<String>, String> {
+fn run_shape(app: &mut SketApp, t: &Tool) -> Result<Vec<String>, String> {
     let p = &t.pts;
     let d = |a: usize, b: usize| p[a].0.dist(p[b].0);
     let sides = crate::sketch_dims::locked_value(app, t, "Sides").map_or(6, |v| v as usize);
@@ -825,8 +825,8 @@ pub(crate) fn projection_preselection(selection: &[sketcraft_engine::Sel]) -> Op
 
 /// `x` or `y` when the origin axis `name` is the active sketch's own x or y axis: along it, and
 /// through the sketch's origin.
-pub(crate) fn sketch_axis_of(app: &SolveApp, name: &str) -> Option<&'static str> {
-    use solidcore_record::Vec3;
+pub(crate) fn sketch_axis_of(app: &SketApp, name: &str) -> Option<&'static str> {
+    use sketcore_record::Vec3;
     let dir = match name {
         "X" => Vec3::X,
         "Y" => Vec3::Y,
@@ -871,7 +871,7 @@ fn symmetry_args(picks: &[Value], sketch: Option<&sketcraft_engine::sketch::Sket
     (a != b).then(|| json!({"a": a, "b": b, "line": line}))
 }
 
-fn run_pick(app: &mut SolveApp, t: &Tool) {
+fn run_pick(app: &mut SketApp, t: &Tool) {
     // An entity id, or a model edge's or vertex's reference.
     let k: Vec<Value> = t.picks.iter().map(|pick| serde_json::from_str(pick).ok().filter(Value::is_object).unwrap_or_else(|| json!(pick))).collect();
     let params = match t.cmd {
@@ -896,7 +896,7 @@ fn run_pick(app: &mut SolveApp, t: &Tool) {
 }
 
 /// Take back a pending spline point before undo or Backspace reaches the sketch.
-pub fn undo_spline_point(app: &mut SolveApp) -> bool {
+pub fn undo_spline_point(app: &mut SketApp) -> bool {
     let Some(t) = app.tool.as_mut() else { return false };
     if !matches!(t.cmd, "sketch.spline.fit_point" | "sketch.spline.control_point" | "sketch.spline.control_point_5") || t.pts.is_empty() {
         return false;
@@ -907,7 +907,7 @@ pub fn undo_spline_point(app: &mut SolveApp) -> bool {
 }
 
 /// Right click / Esc: end the current chain (line) or cancel the tool.
-pub fn finish(app: &mut SolveApp) {
+pub fn finish(app: &mut SketApp) {
     crate::dim_view::cancel();
     if crate::sketch3d::finish(app) {
         return;
@@ -935,7 +935,7 @@ pub fn finish(app: &mut SolveApp) {
 /// Rubber-band preview of the shape being drawn.
 pub(crate) fn paint_preview_curve(
     mut sketch: sketcraft_engine::sketch::Sketch,
-    plane: &solidcore_record::Plane,
+    plane: &sketcore_record::Plane,
     painter: &egui::Painter,
     proj: &Proj,
     stroke: Stroke,
@@ -954,7 +954,7 @@ pub(crate) fn paint_preview_curve(
     crate::scenario::publish_count("tool_preview_curves", sketch.curves.len() as f64);
 }
 
-pub(crate) fn paint_sketch_path(points: &[solidcore_record::Vec3], mode: u8, painter: &egui::Painter, proj: &Proj, stroke: Stroke) {
+pub(crate) fn paint_sketch_path(points: &[sketcore_record::Vec3], mode: u8, painter: &egui::Painter, proj: &Proj, stroke: Stroke) {
     if mode == 0 {
         let screen: Vec<_> = points.iter().filter_map(|point| proj.to_screen(*point)).collect();
         if screen.len() >= 2 {
@@ -973,7 +973,7 @@ pub(crate) fn paint_sketch_path(points: &[solidcore_record::Vec3], mode: u8, pai
 pub(crate) fn paint_curve(
     sketch: &sketcraft_engine::sketch::Sketch,
     index: usize,
-    plane: &solidcore_record::Plane,
+    plane: &sketcore_record::Plane,
     painter: &egui::Painter,
     proj: &Proj,
     stroke: Stroke,
@@ -1182,7 +1182,7 @@ pub(crate) fn polygon_outline(t: &Tool, hover: Vec2, sides: f64) -> Option<Vec<V
     Some(corners)
 }
 
-pub fn preview(app: &SolveApp, t: &Tool, painter: &egui::Painter, proj: &Proj) {
+pub fn preview(app: &SketApp, t: &Tool, painter: &egui::Painter, proj: &Proj) {
     if crate::sketch3d::preview(app, t, painter, proj) {
         return;
     }

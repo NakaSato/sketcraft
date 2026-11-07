@@ -34,7 +34,7 @@ fn measure_starts_with_selected_vertices_edges_and_faces() {
                     _ => {
                         let st = crate::open_meshing::session_world(&h.app.session);
                         let mesh = st.body("Box").unwrap().mesh();
-                        let point = solidcore_record::Vec3::from(point);
+                        let point = sketcore_record::Vec3::from(point);
                         let index = if kind == "edge" {
                             mesh.edges.iter().position(|e| e.windows(2).any(|w| point.dist_to_segment(w[0], w[1]) < 1e-6)).unwrap()
                         } else {
@@ -317,7 +317,7 @@ fn measurement_axis_distances_can_be_disabled_saved_and_restored_in_preferences(
     h.call("ui.prefs", json!({"button":"ok"}));
     let texts = painted_text(&mut h);
     assert!(!texts.iter().any(|text| text.starts_with("X: ") || text.starts_with("Y: ") || text.starts_with("Z: ")));
-    let mut restored = crate::SolveApp::new(Default::default(), Default::default());
+    let mut restored = crate::SketApp::new(Default::default(), Default::default());
     restored.load_prefs(&h.app.prefs());
     assert!(!restored.preferences.measure_axis_distances, "disabled preference survives restart");
     h.call("ui.prefs", json!({"open":"Tools","measure_axis_distances":true}));

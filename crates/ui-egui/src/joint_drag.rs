@@ -4,11 +4,11 @@
 
 use egui::Pos2;
 use serde_json::json;
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 use sketcraft_engine::doc::{apply_point, joints, mat_inverse};
 use sketcraft_engine::geom::prelude::*;
 
-use crate::SolveApp;
+use crate::SketApp;
 use crate::viewport::{Hit, Proj};
 
 /// A drag under way.
@@ -26,7 +26,7 @@ pub struct Drag {
 
 /// Begin a drag on the part under `p` when joints place it and leave it free to move (it is
 /// neither grounded nor fixed to what is). True when one began.
-pub fn start(app: &mut SolveApp, proj: &Proj, p: Pos2) -> bool {
+pub fn start(app: &mut SketApp, proj: &Proj, p: Pos2) -> bool {
     // The face under the pointer, past the part's own edges and vertices (not past sketches or
     // construction geometry in front of it).
     let hits = crate::viewport::pick(app, proj, p);
@@ -53,12 +53,12 @@ pub fn start(app: &mut SolveApp, proj: &Proj, p: Pos2) -> bool {
     true
 }
 
-pub fn active(app: &SolveApp) -> bool {
+pub fn active(app: &SketApp) -> bool {
     app.viewport.joint_drag.is_some()
 }
 
 /// Reach for the point under `p`.
-pub fn to(app: &mut SolveApp, proj: &Proj, p: Pos2) {
+pub fn to(app: &mut SketApp, proj: &Proj, p: Pos2) {
     let Some(d) = app.viewport.joint_drag.clone() else { return };
     let (o, dir) = proj.ray(p);
     let facing = dir.dot(d.normal);
@@ -95,14 +95,14 @@ pub fn to(app: &mut SolveApp, proj: &Proj, p: Pos2) {
     }
 }
 
-pub fn end(app: &mut SolveApp) {
+pub fn end(app: &mut SketApp) {
     app.viewport.joint_drag = None;
 }
 
 #[cfg(test)]
 mod tests {
     use serde_json::{Value, json};
-    use solidcore_record::Vec3;
+    use sketcore_record::Vec3;
     use sketcraft_engine::doc::{apply_point, joints};
     use sketcraft_engine::geom::prelude::*;
 

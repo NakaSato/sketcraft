@@ -994,8 +994,7 @@ pub(super) fn export(s: &mut Session, params: &Value) -> Result<Value> {
     };
     // Replace atomically without reading an arbitrarily large previous target into memory.
     // Design saves retain their independent backup policy.
-    let result =
-        if input.overwrite { sketcraft_io::write_atomic(path, bytes, false) } else { sketcraft_io::safe_write::create_atomic(path, bytes) };
+    let result = if input.overwrite { sketcraft_io::write_atomic(path, bytes, false) } else { sketcraft_io::safe_write::create_atomic(path, bytes) };
     result.map_err(|e| bad("render.export", format!("could not export completed {}: {e}", input.format.extension())))?;
     Ok(
         json!({"job":job,"path":input.path,"bytes":bytes.len(),"format":input.format.extension(),"encoding":if input.format==ExportFormat::Exr {"scene_linear_srgb_d65"} else {"srgb"},"alpha":if input.format==ExportFormat::Exr {"coverage_premultiplied"} else {"straight"},"frame":frame.info,"linear_master":frame.linear_master_info(),"presentation":frame.presentation()}),

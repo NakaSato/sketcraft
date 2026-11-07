@@ -79,7 +79,7 @@ pub(super) fn import(s: &mut Session, params: &Value) -> Result<Value> {
     for x in [bounds.min.x, bounds.max.x] {
         for y in [bounds.min.y, bounds.max.y] {
             for z in [bounds.min.z, bounds.max.z] {
-                frame.uv(solidcore_record::Vec3::new(x, y, z)).map_err(|e| bad(command, e.to_string()))?;
+                frame.uv(sketcore_record::Vec3::new(x, y, z)).map_err(|e| bad(command, e.to_string()))?;
             }
         }
     }

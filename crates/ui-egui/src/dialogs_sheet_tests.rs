@@ -7,7 +7,7 @@ use crate::Services;
 use crate::dialogs::{apply_commands, for_feature as edit_dialog};
 
 /// A 100 x 60 base flange on XY (2.5 mm steel).
-fn plate(mode: crate::shell::LayoutMode) -> SolveApp {
+fn plate(mode: crate::shell::LayoutMode) -> SketApp {
     let mut s = Session::default();
     s.execute("sketch.create", &json!({"plane": "XY", "name": "Base"})).unwrap();
     s.execute("sketch.rectangle.two_point", &json!({"p0": [0, 0], "p1": [100, 60]})).unwrap();
@@ -410,11 +410,11 @@ fn rules_dialog_picks_the_corner_relief_shape() {
         h.app.run("sheet.flange", json!({"sketch": "Base"})).unwrap();
         h.app.run("sheet.flange", json!({"edges": [[60, 0, 2], [120, 45, 2], [60, 90, 2], [0, 45, 2]], "height": 20, "angle": "72 deg"})).unwrap();
         // The rounds in the base of the tray, and the shape the open dialog shows.
-        let rounds = |app: &SolveApp| {
+        let rounds = |app: &SketApp| {
             let state = app.session.model.state();
-            state.sheets.last().map(|s| s.base.outer.segs.iter().filter(|g| matches!(g, solidcore_record::Seg2::Arc { .. })).count())
+            state.sheets.last().map(|s| s.base.outer.segs.iter().filter(|g| matches!(g, sketcore_record::Seg2::Arc { .. })).count())
         };
-        let shown = |app: &SolveApp| match app.dialog.as_ref().map(|d| &d.kind) {
+        let shown = |app: &SketApp| match app.dialog.as_ref().map(|d| &d.kind) {
             Some(Kind::Sheet(Sm::Rules { relief, .. })) => Some(*relief),
             _ => None,
         };
@@ -457,11 +457,11 @@ fn rules_dialog_sets_how_bend_angles_read() {
         h.app.run("sketch.finish", json!({})).unwrap();
         h.app.run("sheet.flange", json!({"sketch": "Base"})).unwrap();
         h.app.run("sheet.flange", json!({"edges": [[50, 0, 2]], "height": 20, "angle": "58 deg"})).unwrap();
-        let shown = |app: &SolveApp| match app.dialog.as_ref().map(|d| &d.kind) {
+        let shown = |app: &SketApp| match app.dialog.as_ref().map(|d| &d.kind) {
             Some(Kind::Sheet(Sm::Rules { angles, .. })) => Some(*angles),
             _ => None,
         };
-        let note = |app: &mut SolveApp| {
+        let note = |app: &mut SketApp| {
             let dxf = app.session.execute("sheet.export_dxf", &json!({"bend_notes": true})).unwrap();
             dxf["dxf"].as_str().unwrap_or_default().lines().map(str::trim).find(|l| l.starts_with("B1 ")).map(str::to_string)
         };
@@ -512,11 +512,11 @@ fn the_rule_manager_relieves_a_corner_that_is_not_square() {
         )
         .unwrap();
     // The base of the notch has its four corners, and the bends run the whole length of the edges.
-    let base = |app: &SolveApp| {
+    let base = |app: &SketApp| {
         let state = app.session.model.state();
         state.sheets.last().map(|s| (s.base.outer.segs.len(), s.flanges.iter().map(|f| s.zone_span(f).1 - s.zone_span(f).0).collect::<Vec<_>>()))
     };
-    let shown = |app: &SolveApp| match app.dialog.as_ref().map(|d| &d.kind) {
+    let shown = |app: &SketApp| match app.dialog.as_ref().map(|d| &d.kind) {
         Some(Kind::Sheet(Sm::Rules { relief, .. })) => Some(*relief),
         _ => None,
     };
@@ -571,11 +571,11 @@ fn flange_dialog_picks_a_corner_relief_of_its_own() {
         h.app.session.selection = edges;
         h.app.start("sheet.flange");
         h.frames(3);
-        let shown = |app: &SolveApp| match app.dialog.as_ref().map(|d| &d.kind) {
+        let shown = |app: &SketApp| match app.dialog.as_ref().map(|d| &d.kind) {
             Some(Kind::Sheet(Sm::Flange { relief, relief_size, .. })) => Some((*relief, relief_size.clone())),
             _ => None,
         };
-        let relief = |app: &SolveApp| match &app.session.doc.features.last().map(|f| &f.kind) {
+        let relief = |app: &SketApp| match &app.session.doc.features.last().map(|f| &f.kind) {
             Some(FeatureKind::SheetFlange { corner_relief_shape, corner_relief, .. }) => Some((corner_relief_shape.clone(), corner_relief.clone())),
             _ => None,
         };
@@ -600,13 +600,13 @@ fn flange_dialog_picks_a_corner_relief_of_its_own() {
         assert!(h.app.dialog.is_none(), "{:?}", h.app.dialog);
         assert_eq!(relief(&h.app), Some((Some("round".into()), Some("6 mm".into()))));
         assert!(h.app.session.model.results.iter().all(|r| r.error.is_none() && r.warning.is_none()), "{:?}", h.app.session.model.results);
-        let arcs = |app: &SolveApp| {
+        let arcs = |app: &SketApp| {
             app.session
                 .model
                 .state()
                 .sheets
                 .last()
-                .map(|s| s.base.outer.segs.iter().filter(|g| matches!(g, solidcore_record::Seg2::Arc { .. })).count())
+                .map(|s| s.base.outer.segs.iter().filter(|g| matches!(g, sketcore_record::Seg2::Arc { .. })).count())
         };
         assert_eq!(arcs(&h.app), Some(1), "the round is cut at the one corner the two flanges make");
         // Edit Feature shows both again; Rule and an empty size take the feature back to the rule's relief.
@@ -680,7 +680,7 @@ fn edge_flanges_can_have_an_angle_and_a_height_of_their_own() {
         assert_eq!(own.len(), 2, "{own:?}");
         assert!(own.iter().any(|o| o.0.dist(point(1)) < 1e-9 && o.1 == "100 deg" && o.2.is_empty()), "{own:?}");
         assert!(own.iter().any(|o| o.0.dist(point(3)) < 1e-9 && o.1 == "90 deg" && o.2 == "15 mm"), "{own:?}");
-        let volume = |app: &mut SolveApp| app.session.execute("inspect.measure", &json!({})).unwrap()["total"]["volume_mm3"].as_f64().unwrap();
+        let volume = |app: &mut SketApp| app.session.execute("inspect.measure", &json!({})).unwrap()["total"]["volume_mm3"].as_f64().unwrap();
         let before = volume(&mut app);
         let c = apply_commands(&app, &e).unwrap();
         assert_eq!(c[0].0, "timeline.redefine");
@@ -790,7 +790,7 @@ fn flange_dialog_measures_the_height_from_the_chosen_datum() {
         h.app.session.selection = edges;
         h.app.start("sheet.flange");
         h.frames(3);
-        let shown = |app: &SolveApp| match app.dialog.as_ref().map(|d| &d.kind) {
+        let shown = |app: &SketApp| match app.dialog.as_ref().map(|d| &d.kind) {
             Some(Kind::Sheet(Sm::Flange { height_from, .. })) => Some(*height_from),
             _ => None,
         };
@@ -806,7 +806,7 @@ fn flange_dialog_measures_the_height_from_the_chosen_datum() {
         assert_eq!(c[0].1["height_from"], json!("inner"), "{}", c[0].1);
         h.step(&json!({"widget": "OK"})).unwrap();
         assert!(h.app.dialog.is_none(), "{:?}", h.app.dialog);
-        let saved = |app: &SolveApp| match app.session.doc.features.last().map(|f| &f.kind) {
+        let saved = |app: &SketApp| match app.session.doc.features.last().map(|f| &f.kind) {
             Some(FeatureKind::SheetFlange { height_from, .. }) => height_from.clone(),
             _ => None,
         };
@@ -867,7 +867,7 @@ fn convert_takes_the_fixed_face_and_the_bend_edges() {
     let mut s = Session::default();
     s.execute("solid.box", &json!({"length": 100, "width": 60, "height": 30, "body_name": "Tray"})).unwrap();
     s.execute("solid.shell", &json!({"faces": [[50, 30, 30]], "thickness": 2})).unwrap();
-    let mut app = SolveApp::new(s, Services::default());
+    let mut app = SketApp::new(s, Services::default());
     app.start("sheet.convert");
     let mut d = app.dialog.clone().unwrap();
     assert_eq!(d.inputs.iter().map(|i| i.label).collect::<Vec<_>>(), ["Fixed Face", "Bend Edges"]);
@@ -884,7 +884,7 @@ fn convert_takes_the_fixed_face_and_the_bend_edges() {
     assert_eq!(c[0].0, "sheet.convert");
     assert_eq!(c[0].1["bends"], json!([[50.0, 0.0, 0.0], [100.0, 30.0, 0.0], [50.0, 60.0, 0.0], [0.0, 30.0, 0.0]]));
     run_all(&mut app, c);
-    let bends = |app: &mut SolveApp| app.session.execute("sheet.flat_pattern", &json!({})).unwrap()["bends"].as_array().map(Vec::len);
+    let bends = |app: &mut SketApp| app.session.execute("sheet.flat_pattern", &json!({})).unwrap()["bends"].as_array().map(Vec::len);
     assert_eq!(bends(&mut app), Some(4));
     // Edit Feature: the face and the four edges are back in their rows, and OK rebuilds the sheet.
     let f = app.session.doc.features.last().unwrap().clone();
@@ -950,7 +950,7 @@ fn path_flange_dialog_follows_the_path() {
 
 // ---- flat pattern navigation ----
 
-fn flat_app(preset: &str, mode: crate::shell::LayoutMode) -> SolveApp {
+fn flat_app(preset: &str, mode: crate::shell::LayoutMode) -> SketApp {
     let mut app = plate(mode);
     app.run("sheet.flange", json!({"sketch": "Base"})).unwrap();
     let flat = app.session.execute("sheet.flat_pattern", &json!({})).unwrap();
@@ -972,7 +972,7 @@ fn same_view(a: &sketcraft_engine::render::Camera, b: &sketcraft_engine::render:
         && a.pitch == b.pitch
 }
 
-fn frame(app: &mut SolveApp, ctx: &egui::Context, time: &mut f64, mods: egui::Modifiers, events: Vec<egui::Event>) {
+fn frame(app: &mut SketApp, ctx: &egui::Context, time: &mut f64, mods: egui::Modifiers, events: Vec<egui::Event>) {
     *time += 1.0 / 60.0;
     let events = std::iter::once(egui::Event::ModifiersChanged(mods)).chain(events).collect();
     let raw = egui::RawInput {
@@ -1021,7 +1021,7 @@ fn flat_pattern_pans_and_zooms_like_the_design_viewport() {
                             continue;
                         }
                         let before = flat.flat_view.cam;
-                        let mut both = |events: Vec<Event>, mods: Modifiers, flat: &mut SolveApp, design: &mut SolveApp| {
+                        let mut both = |events: Vec<Event>, mods: Modifiers, flat: &mut SketApp, design: &mut SketApp| {
                             frame(flat, &flat_ctx, &mut ft, mods, events.clone());
                             frame(design, &design_ctx, &mut dt, mods, events);
                         };
@@ -1172,7 +1172,7 @@ fn fit_and_home_frame_the_flat_pattern() {
     }
 }
 
-fn perforated_flat() -> (SolveApp, Dialog) {
+fn perforated_flat() -> (SketApp, Dialog) {
     let mut app = plate(crate::shell::LayoutMode::Floating);
     app.run("sheet.flange", json!({"sketch": "Base"})).unwrap();
     app.run("sheet.perforate", json!({"diameter": 3, "pitch": 6})).unwrap();
@@ -1185,7 +1185,7 @@ fn perforated_flat() -> (SolveApp, Dialog) {
     (app, dialog)
 }
 
-fn flat_circles(app: &mut SolveApp, dialog: &Dialog, rect: Rect) -> Vec<egui::epaint::CircleShape> {
+fn flat_circles(app: &mut SketApp, dialog: &Dialog, rect: Rect) -> Vec<egui::epaint::CircleShape> {
     let ctx = crate::fonts::test_context();
     let input = egui::RawInput { screen_rect: Some(rect), ..Default::default() };
     let output = crate::test_support::frame(&ctx, input, |ui| {

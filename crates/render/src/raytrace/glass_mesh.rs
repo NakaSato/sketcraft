@@ -10,7 +10,7 @@ use crate::{
     job::{self, CancelToken, DielectricBoundary, RaytraceOptions},
 };
 use robust::{Coord, Coord3D, orient2d, orient3d};
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 use std::mem::size_of;
 
 fn invalid(message: &str) -> job::JobError {

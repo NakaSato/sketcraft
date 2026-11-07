@@ -2,7 +2,7 @@
 //! Unsupported backend capabilities remain visible with a reason.
 use super::{ImageMethod, cpu, library, materials, setups, studio};
 use crate::ui_kit::BackingTooltipExt as _;
-use crate::{SolveApp, ui_kit};
+use crate::{SketApp, ui_kit};
 use serde_json::{Value, json};
 use sketcraft_engine::doc::Document;
 use std::sync::{Arc, Weak};
@@ -95,21 +95,21 @@ pub(super) struct Review {
     document: Weak<Document>,
 }
 impl Review {
-    fn current(&self, app: &SolveApp) -> bool {
+    fn current(&self, app: &SketApp) -> bool {
         self.revision == app.session.revision && Weak::ptr_eq(&self.document, &Arc::downgrade(&app.session.doc))
     }
 }
-pub(super) fn record_check(app: &mut SolveApp, request: &Value, reply: &Value) {
+pub(super) fn record_check(app: &mut SketApp, request: &Value, reply: &Value) {
     app.render_workspace.view.inspector.checked =
         Some(Review { request: request.clone(), reply: reply.clone(), revision: app.session.revision, document: Arc::downgrade(&app.session.doc) });
 }
 
-pub(super) fn switch_shot(app: &mut SolveApp, name: String) {
+pub(super) fn switch_shot(app: &mut SketApp, name: String) {
     setups::refresh_dirty(app);
     request_action(app, PendingAction::Switch(name));
 }
 
-pub(super) fn shot_row_action(app: &mut SolveApp, name: String, command: &str) {
+pub(super) fn shot_row_action(app: &mut SketApp, name: String, command: &str) {
     setups::refresh_dirty(app);
     if command == "render.shot.remove" {
         request_action(app, PendingAction::Remove(name));
@@ -118,7 +118,7 @@ pub(super) fn shot_row_action(app: &mut SolveApp, name: String, command: &str) {
     }
 }
 
-fn request_action(app: &mut SolveApp, action: PendingAction) {
+fn request_action(app: &mut SketApp, action: PendingAction) {
     // Editor focus is separate from activation. With the saved camera already in
     // place (or in compatibility mode), focusing the active shot keeps its draft.
     if let PendingAction::Switch(name) = &action
@@ -143,7 +143,7 @@ fn request_action(app: &mut SolveApp, action: PendingAction) {
 }
 /// Explicit tree/strip activation restores the complete saved camera. Numeric reloads,
 /// external edits and Undo keep using the camera-neutral setup adapter.
-pub(super) fn activate_saved_shot(app: &mut SolveApp, name: String) -> Result<(), String> {
+pub(super) fn activate_saved_shot(app: &mut SketApp, name: String) -> Result<(), String> {
     if !app.preferences.render_legacy_image_defaults {
         // The command validates the saved setup before any active draft is replaced.
         restore_saved_camera(app, &name)?;
@@ -153,7 +153,7 @@ pub(super) fn activate_saved_shot(app: &mut SolveApp, name: String) -> Result<()
     Ok(())
 }
 
-fn perform_action(app: &mut SolveApp, action: PendingAction) -> Result<(), String> {
+fn perform_action(app: &mut SketApp, action: PendingAction) -> Result<(), String> {
     match action {
         PendingAction::Switch(name) => {
             activate_saved_shot(app, name.clone())?;
@@ -180,7 +180,7 @@ fn perform_action(app: &mut SolveApp, action: PendingAction) -> Result<(), Strin
     }
     Ok(())
 }
-pub(super) fn confirmation(app: &mut SolveApp, ctx: &egui::Context) {
+pub(super) fn confirmation(app: &mut SketApp, ctx: &egui::Context) {
     super::shots::confirmation(app, ctx);
     materials::confirmation(app, ctx);
     super::light::confirmation(app, ctx);
@@ -222,13 +222,13 @@ pub(super) fn confirmation(app: &mut SolveApp, ctx: &egui::Context) {
         app.set_status(error, true);
     }
 }
-fn browse_button(app: &mut SolveApp, ui: &mut egui::Ui, kind: &str, key: &str) {
+fn browse_button(app: &mut SketApp, ui: &mut egui::Ui, kind: &str, key: &str) {
     if ui_kit::button(ui, app.tr(key), ui_kit::Button::Normal).clicked() {
         library::open_category(app, kind);
     }
 }
 /// All visible batch entry points share readiness and the captured, live-draining action.
-fn all_shots_button(app: &mut SolveApp, ui: &mut egui::Ui, label: &str, target: &str) -> Option<String> {
+fn all_shots_button(app: &mut SketApp, ui: &mut egui::Ui, label: &str, target: &str) -> Option<String> {
     let ready = super::ribbon::action_ready(app, "render.batch");
     let button = ui_kit::button(ui, label, ui_kit::Button::Enabled(ready.is_ok()));
     let button = if let Err(reason) = &ready { button.on_disabled_hover_text(reason) } else { button };
@@ -240,14 +240,14 @@ fn all_shots_button(app: &mut SolveApp, ui: &mut egui::Ui, label: &str, target: 
     }
     ready.err()
 }
-fn batch_explanation(app: &SolveApp, ui: &mut egui::Ui, reason: Option<&str>) {
+fn batch_explanation(app: &SketApp, ui: &mut egui::Ui, reason: Option<&str>) {
     if let Some(reason) = reason {
         ui_kit::text(ui, reason, ui_kit::Text::Note("render:batch:reason"));
     }
     ui_kit::text(ui, app.tr("render.batch_current_settings_help"), ui_kit::Text::Note("render.batch_current_settings_help"));
 }
 
-pub(super) fn scene_controls(app: &mut SolveApp, ui: &mut egui::Ui) {
+pub(super) fn scene_controls(app: &mut SketApp, ui: &mut egui::Ui) {
     ui_kit::text(ui, app.tr("render.scene_preserves_design"), ui_kit::Text::Note("render.scene_preserves_design"));
     let label = app.tr("render.children.method").to_string();
     ui_kit::row(ui, &label, |ui| super::method_dropdown(app, ui));
@@ -340,7 +340,7 @@ pub(super) fn scene_controls(app: &mut SolveApp, ui: &mut egui::Ui) {
     });
 }
 
-fn scene_stage(app: &mut SolveApp, stage: super::Stage) {
+fn scene_stage(app: &mut SketApp, stage: super::Stage) {
     let name = app.render_workspace.view.name.clone();
     let _ = app.run("view.render_stage", json!({"stage":stage.key()}));
     let params = match stage {
@@ -352,7 +352,7 @@ fn scene_stage(app: &mut SolveApp, stage: super::Stage) {
     };
     let _ = app.run("view.render_select", params);
 }
-pub(super) fn apply_camera_draft(app: &mut SolveApp, camera: sketcraft_engine::render::Camera) -> Result<(), String> {
+pub(super) fn apply_camera_draft(app: &mut SketApp, camera: sketcraft_engine::render::Camera) -> Result<(), String> {
     app.run("render.camera.set", json!({"camera":camera}))?;
     app.follow_view_request(false);
     app.render_workspace.view.dirty = true;
@@ -377,7 +377,7 @@ pub(super) enum Editor {
 
 /// Existing fixtures navigate the same selection model as Browser clicks.
 #[cfg(test)]
-pub(super) fn select_editor(app: &mut SolveApp, editor: Editor) {
+pub(super) fn select_editor(app: &mut SketApp, editor: Editor) {
     use super::RenderSelection;
     let selection = match editor {
         Editor::Appearance => {
@@ -417,7 +417,7 @@ pub(super) fn select_editor(app: &mut SolveApp, editor: Editor) {
 }
 
 #[cfg(test)]
-pub(super) fn selected_editor(app: &SolveApp) -> Editor {
+pub(super) fn selected_editor(app: &SketApp) -> Editor {
     use super::RenderSelection;
     match app.render_workspace.view.selection {
         RenderSelection::Nothing => Editor::Scene,
@@ -433,12 +433,12 @@ pub(super) fn selected_editor(app: &SolveApp) -> Editor {
         RenderSelection::Check => Editor::Check,
     }
 }
-fn editor_section(app: &mut SolveApp, ui: &mut egui::Ui, id: &'static str, key: &'static str, draw: fn(&mut SolveApp, &mut egui::Ui)) {
+fn editor_section(app: &mut SketApp, ui: &mut egui::Ui, id: &'static str, key: &'static str, draw: fn(&mut SketApp, &mut egui::Ui)) {
     reveal_section(app, ui, id);
     let title = app.tr(key).to_string();
     ui_kit::section(ui, id, &title, true, |ui| draw(app, ui));
 }
-pub(super) fn output_editor(app: &mut SolveApp, ui: &mut egui::Ui) {
+pub(super) fn output_editor(app: &mut SketApp, ui: &mut egui::Ui) {
     let summary = check_summary(app);
     let notes = ui_kit::button(ui, &summary, ui_kit::Button::Normal);
     crate::scenario::publish_target("render:output:check", notes.rect);
@@ -446,7 +446,7 @@ pub(super) fn output_editor(app: &mut SolveApp, ui: &mut egui::Ui) {
         let _ = app.run("view.render_select", json!({"kind":"check"}));
     }
     for (id, key, draw) in [
-        ("render_output_renderer", "render.children.renderer", renderer_controls as fn(&mut SolveApp, &mut egui::Ui)),
+        ("render_output_renderer", "render.children.renderer", renderer_controls as fn(&mut SketApp, &mut egui::Ui)),
         ("render_output_image", "render.output_image", output_controls),
         ("render_output_destination", "render.output_destination", destination_controls),
         ("render_output_render", "render.children.render", render_controls),
@@ -454,7 +454,7 @@ pub(super) fn output_editor(app: &mut SolveApp, ui: &mut egui::Ui) {
         editor_section(app, ui, id, key, draw);
     }
 }
-fn renderer_controls(app: &mut SolveApp, ui: &mut egui::Ui) {
+fn renderer_controls(app: &mut SketApp, ui: &mut egui::Ui) {
     let label = app.tr("render.children.method").to_string();
     ui_kit::row(ui, &label, |ui| super::method_dropdown(app, ui));
     gpu_status(app, ui);
@@ -467,7 +467,7 @@ fn renderer_controls(app: &mut SolveApp, ui: &mut egui::Ui) {
     };
     ui_kit::text(ui, app.tr(key), ui_kit::Text::Note(key));
 }
-fn output_controls(app: &mut SolveApp, ui: &mut egui::Ui) {
+fn output_controls(app: &mut SketApp, ui: &mut egui::Ui) {
     let side = match app.render_workspace.view.method {
         ImageMethod::CpuRaytrace => 16384,
         ImageMethod::GpuRaytrace => 8192,
@@ -580,7 +580,7 @@ fn output_controls(app: &mut SolveApp, ui: &mut egui::Ui) {
         ui_kit::text(ui, app.tr("render.output_format_status"), ui_kit::Text::Note("render.output_format_status"));
     });
 }
-fn destination_controls(app: &mut SolveApp, ui: &mut egui::Ui) {
+fn destination_controls(app: &mut SketApp, ui: &mut egui::Ui) {
     let label = app.tr("render.image_overwrite").to_string();
     ui_kit::checkbox(ui, &label, &mut app.render_workspace.view.overwrite);
     ui.horizontal_wrapped(|ui| {
@@ -598,7 +598,7 @@ fn destination_controls(app: &mut SolveApp, ui: &mut egui::Ui) {
         }
     });
 }
-fn render_controls(app: &mut SolveApp, ui: &mut egui::Ui) {
+fn render_controls(app: &mut SketApp, ui: &mut egui::Ui) {
     let last = app.render_workspace.view.completed.and_then(|job| app.session.render_job_handle(job).ok()).and_then(|h| h.status().ok());
     let text = last.map_or_else(
         || app.tr("render.shots_no_result").to_string(),
@@ -637,7 +637,7 @@ fn render_controls(app: &mut SolveApp, ui: &mut egui::Ui) {
         let _ = app.run("render.result.view", json!({"view":"image"}));
     }
 }
-pub(super) fn sampling_editor(app: &mut SolveApp, ui: &mut egui::Ui) {
+pub(super) fn sampling_editor(app: &mut SketApp, ui: &mut egui::Ui) {
     editor_section(app, ui, "render_sampling_quality", "render.output_quality", |app, ui| {
         quality_choices(app, ui);
         if app.render_workspace.view.method == ImageMethod::GpuRaytrace {
@@ -662,7 +662,7 @@ pub(super) fn sampling_editor(app: &mut SolveApp, ui: &mut egui::Ui) {
         }
     });
     for (id, key, method, draw) in [
-        ("render_sampling_path", "render.children.path", ImageMethod::GpuRaytrace, path_controls as fn(&mut SolveApp, &mut egui::Ui)),
+        ("render_sampling_path", "render.children.path", ImageMethod::GpuRaytrace, path_controls as fn(&mut SketApp, &mut egui::Ui)),
         ("render_sampling_glass", "render.children.glass", ImageMethod::GpuRaytrace, super::transport::glass_controls),
         ("render_sampling_cpu", "render.children.cpu", ImageMethod::CpuRaytrace, cpu_sampling),
     ] {
@@ -697,7 +697,7 @@ pub(super) fn sampling_editor(app: &mut SolveApp, ui: &mut egui::Ui) {
         }
     }
 }
-fn path_controls(app: &mut SolveApp, ui: &mut egui::Ui) {
+fn path_controls(app: &mut SketApp, ui: &mut egui::Ui) {
     let label = app.tr("render.children.samples").to_string();
     let mut samples = app.render_workspace.view.samples.clamp(1, 4096);
     let response = ui_kit::row(ui, &label, |ui| {
@@ -728,7 +728,7 @@ fn path_controls(app: &mut SolveApp, ui: &mut egui::Ui) {
     crate::scenario::publish_target("render:gpu-denoise", response.rect);
     ui_kit::text(ui, app.tr("render.studio_denoise_help"), ui_kit::Text::Note("render.studio_denoise_help"));
 }
-fn cpu_sampling(app: &mut SolveApp, ui: &mut egui::Ui) {
+fn cpu_sampling(app: &mut SketApp, ui: &mut egui::Ui) {
     super::cpu_sampling_controls(app, ui);
     let mut reflections = app.render_workspace.view.raytrace.reflections.clone().unwrap_or_default();
     if app.render_workspace.view.raytrace.reflections.is_none() {
@@ -750,14 +750,14 @@ fn cpu_sampling(app: &mut SolveApp, ui: &mut egui::Ui) {
         *value = reflections;
     }
 }
-pub(super) fn check_editor(app: &mut SolveApp, ui: &mut egui::Ui) {
+pub(super) fn check_editor(app: &mut SketApp, ui: &mut egui::Ui) {
     editor_section(app, ui, "render_check_check", "render.children.check", check_controls);
     editor_section(app, ui, "render_check_request", "render.children.request", request_controls);
     editor_section(app, ui, "render_check_renderers", "render.children.renderers", renderer_status);
     let title = app.tr("render.children.under_hood").to_string();
     ui_kit::section(ui, "render_check_under_hood", &title, false, |ui| diagnostics(app, ui));
 }
-fn check_controls(app: &mut SolveApp, ui: &mut egui::Ui) {
+fn check_controls(app: &mut SketApp, ui: &mut egui::Ui) {
     let ready = super::ribbon::action_ready(app, "render.preflight");
     let check = ui_kit::button(ui, app.tr("render.children.check_now"), ui_kit::Button::Enabled(ready.is_ok()));
     crate::scenario::publish_target("render:check", check.rect);
@@ -778,7 +778,7 @@ fn check_controls(app: &mut SolveApp, ui: &mut egui::Ui) {
         app.set_status(error, true);
     }
 }
-fn check_note_link(app: &mut SolveApp, ui: &mut egui::Ui, index: usize, line: &CheckLine) {
+fn check_note_link(app: &mut SketApp, ui: &mut egui::Ui, index: usize, line: &CheckLine) {
     if line.status == ui_kit::CheckStatus::Ok || line.key == "backend_pending" {
         return;
     }
@@ -811,7 +811,7 @@ fn check_note_link(app: &mut SolveApp, ui: &mut egui::Ui, index: usize, line: &C
         }
     }
 }
-fn request_controls(app: &mut SolveApp, ui: &mut egui::Ui) {
+fn request_controls(app: &mut SketApp, ui: &mut egui::Ui) {
     let view = &app.render_workspace.view;
     let check = view.inspector.checked.as_ref().filter(|c| c.current(app) && super::image_params(app).as_ref().ok() == Some(&c.request));
     let memory = check
@@ -862,7 +862,7 @@ fn request_controls(app: &mut SolveApp, ui: &mut egui::Ui) {
         }
     }
 }
-fn renderer_status(app: &mut SolveApp, ui: &mut egui::Ui) {
+fn renderer_status(app: &mut SketApp, ui: &mut egui::Ui) {
     gpu_status(app, ui);
     let backend = app.session.render_backend();
     for method in [ImageMethod::GpuRaytrace, ImageMethod::CpuRaytrace, ImageMethod::Raster] {
@@ -887,7 +887,7 @@ fn renderer_status(app: &mut SolveApp, ui: &mut egui::Ui) {
     }
 }
 /// Fit an oversized same-aspect candidate, since fit deliberately never upscales.
-pub(super) fn largest_output(app: &SolveApp) -> Option<(u64, u64)> {
+pub(super) fn largest_output(app: &SketApp) -> Option<(u64, u64)> {
     let limits = cpu::image_limits(app);
     let draft = &app.render_workspace.view.draft;
     limits.fit(u64::from(draft.width).checked_mul(limits.max_dimension)?, u64::from(draft.height).checked_mul(limits.max_dimension)?, None)
@@ -900,7 +900,7 @@ struct QualitySource {
     budget: sketcraft_engine::render::job::CpuBudget,
     adaptive: Option<(u32, u32, [u64; 3])>,
 }
-fn quality_source(app: &SolveApp) -> QualitySource {
+fn quality_source(app: &SketApp) -> QualitySource {
     let view = &app.render_workspace.view;
     let cpu = view.method == ImageMethod::CpuRaytrace;
     QualitySource {
@@ -916,7 +916,7 @@ fn quality_source(app: &SolveApp) -> QualitySource {
         },
     }
 }
-fn quality_request(app: &SolveApp, id: &str) -> Result<Value, String> {
+fn quality_request(app: &SketApp, id: &str) -> Result<Value, String> {
     let view = &app.render_workspace.view;
     match view.method {
         ImageMethod::GpuRaytrace => Ok(json!({"id":id,"variant":"fixed_samples_png","acknowledge_omissions":true})),
@@ -933,7 +933,7 @@ fn quality_request(app: &SolveApp, id: &str) -> Result<Value, String> {
 
 /// Immutable catalogue budgets are cached for comparison and hover summaries only.
 /// An actual preset click prepares and applies a fresh canonical plan.
-fn prepare_quality_choices(app: &mut SolveApp) {
+fn prepare_quality_choices(app: &mut SketApp) {
     let source = quality_source(app);
     if app.render_workspace.view.inspector.quality_source != Some(source) || app.render_workspace.view.inspector.quality_plans.is_none() {
         let plans = QUALITY_IDS.map(|id| {
@@ -944,7 +944,7 @@ fn prepare_quality_choices(app: &mut SolveApp) {
     }
 }
 
-fn quality_selection(app: &SolveApp) -> usize {
+fn quality_selection(app: &SketApp) -> usize {
     let view = &app.render_workspace.view;
     if view.method == ImageMethod::Raster || (view.method == ImageMethod::CpuRaytrace && view.raytrace.progressive.is_none()) {
         return 3;
@@ -979,7 +979,7 @@ fn quality_selection(app: &SolveApp) -> usize {
         .unwrap_or(3)
 }
 
-fn quality_reason(app: &SolveApp, index: usize) -> Option<&str> {
+fn quality_reason(app: &SketApp, index: usize) -> Option<&str> {
     if index == 3 {
         return None;
     }
@@ -996,7 +996,7 @@ fn quality_reason(app: &SolveApp, index: usize) -> Option<&str> {
     }
 }
 
-fn choose_quality(app: &mut SolveApp, index: usize) -> Result<(), String> {
+fn choose_quality(app: &mut SketApp, index: usize) -> Result<(), String> {
     if index == 3 {
         return app.run("view.render_select", json!({"kind":"sampling"})).map(|_| ());
     }
@@ -1008,7 +1008,7 @@ fn choose_quality(app: &mut SolveApp, index: usize) -> Result<(), String> {
     apply_quality_transaction(app, &plan)
 }
 
-fn quality_summary(app: &SolveApp, width: u32, height: u32, samples: u32, depth: u32, seed: u32, denoise: bool) -> String {
+fn quality_summary(app: &SketApp, width: u32, height: u32, samples: u32, depth: u32, seed: u32, denoise: bool) -> String {
     crate::i18n::format(
         "render.quality_summary",
         &[
@@ -1022,14 +1022,7 @@ fn quality_summary(app: &SolveApp, width: u32, height: u32, samples: u32, depth:
     )
 }
 
-fn cpu_quality_summary(
-    app: &SolveApp,
-    width: u32,
-    height: u32,
-    samples: u32,
-    seed: u32,
-    budget: sketcraft_engine::render::job::CpuBudget,
-) -> String {
+fn cpu_quality_summary(app: &SketApp, width: u32, height: u32, samples: u32, seed: u32, budget: sketcraft_engine::render::job::CpuBudget) -> String {
     crate::i18n::format(
         "render.cpu_quality_summary",
         &[
@@ -1041,7 +1034,7 @@ fn cpu_quality_summary(
         ],
     )
 }
-fn quality_hover(app: &SolveApp) -> String {
+fn quality_hover(app: &SketApp) -> String {
     let labels = ["render.quality_draft", "render.quality_balanced", "render.quality_high"];
     app.render_workspace.view.inspector.quality_plans.as_ref().map_or_else(String::new, |plans| {
         plans
@@ -1074,7 +1067,7 @@ fn quality_hover(app: &SolveApp) -> String {
     })
 }
 
-pub(super) fn quality_choices(app: &mut SolveApp, ui: &mut egui::Ui) {
+pub(super) fn quality_choices(app: &mut SketApp, ui: &mut egui::Ui) {
     prepare_quality_choices(app);
     let labels = ["render.quality_draft", "render.quality_balanced", "render.quality_high", "render.quality_custom"].map(|key| app.tr(key));
     let mut quality = quality_selection(app);
@@ -1104,7 +1097,7 @@ pub(super) fn quality_choices(app: &mut SolveApp, ui: &mut egui::Ui) {
     }
 }
 
-pub(super) fn check_summary(app: &SolveApp) -> String {
+pub(super) fn check_summary(app: &SketApp) -> String {
     let state = match &app.render_workspace.view.inspector.checked {
         Some(check) if check.current(app) && super::image_params(app).as_ref().ok() == Some(&check.request) => {
             if check.reply["error"].is_string() {
@@ -1127,7 +1120,7 @@ const SIZE_PRESETS: [(&str, &str, Option<(u32, u32)>); 5] = [
     ("square", "render.size_square", Some((2048, 2048))),
     ("custom", "render.size_custom", None),
 ];
-fn choose_size(app: &mut SolveApp, size: Option<(u32, u32)>) {
+fn choose_size(app: &mut SketApp, size: Option<(u32, u32)>) {
     let custom = size.is_none();
     let (width, height) = size.unwrap_or((app.render_workspace.view.draft.width, app.render_workspace.view.draft.height));
     let result = if custom {
@@ -1142,7 +1135,7 @@ fn choose_size(app: &mut SolveApp, size: Option<(u32, u32)>) {
         reveal(app, "render_output_image");
     }
 }
-fn apply_size(app: &mut SolveApp, width: u32, height: u32, custom: bool) -> Result<(), String> {
+fn apply_size(app: &mut SketApp, width: u32, height: u32, custom: bool) -> Result<(), String> {
     if cpu::image_limits(app).fit(u64::from(width), u64::from(height), None) != Some((u64::from(width), u64::from(height))) {
         return Err(size_limit_reason(app, width, height));
     }
@@ -1163,7 +1156,7 @@ fn apply_size(app: &mut SolveApp, width: u32, height: u32, custom: bool) -> Resu
     app.render_workspace.view.dirty = true;
     Ok(())
 }
-pub(super) fn size_limit_reason(app: &SolveApp, width: u32, height: u32) -> String {
+pub(super) fn size_limit_reason(app: &SketApp, width: u32, height: u32) -> String {
     let limits = cpu::image_limits(app);
     let (w, h) = limits.fit(u64::from(width), u64::from(height), None).unwrap_or((0, 0));
     let reason = crate::i18n::format(
@@ -1189,12 +1182,12 @@ pub(super) fn size_limit_reason(app: &SolveApp, width: u32, height: u32) -> Stri
 }
 /// A preset a CPU method refuses carries the profile that renders it (#8941). Kept short for the
 /// narrow size lists; the reason in its tooltip says what to choose, method included.
-pub(super) fn size_mark(app: &SolveApp, text: &str, size: Option<(u64, u64)>) -> Option<String> {
+pub(super) fn size_mark(app: &SketApp, text: &str, size: Option<(u64, u64)>) -> Option<String> {
     let (width, height) = size?;
     let profile = cpu::budget_name(app, cpu::profile_for_size(app, width, height)?);
     Some(crate::i18n::format("render.size_needs_profile", &[("size", text), ("profile", profile)]))
 }
-pub(super) fn size_presets(app: &mut SolveApp, ui: &mut egui::Ui) {
+pub(super) fn size_presets(app: &mut SketApp, ui: &mut egui::Ui) {
     ui_kit::scope(ui, |ui| {
         let current = (app.render_workspace.view.draft.width, app.render_workspace.view.draft.height);
         let custom = app.render_workspace.view.inspector.resolution.custom || !SIZE_PRESETS.iter().any(|(_, _, size)| *size == Some(current));
@@ -1226,7 +1219,7 @@ pub(super) fn size_presets(app: &mut SolveApp, ui: &mut egui::Ui) {
         ui_kit::text(ui, app.tr("render.output_presets_help"), ui_kit::Text::Note("render.output_presets_help"));
     });
 }
-pub(super) fn stage_tools(app: &mut SolveApp, ui: &mut egui::Ui) {
+pub(super) fn stage_tools(app: &mut SketApp, ui: &mut egui::Ui) {
     let (size, _) = super::output_summary(app);
     let dropdown = ui_kit::compact_dropdown_menu(ui, "render_stage_size", &size, |ui| {
         for (key, label, size) in SIZE_PRESETS {
@@ -1258,7 +1251,7 @@ struct CheckLine {
     label: String,
     status: ui_kit::CheckStatus,
 }
-fn check_lines(app: &SolveApp) -> Vec<CheckLine> {
+fn check_lines(app: &SketApp) -> Vec<CheckLine> {
     use ui_kit::CheckStatus::{Error, Ok, Warning};
     if app.render_workspace.view.method == ImageMethod::GpuRaytrace
         && let Some(key) = app.render_workspace.path_host.pending_message_key()
@@ -1301,7 +1294,7 @@ fn check_lines(app: &SolveApp) -> Vec<CheckLine> {
     }
     lines
 }
-fn output_check(app: &mut SolveApp, ui: &mut egui::Ui) {
+fn output_check(app: &mut SketApp, ui: &mut egui::Ui) {
     let lines = check_lines(app);
     if lines.is_empty() {
         ui_kit::text(ui, app.tr("render.children.not_checked"), ui_kit::Text::Inline);
@@ -1318,7 +1311,7 @@ fn output_check(app: &mut SolveApp, ui: &mut egui::Ui) {
         check_note_link(app, ui, index, line);
     }
 }
-fn check_report(app: &SolveApp) -> Option<String> {
+fn check_report(app: &SketApp) -> Option<String> {
     let lines = check_lines(app);
     if lines.is_empty() {
         return None;
@@ -1353,7 +1346,7 @@ fn check_report(app: &SolveApp) -> Option<String> {
     Some(report)
 }
 
-pub(super) fn scene_resource(app: &mut SolveApp, ui: &mut egui::Ui, id: &str) {
+pub(super) fn scene_resource(app: &mut SketApp, ui: &mut egui::Ui, id: &str) {
     if ui_kit::button(ui, app.tr("render.scene_review"), ui_kit::Button::Enabled(app.render_workspace.view.method != ImageMethod::Raster)).clicked() {
         let mut view = library::View::default();
         if let Err(error) = library::choose(app, &mut view, "native_scenes", id).and_then(|()| library::review::light(app, &view, id)) {
@@ -1361,7 +1354,7 @@ pub(super) fn scene_resource(app: &mut SolveApp, ui: &mut egui::Ui, id: &str) {
         }
     }
 }
-pub(super) fn quality_resource(app: &mut SolveApp, ui: &mut egui::Ui, id: &str) {
+pub(super) fn quality_resource(app: &mut SketApp, ui: &mut egui::Ui, id: &str) {
     ui_kit::text(ui, app.tr("render.quality_projection_help"), ui_kit::Text::Note("render.quality_projection_help"));
     if ui_kit::button(ui, app.tr("render.quality_review"), ui_kit::Button::Enabled(app.render_workspace.view.method == ImageMethod::GpuRaytrace))
         .clicked()
@@ -1371,7 +1364,7 @@ pub(super) fn quality_resource(app: &mut SolveApp, ui: &mut egui::Ui, id: &str) 
     }
 }
 /// Share one non-camera numerical transaction between canonical presets and library reviews.
-pub(super) fn apply_quality_transaction(app: &mut SolveApp, plan: &Value) -> Result<(), String> {
+pub(super) fn apply_quality_transaction(app: &mut SketApp, plan: &Value) -> Result<(), String> {
     let before = setups::draft(app)?;
     let previous = app.render_workspace.view.clone();
     let result = apply_quality(app, plan).and_then(|()| setups::persist_editor(app, &before));
@@ -1382,7 +1375,7 @@ pub(super) fn apply_quality_transaction(app: &mut SolveApp, plan: &Value) -> Res
     Ok(())
 }
 
-pub(super) fn apply_quality(app: &mut SolveApp, plan: &Value) -> Result<(), String> {
+pub(super) fn apply_quality(app: &mut SketApp, plan: &Value) -> Result<(), String> {
     if app.render_workspace.view.method == ImageMethod::CpuRaytrace {
         return apply_cpu_quality(app, plan);
     }
@@ -1417,7 +1410,7 @@ pub(super) fn apply_quality(app: &mut SolveApp, plan: &Value) -> Result<(), Stri
     view.dirty = true;
     Ok(())
 }
-fn apply_cpu_quality(app: &mut SolveApp, plan: &Value) -> Result<(), String> {
+fn apply_cpu_quality(app: &mut SketApp, plan: &Value) -> Result<(), String> {
     use sketcraft_engine::render::job::{CpuBudget, CpuProgressiveOptions, cpu_camera_sampling};
     let view = &app.render_workspace.view;
     if view.raytrace.progressive.is_none() {
@@ -1449,7 +1442,7 @@ fn apply_cpu_quality(app: &mut SolveApp, plan: &Value) -> Result<(), String> {
     view.dirty = true;
     Ok(())
 }
-fn diagnostics(app: &mut SolveApp, ui: &mut egui::Ui) {
+fn diagnostics(app: &mut SketApp, ui: &mut egui::Ui) {
     let request = super::image_request(app);
     let job = app
         .render_workspace
@@ -1503,14 +1496,14 @@ fn diagnostics(app: &mut SolveApp, ui: &mut egui::Ui) {
     browse_button(app, ui, "capabilities", "render.browse_capabilities");
     library::inspect_kinds(app, ui, &["capabilities"]);
 }
-fn copy_json(app: &mut SolveApp, _ui: &mut egui::Ui, value: &Value) {
+fn copy_json(app: &mut SketApp, _ui: &mut egui::Ui, value: &Value) {
     if let Ok(text) = serde_json::to_string_pretty(value)
         && let Err(error) = app.run("render.preflight.copy", json!({"text":text}))
     {
         app.set_status(error, true);
     }
 }
-fn json_details(app: &SolveApp, ui: &mut egui::Ui, key: &str, value: &Value) {
+fn json_details(app: &SketApp, ui: &mut egui::Ui, key: &str, value: &Value) {
     let title = app.tr(key).to_string();
     ui_kit::section(ui, key, &title, false, |ui| {
         let text = serde_json::to_string_pretty(value).unwrap_or_default();
@@ -1521,7 +1514,7 @@ fn json_details(app: &SolveApp, ui: &mut egui::Ui, key: &str, value: &Value) {
 #[path = "render_workspace_inspector_tests.rs"]
 mod tests;
 
-pub(super) fn fit_subject(app: &mut SolveApp) -> Result<(), String> {
+pub(super) fn fit_subject(app: &mut SketApp) -> Result<(), String> {
     // Capture the current navigation orientation before the engine's view command, which fits
     // the product to the picture's aspect: what the preview frames and Export PNG writes.
     app.run("render.camera.set", json!({"camera":app.cam}))?;
@@ -1533,7 +1526,7 @@ pub(super) fn fit_subject(app: &mut SolveApp) -> Result<(), String> {
 
 /// Revert accepts only the restored camera as clean. Numerical and temporary
 /// material drafts retain their independent dirty state and confirmation guard.
-pub(super) fn restore_saved_camera(app: &mut SolveApp, name: &str) -> Result<(), String> {
+pub(super) fn restore_saved_camera(app: &mut SketApp, name: &str) -> Result<(), String> {
     app.run("render.settings.apply", json!({"name":name}))?;
     app.follow_view_request(false);
     app.ui.perspective = app.cam.fov > 0.0;
@@ -1546,21 +1539,21 @@ pub(super) fn restore_saved_camera(app: &mut SolveApp, name: &str) -> Result<(),
     Ok(())
 }
 
-pub(super) fn restore_camera(app: &mut SolveApp) -> Result<(), String> {
+pub(super) fn restore_camera(app: &mut SketApp) -> Result<(), String> {
     let name = app.render_workspace.view.name.clone();
     restore_saved_camera(app, &name)
 }
-pub(super) fn confirmation_open(app: &SolveApp) -> bool {
+pub(super) fn confirmation_open(app: &SketApp) -> bool {
     app.render_workspace.view.inspector.pending.is_some()
         || app.render_workspace.view.save_shot_name.is_some()
         || materials::confirmation_open(app)
         || library::review_open(app)
         || super::assign::replacement_open(app)
 }
-pub(super) fn reveal(app: &mut SolveApp, section: &'static str) {
+pub(super) fn reveal(app: &mut SketApp, section: &'static str) {
     app.render_workspace.view.inspector.reveal = Some(section);
 }
-fn reveal_section(app: &mut SolveApp, ui: &mut egui::Ui, section: &'static str) {
+fn reveal_section(app: &mut SketApp, ui: &mut egui::Ui, section: &'static str) {
     if app.render_workspace.view.inspector.reveal == Some(section) {
         let identity = ui.make_persistent_id(section);
         ui.ctx().data_mut(|data| data.insert_persisted(identity, true));
@@ -1569,7 +1562,7 @@ fn reveal_section(app: &mut SolveApp, ui: &mut egui::Ui, section: &'static str) 
     }
 }
 
-fn gpu_status(app: &mut SolveApp, ui: &mut egui::Ui) {
+fn gpu_status(app: &mut SketApp, ui: &mut egui::Ui) {
     match &app.render_workspace.path_host {
         super::PathHost::Preparing(_, started) => super::setup_progress(ui, app, *started),
         super::PathHost::Failed(error) => {

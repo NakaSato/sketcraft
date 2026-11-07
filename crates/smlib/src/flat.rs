@@ -1,5 +1,5 @@
 //! SMLib's flat B-rep arrays (`capi/include/smlib.h`, "Flat B-rep arrays"): a B-rep as plain
-//! int64 and double arrays laid out like a member of USD's BrepArray schema, which solidcore's body
+//! int64 and double arrays laid out like a member of USD's BrepArray schema, which sketcore's body
 //! is converted to and from ([`crate::import::Arrays`]).
 
 use crate::{Brep, Result};

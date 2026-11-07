@@ -2,7 +2,7 @@
 //! Sampling estimates the area integral; it is not an exact solid-angle integral.
 //! No emitter geometry, indirect bounce or calibrated photometric units are implied.
 
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 use sketcraft_geom::prelude::*;
 
 use super::lighting::MAX_LINEAR_RADIANCE;

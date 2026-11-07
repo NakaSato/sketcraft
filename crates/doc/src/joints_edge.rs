@@ -8,7 +8,7 @@
 //! corner x and y run along the two edges, away from the corner into the face, in the order that
 //! makes the frame right-handed.
 
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 use sketcraft_geom::prelude::*;
 
 use super::{EdgeAxis, Snap, component_bodies, frame};

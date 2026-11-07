@@ -1,6 +1,6 @@
 //! Selection-following appearance editor. All mutations use the appearance registry.
 use crate::ui_kit::BackingTooltipExt as _;
-use crate::{SolveApp, dialogs_appearance, ui_kit};
+use crate::{SketApp, dialogs_appearance, ui_kit};
 use serde_json::{Value, json};
 use sketcraft_engine::{
     Sel,
@@ -75,7 +75,7 @@ fn step_index(step: LookStep) -> usize {
         LookStep::Material => 3,
     }
 }
-pub(super) fn targets(app: &SolveApp, step: LookStep) -> Targets {
+pub(super) fn targets(app: &SketApp, step: LookStep) -> Targets {
     let mut targets = Targets::default();
     let state = crate::open_meshing::session_world(&app.session);
     for selection in &app.session.selection {
@@ -135,7 +135,7 @@ fn decode_look(value: &Value) -> Option<Look> {
         pbr: value.get("pbr").filter(|v| !v.is_null()).and_then(|p| serde_json::from_value(p.clone()).ok()),
     })
 }
-pub(super) fn chains(app: &mut SolveApp, targets: &Targets) -> Result<Vec<[Option<Look>; 4]>, String> {
+pub(super) fn chains(app: &mut SketApp, targets: &Targets) -> Result<Vec<[Option<Look>; 4]>, String> {
     targets
         .queries()
         .into_iter()
@@ -154,14 +154,14 @@ pub(super) fn chains(app: &mut SolveApp, targets: &Targets) -> Result<Vec<[Optio
 fn look_params(look: &Look) -> Value {
     json!({"name":look.name,"color":look.color,"opacity":look.opacity,"pbr":look.pbr})
 }
-pub(super) fn users(app: &SolveApp, look: &Look) -> usize {
+pub(super) fn users(app: &SketApp, look: &Look) -> usize {
     assigned_looks(app).filter(|l| *l == look).count()
 }
-fn assigned_looks(app: &SolveApp) -> impl Iterator<Item = &Look> {
+fn assigned_looks(app: &SketApp) -> impl Iterator<Item = &Look> {
     let appearances = &app.session.doc.appearances;
     appearances.bodies.values().chain(appearances.components.values()).chain(appearances.faces.iter().map(|f| &f.look))
 }
-pub(super) fn assign(app: &mut SolveApp, targets: &Targets, from: &Look, to: &Look, all_users: bool) -> Result<(), String> {
+pub(super) fn assign(app: &mut SketApp, targets: &Targets, from: &Look, to: &Look, all_users: bool) -> Result<(), String> {
     if all_users {
         app.run("appearance.replace", json!({"from":look_params(from),"to":look_params(to)}))?;
     } else if let Some(params) = targets.params(to) {
@@ -169,7 +169,7 @@ pub(super) fn assign(app: &mut SolveApp, targets: &Targets, from: &Look, to: &Lo
     }
     Ok(())
 }
-pub(super) fn clear(app: &mut SolveApp, targets: &Targets, look: &Look) -> Result<(), String> {
+pub(super) fn clear(app: &mut SketApp, targets: &Targets, look: &Look) -> Result<(), String> {
     if let Some(params) = targets.params(look) {
         app.run("appearance.assign", dialogs_appearance::without_look(params))?;
     }
@@ -222,7 +222,7 @@ fn ended(response: &egui::Response, ui: &egui::Ui) -> bool {
         || response.changed() && !response.has_focus() && !ui.input(|i| i.pointer.any_down()) && !ui.ctx().egui_wants_keyboard_input()
 }
 
-pub(in crate::render_workspace) fn scope_label(app: &SolveApp) -> &str {
+pub(in crate::render_workspace) fn scope_label(app: &SketApp) -> &str {
     app.tr(match app.session.selection.last() {
         Some(Sel::Occurrence { .. }) => "render.pick_component",
         Some(Sel::Face { .. }) => "render.pick_face",
@@ -230,7 +230,7 @@ pub(in crate::render_workspace) fn scope_label(app: &SolveApp) -> &str {
     })
 }
 
-pub(super) fn reset(app: &mut SolveApp) {
+pub(super) fn reset(app: &mut SketApp) {
     let view = &app.render_workspace.view.inspector.selection_appearance;
     if view.selection != app.session.selection || view.document.as_ref().is_none_or(|d| !Weak::ptr_eq(d, &Arc::downgrade(&app.session.doc))) {
         return;
@@ -255,7 +255,7 @@ pub(super) fn reset(app: &mut SolveApp) {
     }
 }
 
-pub(in crate::render_workspace) fn remove(app: &mut SolveApp) {
+pub(in crate::render_workspace) fn remove(app: &mut SketApp) {
     let view = &app.render_workspace.view.inspector.selection_appearance;
     let selected = targets(app, view.inspected.unwrap_or(mode_step(view.mode)));
     if let Some(look) = view.draft.clone() {
@@ -266,7 +266,7 @@ pub(in crate::render_workspace) fn remove(app: &mut SolveApp) {
     }
 }
 
-pub(in crate::render_workspace) fn footer(app: &mut SolveApp, ui: &mut egui::Ui) {
+pub(in crate::render_workspace) fn footer(app: &mut SketApp, ui: &mut egui::Ui) {
     ui.horizontal(|ui| {
         let enabled = !app.session.selection.is_empty();
         if ui_kit::icon_label_action(ui, app.tr("render.inspector_save_library"), Some("plus"), enabled, false)
@@ -284,7 +284,7 @@ pub(in crate::render_workspace) fn footer(app: &mut SolveApp, ui: &mut egui::Ui)
 }
 
 /// Returns false only when the explicit-target fallback should be shown.
-pub(in crate::render_workspace) fn controls(app: &mut SolveApp, ui: &mut egui::Ui) -> bool {
+pub(in crate::render_workspace) fn controls(app: &mut SketApp, ui: &mut egui::Ui) -> bool {
     if app.session.selection.is_empty() {
         app.render_workspace.view.inspector.selection_appearance = View::default();
         return false;
@@ -371,7 +371,7 @@ pub(in crate::render_workspace) fn controls(app: &mut SolveApp, ui: &mut egui::U
     app.render_workspace.view.inspector.selection_appearance = view;
     true
 }
-fn draw(app: &mut SolveApp, ui: &mut egui::Ui, view: &mut View, selected: &Targets) -> Result<(), String> {
+fn draw(app: &mut SketApp, ui: &mut egui::Ui, view: &mut View, selected: &Targets) -> Result<(), String> {
     if selected.items.len().saturating_add(selected.components.len()) > 10_000 {
         return Err(app.tr("render.inspector_target_limit").into());
     }

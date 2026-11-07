@@ -10,8 +10,8 @@
 //! box's side, where the outer loop's polygon closes. Every iso line of a closed surface is
 //! therefore one line across the box, cut where it crosses the loops.
 
-use solidcore_record::Vec3;
-use solidcore_record::brep;
+use sketcore_record::Vec3;
+use sketcore_record::brep;
 use sketcraft_geom::brep::eval::SurfaceEval;
 use sketcraft_geom::prelude::*;
 
@@ -281,7 +281,7 @@ fn crosses_right(q: [f64; 2], l: &[[f64; 2]]) -> bool {
 /// The iso curve of `surface` at `fixed` (the other parameter) as a record curve on `[a, b]` of
 /// its own parameter: the surface's own line or circle, or its B-spline row.
 fn iso_record(surface: &brep::Surface, along_u: bool, fixed: f64, (a, b): (f64, f64)) -> Result<(brep::Curve, [f64; 2])> {
-    use solidcore_record::brep::{Curve, Frame, Surface};
+    use sketcore_record::brep::{Curve, Frame, Surface};
     let v = |q: [f64; 3]| Vec3::new(q[0], q[1], q[2]);
     let d = |q: Vec3| [q.x, q.y, q.z];
     let line = |p: Vec3, q: Vec3| (Curve::Line { start: d(p), end: d(q) }, [0.0, 1.0]);

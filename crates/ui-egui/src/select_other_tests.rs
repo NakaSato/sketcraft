@@ -20,7 +20,7 @@ fn same_body_select_other_refresh_survives_disappearing_semantic_owners() {
     h.app.viewport.select_other.popup = Some(super::Popup {
         at: egui::pos2(500.0, 300.0),
         rows: vec![super::Row {
-            hit: crate::viewport::Hit::Face { body: "Body1".into(), index: 0, point: solidcore_record::Vec3::ZERO },
+            hit: crate::viewport::Hit::Face { body: "Body1".into(), index: 0, point: sketcore_record::Vec3::ZERO },
             sel: Sel::Body { name: "Body1".into() },
             label: "Body1".into(),
             icon: "body",
@@ -517,7 +517,7 @@ fn an_edge_is_as_deep_as_its_point_under_the_pointer_not_its_middle() {
     h.call("ui.view", json!({"view":"fit"}));
     h.settle();
     // On the bottom plate's near top edge along Y (x = 15, y from -15 to 15), well off its middle.
-    let under = solidcore_record::Vec3::new(15.0, 9.0, 2.0);
+    let under = sketcore_record::Vec3::new(15.0, 9.0, 2.0);
     let at = h.call("ui.at", json!({"world": [under.x, under.y, under.z]}))["result"].clone();
     let pos = egui::pos2(at[0].as_f64().unwrap() as f32, at[1].as_f64().unwrap() as f32);
     let proj = crate::viewport::projection(&h.app, h.app.viewport.rect.unwrap());
@@ -528,7 +528,7 @@ fn an_edge_is_as_deep_as_its_point_under_the_pointer_not_its_middle() {
     let index = st.bodies.iter().enumerate().map(|(i, b)| (b.name.as_str(), i)).collect();
     let t = super::hit_depth(&st, &index, o, d, edge).expect("a depth");
     let want = (under - o).dot(d);
-    let mid = solidcore_record::Vec3::new(15.0, 0.0, 2.0);
+    let mid = sketcore_record::Vec3::new(15.0, 0.0, 2.0);
     assert!((t - want).abs() < 0.5, "depth {t}, the point under the pointer {want}, its middle {}", (mid - o).dot(d));
 }
 
@@ -954,7 +954,7 @@ fn hidden_edge_mode_is_scoped_and_invalidates_hover_without_pointer_motion() {
     assert!(!pick_cached(&mut h.app, &proj, pos).iter().any(target));
     h.app.session.visibility.hidden_bodies.clear();
     // The section removes the target entirely: even hidden-edge mode must exclude it.
-    h.app.session.section = Some((solidcore_record::Vec3::new(0.0, 0.0, -5.0), solidcore_record::Vec3::Z));
+    h.app.session.section = Some((sketcore_record::Vec3::new(0.0, 0.0, -5.0), sketcore_record::Vec3::Z));
     assert!(!pick_all(&h.app, &proj, pos).iter().any(target));
     h.app.session.section = None;
     h.call("ui.prefs", json!({"select_hidden_edges":false}));
@@ -971,11 +971,11 @@ fn hidden_edge_mode_keeps_section_caps_as_occluders() {
     let target = |hit: &Hit| matches!(hit, Hit::Edge { body, .. } if body == "Target");
     assert!(pick_all(&h.app, &proj, pos).iter().any(target), "an ordinary face permits hidden edges");
     // The target remains below the cut, but the section cap through the cover hides it.
-    h.app.session.section = Some((solidcore_record::Vec3::new(0.0, 0.0, 25.0), solidcore_record::Vec3::Z));
+    h.app.session.section = Some((sketcore_record::Vec3::new(0.0, 0.0, 25.0), sketcore_record::Vec3::Z));
     assert!(!pick(&h.app, &proj, pos).iter().any(target), "ordinary picking must respect the cap");
     assert!(!pick_all(&h.app, &proj, pos).iter().any(target), "Select Other must respect the cap");
     // A plane between the bodies removes the cover without making a cap over the target.
-    h.app.session.section = Some((solidcore_record::Vec3::new(0.0, 0.0, 15.0), solidcore_record::Vec3::Z));
+    h.app.session.section = Some((sketcore_record::Vec3::new(0.0, 0.0, 15.0), sketcore_record::Vec3::Z));
     assert!(pick_all(&h.app, &proj, pos).iter().any(target));
 }
 
@@ -992,10 +992,10 @@ fn hidden_edge_mode_keeps_caps_behind_a_nearer_kept_face() {
     h.app.preferences.select_hidden_edges = true;
     let proj = projection(&h.app, h.app.viewport.rect.unwrap());
     // The ray lies inside the faces, close enough to reach the Target's edge.
-    let pos = proj.to_screen(solidcore_record::Vec3::new(5.0, 0.02, 10.0)).unwrap();
+    let pos = proj.to_screen(sketcore_record::Vec3::new(5.0, 0.02, 10.0)).unwrap();
     let target = |hit: &Hit| matches!(hit, Hit::Edge { body, .. } if body == "Target");
     assert!(pick_all(&h.app, &proj, pos).iter().any(target), "ordinary faces permit hidden edges");
-    h.app.session.section = Some((solidcore_record::Vec3::new(0.0, 0.0, 25.0), solidcore_record::Vec3::Z));
+    h.app.session.section = Some((sketcore_record::Vec3::new(0.0, 0.0, 25.0), sketcore_record::Vec3::Z));
     for enabled in [false, true] {
         h.app.preferences.select_hidden_edges = enabled;
         for hits in [pick(&h.app, &proj, pos), pick_all(&h.app, &proj, pos)] {
@@ -1027,11 +1027,11 @@ fn hidden_edge_ties_prefer_visible_edges_without_overriding_distance() {
             assert_eq!(h.app.session.world_state().unwrap().bodies[0].name, if front_first { "Front" } else { "Rear" });
             if offset == 0.0 {
                 for x in [0.0, 40.0] {
-                    assert_eq!(proj.to_screen(solidcore_record::Vec3::new(x, 0.0, 10.0)), proj.to_screen(solidcore_record::Vec3::new(x, 0.0, 30.0)));
+                    assert_eq!(proj.to_screen(sketcore_record::Vec3::new(x, 0.0, 10.0)), proj.to_screen(sketcore_record::Vec3::new(x, 0.0, 30.0)));
                 }
             }
             // Keep the ray inside both faces so boundary rounding cannot hide the nearer face.
-            let pos = proj.to_screen(solidcore_record::Vec3::new(20.0, 0.02, 10.0)).unwrap();
+            let pos = proj.to_screen(sketcore_record::Vec3::new(20.0, 0.02, 10.0)).unwrap();
             for enabled in [false, true] {
                 h.app.preferences.select_hidden_edges = enabled;
                 let expected = if enabled && offset != 0.0 { "Rear" } else { "Front" };

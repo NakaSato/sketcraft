@@ -18,7 +18,7 @@ use crate::prelude::*;
 use std::cmp::Ordering;
 use std::collections::BinaryHeap;
 
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 
 /// Most triangles [`levels`] simplifies (more: no levels).
 pub const MAX_TRIANGLES: usize = 50_000_000;

@@ -386,13 +386,11 @@ fn sketch_create_in_the_grid_shows_every_variant() {
     h.step(&json!({"click":{"handle":"panel:SKETCH:CREATE"}})).unwrap();
     h.frames(4);
     let cells: Vec<String> = crate::scenario::handles("dropdown:").into_iter().map(|(id, _)| id).collect();
-    for id in ["sketch.line", "sketch.rectangle.center", "sketch.circle.three_point", "sketch.arc.tangent", "sketch.polygon.edge", "sketch.point"]
-    {
+    for id in ["sketch.line", "sketch.rectangle.center", "sketch.circle.three_point", "sketch.arc.tangent", "sketch.polygon.edge", "sketch.point"] {
         assert!(cells.iter().any(|c| *c == format!("dropdown:{id}")), "{id} is an icon of the grid: {cells:?}");
     }
-    let grouped = sketch_create_grouped(
-        &sketcraft_engine::command_specs().into_iter().filter(|c| c.id.starts_with("sketch.rectangle")).collect::<Vec<_>>(),
-    );
+    let grouped =
+        sketch_create_grouped(&sketcraft_engine::command_specs().into_iter().filter(|c| c.id.starts_with("sketch.rectangle")).collect::<Vec<_>>());
     assert_eq!(grouped.first().and_then(|(h, _)| *h), Some("Rectangle"));
     assert!(grouped.iter().skip(1).all(|(h, _)| h.is_none()), "one heading per family");
     h.step(&json!({"click":{"handle":"dropdown:sketch.rectangle.center"}})).unwrap();

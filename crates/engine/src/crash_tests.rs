@@ -168,7 +168,7 @@ fn child() {
             }
             assert_eq!(s.doc.features.len(), 1, "the design is unchanged");
         }
-        // A panic inside a solidcore call: caught there, an internal error of the command.
+        // A panic inside a sketcore call: caught there, an internal error of the command.
         "kernel" => {
             let r = s.execute("diagnostics.crash_test", &json!({"mode": "kernel"}));
             assert!(matches!(&r, Err(crate::EngineError::Internal(id, _)) if id == "diagnostics.crash_test"), "{r:?}");

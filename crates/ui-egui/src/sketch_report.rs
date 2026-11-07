@@ -7,7 +7,7 @@
 
 use serde_json::Value;
 
-use crate::SolveApp;
+use crate::SketApp;
 use crate::ui_kit;
 
 /// Rows of unconstrained curves and points shown before the list scrolls.
@@ -22,7 +22,7 @@ pub struct SketchReport {
     pub result: Result<Value, String>,
 }
 
-fn read(app: &mut SolveApp, sketch: Option<u64>) -> Result<Value, String> {
+fn read(app: &mut SketApp, sketch: Option<u64>) -> Result<Value, String> {
     let params = match sketch {
         Some(id) => serde_json::json!({ "sketch": id }),
         None => serde_json::json!({}),
@@ -31,7 +31,7 @@ fn read(app: &mut SolveApp, sketch: Option<u64>) -> Result<Value, String> {
 }
 
 /// Open the report on the active sketch.
-pub fn open(app: &mut SolveApp) {
+pub fn open(app: &mut SketApp) {
     let sketch = app.session.active_sketch;
     let result = read(app, sketch);
     app.sketch_report = Some(SketchReport { revision: app.session.revision, sketch, result });
@@ -67,7 +67,7 @@ fn status(v: &Value) -> String {
 }
 
 /// Draw the window when it is open. Called once per frame.
-pub fn show(app: &mut SolveApp, ctx: &egui::Context) {
+pub fn show(app: &mut SketApp, ctx: &egui::Context) {
     let Some(mut r) = app.sketch_report.take() else { return };
     if r.revision != app.session.revision {
         r.revision = app.session.revision;

@@ -41,7 +41,7 @@ fn copy(s: &mut Session, p: &Value) -> Result<Value> {
 pub(in crate::cmd) fn explicit_planes(p: &mut PlaneRef) {
     match p {
         PlaneRef::Origin { name } => {
-            if let Some(plane) = solidcore_record::Plane::named(name) {
+            if let Some(plane) = sketcore_record::Plane::named(name) {
                 *p = PlaneRef::Custom { plane };
             }
         }
@@ -310,7 +310,7 @@ mod tests {
 
     #[test]
     fn foreign_sketch_paste_preserves_world_position_in_a_placed_component() {
-        use solidcore_record::Vec3;
+        use sketcore_record::Vec3;
 
         let mut source = dimensioned_sketch();
         let arc = [Vec3::new(1., 0., 0.), Vec3::new(0., 0., 1.), Vec3::new(-1., 0., 0.)];

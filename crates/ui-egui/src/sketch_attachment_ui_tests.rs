@@ -250,8 +250,8 @@ fn actual_nested_second_placement_face_pick_keeps_target_and_author_paths() {
 
 #[test]
 fn nested_anchor_saved_fixed_conversion_preserves_rotated_second_author_plane() {
-    use solidcore_record::Plane;
-    use solidcore_record::Vec3;
+    use sketcore_record::Plane;
+    use sketcore_record::Vec3;
     use sketcraft_engine::doc::{EmbossFace, apply_point, apply_vector};
     let mut h = Harness::new();
     h.app.session.auto_project = false;

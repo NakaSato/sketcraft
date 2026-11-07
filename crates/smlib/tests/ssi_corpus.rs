@@ -11,7 +11,7 @@
 //!   cargo test -p sketcraft-smlib --test ssi_corpus -- --ignored --nocapture
 //! ```
 //!
-//! [`solidcore_global_intersect_at_1e_6`] runs every case through solidcore's
+//! [`sketcore_global_intersect_at_1e_6`] runs every case through sketcore's
 //! GlobalSurfaceIntersect (via `sketcraft_smlib::ssi`, as the corpus runner calls it) and checks
 //! that every case SMLib passed passes.
 
@@ -538,7 +538,7 @@ fn runner_output(
     b: &sketcraft_smlib::ssi::Surface,
     ms: f64,
 ) -> Outcome {
-    use solidcore_record::brep::Curve2;
+    use sketcore_record::brep::Curve2;
     use sketcraft_geom::brep::eval::CurveEval;
     use sketcraft_smlib::ssi::{CurveType, Surface};
     let r = match r {
@@ -617,12 +617,12 @@ fn global_intersect_scores() -> Vec<Score> {
     scores
 }
 
-/// solidcore passes exactly the cases [`GSI_1E6_PASS`] lists: a case that starts passing is
+/// sketcore passes exactly the cases [`GSI_1E6_PASS`] lists: a case that starts passing is
 /// added there, one that stops is a regression. The self-crossing curves (Viviani's figure eight,
-/// the crossing loops) are split at their crossings since solidcore's
+/// the crossing loops) are split at their crossings since sketcore's
 /// `ssi_split_curves_at_singular_points` (tangency-labs/solidcore#2110).
 #[test]
-fn solidcore_global_intersect_at_1e_6() {
+fn sketcore_global_intersect_at_1e_6() {
     let scores = global_intersect_scores();
     let passed: std::collections::BTreeSet<&str> = scores.iter().filter(|s| s.verdict == Verdict::Pass).map(|s| s.id.as_str()).collect();
     let listed: std::collections::BTreeSet<&str> = GSI_1E6_PASS.iter().copied().collect();

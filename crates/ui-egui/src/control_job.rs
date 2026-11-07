@@ -21,7 +21,7 @@
 //! file opened) the agent's command is refused, saying so, and nothing is applied.
 //!
 //! Done within the app's wait ([`crate::dialogs::APPLY_AT_ONCE`]), a request just runs, as
-//! before. Headless use, tests and the web build ([`SolveApp::apply_off_thread`] unset) run
+//! before. Headless use, tests and the web build ([`SketApp::apply_off_thread`] unset) run
 //! everything at once, and so does the app unless the preference is on (Preferences > AI,
 //! `agent_off_thread`, off by default).
 
@@ -33,7 +33,7 @@ use serde_json::{Value, json};
 
 use sketcraft_engine::doc::KeptResults;
 
-use crate::SolveApp;
+use crate::SketApp;
 use crate::control::ControlRequest;
 
 /// Areas whose commands only compute the design (no files written, nothing started outside the
@@ -181,17 +181,14 @@ impl ControlJob {
     }
 }
 
-fn label(app: &SolveApp, command: &str) -> String {
+fn label(app: &SketApp, command: &str) -> String {
     let language = crate::i18n::Locale::for_language(&app.preferences.language);
     language.label(sketcraft_engine::find_command(command).map_or(command, |c| c.label)).to_string()
 }
 
 /// Run `f` on a worker thread (with the request's folder scope), answering on the returned
 /// channel. `None` without threads (the web).
-fn spawn(
-    scope: Option<sketcraft_engine::io::vfs::PathScope>,
-    f: impl FnOnce() -> Option<Value> + Send + 'static,
-) -> Option<Receiver<Option<Value>>> {
+fn spawn(scope: Option<sketcraft_engine::io::vfs::PathScope>, f: impl FnOnce() -> Option<Value> + Send + 'static) -> Option<Receiver<Option<Value>>> {
     let (tx, rx) = std::sync::mpsc::channel();
     std::thread::Builder::new()
         .name("agent".into())
@@ -212,7 +209,7 @@ pub(crate) struct Steps {
 }
 
 impl Steps {
-    fn new(app: &SolveApp, request: &Value, commands: &[(String, Value)]) -> Arc<Steps> {
+    fn new(app: &SketApp, request: &Value, commands: &[(String, Value)]) -> Arc<Steps> {
         // A batch counts all its steps, also those after the ones computed ahead.
         let total = request.get("commands").and_then(Value::as_array).map_or(commands.len(), Vec::len).max(commands.len());
         Arc::new(Steps { now: AtomicUsize::new(0), labels: commands.iter().map(|(c, _)| label(app, c)).collect(), total })
@@ -229,11 +226,7 @@ impl Steps {
 
 /// Evaluate `commands` ahead on a copy of the session, on a worker (with the folder scope
 /// `request` names). What it computes is kept for the run here.
-fn evaluate_ahead(
-    app: &SolveApp,
-    request: &Value,
-    commands: Vec<(String, Value)>,
-) -> Option<(Receiver<Option<Value>>, Arc<KeptResults>, Arc<Steps>)> {
+fn evaluate_ahead(app: &SketApp, request: &Value, commands: Vec<(String, Value)>) -> Option<(Receiver<Option<Value>>, Arc<KeptResults>, Arc<Steps>)> {
     let scope = crate::control::request_scope(app, request).ok()?;
     let ahead = app.session.ahead();
     let kept = ahead.kept();
@@ -248,7 +241,7 @@ fn evaluate_ahead(
 
 /// Start computing a design change ahead, for the design as it is now.
 fn begin_ahead(
-    app: &SolveApp,
+    app: &SketApp,
     req: &ControlRequest,
     commands: Vec<(String, Value)>,
     tries: u8,
@@ -257,10 +250,10 @@ fn begin_ahead(
     Some((Work::Ahead { commands, doc: app.session.doc.clone(), revision: app.session.revision, tries, kept }, rx, steps))
 }
 
-impl SolveApp {
+impl SketApp {
     /// Run a control request here with what was computed ahead for it at hand ([`KeptResults`]):
     /// its features are found there rather than computed again on the window thread.
-    pub(crate) fn run_with_kept<R>(&mut self, kept: Option<Arc<KeptResults>>, run: impl FnOnce(&mut SolveApp) -> R) -> R {
+    pub(crate) fn run_with_kept<R>(&mut self, kept: Option<Arc<KeptResults>>, run: impl FnOnce(&mut SketApp) -> R) -> R {
         let keeps = kept.is_some();
         if keeps {
             self.session.model.keep(kept);
@@ -290,7 +283,7 @@ impl Ahead {
     /// Start evaluating the design changes of the `request` (`method`: an `engine.execute` or an
     /// `engine.batch`) the pointer acts out; `None` when it just runs once the pointer is there
     /// (not computed off the window thread, or nothing to compute).
-    pub(crate) fn begin(app: &SolveApp, method: &str, request: &Value) -> Option<Ahead> {
+    pub(crate) fn begin(app: &SketApp, method: &str, request: &Value) -> Option<Ahead> {
         app.apply_off_thread?;
         if !app.preferences.agent_off_thread || app.file_load.busy() || app.file_picker.is_some() {
             return None;
@@ -345,7 +338,7 @@ fn ahead_commands(method: &str, p: &Value) -> Vec<(String, Value)> {
 }
 
 /// Wait the app's wait for a worker: `Some(result)` when it finished within it.
-fn within_wait(app: &SolveApp, rx: &Receiver<Option<Value>>) -> Option<Option<Value>> {
+fn within_wait(app: &SketApp, rx: &Receiver<Option<Value>>) -> Option<Option<Value>> {
     let wait = app.apply_off_thread?;
     if wait.is_zero() {
         return None;
@@ -357,7 +350,7 @@ fn within_wait(app: &SolveApp, rx: &Receiver<Option<Value>>) -> Option<Option<Va
     }
 }
 
-impl SolveApp {
+impl SketApp {
     /// Since when an agent's design change has been computing off the window thread (ms), and
     /// its command.
     pub fn agent_computing(&self) -> Option<(f64, String)> {

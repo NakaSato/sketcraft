@@ -1,7 +1,7 @@
 //! Solid feature commands: extrude, revolve, fillet, chamfer, primitives, combine, move.
 
 use serde_json::{Value, json};
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 use sketcraft_doc::{
     AxisRef, Direction, Expr, Extent, FeatureKind, Operation, PointExpr, ProfileSel, RailFit, SweepOrientation, SweepRail, ThinSide, ThinWall,
     Touching, expr::Kind, point_expr,
@@ -1203,7 +1203,7 @@ fn thin_param(s: &Session, p: &Value, sketch: u64, cmd: &str) -> Result<ThinWall
 }
 
 /// The regions of a thin wall in its (solved) sketch, with the current parameter values.
-fn thin_regions(s: &Session, ss: &sketcraft_doc::SolvedSketch, thin: &ThinWall) -> std::result::Result<Vec<solidcore_record::Region2>, String> {
+fn thin_regions(s: &Session, ss: &sketcraft_doc::SolvedSketch, thin: &ThinWall) -> std::result::Result<Vec<sketcore_record::Region2>, String> {
     let length = |e: &str| s.doc.eval(&s.doc.with_design_unit(e, Kind::Length), Kind::Length).map_err(|e| e.to_string());
     let t = length(&thin.thickness)?;
     let (inside, outside) = match thin.side {
@@ -1212,7 +1212,7 @@ fn thin_regions(s: &Session, ss: &sketcraft_doc::SolvedSketch, thin: &ThinWall) 
         ThinSide::Outside => (0.0, t),
         ThinSide::TwoSides => (t, length(thin.thickness2.as_deref().unwrap_or("0"))?),
     };
-    let curves: Vec<Vec<solidcore_record::Seg2>> = thin
+    let curves: Vec<Vec<sketcore_record::Seg2>> = thin
         .curves
         .iter()
         .filter_map(|id| ss.sketch.curve_index(id))
@@ -2422,7 +2422,7 @@ pub(super) fn check_plane_name(name: &str, cmd: &str) -> Result<()> {
 
 /// What [`check_plane_name`] says about `name`, or `None` when a construction plane may take it.
 pub(crate) fn plane_name_problem(name: &str) -> Option<String> {
-    solidcore_record::Plane::named(name.trim()).map(|_| {
+    sketcore_record::Plane::named(name.trim()).map(|_| {
         format!("`{}` is reserved for an origin plane (XY, XZ, YZ, Top, Front, Right); give the construction plane another name", name.trim())
     })
 }
@@ -2433,10 +2433,10 @@ pub(crate) const PLANE_FORMS: &str =
 
 /// The plane an explicit plane object gives through `origin`, as [`plane_param`] reads it: from
 /// `x_dir` and `y_dir` when both are points, else from `normal`; `None` when they don't make one.
-pub(crate) fn explicit_plane(o: &Value, origin: Vec3) -> Option<solidcore_record::Plane> {
+pub(crate) fn explicit_plane(o: &Value, origin: Vec3) -> Option<sketcore_record::Plane> {
     match (o.get("x_dir").and_then(vec3), o.get("y_dir").and_then(vec3), o.get("normal").and_then(vec3)) {
-        (Some(x), Some(y), _) => solidcore_record::Plane::new(origin, x, y),
-        (_, _, Some(n)) => solidcore_record::Plane::from_normal(origin, n),
+        (Some(x), Some(y), _) => sketcore_record::Plane::new(origin, x, y),
+        (_, _, Some(n)) => sketcore_record::Plane::from_normal(origin, n),
         _ => None,
     }
 }
@@ -2454,7 +2454,7 @@ pub(super) fn plane_param(s: &Session, v: Option<&Value>, cmd: &str) -> Result<s
         None => Err(bad(cmd, format!("no plane `{r}` (a plane is {WANT})"))),
     };
     match v {
-        Some(Value::String(n)) if solidcore_record::Plane::named(n.trim()).is_some() => {
+        Some(Value::String(n)) if sketcore_record::Plane::named(n.trim()).is_some() => {
             if let Some(f) = s.doc.find_feature(n.trim())
                 && matches!(f.kind, FeatureKind::ConstructionPlane { .. })
             {
@@ -3079,11 +3079,7 @@ fn hidden_body_picked_at(s: &Session, p: Vec3, shown: &[String]) -> Option<Strin
 }
 
 /// The body, among those `keep` takes, with the face nearest `p` within its pick tolerance.
-fn body_with_face_at(
-    st: &sketcraft_doc::ModelState,
-    p: Vec3,
-    keep: impl Fn(&sketcraft_doc::ModelBody) -> bool,
-) -> Option<&sketcraft_doc::ModelBody> {
+fn body_with_face_at(st: &sketcraft_doc::ModelState, p: Vec3, keep: impl Fn(&sketcraft_doc::ModelBody) -> bool) -> Option<&sketcraft_doc::ModelBody> {
     st.bodies
         .iter()
         .filter(|b| !b.body.is_mesh() && keep(b))
@@ -3749,7 +3745,7 @@ mod corner_tests {
         // rational form): every point on the horn torus about its upright edge.
         let mut corners = 0;
         for f in &body.record().faces {
-            if !matches!(f.surface, solidcore_record::brep::Surface::RationalSpline { .. }) {
+            if !matches!(f.surface, sketcore_record::brep::Surface::RationalSpline { .. }) {
                 continue;
             }
             corners += 1;

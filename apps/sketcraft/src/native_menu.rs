@@ -6,7 +6,7 @@ use muda::{
     AboutMetadata, Menu, MenuEvent, MenuItem, PredefinedMenuItem, Submenu,
     accelerator::{Accelerator, Code, Modifiers},
 };
-use sketcraft_ui_egui::{SolveApp, toolbar::FileAction};
+use sketcraft_ui_egui::{SketApp, toolbar::FileAction};
 
 pub struct NativeMenu {
     menu: Menu,
@@ -18,7 +18,7 @@ pub struct NativeMenu {
 }
 
 impl NativeMenu {
-    pub fn new(app: &SolveApp, ctx: &egui::Context) -> muda::Result<Self> {
+    pub fn new(app: &SketApp, ctx: &egui::Context) -> muda::Result<Self> {
         let menu = Menu::new();
         let application = Submenu::new("SketCraft", true);
         let file = Submenu::new(app.tr("ui.file"), true);
@@ -128,7 +128,7 @@ impl NativeMenu {
         Ok(native)
     }
 
-    pub fn raw_input_hook(&mut self, app: &mut SolveApp, ctx: &egui::Context, raw: &mut egui::RawInput) {
+    pub fn raw_input_hook(&mut self, app: &mut SketApp, ctx: &egui::Context, raw: &mut egui::RawInput) {
         for event in self.events.try_iter().take(64) {
             if let Some((_, action)) = self.help_actions.iter().find(|(item, _)| item.id() == &event.id) {
                 sketcraft_ui_egui::help::run(app, ctx, action);
@@ -149,11 +149,11 @@ impl NativeMenu {
         }
     }
 
-    fn action_enabled(action: &FileAction, app: &SolveApp, ctx: &egui::Context) -> bool {
+    fn action_enabled(action: &FileAction, app: &SketApp, ctx: &egui::Context) -> bool {
         action.menu_enabled(app, ctx.egui_wants_keyboard_input())
     }
 
-    pub fn tick(&mut self, app: &mut SolveApp, ctx: &egui::Context) {
+    pub fn tick(&mut self, app: &mut SketApp, ctx: &egui::Context) {
         for (item, action) in &self.actions {
             let enabled = Self::action_enabled(action, app, ctx);
             if item.is_enabled() != enabled {
@@ -173,7 +173,7 @@ impl NativeMenu {
         }
     }
 
-    fn update_recent(&mut self, app: &SolveApp) -> muda::Result<()> {
+    fn update_recent(&mut self, app: &SketApp) -> muda::Result<()> {
         while self.recent.remove_at(0).is_some() {}
         self.actions.retain(|(_, action)| !matches!(action, FileAction::OpenRecent(_) | FileAction::ClearRecent));
         self.recent_paths = app.home.recent.iter().take(32).cloned().collect();

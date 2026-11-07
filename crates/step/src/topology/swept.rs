@@ -17,8 +17,8 @@
 use sketcraft_geom::prelude::*;
 use std::f64::consts::{FRAC_PI_2, TAU};
 
-use solidcore_record::Vec3;
-use solidcore_record::brep::{Curve as BCurve, Surface as BSurface};
+use sketcore_record::Vec3;
+use sketcore_record::brep::{Curve as BCurve, Surface as BSurface};
 
 use super::{MAX_NESTING, R, frame, map_bspline_curve, unsupported, v3};
 use crate::geom::{Axis1, Curve, P3, Placement, Surface};
@@ -609,7 +609,7 @@ fn canonical(s: &Surface, reversed: &mut bool) -> Option<BSurface> {
             let step_normal = k.cross(at - o).cross(cy * *radius);
             *reversed = step_normal.dot(cx) < 0.0;
             Some(BSurface::Torus {
-                frame: solidcore_record::brep::Frame { origin: p3(foot), x_axis: p3(x), y_axis: p3(k.cross(x)) },
+                frame: sketcore_record::brep::Frame { origin: p3(foot), x_axis: p3(x), y_axis: p3(k.cross(x)) },
                 major_radius: big,
                 minor_radius: *radius,
                 tube_start: 0.0,

@@ -8,7 +8,7 @@
 //! the preview draws.
 
 use serde_json::{Value, json};
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 use sketcraft_engine::Session;
 use sketcraft_engine::doc::{FeatureKind, PlaneRef};
 use sketcraft_engine::geom::prelude::*;

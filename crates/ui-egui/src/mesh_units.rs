@@ -11,7 +11,7 @@
 use serde_json::json;
 use sketcraft_engine::doc::point_cloud::UNITS;
 
-use crate::{SolveApp, file_load, ui_kit};
+use crate::{SketApp, file_load, ui_kit};
 
 /// A file waiting for its unit.
 #[derive(Clone, Debug, PartialEq)]
@@ -35,7 +35,7 @@ pub fn needs_unit(path: &str) -> bool {
 /// Ask for the unit of `path` before it is imported. Returns whether the file was held for the
 /// answer (the caller then stops: the dialog starts the import itself). The web app asks too, for
 /// the file a person uploaded, before its mesh is made.
-pub fn ask(app: &mut SolveApp, path: &str, insert: bool) -> bool {
+pub fn ask(app: &mut SketApp, path: &str, insert: bool) -> bool {
     if !needs_unit(path) {
         return false;
     }
@@ -46,7 +46,7 @@ pub fn ask(app: &mut SolveApp, path: &str, insert: bool) -> bool {
 /// Insert Mesh was chosen and `path` is a PLY: ask its unit, then insert it as a mesh (its faces)
 /// and not as the point cloud every other way of inserting a PLY makes. Returns whether it was
 /// held for the answer; another file goes on as the extension says.
-pub fn ask_ply_as_mesh(app: &mut SolveApp, path: &str) -> bool {
+pub fn ask_ply_as_mesh(app: &mut SketApp, path: &str) -> bool {
     if !sketcraft_engine::io::is_ply_path(path) {
         return false;
     }
@@ -65,7 +65,7 @@ fn unit_at(choice: usize) -> &'static str {
 }
 
 /// The dialog, while a file waits for its unit.
-pub fn show(app: &mut SolveApp, ctx: &egui::Context) {
+pub fn show(app: &mut SketApp, ctx: &egui::Context) {
     let Some(mut ask) = app.mesh_units.clone() else { return };
     let file = std::path::Path::new(&ask.path).file_name().map(|n| n.to_string_lossy().to_string()).unwrap_or_else(|| ask.path.clone());
     // The symbols themselves (mm, cm, m, in, ft), as everywhere else units are chosen.
@@ -111,7 +111,7 @@ mod tests {
 
     #[test]
     fn a_ply_asks_only_when_it_is_inserted_as_a_mesh() {
-        let mut app = SolveApp::new(sketcraft_engine::Session::default(), Default::default());
+        let mut app = SketApp::new(sketcraft_engine::Session::default(), Default::default());
         // Open and Insert keep sending a PLY to the point cloud: no dialog.
         assert!(!ask(&mut app, "scan.ply", true) && !ask(&mut app, "scan.PLY", false));
         assert!(app.mesh_units.is_none());
@@ -131,7 +131,7 @@ mod tests {
 
     #[test]
     fn an_stl_waits_for_its_unit_and_the_control_channel_does_not() {
-        let mut app = SolveApp::new(sketcraft_engine::Session::default(), Default::default());
+        let mut app = SketApp::new(sketcraft_engine::Session::default(), Default::default());
         file_load::begin(&mut app, "part.stl", true);
         let ask = app.mesh_units.clone().expect("asked");
         assert_eq!((ask.path.as_str(), ask.insert, unit_at(ask.choice)), ("part.stl", true, "mm"));

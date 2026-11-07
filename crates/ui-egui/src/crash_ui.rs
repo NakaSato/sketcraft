@@ -3,7 +3,7 @@
 
 use sketcraft_engine::crash::{self, Summary};
 
-use crate::SolveApp;
+use crate::SketApp;
 use crate::ui_kit;
 
 #[derive(Default)]
@@ -59,7 +59,7 @@ fn report_heading(r: &Summary) -> String {
 
 /// The host found these new reports at startup: tell the user about real crashes (recovered
 /// kernel errors stay quiet; they are listed in the window).
-pub fn announce(app: &mut SolveApp, fresh: &[Summary]) {
+pub fn announce(app: &mut SketApp, fresh: &[Summary]) {
     let crashes = fresh.iter().filter(|r| r.kind != "kernel_panic_recovered").count();
     if crashes == 0 {
         return;
@@ -70,7 +70,7 @@ pub fn announce(app: &mut SolveApp, fresh: &[Summary]) {
     app.set_status(locale.text("crash.previous_session"), true);
 }
 
-pub fn show(app: &mut SolveApp, ctx: &egui::Context) {
+pub fn show(app: &mut SketApp, ctx: &egui::Context) {
     if !app.crashes.open {
         return;
     }
@@ -169,7 +169,7 @@ pub fn show(app: &mut SolveApp, ctx: &egui::Context) {
 }
 
 /// Help > Crash Reports…
-pub fn open(app: &mut SolveApp) {
+pub fn open(app: &mut SketApp) {
     app.crashes.open = true;
     app.crashes.note.clear();
     app.crashes.refresh();

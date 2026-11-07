@@ -23,7 +23,7 @@ use egui::{Color32, Sense, vec2};
 use serde_json::{Value, json};
 use sketcraft_engine::slicers::{self, Slicer};
 
-use crate::SolveApp;
+use crate::SketApp;
 use crate::dialogs::{Kind, form_row};
 use crate::selection::{BODIES, PLANAR_FACES, SelInput};
 use crate::theme::Tokens;
@@ -123,7 +123,7 @@ impl SlicerMenu {
 }
 
 /// The dialog for `file.save_mesh` or `file.send_to_slicer`, with the choices of last time.
-pub fn start(app: &SolveApp, id: &str) -> Option<(Kind, Vec<SelInput>)> {
+pub fn start(app: &SketApp, id: &str) -> Option<(Kind, Vec<SelInput>)> {
     let open = match id {
         "file.save_mesh" => false,
         "file.send_to_slicer" | "file.open_in_easyprint" => true,
@@ -146,7 +146,7 @@ pub fn start(app: &SolveApp, id: &str) -> Option<(Kind, Vec<SelInput>)> {
 }
 
 /// Send to Slicer needs a way to start a program (a browser has none) or a way to reach EasyPrint.
-pub fn available(app: &SolveApp) -> bool {
+pub fn available(app: &SketApp) -> bool {
     app.services.pick_program.is_some() || crate::easyprint_ui::available(app)
 }
 
@@ -177,7 +177,7 @@ fn spawn_wait(
 
 /// Run `file.send_to_slicer` and report what happened. A slicer that has to be started first is
 /// started and waited for in the background.
-fn send_to_slicer(app: &mut SolveApp, params: Value) {
+fn send_to_slicer(app: &mut SketApp, params: Value) {
     let _language = crate::i18n::scope(&app.preferences.language);
     if let Some(wait) = &app.slicer_wait {
         // Whatever was picked this time (another slicer, other bodies): nothing else is sent.
@@ -196,7 +196,7 @@ fn send_to_slicer(app: &mut SolveApp, params: Value) {
 }
 
 /// The command started the slicer on its own (`result.starting`): wait for it in the background.
-fn begin_wait(app: &mut SolveApp, params: Value, result: &Value) {
+fn begin_wait(app: &mut SketApp, params: Value, result: &Value) {
     let name = result.get("starting").and_then(Value::as_str).unwrap_or_default().to_string();
     let path = result.get("path").and_then(Value::as_str).unwrap_or_default().to_string();
     let spec = params["slicer"].as_str().unwrap_or_default().to_string();
@@ -215,7 +215,7 @@ fn begin_wait(app: &mut SolveApp, params: Value, result: &Value) {
 }
 
 /// Per frame: when the slicer being waited for is ready, send the file; when the wait ran out, say so.
-pub fn tick_wait(app: &mut SolveApp, ctx: &egui::Context) {
+pub fn tick_wait(app: &mut SketApp, ctx: &egui::Context) {
     use std::sync::mpsc::TryRecvError;
     let Some(wait) = app.slicer_wait.as_ref() else { return };
     let ready = match wait.done.try_recv() {
@@ -249,7 +249,7 @@ pub fn tick_wait(app: &mut SolveApp, ctx: &egui::Context) {
 
 /// Open the dialog with `format` (`stl`, `3mf` or `3mf-tagged`) chosen, whatever was used last:
 /// File › Export STL… and Export 3MF…. The user can still change it in the dialog.
-pub fn start_with_format(app: &mut SolveApp, format: &str) {
+pub fn start_with_format(app: &mut SketApp, format: &str) {
     app.start("file.save_mesh");
     if let Some(index) = FORMATS.iter().position(|f| f.1 == format)
         && let Some(Kind::SaveMesh(k)) = app.dialog.as_mut().map(|d| &mut d.kind)
@@ -317,7 +317,7 @@ fn paint_icon(ui: &egui::Ui, rect: egui::Rect, tex: Option<egui::TextureId>, nam
 }
 
 /// Every body of the design, in model order; with `visible`, only the bodies the viewport shows.
-pub(crate) fn body_picks(app: &SolveApp, visible: bool) -> Vec<Sel> {
+pub(crate) fn body_picks(app: &SketApp, visible: bool) -> Vec<Sel> {
     let st = crate::open_meshing::session_world(&app.session);
     let shown = |name: &str| !visible || app.session.body_visible(name);
     st.bodies.iter().filter(|b| shown(&b.name)).map(|b| Sel::Body { name: b.name.clone() }).collect()
@@ -326,7 +326,7 @@ pub(crate) fn body_picks(app: &SolveApp, visible: bool) -> Vec<Sel> {
 /// Keep the Print face input and the design in step: it holds the print face of each body being
 /// sent. A face picked into it becomes the print face of its body, in place of the one it had; a
 /// face taken out of it clears its body's. When the bodies change, it shows their print faces.
-fn sync_print_face(app: &mut SolveApp, k: &mut SaveMesh, inputs: &mut [SelInput]) {
+fn sync_print_face(app: &mut SketApp, k: &mut SaveMesh, inputs: &mut [SelInput]) {
     let bodies = crate::selection::items(inputs, 0).body_names();
     let Some(input) = inputs.get_mut(1) else { return };
     match k.shown.take() {
@@ -364,7 +364,7 @@ fn sync_print_face(app: &mut SolveApp, k: &mut SaveMesh, inputs: &mut [SelInput]
 }
 
 /// The rows after the Bodies input; true when Enter was pressed in a field.
-pub fn rows(app: &mut SolveApp, ui: &mut egui::Ui, k: &mut SaveMesh, inputs: &mut [SelInput]) -> bool {
+pub fn rows(app: &mut SketApp, ui: &mut egui::Ui, k: &mut SaveMesh, inputs: &mut [SelInput]) -> bool {
     if k.open {
         sync_print_face(app, k, inputs);
     }
@@ -414,7 +414,7 @@ pub fn rows(app: &mut SolveApp, ui: &mut egui::Ui, k: &mut SaveMesh, inputs: &mu
     false
 }
 
-fn slicer_combo(app: &mut SolveApp, ui: &mut egui::Ui, k: &mut SaveMesh) {
+fn slicer_combo(app: &mut SketApp, ui: &mut egui::Ui, k: &mut SaveMesh) {
     let entries = app.slicer_menu.entries();
     let ctx = ui.ctx().clone();
     let current = entries.iter().find(|e| e.key == k.slicer);
@@ -528,7 +528,7 @@ fn slicer_combo(app: &mut SolveApp, ui: &mut egui::Ui, k: &mut SaveMesh) {
 }
 
 /// Put a program the user picked at the top of the list (and keep it).
-fn add_custom(app: &mut SolveApp, path: &str) -> Result<(), String> {
+fn add_custom(app: &mut SketApp, path: &str) -> Result<(), String> {
     if slicers::custom(path).is_none() {
         return Err(crate::i18n::format("ui.not_a_program", &[("path", path)]));
     }
@@ -585,7 +585,7 @@ pub fn button(k: &SaveMesh) -> &'static str {
 
 /// Save: ask for a file name and write the file. Send: write it to the slicer folder and start the
 /// slicer with it, with no file dialog.
-pub fn run(app: &mut SolveApp, k: &SaveMesh, inputs: &[SelInput]) -> Result<(), String> {
+pub fn run(app: &mut SketApp, k: &SaveMesh, inputs: &[SelInput]) -> Result<(), String> {
     let (_, params) = commands(k, inputs)?.into_iter().next().ok_or("nothing to save")?;
     if k.open {
         app.preferences.send_slicer = k.slicer.clone();
@@ -610,7 +610,7 @@ pub fn run(app: &mut SolveApp, k: &SaveMesh, inputs: &[SelInput]) -> Result<(), 
 }
 
 /// Run `file.save_mesh` into `path` and report what happened.
-fn save(app: &mut SolveApp, mut params: Value, path: &str) {
+fn save(app: &mut SketApp, mut params: Value, path: &str) {
     // Runs from the file picker's answer, outside the frame's language scope.
     let _language = crate::i18n::scope(&app.preferences.language);
     params["path"] = json!(path);
@@ -619,7 +619,7 @@ fn save(app: &mut SolveApp, mut params: Value, path: &str) {
 }
 
 /// The status line after a save or a send.
-fn report(app: &mut SolveApp, result: &Value) {
+fn report(app: &mut SketApp, result: &Value) {
     let path = result.get("path").and_then(Value::as_str).unwrap_or_default();
     match result.get("slicer_error").and_then(Value::as_str) {
         Some(e) => app.set_status(e.to_string(), true),
@@ -650,7 +650,7 @@ mod tests {
 
     #[test]
     fn without_a_program_dialog_send_to_slicer_is_unavailable_and_starts_nothing() {
-        let mut app = SolveApp::new(sketcraft_engine::Session::default(), Default::default());
+        let mut app = SketApp::new(sketcraft_engine::Session::default(), Default::default());
         assert!(app.services.pick_program.is_none());
         assert!(!available(&app));
         app.preferences.send_slicer = "prusa".into();
@@ -664,7 +664,7 @@ mod tests {
     /// An app with a box in it, `fake-slicer` (a script that writes its arguments to `seen`) among the
     /// user's programs, and the parameters Send to Slicer would send.
     #[cfg(unix)]
-    fn app_with_fake_slicer(tag: &str) -> (SolveApp, std::path::PathBuf, Value) {
+    fn app_with_fake_slicer(tag: &str) -> (SketApp, std::path::PathBuf, Value) {
         use std::os::unix::fs::PermissionsExt;
         let dir = std::env::temp_dir().join(format!("sketcraft-slicer-wait-{tag}-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&dir);
@@ -672,7 +672,7 @@ mod tests {
         let (script, seen) = (dir.join("fake-slicer"), dir.join("seen"));
         std::fs::write(&script, format!("#!/bin/sh\necho \"$@\" >> {}\n", seen.display())).unwrap();
         std::fs::set_permissions(&script, std::fs::Permissions::from_mode(0o755)).unwrap();
-        let mut app = SolveApp::new(sketcraft_engine::Session::default(), Default::default());
+        let mut app = SketApp::new(sketcraft_engine::Session::default(), Default::default());
         app.run("solid.box", json!({"length": 10, "width": 10, "height": 10, "body_name": "Part"})).unwrap();
         app.preferences.custom_slicers = vec![script.to_string_lossy().into_owned()];
         let params = json!({"slicer": script, "bodies": ["Part"], "wait": "no"});
@@ -753,7 +753,7 @@ mod tests {
 
     #[test]
     fn a_started_slicer_that_can_not_be_found_again_is_reported() {
-        let mut app = SolveApp::new(sketcraft_engine::Session::default(), Default::default());
+        let mut app = SketApp::new(sketcraft_engine::Session::default(), Default::default());
         let result = json!({"starting": "Ghost Slicer", "path": "/tmp/part.3mf"});
         begin_wait(&mut app, json!({"slicer": "no such slicer anywhere", "bodies": ["Part"]}), &result);
         assert!(app.slicer_wait.is_none());
@@ -809,7 +809,7 @@ mod tests {
         let (script, seen) = (folder.join("PrusaSlicer"), dir.join("seen"));
         std::fs::write(&script, format!("#!/bin/sh\necho \"$@\" >> {}\n", seen.display())).unwrap();
         std::fs::set_permissions(&script, std::fs::Permissions::from_mode(0o755)).unwrap();
-        let mut app = SolveApp::new(sketcraft_engine::Session::default(), Default::default());
+        let mut app = SketApp::new(sketcraft_engine::Session::default(), Default::default());
         app.run("solid.box", json!({"length": 10, "width": 10, "height": 10, "body_name": "Part"})).unwrap();
         let spec = script.to_string_lossy().into_owned();
         app.preferences.custom_slicers = vec![spec.clone()];
@@ -974,7 +974,7 @@ mod tests {
         h.settle();
         // A click on the face of `body` at `point` in the Print face input; that face's index.
         let pick = |h: &mut crate::scenario::Harness, body: &str, point: [f64; 3]| {
-            let p = solidcore_record::Vec3::new(point[0], point[1], point[2]);
+            let p = sketcore_record::Vec3::new(point[0], point[1], point[2]);
             let index = sketcraft_engine::doc::appearance::face_index_at(h.app.session.world_state().unwrap().body(body).unwrap(), p).unwrap();
             let d = h.app.dialog.as_mut().unwrap();
             d.active = 1;

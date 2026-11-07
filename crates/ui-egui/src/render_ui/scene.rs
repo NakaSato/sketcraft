@@ -1,7 +1,7 @@
 //! Render scene content in the shared Browser host and row painter.
 use super::{ImageMethod, RenderSelection, cpu, hdr, inspector, setups, studio};
 use crate::{
-    SolveApp,
+    SketApp,
     browser::{self, Row},
     context_menu::{self, Item},
     theme::Tokens,
@@ -21,7 +21,7 @@ pub(crate) struct Decoration {
     pub count: String,
 }
 
-pub(crate) fn decoration(app: &SolveApp, names: &[String]) -> Decoration {
+pub(crate) fn decoration(app: &SketApp, names: &[String]) -> Decoration {
     if !super::active(app) {
         return Decoration::default();
     }
@@ -42,7 +42,7 @@ pub(crate) fn decoration(app: &SolveApp, names: &[String]) -> Decoration {
     }
 }
 
-fn object_look(app: &SolveApp, body: &ModelBody) -> Option<Look> {
+fn object_look(app: &SketApp, body: &ModelBody) -> Option<Look> {
     let face = app.session.selection.iter().rev().find_map(|s| match s {
         Sel::Face { body: name, index, .. } if name == &body.name => Some(*index),
         _ => None,
@@ -50,22 +50,22 @@ fn object_look(app: &SolveApp, body: &ModelBody) -> Option<Look> {
     face.map_or_else(|| app.session.doc.model_display_look(body), |face| app.session.doc.model_face_look(body, face))
 }
 
-pub(crate) fn same_look(app: &SolveApp, names: &[String]) -> bool {
+pub(crate) fn same_look(app: &SketApp, names: &[String]) -> bool {
     let state = crate::open_meshing::session_world(&app.session);
     let mut looks = names.iter().filter_map(|name| state.body(name)).map(|body| app.session.doc.model_display_look(body));
     let Some(first) = looks.next() else { return false };
     looks.all(|look| look == first)
 }
 
-fn look_name(app: &SolveApp, look: Option<&Look>) -> String {
+fn look_name(app: &SketApp, look: Option<&Look>) -> String {
     look.map_or_else(|| app.tr("render.tree_default").into(), |look| look.name.clone())
 }
-fn look_color(app: &SolveApp, body: &ModelBody, look: Option<&Look>) -> Color32 {
+fn look_color(app: &SketApp, body: &ModelBody, look: Option<&Look>) -> Color32 {
     let color = look.map(|l| l.color).or_else(|| app.session.doc.body_color(body).map(|c| c.map(|v| (v.clamp(0.0, 1.0) * 255.0).round() as u8)));
     color.map_or(Tokens::get().body, |rgb| crate::theme::srgb(rgb.map(|channel| f32::from(channel) / 255.0)))
 }
 
-fn section(app: &mut SolveApp, ui: &mut egui::Ui, key: &str) -> bool {
+fn section(app: &mut SketApp, ui: &mut egui::Ui, key: &str) -> bool {
     let id = format!("render:tree:{key}");
     let open = browser::is_open(app, &id, true);
     let label = app.tr(&format!("render.tree_{key}")).to_string();
@@ -123,12 +123,12 @@ fn section(app: &mut SolveApp, ui: &mut egui::Ui, key: &str) -> bool {
     open
 }
 
-fn select(app: &mut SolveApp, kind: &str, id: Option<&str>) {
+fn select(app: &mut SketApp, kind: &str, id: Option<&str>) {
     let params = id.map_or_else(|| json!({"kind":kind}), |id| json!({"kind":kind,"id":id}));
     let _ = app.run("view.render_select", params);
 }
 
-pub(crate) fn light_types(app: &SolveApp) -> Vec<&'static str> {
+pub(crate) fn light_types(app: &SketApp) -> Vec<&'static str> {
     super::light::rows(app)
         .unwrap_or_default()
         .iter()
@@ -141,7 +141,7 @@ pub(crate) fn light_types(app: &SolveApp) -> Vec<&'static str> {
         })
         .collect()
 }
-pub(crate) fn environment(app: &SolveApp) -> (String, String) {
+pub(crate) fn environment(app: &SketApp) -> (String, String) {
     let view = &app.render_workspace.view;
     if view.method == ImageMethod::GpuRaytrace && view.studio.environment == studio::Environment::None && view.studio.lighting_enabled {
         // An explicit constant, including black, is not the implicit studio.
@@ -179,7 +179,7 @@ pub(crate) fn environment(app: &SolveApp) -> (String, String) {
     )
 }
 
-pub(crate) fn sections(app: &mut SolveApp, ui: &mut egui::Ui) {
+pub(crate) fn sections(app: &mut SketApp, ui: &mut egui::Ui) {
     setups::refresh_dirty(app);
     let (source, _detail) = environment(app);
     let open = browser::is_open(app, "render:tree:environment", true);
@@ -301,7 +301,7 @@ pub(crate) fn sections(app: &mut SolveApp, ui: &mut egui::Ui) {
     }
 }
 
-pub(crate) fn output(app: &mut SolveApp, ui: &mut egui::Ui) {
+pub(crate) fn output(app: &mut SketApp, ui: &mut egui::Ui) {
     let (size, format) = super::output_summary(app);
     let subtitle = format!("{size} · {format}");
     let row = browser::draw_row(
@@ -355,7 +355,7 @@ pub(crate) struct LookGroup {
     pub objects: Vec<String>,
 }
 
-pub(crate) fn groups(app: &SolveApp) -> Vec<LookGroup> {
+pub(crate) fn groups(app: &SketApp) -> Vec<LookGroup> {
     let mut groups: Vec<LookGroup> = Vec::new();
     for body in &crate::open_meshing::session_world(&app.session).bodies {
         for look in app.session.doc.model_used_looks(body) {
@@ -370,7 +370,7 @@ pub(crate) fn groups(app: &SolveApp) -> Vec<LookGroup> {
     groups
 }
 
-pub(crate) fn wear_subtitle(app: &SolveApp) -> String {
+pub(crate) fn wear_subtitle(app: &SketApp) -> String {
     let count = app.render_workspace.view.studio.aging.len();
     if count == 0 {
         app.tr("render.wear_no_layers").into()
@@ -379,7 +379,7 @@ pub(crate) fn wear_subtitle(app: &SolveApp) -> String {
     }
 }
 
-fn wear(app: &mut SolveApp, ui: &mut egui::Ui) {
+fn wear(app: &mut SketApp, ui: &mut egui::Ui) {
     let subtitle = wear_subtitle(app);
     let row = browser::draw_row(
         ui,
@@ -403,7 +403,7 @@ fn wear(app: &mut SolveApp, ui: &mut egui::Ui) {
 }
 
 /// Returns true when the object section is closed or the By look lens drew its objects.
-pub(crate) fn objects(app: &mut SolveApp, ui: &mut egui::Ui, hover_bodies: &mut Vec<String>, hovered: &mut bool) -> bool {
+pub(crate) fn objects(app: &mut SketApp, ui: &mut egui::Ui, hover_bodies: &mut Vec<String>, hovered: &mut bool) -> bool {
     if app.tree.reveal.is_some() {
         app.tree.collapsed.remove("render:tree:objects");
     }
@@ -526,7 +526,7 @@ pub(crate) fn objects(app: &mut SolveApp, ui: &mut egui::Ui, hover_bodies: &mut 
     true
 }
 
-pub(crate) fn matches_query(app: &SolveApp, name: &str, look: &str) -> bool {
+pub(crate) fn matches_query(app: &SketApp, name: &str, look: &str) -> bool {
     let query = app.render_workspace.view.object_query.trim().to_lowercase();
     !app.render_workspace.view.search_objects || query.is_empty() || name.to_lowercase().contains(&query) || look.to_lowercase().contains(&query)
 }

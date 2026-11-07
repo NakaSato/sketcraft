@@ -9,7 +9,7 @@
 //! An end is tied when it is shared with another curve's end, joined to one by coincident
 //! constraints, or held on a curve (point on curve, midpoint).
 
-use solidcore_record::{Seg2, Vec2};
+use sketcore_record::{Seg2, Vec2};
 use sketcraft_geom::Aabb2;
 use sketcraft_geom::prelude::*;
 

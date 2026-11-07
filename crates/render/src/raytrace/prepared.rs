@@ -1,7 +1,7 @@
 //! Borrowed prepared-scene contract shared by bounded transport consumers.
 use super::{Bvh, Hit, MAX_DISTANCE_MM, Ray, Result, TraceError};
 use crate::{ProductScene, surface::OpaqueSurface};
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 use sketcraft_geom::prelude::*;
 
 #[derive(Clone, Copy)]

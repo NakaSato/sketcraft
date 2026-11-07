@@ -5,12 +5,12 @@
 use crate::selection::SelectionExt as _;
 use crate::ui_kit::{choice_row, expr_row};
 use serde_json::{Value, json};
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 use sketcraft_engine::Sel;
 use sketcraft_engine::doc::{Expr, Mat, RailFit, SweepOrientation, SweepRail};
 use sketcraft_engine::geom::prelude::*;
 
-use crate::SolveApp;
+use crate::SketApp;
 use crate::selection::{AXES, CURVES, EDGES, SelInput};
 
 /// The orientation choices, in combo order: perpendicular, parallel, a direction.
@@ -132,7 +132,7 @@ pub fn rail_fit_index(fit: RailFit) -> usize {
 
 /// The picked rails (each in the sketch its curves are in) and the fit (`fit`, an index into
 /// [`RAIL_FITS`]), added to `p`; whether any rail was picked.
-pub fn rail_params(app: &SolveApp, fit: usize, rails: [&[Sel]; 2], p: &mut Value) -> Result<bool, String> {
+pub fn rail_params(app: &SketApp, fit: usize, rails: [&[Sel]; 2], p: &mut Value) -> Result<bool, String> {
     let mut given = Vec::new();
     for sels in rails {
         let curves: Vec<String> = sels.curve_ids();
@@ -156,7 +156,7 @@ pub fn rail_params(app: &SolveApp, fit: usize, rails: [&[Sel]; 2], p: &mut Value
 /// scale when they change anything; with rails picked, the rails (each in the sketch its curves
 /// are in) and the fit instead. `picked` is the direction input's selection, `rails` the rail
 /// inputs'.
-pub fn params(app: &SolveApp, o: &SweepOpts, picked: Option<&Sel>, rails: [&[Sel]; 2], p: &mut Value) -> Result<(), String> {
+pub fn params(app: &SketApp, o: &SweepOpts, picked: Option<&Sel>, rails: [&[Sel]; 2], p: &mut Value) -> Result<(), String> {
     // Rails set the profile's turn and size: the other options don't apply.
     if rail_params(app, o.rail_fit, rails, p)? {
         return Ok(());

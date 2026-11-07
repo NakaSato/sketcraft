@@ -4,7 +4,7 @@ use super::image::{error, invalid, primary_ray};
 use super::prepared::PreparedScene;
 use super::{Hit, Ray, WorkBudget};
 use crate::job::{CancelToken, ImageRequest, RaytraceOptions, Result, denoise::Guide};
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 use sketcraft_geom::prelude::*;
 
 pub(super) struct Guides {

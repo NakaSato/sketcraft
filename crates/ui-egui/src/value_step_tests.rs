@@ -2,7 +2,7 @@ use egui::{Event, Key, Modifiers, MouseWheelUnit, TouchPhase, pos2, vec2};
 use serde_json::json;
 
 use super::*;
-use crate::SolveApp;
+use crate::SketApp;
 use crate::scenario::Harness;
 
 #[test]
@@ -72,7 +72,7 @@ fn anything_but_a_plain_number_is_left_as_typed() {
 struct Field {
     on: bool,
     ctx: egui::Context,
-    app: SolveApp,
+    app: SketApp,
     text: String,
     id: egui::Id,
     changed: bool,
@@ -91,7 +91,7 @@ impl Field {
 
     fn with(text: &str, on: bool) -> Self {
         let ctx = egui::Context::default();
-        let mut app = SolveApp::new(sketcraft_engine::Session::default(), Default::default());
+        let mut app = SketApp::new(sketcraft_engine::Session::default(), Default::default());
         crate::params_dialog::publish(&mut app, &ctx);
         let id = egui::Id::unique("value_step_test_field");
         let mut f = Self { on, ctx, app, text: text.into(), id, changed: false, rect: egui::Rect::NOTHING, scroll: egui::Id::NULL };
@@ -238,7 +238,7 @@ fn edge_flange(on: bool) -> Harness {
     for (id, p) in crate::dialogs::apply_commands(&h.app, &d).unwrap() {
         h.app.run(&id, p).unwrap();
     }
-    let edge = crate::dialogs::edge_sel(&h.app.session, solidcore_record::Vec3::new(50.0, 0.0, 2.5)).unwrap();
+    let edge = crate::dialogs::edge_sel(&h.app.session, sketcore_record::Vec3::new(50.0, 0.0, 2.5)).unwrap();
     h.app.session.selection = vec![edge];
     h.step(&json!({"start": "sheet.flange"})).unwrap();
     h.frames(6);

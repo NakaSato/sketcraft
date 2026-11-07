@@ -302,12 +302,12 @@ pub(crate) fn popup_state(ctx: &egui::Context) -> Option<(usize, bool)> {
 mod tests {
     use super::*;
     use crate::params_dialog::suggestions;
-    use crate::{SolveApp, params_dialog};
+    use crate::{SketApp, params_dialog};
     use serde_json::json;
 
     struct Editor {
         ctx: egui::Context,
-        app: SolveApp,
+        app: SketApp,
         text: String,
         id: egui::Id,
         accepted: bool,
@@ -317,7 +317,7 @@ mod tests {
     impl Editor {
         fn new(text: &str) -> Self {
             let ctx = crate::fonts::test_context();
-            let mut app = SolveApp::new(sketcraft_engine::Session::default(), Default::default());
+            let mut app = SketApp::new(sketcraft_engine::Session::default(), Default::default());
             for (name, value) in [("width", 40), ("width_extra", 50), ("wing", 20), ("wire", 10), ("radius", 10)] {
                 app.run("parameters.add", json!({"name":name,"expression":format!("{value} mm")})).unwrap();
             }
@@ -395,7 +395,7 @@ mod tests {
         let short_w = crate::scenario::rect_of("dialog:suggestions").map(|r| r.width()).unwrap_or(0.0);
 
         let ctx = crate::fonts::test_context();
-        let mut app = SolveApp::new(sketcraft_engine::Session::default(), Default::default());
+        let mut app = SketApp::new(sketcraft_engine::Session::default(), Default::default());
         let long = "Driver_MountHole_to_Cover_Shared_Base_Layout_Angle";
         app.run("parameters.add", json!({"name": long, "expression": "8 deg"})).unwrap();
         params_dialog::publish(&mut app, &ctx);

@@ -1,6 +1,6 @@
 //! Fillets and chamfers where a curved wall runs out into a flat face in a knife edge (#851).
 use crate::*;
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 use std::f64::consts::PI;
 
 const R_WALL: f64 = 21.0;
@@ -365,7 +365,7 @@ fn rounds_ending_in_a_sphere_of_any_size_never_panic() {
 /// The front's top edge rounded r 2, then the edge between that round and the arc wall (the
 /// middle of the arc top edge's tangent chain) at the round's own radius: the ball sits on the
 /// round's axis, fixed, and the plane square to the edge at its top end misses that centre, so
-/// no round ends there. solidcore refuses it as a collapsed offset (`NoRoomReason::
+/// no round ends there. sketcore refuses it as a collapsed offset (`NoRoomReason::
 /// OffsetCollapses`, solidcore#2431), naming 2 less its fit margin; the refusal says why.
 #[test]
 fn a_ball_as_wide_as_the_round_it_rolls_on_is_refused_saying_why() {
@@ -376,7 +376,7 @@ fn a_ball_as_wide_as_the_round_it_rolls_on_is_refused_saying_why() {
         other => panic!("{:?}", other.map(|b| b.face_count())),
     };
     assert!(why.contains("the ball is as wide as a face it rolls on, so its centre stays put and the round cannot end at the edge's end"), "{why}");
-    // 2 less solidcore's fit margin.
+    // 2 less sketcore's fit margin.
     let largest: f64 = why
         .split_once("the largest radius that fits is ")
         .and_then(|(_, n)| n.split_once(" mm"))

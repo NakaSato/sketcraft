@@ -6,12 +6,12 @@ use serde_json::json;
 use sketcraft_engine::Session;
 use sketcraft_engine::geom::prelude::*;
 
-use crate::SolveApp;
+use crate::SketApp;
 
 /// The whole app in a headless 1600 x 1000 window with the custom title bar.
 struct Win {
     ctx: egui::Context,
-    app: SolveApp,
+    app: SketApp,
     time: f64,
     /// The window's size in points; a test that changes it moves the viewport's layout.
     size: egui::Vec2,
@@ -19,7 +19,7 @@ struct Win {
 
 impl Win {
     fn new() -> Self {
-        let mut app = SolveApp::new(Session::default(), Default::default());
+        let mut app = SketApp::new(Session::default(), Default::default());
         app.custom_titlebar = true;
         let mut w = Win { ctx: crate::fonts::test_context(), app, time: 0.0, size: vec2(1600.0, 1000.0) };
         for _ in 0..3 {
@@ -203,9 +203,9 @@ fn update_links_names_the_design_it_reads_while_the_window_draws() {
         s.execute("file.save", &json!({"path": part, "cache": false})).unwrap();
         s.execute("inspect.measure", &json!({})).unwrap()["total"]["volume_mm3"].as_f64().unwrap()
     };
-    let volume = |app: &mut SolveApp| app.session.execute("inspect.measure", &json!({})).unwrap()["total"]["volume_mm3"].as_f64().unwrap();
+    let volume = |app: &mut SketApp| app.session.execute("inspect.measure", &json!({})).unwrap()["total"]["volume_mm3"].as_f64().unwrap();
     // The holes come through the link's exchange as surfaces of their own: a close match.
-    let near = |app: &mut SolveApp, v: f64| {
+    let near = |app: &mut SketApp, v: f64| {
         let got = volume(app);
         assert!((got - v).abs() < 1e-3 * v, "{got} mm³, not {v}");
     };
@@ -216,7 +216,7 @@ fn update_links_names_the_design_it_reads_while_the_window_draws() {
     h.app.run("file.save", json!({"path": case})).unwrap();
     near(&mut h.app, thin);
     let thick = save_part(12.0);
-    let until = |h: &mut crate::scenario::Harness, done: &dyn Fn(&SolveApp) -> bool| {
+    let until = |h: &mut crate::scenario::Harness, done: &dyn Fn(&SketApp) -> bool| {
         let began = std::time::Instant::now();
         while !done(&h.app) {
             assert!(began.elapsed() < std::time::Duration::from_secs(120), "Update Links went on");
@@ -268,7 +268,7 @@ fn reloading_a_point_cloud_runs_off_the_window_thread() {
     h.app.tree.cloud_panel = Some(crate::browser::CloudPanel::new(&h.app, id));
     h.frames(4);
     std::fs::write(&path, "0 0 0\n1 0 0\n2 0 0\n").unwrap();
-    let points = |app: &SolveApp| app.session.doc.point_clouds[0].len();
+    let points = |app: &SketApp| app.session.doc.point_clouds[0].len();
     let until_idle = |h: &mut crate::scenario::Harness| {
         let began = std::time::Instant::now();
         while !h.app.file_load.idle() {
@@ -347,7 +347,7 @@ fn a_file_load_is_checked_at_the_requests_own_level() {
     h.app.home.open = false;
     let id = h.app.run("pointcloud.insert", json!({"path": path})).unwrap()["cloud"].as_u64().unwrap();
     std::fs::write(&path, "0 0 0\n1 0 0\n2 0 0\n").unwrap();
-    let points = |app: &SolveApp| app.session.doc.point_clouds[0].len();
+    let points = |app: &SketApp| app.session.doc.point_clouds[0].len();
     let misspelt = |level: &str| json!({"command": "pointcloud.reload", "params": {"cloud": id, "clowd": 1}, "param_check": level});
 
     let (v, _) = h.call_queued("engine.execute", misspelt("loud"));
@@ -395,7 +395,7 @@ fn update_links_and_open_linked_design_ask_before_a_network_location() {
         // The same file under the crafted name, beside the design (a plain file name on Unix).
         std::fs::copy(&part, format!("{}/{crafted}", dir.display())).unwrap();
     };
-    let volume = |app: &mut SolveApp| app.session.execute("inspect.measure", &json!({})).unwrap()["total"]["volume_mm3"].as_f64().unwrap();
+    let volume = |app: &mut SketApp| app.session.execute("inspect.measure", &json!({})).unwrap()["total"]["volume_mm3"].as_f64().unwrap();
     save_part(5.0);
     let mut h = crate::scenario::Harness::new();
     h.app.home.open = false;
@@ -898,7 +898,7 @@ fn an_opened_design_comes_up_at_the_home_view() {
     // The view the design before it was left at: straight down, zoomed right in.
     w.app.cam.set_view(StandardView::Top);
     w.app.cam.distance = 12.0;
-    w.app.cam.target = solidcore_record::Vec3::new(50.0, -70.0, 3.0);
+    w.app.cam.target = sketcore_record::Vec3::new(50.0, -70.0, 3.0);
     // Opened from the Home screen, which covers the viewport while the design goes in: the
     // viewport is not drawn, so the layout a fit would be framed into is the one left over from
     // what was there before, which cannot frame anything.
@@ -958,7 +958,7 @@ fn an_opened_design_comes_up_at_the_home_view() {
 /// dialog, Messages names what wasn't read, and editing that feature says why it can't be edited.
 #[test]
 fn a_newer_design_opens_with_a_notice_and_no_dialog() {
-    let mut app = SolveApp::new(Session::default(), Default::default());
+    let mut app = SketApp::new(Session::default(), Default::default());
     let dir = scratch("newer_design");
     let mut design = Session::default();
     design.execute("solid.box", &json!({"length": 2, "width": 3, "height": 4})).unwrap();

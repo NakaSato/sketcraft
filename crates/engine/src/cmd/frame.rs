@@ -7,7 +7,7 @@ use sketcraft_geom::prelude::*;
 use std::collections::BTreeMap;
 
 use serde_json::{Value, json};
-use solidcore_record::{Loop2, Seg2, Vec2};
+use sketcore_record::{Loop2, Seg2, Vec2};
 use sketcraft_doc::expr::Kind;
 use sketcraft_doc::frame::{self, Anchor, MemberProfile, Profile, ProfileSpec};
 use sketcraft_doc::{FeatureKind, SketchId};

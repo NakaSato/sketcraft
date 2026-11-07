@@ -5,26 +5,26 @@
 use egui::{Pos2, Rect, Shape, vec2};
 use serde_json::json;
 
-use crate::SolveApp;
+use crate::SketApp;
 
 use crate::test_support::each_shape as each;
 
 /// The sample with Fillet1 failing (the plate made narrower than its fillets).
-fn failing_sample() -> SolveApp {
+fn failing_sample() -> SketApp {
     let mut s = sketcraft_engine::Session::default();
     s.run_script(&sketcraft_engine::sample::script()).unwrap();
     s.execute("parameters.change", &json!({"name": "width", "expression": "5 mm"})).unwrap();
-    SolveApp::new(s, crate::Services::default())
+    SketApp::new(s, crate::Services::default())
 }
 
 /// Each feature's name and whether it failed.
-fn features(app: &SolveApp) -> Vec<(String, bool)> {
+fn features(app: &SketApp) -> Vec<(String, bool)> {
     app.session.doc.features.iter().map(|f| (f.name.clone(), app.session.model.result(f.id).is_some_and(|r| r.error.is_some()))).collect()
 }
 
 /// The centres of the 10 to 12-point icon images one frame of `draw` paints: the failed-feature mark
 /// (the sample has no warnings, so every such image is an error mark).
-fn error_discs(app: &mut SolveApp, draw: fn(&mut SolveApp, &mut egui::Ui)) -> Vec<Pos2> {
+fn error_discs(app: &mut SketApp, draw: fn(&mut SketApp, &mut egui::Ui)) -> Vec<Pos2> {
     crate::scenario::clear_handles();
     let ctx = crate::fonts::test_context();
     let screen = Rect::from_min_size(Pos2::ZERO, vec2(1400.0, 900.0));
@@ -44,7 +44,7 @@ fn error_discs(app: &mut SolveApp, draw: fn(&mut SolveApp, &mut egui::Ui)) -> Ve
 }
 
 /// The features that have a disc where their mark goes (`at`: the mark's centre from the item's).
-fn marked(app: &mut SolveApp, draw: fn(&mut SolveApp, &mut egui::Ui), at: impl Fn(Pos2, Pos2) -> bool) -> Vec<(String, bool)> {
+fn marked(app: &mut SketApp, draw: fn(&mut SketApp, &mut egui::Ui), at: impl Fn(Pos2, Pos2) -> bool) -> Vec<(String, bool)> {
     let discs = error_discs(app, draw);
     let handles = crate::scenario::handles("timeline:");
     features(app)

@@ -7,7 +7,7 @@ use std::sync::Arc;
 use serde_json::{Value, json};
 use sketcraft_engine::doc::KeptResults;
 
-use crate::SolveApp;
+use crate::SketApp;
 use crate::ui_kit;
 
 /// Longest list of names the confirmation shows before "and n more".
@@ -24,7 +24,7 @@ pub struct Pending {
 
 /// What Delete acts on now: the selection (bodies not locked), plus the components picked in
 /// the browser (their occurrences).
-pub fn selection_params(app: &SolveApp) -> Value {
+pub fn selection_params(app: &SketApp) -> Value {
     use sketcraft_engine::Sel;
     let mut items: Vec<Sel> = Vec::new();
     for s in app.session.selection.iter().filter(|s| !matches!(s, Sel::Body { name } if app.session.visibility.locked_bodies.contains(name))) {
@@ -48,7 +48,7 @@ fn is_empty(p: &Value) -> bool {
     ["items", "occurrences", "components", "canvases", "joints"].iter().all(|k| p.get(*k).and_then(Value::as_array).is_none_or(|a| a.is_empty()))
 }
 
-fn shared_occurrences(app: &SolveApp, params: &Value) -> bool {
+fn shared_occurrences(app: &SketApp, params: &Value) -> bool {
     let explicit = params.get("occurrences").and_then(Value::as_array).into_iter().flatten().filter_map(Value::as_u64);
     let selected = params
         .get("items")
@@ -62,7 +62,7 @@ fn shared_occurrences(app: &SolveApp, params: &Value) -> bool {
 
 /// Delete what is selected (the Delete key). A selected sketch dimension or constraint glyph
 /// goes first, as before.
-pub fn delete_selection(app: &mut SolveApp) {
+pub fn delete_selection(app: &mut SketApp) {
     if crate::sketch3d::delete_selected(app) || crate::sketch_tools::delete_glyph(app) {
         return;
     }
@@ -77,12 +77,12 @@ pub fn delete_selection(app: &mut SolveApp) {
 }
 
 /// Whether Delete has nothing to act on: nothing selected, and no joint open in Edit Joint.
-pub fn nothing_to_delete(app: &SolveApp) -> bool {
+pub fn nothing_to_delete(app: &SketApp) -> bool {
     is_empty(&selection_params(app)) && edited_joint(app).is_none()
 }
 
 /// The joint the open Edit Joint dialog edits.
-fn edited_joint(app: &SolveApp) -> Option<u64> {
+fn edited_joint(app: &SketApp) -> Option<u64> {
     match app.dialog.as_ref().map(|d| &d.kind) {
         Some(crate::dialogs::Kind::Assembly(crate::dialogs_assembly::Asm::Joint(f))) => f.editing,
         _ => None,
@@ -90,7 +90,7 @@ fn edited_joint(app: &SolveApp) -> Option<u64> {
 }
 
 /// Why a joint cannot be deleted now (the history it changes is busy), if it cannot.
-fn joint_delete_blocked(app: &SolveApp) -> Option<&'static str> {
+fn joint_delete_blocked(app: &SketApp) -> Option<&'static str> {
     if app.dialog.is_some() {
         Some("Close the open dialog before deleting a joint")
     } else if app.tool.is_some() {
@@ -107,7 +107,7 @@ fn joint_delete_blocked(app: &SolveApp) -> Option<&'static str> {
 /// Delete `params` (as `selection.delete` takes them): at once, or after a confirmation when
 /// other features go with it or would fail. The dry run that finds out evaluates the history
 /// after what is deleted, so it may compute off the window thread (#2678).
-pub fn request(app: &mut SolveApp, params: Value) {
+pub fn request(app: &mut SketApp, params: Value) {
     let joints: Vec<u64> = params.get("joints").and_then(Value::as_array).into_iter().flatten().filter_map(Value::as_u64).collect();
     if !joints.is_empty() {
         // Deleting just the joint Edit Joint edits closes the dialog first, as its Cancel does.
@@ -132,7 +132,7 @@ pub fn request(app: &mut SolveApp, params: Value) {
 }
 
 /// [`request`] once its dry run's report is in.
-pub(crate) fn checked(app: &mut SolveApp, params: Value, report: Result<Value, String>, kept: Option<Arc<KeptResults>>) {
+pub(crate) fn checked(app: &mut SketApp, params: Value, report: Result<Value, String>, kept: Option<Arc<KeptResults>>) {
     let report = match report {
         Ok(r) => r,
         Err(e) => {
@@ -154,7 +154,7 @@ pub(crate) fn checked(app: &mut SolveApp, params: Value, report: Result<Value, S
 
 /// Delete for real. With the history rolled back it builds the history after the marker to see
 /// what the delete breaks: the dry run built it ahead, off the window thread, and `kept` it.
-fn run(app: &mut SolveApp, params: &Value, kept: Option<Arc<KeptResults>>) {
+fn run(app: &mut SketApp, params: &Value, kept: Option<Arc<KeptResults>>) {
     match app.run_with_kept(kept, |app| app.run("selection.delete", params.clone())) {
         Ok(r) => {
             app.tree.picked_components.clear();
@@ -169,7 +169,7 @@ fn run(app: &mut SolveApp, params: &Value, kept: Option<Arc<KeptResults>>) {
 }
 
 /// Answer the confirmation (also `ui.confirm`): delete, or keep everything.
-pub fn confirm(app: &mut SolveApp, accept: bool) -> bool {
+pub fn confirm(app: &mut SketApp, accept: bool) -> bool {
     let Some(p) = app.menu.confirm.take() else { return false };
     if accept {
         run(app, &p.params, p.kept);
@@ -178,7 +178,7 @@ pub fn confirm(app: &mut SolveApp, accept: bool) -> bool {
 }
 
 /// The confirmation card.
-pub fn show(app: &mut SolveApp, ctx: &egui::Context) {
+pub fn show(app: &mut SketApp, ctx: &egui::Context) {
     let Some(p) = app.menu.confirm.clone() else { return };
     let list = |k: &str| -> Vec<String> {
         p.report[k].as_array().map(|a| a.iter().filter_map(|x| x.as_str().map(str::to_string)).collect()).unwrap_or_default()

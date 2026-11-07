@@ -5,11 +5,11 @@
 
 use egui::{Pos2, Stroke};
 use serde_json::{Value, json};
-use solidcore_record::Vec2;
+use sketcore_record::Vec2;
 use sketcraft_engine::geom::prelude::*;
 use sketcraft_engine::sketch::Sketch;
 
-use crate::SolveApp;
+use crate::SketApp;
 use crate::tools::Tool;
 use crate::viewport::Proj;
 
@@ -54,7 +54,7 @@ impl LineChain {
 /// the end of the last segment still there, or to where it began (as lines: there is nothing to
 /// be tangent to), and ends if that point has gone too. Clicking on from a point that no longer
 /// exists would only be refused.
-pub fn rejoin(app: &SolveApp, t: &mut Tool) {
+pub fn rejoin(app: &SketApp, t: &mut Tool) {
     if t.cmd != LINE && !in_arc_mode(t) {
         return;
     }
@@ -124,7 +124,7 @@ fn can_switch(t: &Tool) -> bool {
 
 /// Per frame, with `pointer` free over the view (nothing held, no camera move): notes where it has
 /// been against the chain's last point, and switches after a rest there.
-pub fn follow_pointer(app: &mut SolveApp, ctx: &egui::Context, proj: &Proj, pointer: Option<Pos2>) {
+pub fn follow_pointer(app: &mut SketApp, ctx: &egui::Context, proj: &Proj, pointer: Option<Pos2>) {
     if !app.preferences.line_hover_tangent_arc || !app.tool.as_ref().is_some_and(can_switch) {
         return;
     }
@@ -169,7 +169,7 @@ pub fn follow_pointer(app: &mut SolveApp, ctx: &egui::Context, proj: &Proj, poin
 
 /// Lines to tangent arcs, or back. The chain's point and curve go across; the pointer has to leave
 /// the point before it can switch again.
-fn switch(app: &mut SolveApp) {
+fn switch(app: &mut SketApp) {
     let Some(old) = app.tool.as_ref() else { return };
     let to_arc = old.cmd == LINE;
     let next = if to_arc { crate::sketch_tools::tool_for(TANGENT_ARC) } else { Tool::for_command(LINE) };
@@ -184,7 +184,7 @@ fn switch(app: &mut SolveApp) {
 
 /// Right-click or Esc while drawing tangent arcs: the chain ends as a line chain does, and the Line
 /// tool stays out. False when the tool isn't that.
-pub fn finish(app: &mut SolveApp) -> bool {
+pub fn finish(app: &mut SketApp) -> bool {
     if !app.tool.as_ref().is_some_and(in_arc_mode) {
         return false;
     }
@@ -195,7 +195,7 @@ pub fn finish(app: &mut SolveApp) -> bool {
 
 /// A click while drawing tangent arcs: the arc, by the tangent arc command, tangent to the chain's
 /// last curve, its end the chain's new last point.
-pub fn place_arc(app: &mut SolveApp, tool: &mut Tool, end: &(Vec2, Option<String>)) {
+pub fn place_arc(app: &mut SketApp, tool: &mut Tool, end: &(Vec2, Option<String>)) {
     let (Some(start), Some(curve)) = (tool.pts.first().and_then(|p| p.1.clone()), tool.chain.curve.clone()) else { return };
     // On an existing point the arc ends on that point, so an outline closes. The other snaps
     // (a midpoint, a place on a curve) name no point: their coordinates.
@@ -239,7 +239,7 @@ pub(crate) fn shown_label(t: &Tool) -> Option<&'static str> {
 }
 
 /// The label next to the cursor (below the point's coordinates).
-pub fn paint_mode(app: &SolveApp, ui: &egui::Ui, painter: &egui::Painter, proj: &Proj) {
+pub fn paint_mode(app: &SketApp, ui: &egui::Ui, painter: &egui::Painter, proj: &Proj) {
     let Some((command, icon)) = app.tool.as_ref().and_then(shown_mode) else { return };
     let Some(pointer) = ui.input(|i| i.pointer.hover_pos()).filter(|p| proj.rect.contains(*p)) else { return };
     let tk = crate::theme::Tokens::view();

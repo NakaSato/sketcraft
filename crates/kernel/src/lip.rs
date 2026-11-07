@@ -3,8 +3,8 @@
 //! directly on the body's schema 4 record (the band's walls continue the walls below, which a
 //! boolean union can't join: their faces would coincide).
 
-use solidcore_record::brep::{Brep, Curve, Frame, Surface};
-use solidcore_record::{Loop2, Plane, Region2, Seg2, Vec3};
+use sketcore_record::brep::{Brep, Curve, Frame, Surface};
+use sketcore_record::{Loop2, Plane, Region2, Seg2, Vec3};
 use sketcraft_geom::Ring;
 use sketcraft_geom::prelude::*;
 

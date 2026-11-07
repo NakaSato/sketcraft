@@ -4,18 +4,18 @@ use serde_json::json;
 use sketcraft_engine::{Sel, sketch::SketchPatternKind};
 
 use crate::{
-    SolveApp,
+    SketApp,
     browser::{Row, draw_row},
 };
 
-pub(crate) fn has_patterns(app: &SolveApp, sketch: u64) -> bool {
+pub(crate) fn has_patterns(app: &SketApp, sketch: u64) -> bool {
     app.session.doc.sketch(sketch).is_ok_and(|sk| !sk.patterns.is_empty())
 }
 
 /// Shared by the parts browser and the vertical feature history. The stored document is the
 /// source, so rolled-back sketches retain their children without showing preview-only copies.
 /// `dim`: the sketch is hidden (or a placement above it), so its patterns fade with it.
-pub(crate) fn rows(app: &mut SolveApp, ui: &mut egui::Ui, sketch: u64, depth: usize, scope: &str, occurrence: Option<(u64, &[u64])>, dim: bool) {
+pub(crate) fn rows(app: &mut SketApp, ui: &mut egui::Ui, sketch: u64, depth: usize, scope: &str, occurrence: Option<(u64, &[u64])>, dim: bool) {
     let patterns: Vec<_> = app.session.doc.sketch(sketch).map(|sk| sk.patterns.clone()).unwrap_or_default();
     for pattern in patterns {
         let (name, icon) = match pattern.kind {

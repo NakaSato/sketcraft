@@ -1,4 +1,4 @@
-use solidcore_record::{Vec2, Vec3};
+use sketcore_record::{Vec2, Vec3};
 use sketcraft_kernel::measure;
 use sketcraft_sketch::{ConstraintKind, Sketch};
 

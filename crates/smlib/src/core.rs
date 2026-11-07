@@ -1,19 +1,19 @@
-//! The solidcore backend: one kernel for the process (SMLib's context is process-global too, and
+//! The sketcore backend: one kernel for the process (SMLib's context is process-global too, and
 //! some of its state, such as the fillet solver's latched step, lives for the whole process),
 //! every call under its lock and a panic guard.
 //!
-//! Upstream fixes ([`fixes`]) are solidcore's opt-in corrections of SMLib defects that the C++
+//! Upstream fixes ([`fixes`]) are sketcore's opt-in corrections of SMLib defects that the C++
 //! fork fixed in its own sources; each one turned on here says which fork commit it matches.
 
 use std::panic::{AssertUnwindSafe, catch_unwind};
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Mutex, PoisonError};
 
-use solidcore::geom::attribute::{AttributeStore, ObjectKey};
-use solidcore::geom::vector3d::Vec3;
-use solidcore::kernel::{CancelToken, Kernel, KernelOptions, Rng, UpstreamFixes};
-use solidcore::mass::integrator::properties::{PropertyAttributes, brep_volume};
-use solidcore::primitive::api_primitives as primitives;
+use sketcore::geom::attribute::{AttributeStore, ObjectKey};
+use sketcore::geom::vector3d::Vec3;
+use sketcore::kernel::{CancelToken, Kernel, KernelOptions, Rng, UpstreamFixes};
+use sketcore::mass::integrator::properties::{PropertyAttributes, brep_volume};
+use sketcore::primitive::api_primitives as primitives;
 
 use crate::{Error, Result};
 
@@ -56,19 +56,19 @@ mod trim_tests;
 pub(crate) use convert::{from_arrays, to_arrays};
 pub(crate) use measure::{area, bounds, check, classify_point, edge_face_distance, is_manifold_solid, mass_properties, solid_count};
 
-/// A solidcore body. Its own lock: solidcore's operations take `&mut Brep`, even to measure.
-pub(crate) struct Body(pub(crate) Mutex<solidcore::topology::Brep>);
+/// A sketcore body. Its own lock: sketcore's operations take `&mut Brep`, even to measure.
+pub(crate) struct Body(pub(crate) Mutex<sketcore::topology::Brep>);
 
 impl Body {
-    pub(crate) fn new(b: solidcore::topology::Brep) -> Body {
+    pub(crate) fn new(b: sketcore::topology::Brep) -> Body {
         Body(Mutex::new(b))
     }
 }
 
-/// The fixes this backend runs with: every one of solidcore's opt-in fixes of upstream SMLib
+/// The fixes this backend runs with: every one of sketcore's opt-in fixes of upstream SMLib
 /// defects (`UpstreamFixes`, each naming its record and issue), whether or not the C++ fork has it,
 /// unless it appears broken. A test checks none is left off but those in `HELD_BACK`, so moving the
-/// solidcore pin to a rev with a new flag fails until it is added here.
+/// sketcore pin to a rev with a new flag fails until it is added here.
 pub(crate) fn fixes() -> UpstreamFixes {
     let mut f = UpstreamFixes::default();
     f.fillet_retry_radius_as_first = true;
@@ -237,7 +237,7 @@ pub(crate) fn fixes() -> UpstreamFixes {
     f.fillet_half_degree_crease = true;
     f.fillet_split_edge_keeps_near_half = true;
     f.curve_loop_normal_from_area = true;
-    // The fork's commits in `SMLIB_REV` 2fc375f, ported to solidcore since.
+    // The fork's commits in `SMLIB_REV` 2fc375f, ported to sketcore since.
     f.fillet_cliff_overflow = true;
     f.fillet_3x2_tangent_side_edge_roles = true;
     f.offset_extension_as_itself = true;
@@ -396,7 +396,7 @@ pub(crate) fn fixes() -> UpstreamFixes {
 /// The fixes held off, each with the case and the numbers that show it broken: a volume or topology
 /// wrong against the analytic value, a check failure, a crash, sound geometry refused that builds
 /// without the flag, or a large slowdown. Differing from the C++ kernel is no such evidence: a fix
-/// the fork doesn't have stays on, and where solidcore builds what SMLib refuses, a result right
+/// the fork doesn't have stays on, and where sketcore builds what SMLib refuses, a result right
 /// against its closed form is a win.
 ///
 /// `fillet_refuse_rounds_breaking_through` (WR-707, solidcore#2311): sound geometry refused. With it
@@ -406,7 +406,7 @@ pub(crate) fn fixes() -> UpstreamFixes {
 /// (3350, its closed form), 1080-fillet-notched-block-top-outline-r8,
 /// 324-fillet-over-hole-cut-by-overlong-cylinder, 324-fillet-over-hole-overlap,
 /// 5158-fillet-adjacent-plate-edges-as-thick-as-plate and the sloped and equal-slope basin rims of
-/// #1080 and #5835. A fix under the same flag is in progress on solidcore.
+/// #1080 and #5835. A fix under the same flag is in progress on sketcore.
 #[cfg(test)]
 const HELD_BACK: &[&str] = &["fillet_refuse_rounds_breaking_through"];
 
@@ -428,7 +428,7 @@ fn fresh() -> Kernel {
 /// The kernels calls run on. The lock is only held to take or put back a kernel, never during a
 /// call: a call that runs long (or never returns) holds up nothing but its own body, so one
 /// design's long operation never delays another's. Calls one after another all get the same
-/// kernel; one that starts while another runs gets one of its own (solidcore keeps no global
+/// kernel; one that starts while another runs gets one of its own (sketcore keeps no global
 /// state, and a body's identities are valid only in the kernel that issued them, so any kernel
 /// takes any body).
 ///
@@ -501,19 +501,19 @@ pub(crate) fn hold_a_kernel() -> HeldKernel {
     HeldKernel(take_kernel())
 }
 
-/// Runs `f` on a kernel of its own. A panic in solidcore is caught: the kernel, which it may have
+/// Runs `f` on a kernel of its own. A panic in sketcore is caught: the kernel, which it may have
 /// left half-updated, is dropped and the call fails with [`Error::Internal`]. A token over this
 /// thread's work ([`crate::stop`]) stops it.
-pub(crate) fn run<T: dump::Answer>(call: &'static str, f: impl FnOnce(&mut Kernel) -> std::result::Result<T, solidcore::SolidError>) -> Result<T> {
+pub(crate) fn run<T: dump::Answer>(call: &'static str, f: impl FnOnce(&mut Kernel) -> std::result::Result<T, sketcore::SolidError>) -> Result<T> {
     run_on(call, &[], f)
 }
 
 thread_local! {
-    /// How many solidcore calls this thread is inside: a panic now is caught ([`run_on`]).
+    /// How many sketcore calls this thread is inside: a panic now is caught ([`run_on`]).
     static IN_CALL: std::cell::Cell<u32> = const { std::cell::Cell::new(0) };
 }
 
-/// Is this thread inside a solidcore call, whose panic [`run_on`] catches? (Crash reports mark such
+/// Is this thread inside a sketcore call, whose panic [`run_on`] catches? (Crash reports mark such
 /// a panic recovered.)
 pub(crate) fn in_call() -> bool {
     IN_CALL.with(std::cell::Cell::get) > 0
@@ -524,11 +524,11 @@ pub(crate) fn in_call() -> bool {
 pub(crate) fn run_on<T: dump::Answer>(
     call: &'static str,
     inputs: dump::Inputs<'_>,
-    f: impl FnOnce(&mut Kernel) -> std::result::Result<T, solidcore::SolidError>,
+    f: impl FnOnce(&mut Kernel) -> std::result::Result<T, sketcore::SolidError>,
 ) -> Result<T> {
     let stop = crate::stop::token();
     if stop.as_ref().is_some_and(CancelToken::is_cancelled) {
-        return Err(Error::Solidcore(format!("{call}: cancelled")));
+        return Err(Error::Sketcore(format!("{call}: cancelled")));
     }
     call_on(call, inputs, stop, f)
 }
@@ -538,16 +538,16 @@ fn call_on<T: dump::Answer>(
     call: &'static str,
     inputs: dump::Inputs<'_>,
     stop: Option<CancelToken>,
-    f: impl FnOnce(&mut Kernel) -> std::result::Result<T, solidcore::SolidError>,
+    f: impl FnOnce(&mut Kernel) -> std::result::Result<T, sketcore::SolidError>,
 ) -> Result<T> {
     let Some(mut k) = take_kernel() else {
         log::warn!(target: "smlib", "{call}: refused, {MOST_RUNNING} kernel calls are still running");
-        return Err(Error::Solidcore(format!("{call}: {MOST_RUNNING} kernel calls are still running")));
+        return Err(Error::Sketcore(format!("{call}: {MOST_RUNNING} kernel calls are still running")));
     };
     start_clean(&mut k);
     k.cancel = stop.clone();
     // A profiler span per call: where the kernel's time goes.
-    let _span = sketcraft_profile::span("solidcore", call);
+    let _span = sketcraft_profile::span("sketcore", call);
     let in_flight = dump::in_flight(call);
     struct Depth;
     impl Drop for Depth {
@@ -561,16 +561,16 @@ fn call_on<T: dump::Answer>(
     drop(depth);
     let r = match caught {
         Ok(Ok(v)) => Ok(v),
-        Ok(Err(e)) => Err(Error::Solidcore(format!("{call}: {e}"))),
+        Ok(Err(e)) => Err(Error::Sketcore(format!("{call}: {e}"))),
         Err(p) => {
             k = fresh();
             let why = p.downcast_ref::<&str>().map(|s| (*s).to_owned()).or_else(|| p.downcast_ref::<String>().cloned()).unwrap_or_default();
-            log::warn!(target: "smlib", "solidcore panicked in {call}: {why}");
+            log::warn!(target: "smlib", "sketcore panicked in {call}: {why}");
             Err(Error::Internal(format!("{call}: {why}")))
         }
     };
     drop(in_flight);
-    // Stopped, it is no failure to look into, and solidcore may have left the kernel part way.
+    // Stopped, it is no failure to look into, and sketcore may have left the kernel part way.
     if stop.is_some_and(|s| s.is_cancelled()) {
         put_kernel(None);
         return r;
@@ -589,11 +589,11 @@ fn call_on<T: dump::Answer>(
 }
 
 /// A call the capi checks for `SM_SUCCESS`, treating any other status as no answer: an error
-/// that stands for an SMLib status exactly ([`SolidError::sm_status`](solidcore::SolidError::sm_status),
-/// solidcore#1452) is `None`. Every other solidcore error
+/// that stands for an SMLib status exactly ([`SolidError::sm_status`](sketcore::SolidError::sm_status),
+/// solidcore#1452) is `None`. Every other sketcore error
 /// (unported code, invalid input to an adapter, a missing record...) is not a status the C++
 /// path returns, so it fails the call instead of hiding as a skipped entity.
-pub(crate) fn answer<T>(r: std::result::Result<T, solidcore::SolidError>) -> std::result::Result<Option<T>, solidcore::SolidError> {
+pub(crate) fn answer<T>(r: std::result::Result<T, sketcore::SolidError>) -> std::result::Result<Option<T>, sketcore::SolidError> {
     match r {
         Ok(v) => Ok(Some(v)),
         Err(e) if e.sm_status().is_some() => Ok(None),
@@ -605,13 +605,13 @@ pub(crate) fn answer<T>(r: std::result::Result<T, solidcore::SolidError>) -> std
 pub(crate) fn with_body<T: dump::Answer>(
     call: &'static str,
     body: &Body,
-    f: impl FnOnce(&mut Kernel, &mut solidcore::topology::Brep) -> std::result::Result<T, solidcore::SolidError>,
+    f: impl FnOnce(&mut Kernel, &mut sketcore::topology::Brep) -> std::result::Result<T, sketcore::SolidError>,
 ) -> Result<T> {
     // A body a panic interrupted may be half-edited: it is never used again.
     if body.0.is_poisoned() {
         return Err(Error::Internal(format!("{call}: the body was left unfinished by an earlier panic")));
     }
-    // No token stops it: stopped part way, solidcore may leave the body it borrows half-changed.
+    // No token stops it: stopped part way, sketcore may leave the body it borrows half-changed.
     call_on(call, &[("brep", body)], None, |k| f(k, &mut body.0.lock().unwrap_or_else(PoisonError::into_inner)))
 }
 

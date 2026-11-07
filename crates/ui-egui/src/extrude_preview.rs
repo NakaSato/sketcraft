@@ -4,11 +4,11 @@ use std::collections::HashMap;
 use std::sync::Arc;
 
 use serde_json::Value;
-use solidcore_record::{Seg2, Vec3};
+use sketcore_record::{Seg2, Vec3};
 use sketcraft_engine::{Sel, doc::Document, geom::Aabb3};
 
 use crate::{
-    SolveApp,
+    SketApp,
     gpu::GpuScene,
     preview::{Built, Colors},
 };
@@ -38,7 +38,7 @@ impl StraightPreview {
     pub(crate) fn clear(&mut self) {
         self.cached = None;
     }
-    pub(crate) fn compute(&mut self, app: &SolveApp, commands: &[(String, Value)], colors: Colors) -> Option<Result<Built, String>> {
+    pub(crate) fn compute(&mut self, app: &SketApp, commands: &[(String, Value)], colors: Colors) -> Option<Result<Built, String>> {
         let [(id, params)] = commands else { return None };
         let params = match id.as_str() {
             "solid.extrude" => params,
@@ -168,7 +168,7 @@ impl StraightPreview {
     }
 }
 
-fn prepare(app: &SolveApp, inputs: &[Sel]) -> Option<Cached> {
+fn prepare(app: &SketApp, inputs: &[Sel]) -> Option<Cached> {
     let state = crate::open_meshing::session_world(&app.session);
     let mut surfaces = Vec::new();
     let mut budget = 65_536usize;

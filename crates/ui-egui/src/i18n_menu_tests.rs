@@ -10,7 +10,7 @@ use std::collections::BTreeSet;
 
 use crate::browser;
 use crate::context_menu::{self, Item, Target};
-use crate::{Services, SolveApp};
+use crate::{Services, SketApp};
 use serde_json::json;
 use sketcraft_engine::Session;
 
@@ -26,7 +26,7 @@ fn translatable(items: &[Item]) -> impl Iterator<Item = &str> {
     items.iter().map(|i| i.label.as_str()).filter(|l| !l.is_empty())
 }
 
-fn take(app: &SolveApp, out: &mut BTreeSet<String>) {
+fn take(app: &SketApp, out: &mut BTreeSet<String>) {
     let state = app.session.model.state();
     let bodies: Vec<String> = state.bodies.iter().map(|b| b.name.clone()).collect();
     let features: Vec<u64> = app.session.doc.features.iter().map(|f| f.id).collect();
@@ -136,7 +136,7 @@ fn every_menu_label_is_in_the_english_catalog() {
 /// (otherwise its template falls back to English: "撤销 done" instead of "撤销 完成").
 #[test]
 fn command_done_echo_follows_the_language_preference_without_a_render_scope() {
-    let mut app = SolveApp::new(Session::default(), Services::default());
+    let mut app = SketApp::new(Session::default(), Services::default());
     app.preferences.language = "zh".into();
     app.run("solid.box", json!({ "length": 5, "width": 5, "height": 5 })).expect("box");
     let echo = app.session.log.last().expect("the echo is logged");

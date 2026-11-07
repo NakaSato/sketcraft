@@ -8,7 +8,7 @@ use sketcraft_engine::geom::prelude::*;
 use std::cell::RefCell;
 
 use egui::{Color32, Pos2, Rect, Sense, Shape, Stroke, vec2};
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 use sketcraft_engine::geom::Ring;
 
 use crate::theme::Tokens;

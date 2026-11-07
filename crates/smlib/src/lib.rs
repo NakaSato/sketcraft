@@ -1,7 +1,7 @@
-//! The B-rep kernel, solidcore (tangency-labs/solidcore, the Rust port of NVIDIA's SMLib,
+//! The B-rep kernel, sketcore (tangency-labs/solidcore, the Rust port of NVIDIA's SMLib,
 //! Apache-2.0), behind a safe wrapper. Only `crates/kernel` uses this crate (ADR 0002).
 //!
-//! Every call runs in a solidcore kernel of its own, never changes its inputs, turns solidcore's
+//! Every call runs in a sketcore kernel of its own, never changes its inputs, turns sketcore's
 //! errors into [`Error`] and catches its panics ([`Error::Internal`]).
 #![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic, clippy::unimplemented, clippy::todo, clippy::unreachable)]
 
@@ -51,21 +51,21 @@ pub enum Error {
     /// nothing along a line. A thinner or a thicker wall builds.
     WallsTouch,
     /// A blend larger than its faces allow, refused with the largest size that builds it
-    /// (solidcore's fit, `SolidError::FilletRefused`): the size, what it sizes, a point at the
+    /// (sketcore's fit, `SolidError::FilletRefused`): the size, what it sizes, a point at the
     /// middle of the edge it was found for, and why there is no room, when the refusal names them.
     TooLarge { size: f64, kind: FitKind, at: Option<[f64; 3]>, why: Option<RoomReason> },
     /// A shell, offset or thicken whose wall is thicker than a face curves: the face's offset
-    /// folds (solidcore's `ShellRefused`, `ShellRefusal::Fold`). The largest wall that works,
-    /// when solidcore names one.
+    /// folds (sketcore's `ShellRefused`, `ShellRefusal::Fold`). The largest wall that works,
+    /// when sketcore names one.
     WallFolds { largest: Option<f64> },
     /// SMLib cannot build this exactly yet (a variable radius whose law has a corner).
     Unsupported,
     /// A blend's edges meet at a vertex of a kind no SMLib blend corner handles yet.
     CornerUnsupported,
-    /// A swept turn ([`Turn::Swept`]) solidcore does not build at the corner `at`: `room` where
-    /// no radius builds it (a sharp concave side edge between the rounds, solidcore's `NoRoom`),
+    /// A swept turn ([`Turn::Swept`]) sketcore does not build at the corner `at`: `room` where
+    /// no radius builds it (a sharp concave side edge between the rounds, sketcore's `NoRoom`),
     /// else not supported there (`CornerUnsupported`: unequal or variable rounds, a corner of
-    /// four edges, a curved, drafted or tangent side edge); `why` is solidcore's reason.
+    /// four edges, a curved, drafted or tangent side edge); `why` is sketcore's reason.
     TurnRefused { room: bool, why: String, at: Option<[f64; 3]> },
     /// SMLib does not set back the corner of corner point `corner`: SMLib sets back a corner
     /// only where every edge meeting it is blended and they are all convex or all concave.
@@ -78,21 +78,21 @@ pub enum Error {
     NotExact,
     /// A drafted extrusion could not close the corner (or wall) at `at` on its profile, for `why`.
     Corner { why: sweeps::CornerRefusal, at: [f64; 3] },
-    /// solidcore found its own state inconsistent part way through a call (a hole it rebuilt did
+    /// sketcore found its own state inconsistent part way through a call (a hole it rebuilt did
     /// not close).
     Exception,
     /// A B-rep record SMLib cannot take (see [`import::Unsupported`]).
     Record(import::Unsupported),
-    /// solidcore reported an error (the call, then its message).
-    Solidcore(String),
-    /// solidcore panicked; the guard caught it (the call, then the panic's message).
+    /// sketcore reported an error (the call, then its message).
+    Sketcore(String),
+    /// sketcore panicked; the guard caught it (the call, then the panic's message).
     Internal(String),
-    /// A step of SMLib solidcore has not ported yet, refused rather than built another way: what
-    /// is missing, and the solidcore issue that ports it.
+    /// A step of SMLib sketcore has not ported yet, refused rather than built another way: what
+    /// is missing, and the sketcore issue that ports it.
     Unported(&'static str),
 }
 
-/// Why a blend has no room, as solidcore names its refusal (`NoRoomReason`): the reasons a
+/// Why a blend has no room, as sketcore names its refusal (`NoRoomReason`): the reasons a
 /// refusal with a size gives ([`Error::TooLarge`]).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum RoomReason {
@@ -224,8 +224,8 @@ impl std::fmt::Display for Error {
             }
             Error::Exception => write!(f, "SMLib raised an internal exception"),
             Error::Record(u) => write!(f, "{u}"),
-            Error::Solidcore(e) => write!(f, "solidcore: {e}"),
-            Error::Internal(e) => write!(f, "solidcore failed internally in {e}"),
+            Error::Sketcore(e) => write!(f, "sketcore: {e}"),
+            Error::Internal(e) => write!(f, "sketcore failed internally in {e}"),
             Error::Unported(what) => write!(f, "not supported yet: {what}"),
         }
     }
@@ -252,18 +252,18 @@ pub fn hold_a_kernel() -> core::HeldKernel {
     core::hold_a_kernel()
 }
 
-/// Is this thread inside a solidcore call? A panic there is caught and becomes
+/// Is this thread inside a sketcore call? A panic there is caught and becomes
 /// [`Error::Internal`]; crash reports mark it recovered.
 pub fn in_call() -> bool {
     core::in_call()
 }
 
-/// A panic inside a solidcore call, which the call catches as it catches any
+/// A panic inside a sketcore call, which the call catches as it catches any
 /// ([`Error::Internal`], the kernel replaced by a fresh one): the crash-report check
 /// (`diagnostics.crash_test`'s kernel mode). The crate's one deliberate panic.
 #[allow(clippy::panic)]
 pub fn crash_test() -> Result<()> {
-    core::run("crash test", |_| -> std::result::Result<(), solidcore::SolidError> {
+    core::run("crash test", |_| -> std::result::Result<(), sketcore::SolidError> {
         std::panic::panic_any(String::from("crash test: an internal error in the kernel"))
     })
 }
@@ -282,12 +282,12 @@ impl std::fmt::Debug for Brep {
 }
 
 impl Brep {
-    /// A body solidcore made.
+    /// A body sketcore made.
     fn made_core(body: core::Body) -> Brep {
         Brep { body, id: trace::next_id() }
     }
 
-    /// solidcore's body.
+    /// sketcore's body.
     fn core(&self) -> &core::Body {
         &self.body
     }

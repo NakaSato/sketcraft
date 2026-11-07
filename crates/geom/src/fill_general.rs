@@ -55,7 +55,7 @@
 use crate::bspline::{HPoint, NurbsSurface, SplineError, SplineResult, invalid};
 use crate::fill::{Band, Grid, MAX_LOOP_POINTS, SMOOTHNESS, inside_loop, segments_meet};
 use crate::prelude::*;
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 
 /// Most spans of the surface along the domain's longer side.
 pub const MAX_GENERAL_SPANS: usize = 64;

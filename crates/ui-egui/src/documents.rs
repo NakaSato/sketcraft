@@ -12,12 +12,12 @@ use serde_json::{Value, json};
 use sketcraft_engine::Session;
 use sketcraft_engine::render::Camera;
 
-use crate::SolveApp;
+use crate::SketApp;
 use crate::theme::Tokens;
 use crate::ui_kit;
 
 /// Continue transient shot queues without adopting their document or view into the active tab.
-pub(crate) fn advance_render_batches(app: &mut SolveApp, ctx: &egui::Context) {
+pub(crate) fn advance_render_batches(app: &mut SketApp, ctx: &egui::Context) {
     let mut error = None;
     for slot in app.docs.slots.iter_mut().flatten() {
         if let Err(failure) = slot.session.advance_render_batch() {
@@ -75,7 +75,7 @@ struct DocWork {
 /// Take the active design's dialog, tool and toolbar tab, to keep with its tab. A feature still
 /// computing after OK can't wait (its result belongs to the window thread): that dialog is
 /// cancelled, as without the preference.
-fn take_work(app: &mut SolveApp) -> DocWork {
+fn take_work(app: &mut SketApp) -> DocWork {
     if !app.preferences.keep_work_on_tab_switch || app.applying.is_some() {
         crate::dialogs::cancel(app);
         app.tool = None;
@@ -93,7 +93,7 @@ fn take_work(app: &mut SolveApp) -> DocWork {
 /// Kept work comes back even when the preference was turned off since: the dialog may hold the
 /// design's history rolled back for an edit, and only the dialog's Cancel or OK puts it back.
 /// `before`: the session's revision before the switch moved it on to refresh the views.
-fn put_work(app: &mut SolveApp, mut work: DocWork, before: u64) {
+fn put_work(app: &mut SketApp, mut work: DocWork, before: u64) {
     // That refresh is not a change to the design: the edit's Cancel must still see the design
     // it left (`Session::restore_editor` compares revisions), as `PendingFeatureEdit` does.
     if let Some(state) = &mut work.editing_state {
@@ -128,11 +128,11 @@ struct DocView {
     timeline_followed: Option<Option<u64>>,
     /// Bodies, components and features copied or cut in this design: their names and paths mean nothing
     /// in another one (copied features stay with the session the same way). Another design
-    /// pastes them from `SolveApp::foreign_copy`.
+    /// pastes them from `SketApp::foreign_copy`.
     copied_bodies: Vec<String>,
     copied_placements: Vec<Vec<u64>>,
     cut: crate::edit_clipboard::CutSet,
-    /// `SolveApp::own_clipboard_stamp`.
+    /// `SketApp::own_clipboard_stamp`.
     own_clipboard_stamp: u64,
 }
 
@@ -200,11 +200,11 @@ impl Documents {
 
 /// Route native render completion by the document-lifetime owner, never by the
 /// selected tab or a mutable path/name. The engine capsule verifies its registry.
-pub(crate) fn render_owner(app: &SolveApp, uid: u64) -> Option<&Session> {
+pub(crate) fn render_owner(app: &SketApp, uid: u64) -> Option<&Session> {
     if app.session.uid == uid { Some(&app.session) } else { app.docs.background().find(|s| s.uid == uid) }
 }
 pub(crate) fn with_render_owner<T>(
-    app: &mut SolveApp,
+    app: &mut SketApp,
     uid: u64,
     apply: impl FnOnce(&mut Session, &mut crate::render_workspace::ViewState) -> T,
 ) -> Option<T> {
@@ -218,14 +218,14 @@ pub(crate) fn with_render_owner<T>(
 
 /// The host renamed a design file: every open tab of that path follows it, including the
 /// borrowed design name the tab title shows (#11375).
-pub fn follow_file_rename(app: &mut SolveApp, old_path: &str, new_path: &str) {
+pub fn follow_file_rename(app: &mut SketApp, old_path: &str, new_path: &str) {
     app.session.follow_file_rename(old_path, new_path);
     for slot in app.docs.background_mut() {
         slot.session.follow_file_rename(old_path, new_path);
     }
 }
 
-fn take_view(app: &mut SolveApp) -> DocView {
+fn take_view(app: &mut SketApp) -> DocView {
     DocView {
         render: std::mem::take(&mut app.render_workspace.view),
         history_folds: std::mem::take(&mut app.tree.history_folds),
@@ -238,7 +238,7 @@ fn take_view(app: &mut SolveApp) -> DocView {
     }
 }
 
-fn put_view(app: &mut SolveApp, v: DocView) {
+fn put_view(app: &mut SketApp, v: DocView) {
     app.render_workspace.view = v.render;
     crate::render_workspace::invalidate_images(app);
     crate::render_workspace::invalidate_scene(app);
@@ -254,7 +254,7 @@ fn put_view(app: &mut SolveApp, v: DocView) {
 }
 
 /// Put `slot` into the app and return what was there.
-fn swap_in(app: &mut SolveApp, mut slot: DocSlot) -> DocSlot {
+fn swap_in(app: &mut SketApp, mut slot: DocSlot) -> DocSlot {
     let reveals = crate::browser::take_reveals(app);
     crate::semantic_content::leave_document(app);
     if crate::render_workspace::active(app) {
@@ -326,7 +326,7 @@ fn swap_in(app: &mut SolveApp, mut slot: DocSlot) -> DocSlot {
 /// Move tab `from` to place `to`, the tabs between shifting over (#3187); each design keeps its
 /// state and the active one stays active. Not while a "save changes?" prompt is open or tabs are
 /// being closed one after another (their tab numbers would change under them).
-pub fn move_tab(app: &mut SolveApp, from: usize, to: usize) {
+pub fn move_tab(app: &mut SketApp, from: usize, to: usize) {
     let n = app.docs.slots.len();
     if from >= n || to >= n || from == to || app.docs.closing.is_some() || app.docs.quitting.is_some() || app.docs.batch.is_some() {
         return;
@@ -350,7 +350,7 @@ pub fn moved_index(i: usize, from: usize, to: usize) -> usize {
 }
 
 /// Make tab `i` the active design.
-pub fn switch(app: &mut SolveApp, i: usize) {
+pub fn switch(app: &mut SketApp, i: usize) {
     if app.file_picker_busy() {
         return;
     }
@@ -384,7 +384,7 @@ pub fn switch(app: &mut SolveApp, i: usize) {
 /// Show the next design tab (`forward`) or the previous one, going round from the last to the
 /// first (Ctrl+Tab and Ctrl+Shift+Tab, #8565). Not while tabs are being closed one after another
 /// or a "save changes?" prompt is open, as for `move_tab`.
-pub fn cycle(app: &mut SolveApp, forward: bool) {
+pub fn cycle(app: &mut SketApp, forward: bool) {
     let n = app.docs.slots.len();
     if n < 2 || app.docs.closing.is_some() || app.docs.quitting.is_some() || app.docs.batch.is_some() {
         return;
@@ -394,7 +394,7 @@ pub fn cycle(app: &mut SolveApp, forward: bool) {
 }
 
 /// The open design saved at `path`, shown or in the background.
-pub(crate) fn session_at<'a>(app: &'a SolveApp, path: &str) -> Option<&'a Session> {
+pub(crate) fn session_at<'a>(app: &'a SketApp, path: &str) -> Option<&'a Session> {
     let saved_at = |s: &Session| s.path.as_deref().is_some_and(|p| same_path(p, path));
     if saved_at(&app.session) {
         return Some(&app.session);
@@ -403,7 +403,7 @@ pub(crate) fn session_at<'a>(app: &'a SolveApp, path: &str) -> Option<&'a Sessio
 }
 
 /// Every edit in place: of the tab shown, and of the tabs in the background.
-pub(crate) fn edits_mut(app: &mut SolveApp) -> Vec<&mut crate::edit_in_place::PartContext> {
+pub(crate) fn edits_mut(app: &mut SketApp) -> Vec<&mut crate::edit_in_place::PartContext> {
     let mut edits: Vec<_> = app.docs.slots.iter_mut().flatten().filter_map(|s| s.edit_in_place.as_mut()).collect();
     edits.extend(app.edit_in_place.active.as_mut());
     edits
@@ -411,7 +411,7 @@ pub(crate) fn edits_mut(app: &mut SolveApp) -> Vec<&mut crate::edit_in_place::Pa
 
 /// The open design saved at `path` read every link again without an error, from the files as
 /// `stamps` found them: its record of them (`Documents::link_stamps`, or its tab's) is now that.
-pub(crate) fn record_stamps_at(app: &mut SolveApp, path: &str, stamps: &[(u64, crate::linked_source::Stamp)]) {
+pub(crate) fn record_stamps_at(app: &mut SketApp, path: &str, stamps: &[(u64, crate::linked_source::Stamp)]) {
     let record = if app.session.path.as_deref().is_some_and(|p| same_path(p, path)) {
         &mut app.docs.link_stamps
     } else {
@@ -427,7 +427,7 @@ pub(crate) fn record_stamps_at(app: &mut SolveApp, path: &str, stamps: &[(u64, c
 }
 
 /// [`session_at`], to change it.
-pub(crate) fn session_at_mut<'a>(app: &'a mut SolveApp, path: &str) -> Option<&'a mut Session> {
+pub(crate) fn session_at_mut<'a>(app: &'a mut SketApp, path: &str) -> Option<&'a mut Session> {
     let saved_at = |s: &Session| s.path.as_deref().is_some_and(|p| same_path(p, path));
     if saved_at(&app.session) {
         return Some(&mut app.session);
@@ -437,7 +437,7 @@ pub(crate) fn session_at_mut<'a>(app: &'a mut SolveApp, path: &str) -> Option<&'
 
 /// Select an already-open saved design without reloading or framing it. Identity is derived
 /// from the current session path so Save As immediately changes which file the tab owns.
-pub(crate) fn reuse_path(app: &mut SolveApp, path: &str) -> Result<bool, String> {
+pub(crate) fn reuse_path(app: &mut SketApp, path: &str) -> Result<bool, String> {
     sketcraft_engine::io::vfs::check(path).map_err(|e| e.to_string())?;
     // Imports create unsaved designs, rather than owning their source file.
     if sketcraft_engine::io::is_step_path(path) || sketcraft_engine::io::is_mesh_path(path) {
@@ -482,7 +482,7 @@ pub(crate) fn same_path(a: &str, b: &str) -> bool {
 }
 
 /// Open `session` in a new tab after the active one and switch to it (`fit`: frame its model).
-pub fn open_tab(app: &mut SolveApp, session: Session) -> Result<(), String> {
+pub fn open_tab(app: &mut SketApp, session: Session) -> Result<(), String> {
     if app.docs.slots.is_empty() {
         app.docs.slots.push(None);
         app.docs.active = 0;
@@ -499,14 +499,14 @@ pub fn open_tab(app: &mut SolveApp, session: Session) -> Result<(), String> {
 }
 
 /// Is the active design an untouched new one (it can be replaced instead of opening a tab)?
-pub fn active_is_blank(app: &SolveApp) -> bool {
+pub fn active_is_blank(app: &SketApp) -> bool {
     let s = &app.session;
     s.path.is_none() && s.doc.features.is_empty() && s.doc.params.is_empty() && s.doc.components.is_empty() && !s.is_dirty()
 }
 
 /// Show `session` (a design built or read elsewhere): in place of a blank active design,
 /// otherwise in a new tab. Whether it is shown (no tab left for it: the status says so).
-pub fn adopt(app: &mut SolveApp, session: Session) -> bool {
+pub fn adopt(app: &mut SketApp, session: Session) -> bool {
     if active_is_blank(app) {
         let rev = app.session.revision;
         crate::browser::discard_reveals(app);
@@ -540,7 +540,7 @@ pub fn adopt(app: &mut SolveApp, session: Session) -> bool {
 /// The active design as its file holds it (`document.export`): what a host that keeps the files
 /// itself writes (#8517). `text` is the design's JSON, the same a `.json` design file holds, and
 /// `revision` is the one `document.revision` names this state by.
-pub fn export(app: &mut SolveApp) -> Result<Value, String> {
+pub fn export(app: &mut SketApp) -> Result<Value, String> {
     let revision = app.session.design_revision();
     let design = app.session.design();
     let text = String::from_utf8(sketcraft_engine::io::write_design(&design)).map_err(|e| e.to_string())?;
@@ -551,7 +551,7 @@ pub fn export(app: &mut SolveApp) -> Result<Value, String> {
 /// a design file (its JSON, as `document.export` gives it). It opens saved, with nothing to undo,
 /// in the active design's place: as a design opened in a tab of its own, with that tab closed
 /// without asking. A text that does not read changes nothing.
-pub fn import(app: &mut SolveApp, p: &Value) -> Result<Value, String> {
+pub fn import(app: &mut SketApp, p: &Value) -> Result<Value, String> {
     if app.file_picker_busy() || app.file_load.busy() || app.docs.closing.is_some() || app.docs.quitting.is_some() || app.docs.batch.is_some() {
         return Err("a file is being opened or saved, or designs are being closed: try again".into());
     }
@@ -570,7 +570,7 @@ pub fn import(app: &mut SolveApp, p: &Value) -> Result<Value, String> {
 
 /// The host saved the design at `revision` (`document.saved`): it counts as saved from there.
 /// Refused when the design has changed since.
-pub fn saved(app: &mut SolveApp, p: &Value) -> Result<Value, String> {
+pub fn saved(app: &mut SketApp, p: &Value) -> Result<Value, String> {
     let revision = p.get("revision").and_then(Value::as_u64).ok_or("missing `revision`")?;
     let now = app.session.design_revision();
     if revision != now {
@@ -583,7 +583,7 @@ pub fn saved(app: &mut SolveApp, p: &Value) -> Result<Value, String> {
 /// A new, empty design in its own tab. One that is already empty keeps its tab and still
 /// takes Units of new designs (#1205): a launch starts on that empty design, so returning
 /// here used to leave it in millimetres.
-pub fn new_design(app: &mut SolveApp) {
+pub fn new_design(app: &mut SketApp) {
     if app.file_picker_busy() {
         return;
     }
@@ -601,7 +601,7 @@ pub fn new_design(app: &mut SolveApp) {
 
 /// Create a new tab directly; the File view chooses units before using [`new_design`].
 /// An untouched blank launch design is reused.
-pub fn new_tab(app: &mut SolveApp) {
+pub fn new_tab(app: &mut SketApp) {
     if app.file_picker_busy() {
         return;
     }
@@ -620,7 +620,7 @@ pub fn new_tab(app: &mut SolveApp) {
 /// Before opening a file: a fresh tab unless the active design is blank. The empty design,
 /// new or already showing, takes Units of new designs so a cancelled open is not millimetres
 /// when the preference says otherwise.
-pub fn prepare_open(app: &mut SolveApp) {
+pub fn prepare_open(app: &mut SketApp) {
     if active_is_blank(app) {
         crate::prefs::apply_new_design(app);
         return;
@@ -633,7 +633,7 @@ pub fn prepare_open(app: &mut SolveApp) {
 }
 
 /// Close tab `i`: asks first when it has unsaved changes (`force`: close anyway).
-pub fn close(app: &mut SolveApp, i: usize, force: bool) {
+pub fn close(app: &mut SketApp, i: usize, force: bool) {
     if app.file_picker_busy() {
         return;
     }
@@ -693,7 +693,7 @@ pub fn close(app: &mut SolveApp, i: usize, force: bool) {
 }
 
 /// A replacement starts a fresh conversation, unless the current chat itself requested it.
-pub(crate) fn reset_chat(app: &mut SolveApp) {
+pub(crate) fn reset_chat(app: &mut SketApp) {
     if app.agent_chat.following_document {
         crate::agent_chat::continue_in_document(app);
         return;
@@ -710,14 +710,14 @@ pub(crate) fn reset_chat(app: &mut SolveApp) {
 }
 
 /// Hidden conversations must also stop when AI is disabled or the application quits.
-pub(crate) fn disconnect_background_chats(app: &mut SolveApp, wait: bool) {
+pub(crate) fn disconnect_background_chats(app: &mut SketApp, wait: bool) {
     for slot in app.docs.background_mut() {
         slot.agent_chat.disconnect_document(&mut slot.session, wait);
     }
 }
 
 /// Stop only the hidden conversations whose endpoint permission was revoked.
-pub(crate) fn disconnect_background_endpoint(app: &mut SolveApp, id: &str) {
+pub(crate) fn disconnect_background_endpoint(app: &mut SketApp, id: &str) {
     for slot in app.docs.background_mut() {
         slot.agent_chat.disconnect_endpoint(&mut slot.session, id);
     }
@@ -725,7 +725,7 @@ pub(crate) fn disconnect_background_endpoint(app: &mut SolveApp, id: &str) {
 
 /// Close several tabs (Close Other Tabs, Close All Tabs; #3055): each with unsaved changes asks
 /// "save changes?" in turn, the others close; Cancel keeps the tabs not closed yet.
-pub fn close_many(app: &mut SolveApp, mut tabs: Vec<usize>) {
+pub fn close_many(app: &mut SketApp, mut tabs: Vec<usize>) {
     if app.file_picker_busy() || app.docs.quitting.is_some() || app.docs.closing.is_some() {
         return;
     }
@@ -736,7 +736,7 @@ pub fn close_many(app: &mut SolveApp, mut tabs: Vec<usize>) {
 }
 
 /// Close the next tab of [`close_many`]'s batch, or ask about it when it has unsaved changes.
-fn batch_step(app: &mut SolveApp) {
+fn batch_step(app: &mut SketApp) {
     if app.docs.closing.is_some() || app.docs.quitting.is_some() {
         return;
     }
@@ -762,7 +762,7 @@ fn batch_step(app: &mut SolveApp) {
 /// Quit (the title bar's ×, File ▸ Quit, the window being closed): asks "save changes?" for each
 /// design with unsaved changes, then sets `app.quit_requested` for the host to close the window.
 /// Cancel, or a Save that didn't save, stays open.
-pub fn request_quit(app: &mut SolveApp) {
+pub fn request_quit(app: &mut SketApp) {
     if app.file_picker_busy() {
         return;
     }
@@ -773,7 +773,7 @@ pub fn request_quit(app: &mut SolveApp) {
 }
 
 /// Ask about the next design with unsaved changes, or quit when none is left.
-fn quit_step(app: &mut SolveApp) {
+fn quit_step(app: &mut SketApp) {
     let Some(skip) = app.docs.quitting.clone() else {
         return;
     };
@@ -804,20 +804,20 @@ fn quit_step(app: &mut SolveApp) {
 }
 
 /// Is any open design unsaved (the web page asks before it is left)?
-pub fn any_dirty(app: &SolveApp) -> bool {
+pub fn any_dirty(app: &SketApp) -> bool {
     (0..app.docs.count()).any(|i| dirty(app, i))
 }
 
 /// Every open design, in tab order (the shown one in its place): what the web app keeps a copy
 /// of in the browser when "keep unsaved work in this browser" is on (#10220).
-pub fn open_sessions(app: &SolveApp) -> Vec<&Session> {
+pub fn open_sessions(app: &SketApp) -> Vec<&Session> {
     if app.docs.slots.is_empty() {
         return vec![&app.session];
     }
     app.docs.slots.iter().map(|s| s.as_ref().map_or(&app.session, |d| &d.session)).collect()
 }
 
-fn dirty(app: &SolveApp, i: usize) -> bool {
+fn dirty(app: &SketApp, i: usize) -> bool {
     if i == app.docs.active || app.docs.slots.is_empty() {
         return app.session.is_dirty();
     }
@@ -825,7 +825,7 @@ fn dirty(app: &SolveApp, i: usize) -> bool {
 }
 
 /// Tab names (with an unsaved-changes flag), in order.
-pub fn tabs_info(app: &SolveApp) -> Vec<(String, bool)> {
+pub fn tabs_info(app: &SketApp) -> Vec<(String, bool)> {
     if app.docs.slots.is_empty() {
         return vec![(app.session.doc.name.clone(), app.session.is_dirty())];
     }
@@ -849,7 +849,7 @@ pub(crate) struct OpenDesign {
 
 /// The designs open in the other tabs, in tab order: none on the shown design's file, and no
 /// blank one (an empty new design has nothing to insert).
-pub(crate) fn other_designs(app: &SolveApp) -> Vec<OpenDesign> {
+pub(crate) fn other_designs(app: &SketApp) -> Vec<OpenDesign> {
     let shown = app.session.path.as_deref();
     app.docs
         .background()
@@ -860,7 +860,7 @@ pub(crate) fn other_designs(app: &SolveApp) -> Vec<OpenDesign> {
 }
 
 /// Where each tab's design is saved, in `tabs_info`'s order (`None`: not saved yet).
-fn tab_paths(app: &SolveApp) -> Vec<Option<String>> {
+fn tab_paths(app: &SketApp) -> Vec<Option<String>> {
     if app.docs.slots.is_empty() {
         return vec![app.session.path.clone()];
     }
@@ -878,7 +878,7 @@ fn tab_tooltip(name: &str, path: Option<&str>, cut: bool, dirty: bool) -> String
 
 /// The designs a launch with no file to open reopens: those open at the last quit that still
 /// exist, when Preferences › General asks for it (#5542).
-pub fn designs_to_reopen(app: &SolveApp) -> Vec<String> {
+pub fn designs_to_reopen(app: &SketApp) -> Vec<String> {
     if !app.preferences.reopen_designs {
         return Vec::new();
     }
@@ -890,7 +890,7 @@ pub fn designs_to_reopen(app: &SolveApp) -> Vec<String> {
 /// time and the designs it died on come back as the reason, so the app starts usable instead
 /// of hanging on the same design every launch. The marker is written here and cleared as each
 /// design finishes opening (`file_load`), so a healthy session leaves nothing behind.
-pub fn reopen_plan(app: &SolveApp, dir: Option<&std::path::Path>) -> (Vec<String>, Vec<String>) {
+pub fn reopen_plan(app: &SketApp, dir: Option<&std::path::Path>) -> (Vec<String>, Vec<String>) {
     let Some(dir) = dir else {
         return (designs_to_reopen(app), Vec::new());
     };
@@ -909,7 +909,7 @@ pub fn reopen_plan(app: &SolveApp, dir: Option<&std::path::Path>) -> (Vec<String
 /// or `quit`; `answer`: save | dont_save | cancel answers "save changes?"; `open_elsewhere`:
 /// read_only | anyway | cancel and `changed_on_disk`: save_copy | overwrite | cancel answer those
 /// questions (#5467).
-pub fn control(app: &mut SolveApp, p: &Value) -> Value {
+pub fn control(app: &mut SketApp, p: &Value) -> Value {
     let i = p.get("index").and_then(Value::as_u64).map(|x| x as usize);
     match p.get("action").and_then(Value::as_str) {
         Some("new") => new_design(app),
@@ -974,7 +974,7 @@ struct TabDrag {
 
 /// The document tabs in the application bar, from `x0` to `x1`: click to switch, × to close,
 /// drag to reorder, + for a new design.
-pub fn tabs(app: &mut SolveApp, ui: &mut egui::Ui, r: Rect, x0: f32, x1: f32) {
+pub fn tabs(app: &mut SketApp, ui: &mut egui::Ui, r: Rect, x0: f32, x1: f32) {
     let t = Tokens::get();
     let info = tabs_info(app);
     let paths = tab_paths(app);
@@ -1281,12 +1281,12 @@ fn tab_shape(painter: &egui::Painter, t: &Tokens, r: Rect, active: bool, hovered
 const MAX_DESIGN_NAME: usize = 128;
 
 /// Whether the selected tab's design name is being edited in the tab.
-fn renaming_tab(app: &SolveApp) -> bool {
+fn renaming_tab(app: &SketApp) -> bool {
     app.menu.rename.as_ref().is_some_and(|r| r.inline && matches!(r.what, crate::context_menu::RenameWhat::Component(0)))
 }
 
 /// Starts editing the selected design's name in its tab, with the name as shown selected.
-fn start_tab_rename(app: &mut SolveApp, name: &str, tab: Rect) {
+fn start_tab_rename(app: &mut SketApp, name: &str, tab: Rect) {
     let text = crate::i18n::Locale::for_language(&app.preferences.language).given_name(name);
     app.menu.rename = Some(crate::context_menu::Rename {
         what: crate::context_menu::RenameWhat::Component(0),
@@ -1299,7 +1299,7 @@ fn start_tab_rename(app: &mut SolveApp, name: &str, tab: Rect) {
 
 /// The selected tab's name field: Enter or leaving the field (a click anywhere else) keeps the
 /// name, Escape keeps the old one. A name left as it was, or left blank, changes nothing.
-fn tab_rename_field(app: &mut SolveApp, ui: &mut egui::Ui, rect: Rect, shown: &str) {
+fn tab_rename_field(app: &mut SketApp, ui: &mut egui::Ui, rect: Rect, shown: &str) {
     let Some(mut rename) = app.menu.rename.take() else { return };
     let t = Tokens::get();
     ui.painter().rect_filled(rect, t.radius_sm, t.field);
@@ -1359,7 +1359,7 @@ pub enum Answer {
 }
 
 /// The "save changes?" prompt for a tab being closed, or for each unsaved design when quitting.
-pub fn prompt(app: &mut SolveApp, ctx: &egui::Context) {
+pub fn prompt(app: &mut SketApp, ctx: &egui::Context) {
     let _language = crate::i18n::scope(&app.preferences.language);
     quit_step(app);
     // Saved, it asks the Capture Position question first (#9736): that question is the one to
@@ -1424,7 +1424,7 @@ pub fn prompt(app: &mut SolveApp, ctx: &egui::Context) {
 }
 
 /// Act on the "save changes?" answer (also the control channel's `ui.documents {answer}`).
-pub fn answer_prompt(app: &mut SolveApp, answer: Answer) {
+pub fn answer_prompt(app: &mut SketApp, answer: Answer) {
     if app.file_picker_busy() || app.tree.capture_prompt.is_some() {
         return;
     }
@@ -1460,7 +1460,7 @@ pub fn answer_prompt(app: &mut SolveApp, answer: Answer) {
 }
 
 /// Resume Close/Quit only after Save As has answered and the write succeeded.
-pub(crate) fn saved_for_close(app: &mut SolveApp) {
+pub(crate) fn saved_for_close(app: &mut SketApp) {
     // Save asks the Capture Position question first while a move isn't captured (#9736): the
     // close waits for its answer.
     if app.tree.capture_prompt.is_some() {
@@ -1491,7 +1491,7 @@ pub(crate) fn saved_for_close(app: &mut SolveApp) {
 mod tests {
     #[test]
     fn reopening_saved_design_preserves_dirty_session_and_view() {
-        let mut a = super::SolveApp::new(sketcraft_engine::Session::default(), Default::default());
+        let mut a = super::SketApp::new(sketcraft_engine::Session::default(), Default::default());
         let path = std::env::temp_dir().join(format!("sketcraft-reopen-{}.sketcraft", std::process::id()));
         let path = path.to_string_lossy().into_owned();
         a.session.execute("file.save", &serde_json::json!({"path": path})).unwrap();
@@ -1725,8 +1725,8 @@ mod tests {
         }
     }
 
-    fn app() -> SolveApp {
-        SolveApp::new(Session::default(), Services::default())
+    fn app() -> SketApp {
+        SketApp::new(Session::default(), Services::default())
     }
 
     /// Each tab keeps its own design, undo, selection and camera; closing asks when there are
@@ -1777,7 +1777,7 @@ mod tests {
     }
 
     /// Four tabs: the first and third with a part (unsaved), the second and fourth blank.
-    fn four_tabs() -> SolveApp {
+    fn four_tabs() -> SketApp {
         let mut a = app();
         a.run("solid.box", json!({"length": 10, "width": 10, "height": 10})).unwrap();
         open_tab(&mut a, Session::default()).unwrap();
@@ -1867,7 +1867,7 @@ mod tests {
             }
         }
         // Tabs hold 1, 2 and 3 features; the third is active.
-        let features = |a: &mut SolveApp| {
+        let features = |a: &mut SketApp| {
             let back = a.docs.active;
             let v: Vec<usize> = (0..a.docs.count())
                 .map(|i| {
@@ -2305,12 +2305,12 @@ mod tests {
     }
 
     /// The items picked in the open dialog's first input.
-    fn dialog_picks(a: &SolveApp) -> Vec<sketcraft_engine::Sel> {
+    fn dialog_picks(a: &SketApp) -> Vec<sketcraft_engine::Sel> {
         a.dialog.as_ref().and_then(|d| d.inputs.first()).map(|i| i.items.clone()).unwrap_or_default()
     }
 
     /// Tab 1: a box measured between two corners, on INSPECT. Tab 2: a sketch with the Line tool.
-    fn measuring_and_drawing(keep: bool) -> (SolveApp, Vec<sketcraft_engine::Sel>) {
+    fn measuring_and_drawing(keep: bool) -> (SketApp, Vec<sketcraft_engine::Sel>) {
         let mut a = app();
         a.preferences.keep_work_on_tab_switch = keep;
         a.run("solid.box", json!({"length": 3, "width": 4, "height": 12, "body_name": "Box"})).unwrap();

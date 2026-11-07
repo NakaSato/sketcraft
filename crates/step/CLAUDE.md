@@ -1,6 +1,6 @@
 # CLAUDE.md — sketcraft-step
 
-STEP (ISO 10303) as plain data, with no modelling backend: the Part 21 exchange structure, Part 42 geometry and topology, and the units of a representation context. It reads solids into the kernel-neutral B-rep record (schema 4) and writes records back. It is layer L1. Its dependencies are `geom`, `profile` and `solidcore-record`. `crates/kernel` uses it (`INTRA_LAYER_ORDER` in `xtask/src/layers.rs`). See the root CLAUDE.md.
+STEP (ISO 10303) as plain data, with no modelling backend: the Part 21 exchange structure, Part 42 geometry and topology, and the units of a representation context. It reads solids into the kernel-neutral B-rep record (schema 4) and writes records back. It is layer L1. Its dependencies are `geom`, `profile` and `sketcore-record`. `crates/kernel` uses it (`INTRA_LAYER_ORDER` in `xtask/src/layers.rs`). See the root CLAUDE.md.
 
 ## Commands
 

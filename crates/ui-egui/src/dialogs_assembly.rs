@@ -12,7 +12,7 @@ use crate::ui_kit::BackingTooltipExt as _;
 use crate::ui_kit::{choice_row, expr_row, text_row};
 use egui::{Color32, Pos2, RichText, Stroke, vec2};
 use serde_json::{Value, json};
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 use sketcraft_engine::Sel;
 use sketcraft_engine::Session;
 use sketcraft_engine::doc::expr::Kind as ValueKind;
@@ -20,7 +20,7 @@ use sketcraft_engine::doc::joints::{JointKind, JointOrigin, Snap};
 use sketcraft_engine::geom::prelude::*;
 use sketcraft_engine::geom::{Aabb3, Mesh};
 
-use crate::SolveApp;
+use crate::SketApp;
 use crate::dialogs::{Dialog, Kind, combo, field, form_row};
 use crate::preview::{Built, Colors};
 use crate::selection::{
@@ -166,12 +166,12 @@ pub struct Searched {
 }
 
 impl Searched {
-    fn now(app: &SolveApp, f: &JointForm, inputs: &[SelInput]) -> Result<Searched, String> {
+    fn now(app: &SketApp, f: &JointForm, inputs: &[SelInput]) -> Result<Searched, String> {
         Ok(Searched { design: std::sync::Arc::downgrade(&app.session.doc), joint: edit_commands(app, f, inputs)? })
     }
 
     /// Whether the design and the dialog's joint are still the ones searched.
-    fn current(&self, app: &SolveApp, f: &JointForm, inputs: &[SelInput]) -> bool {
+    fn current(&self, app: &SketApp, f: &JointForm, inputs: &[SelInput]) -> bool {
         self.design.upgrade().is_some_and(|d| std::sync::Arc::ptr_eq(&d, &app.session.doc))
             && edit_commands(app, f, inputs).is_ok_and(|now| now == self.joint)
     }
@@ -286,7 +286,7 @@ impl Asm {
 }
 
 /// The dialog for an assembly command: its state and selection inputs.
-pub fn start(app: &SolveApp, id: &str) -> Option<(Kind, Vec<SelInput>)> {
+pub fn start(app: &SketApp, id: &str) -> Option<(Kind, Vec<SelInput>)> {
     let s = &app.session;
     let (asm, inputs) = match id {
         "component.from_bodies" => (Asm::FromBodies, vec![SelInput::new("Bodies", BODIES, true)]),
@@ -363,7 +363,7 @@ pub fn preset(s: &Session, k: &mut Asm, p: &Value) -> Result<(), String> {
 /// The joint picked in the browser, else the first that moves (an index into the design's
 /// joints). With `rigid`, a picked rigid joint comes before the first that moves: Drive Joints
 /// opened on one says why it can't drive it (#6981).
-fn picked_joint(app: &SolveApp, rigid: bool) -> usize {
+fn picked_joint(app: &SketApp, rigid: bool) -> usize {
     let s = &app.session;
     let list = movable(s);
     let picked: Vec<usize> = app.tree.picked_joints.iter().filter_map(|id| s.doc.assembly.joints.iter().position(|j| j.id == *id)).collect();
@@ -400,7 +400,7 @@ fn side_inputs() -> Vec<SelInput> {
 /// The pick a joint side shows in the side inputs: the face or edge of its own occurrence that
 /// the side's snap names (the piece nearest its pick, when the name has several), else the face
 /// or edge nearest the pick. A point or frame side names no face, so it shows its component.
-fn side_pick(app: &SolveApp, o: &JointOrigin) -> Option<Sel> {
+fn side_pick(app: &SketApp, o: &JointOrigin) -> Option<Sel> {
     let s = &app.session;
     let (pick, face, edge) = match &o.snap {
         Snap::FaceCenter { pick, face, .. } | Snap::CircleCenter { pick, face, .. } => (*pick, face.as_deref(), None),
@@ -419,8 +419,7 @@ fn side_pick(app: &SolveApp, o: &JointOrigin) -> Option<Sel> {
         }
     };
     // The pick is in the component's coordinates; the placed bodies are in the world.
-    let at =
-        if o.occurrence == 0 { sketcraft_engine::doc::IDENTITY } else { sketcraft_engine::doc::joints::occurrence_world(&s.doc, o.occurrence) };
+    let at = if o.occurrence == 0 { sketcraft_engine::doc::IDENTITY } else { sketcraft_engine::doc::joints::occurrence_world(&s.doc, o.occurrence) };
     let p = sketcraft_engine::doc::apply_point(&at, pick);
     let st = crate::open_meshing::session_world(s);
     let own: Vec<&sketcraft_engine::doc::ModelBody> = st.bodies.iter().filter(|b| occurrence_of_body(s, &b.name) == Some(o.occurrence)).collect();
@@ -511,7 +510,7 @@ pub(crate) fn default_joint_name(doc: &sketcraft_engine::doc::Document, kind: Jo
 
 /// The Edit Joint dialog for a joint (by id). Its two sides show as the Joint dialog's do, each
 /// pre-filled with the pick it sits on.
-pub fn edit_joint(app: &SolveApp, id: u64) -> Option<Dialog> {
+pub fn edit_joint(app: &SketApp, id: u64) -> Option<Dialog> {
     let j = app.session.doc.assembly.joints.iter().find(|j| j.id == id)?;
     let mut f = JointForm::new(false, &app.session.doc);
     f.name = j.name.clone();
@@ -539,7 +538,7 @@ pub fn edit_joint(app: &SolveApp, id: u64) -> Option<Dialog> {
 }
 
 /// Edit Joint with its Limits section open (the browser's Edit Joint Limits).
-pub fn edit_joint_limits(app: &SolveApp, id: u64) -> Option<Dialog> {
+pub fn edit_joint_limits(app: &SketApp, id: u64) -> Option<Dialog> {
     let mut d = edit_joint(app, id)?;
     if let Kind::Assembly(Asm::Joint(f)) = &mut d.kind {
         f.show_limits = true;
@@ -548,7 +547,7 @@ pub fn edit_joint_limits(app: &SolveApp, id: u64) -> Option<Dialog> {
 }
 
 /// Edit Joint with its motion playing (the browser's Animate Joint).
-pub fn animate_joint(app: &SolveApp, id: u64) -> Option<Dialog> {
+pub fn animate_joint(app: &SketApp, id: u64) -> Option<Dialog> {
     let mut d = edit_joint(app, id)?;
     if let Kind::Assembly(Asm::Joint(f)) = &mut d.kind {
         f.animate = true;
@@ -557,7 +556,7 @@ pub fn animate_joint(app: &SolveApp, id: u64) -> Option<Dialog> {
 }
 
 /// Frame the two components a joint connects (the browser's Find in Window).
-pub fn find_joint(app: &mut SolveApp, id: u64) {
+pub fn find_joint(app: &mut SketApp, id: u64) {
     let s = &app.session;
     let Some(j) = s.doc.assembly.joints.iter().find(|j| j.id == id) else { return };
     let bb = occurrence_bounds(s, &[j.a.occurrence, j.b.occurrence]);
@@ -585,7 +584,7 @@ pub fn occurrence_bounds(s: &Session, occs: &[u64]) -> Aabb3 {
 }
 
 /// The Drive Joints dialog on a joint (by id).
-pub fn drive_joint(app: &SolveApp, id: u64) -> Option<Dialog> {
+pub fn drive_joint(app: &SketApp, id: u64) -> Option<Dialog> {
     let joint = app.session.doc.assembly.joints.iter().position(|j| j.id == id)?;
     Some(Dialog::new(Kind::Assembly(Asm::Drive { joint, values: current_values(&app.session, joint), focus: true }), vec![]))
 }
@@ -764,7 +763,7 @@ fn shifted(s: &SnapPt, x: f64, y: f64) -> Value {
 // ---- rows ----
 
 /// The dialog's own rows (after the selection inputs); true when Enter was pressed in a value.
-pub fn rows(app: &mut SolveApp, ui: &mut egui::Ui, k: &mut Asm, inputs: &mut [SelInput], active: &mut usize) -> bool {
+pub fn rows(app: &mut SketApp, ui: &mut egui::Ui, k: &mut Asm, inputs: &mut [SelInput], active: &mut usize) -> bool {
     let t = Tokens::get();
     let mut enter = false;
     let problem = joint_problem(app, k, inputs);
@@ -1089,7 +1088,7 @@ fn capital(s: &str) -> String {
 
 /// The Limits section's Find Limits row: the button, or the search under way with Cancel; and
 /// what the last search said about all the values.
-fn find_limits_row(app: &mut SolveApp, ui: &mut egui::Ui, f: &mut JointForm, id: u64, inputs: &[SelInput]) {
+fn find_limits_row(app: &mut SketApp, ui: &mut egui::Ui, f: &mut JointForm, id: u64, inputs: &[SelInput]) {
     let t = Tokens::get();
     if let Some(search) = &f.search {
         // A poisoned lock: the search's thread panicked.
@@ -1148,7 +1147,7 @@ fn find_limits_row(app: &mut SolveApp, ui: &mut egui::Ui, f: &mut JointForm, id:
 
 /// The commands OK would run for the joint as the dialog has it (its sides as picked in
 /// `inputs`), but its limits (what Find Limits fills in).
-fn edit_commands(app: &SolveApp, f: &JointForm, inputs: &[SelInput]) -> Result<Vec<(String, Value)>, String> {
+fn edit_commands(app: &SketApp, f: &JointForm, inputs: &[SelInput]) -> Result<Vec<(String, Value)>, String> {
     let edit = Dialog::new(Kind::Assembly(Asm::Joint(Box::new(f.clone()))), inputs.to_vec());
     Ok(crate::dialogs::apply_commands(app, &edit)?.into_iter().filter(|(id, _)| id != "joint.limits").collect())
 }
@@ -1156,7 +1155,7 @@ fn edit_commands(app: &SolveApp, f: &JointForm, inputs: &[SelInput]) -> Result<V
 /// Find Limits: on a copy of the design, the joint as the dialog has it now (its type and
 /// alignment, as OK would leave them), then `joint.find_limits` on it. Off the window thread
 /// when the app runs commands there, else at once.
-fn find_limits(app: &SolveApp, f: &mut JointForm, id: u64, inputs: &[SelInput]) {
+fn find_limits(app: &SketApp, f: &mut JointForm, id: u64, inputs: &[SelInput]) {
     (f.found_note, f.search, f.searched) = (None, None, None);
     f.found.clear();
     let searched = match Searched::now(app, f, inputs) {
@@ -1277,7 +1276,7 @@ fn fill_limits(doc: &sketcraft_engine::doc::Document, f: &mut JointForm, reply: 
 /// neighbour) and find the overlapping volumes (world placement) to show in red. Off the window
 /// thread, on a kernel thread, when the app runs commands there: a slow pair froze the window
 /// until the app was closed (#11483). Else at once.
-fn interference(app: &SolveApp, picked: &[Sel], clearance: &str) -> Check {
+fn interference(app: &SketApp, picked: &[Sel], clearance: &str) -> Check {
     let check =
         Check { reply: Default::default(), design: std::sync::Arc::downgrade(&app.session.doc), of: picked.to_vec(), started: crate::now_ms() };
     let names: Vec<String> = picked.body_names();
@@ -1342,7 +1341,7 @@ fn overlap_meshes(st: &sketcraft_engine::doc::ModelState, r: &Value) -> Vec<Mesh
     .collect()
 }
 
-fn interference_rows(app: &SolveApp, ui: &mut egui::Ui, r: &Value) {
+fn interference_rows(app: &SketApp, ui: &mut egui::Ui, r: &Value) {
     let t = Tokens::get();
     if let Some(e) = r.get("error").and_then(Value::as_str) {
         crate::ui_kit::status_line(ui, e, crate::ui_kit::StatusTone::Error);
@@ -1419,7 +1418,7 @@ pub(crate) fn body_of(sel: &Sel) -> Option<&str> {
 /// quiet, and no option seems to do anything (#1239). With it, the bodies Create Components from
 /// Bodies would part (none when that would not help). The usual case is every pick on one
 /// component: a STEP file with several parts often brings them as bodies of one component.
-fn joint_problem(app: &SolveApp, k: &Asm, inputs: &[SelInput]) -> Option<(String, Vec<String>)> {
+fn joint_problem(app: &SketApp, k: &Asm, inputs: &[SelInput]) -> Option<(String, Vec<String>)> {
     let Asm::Joint(f) = k else { return None };
     let picks: Vec<&Sel> =
         if f.as_built { sel_items(inputs, 0).iter().collect() } else { (0..2).filter_map(|i| sel_items(inputs, i).first()).collect() };
@@ -1457,7 +1456,7 @@ fn occurrences(s: &Session, items: &[Sel]) -> Vec<u64> {
 }
 
 /// The commands the dialog's OK runs.
-pub fn commands(app: &SolveApp, k: &Asm, inputs: &[SelInput]) -> Result<Vec<(String, Value)>, String> {
+pub fn commands(app: &SketApp, k: &Asm, inputs: &[SelInput]) -> Result<Vec<(String, Value)>, String> {
     let s = &app.session;
     let snap = |i: usize, what: &str| -> Result<SnapPt, String> {
         sel_items(inputs, i).first().and_then(|x| snap_of(s, x)).ok_or_else(|| format!("select {what} first"))
@@ -1594,7 +1593,7 @@ pub fn commands(app: &SolveApp, k: &Asm, inputs: &[SelInput]) -> Result<Vec<(Str
 }
 
 /// The preview's commands: OK's, with the joint's values playing its motion while animating.
-pub fn animate(app: &SolveApp, k: &Asm, cmds: &mut Vec<(String, Value)>) {
+pub fn animate(app: &SketApp, k: &Asm, cmds: &mut Vec<(String, Value)>) {
     if let Asm::Coupling(f) = k {
         crate::dialogs_coupling::animate(&app.session, f, cmds);
     }
@@ -1709,7 +1708,7 @@ pub fn drive_stop(reply: &Value) -> Option<String> {
 // ---- overlay ----
 
 /// Snap glyphs under the cursor and at the picked origins; the overlap of an interference.
-pub fn overlay(app: &SolveApp, painter: &egui::Painter, proj: &Proj, d: &mut Dialog) {
+pub fn overlay(app: &SketApp, painter: &egui::Painter, proj: &Proj, d: &mut Dialog) {
     let t = Tokens::get();
     let Kind::Assembly(k) = &mut d.kind else { return };
     if let Asm::Interference { overlaps, .. } = k {
@@ -1803,7 +1802,7 @@ pub(crate) fn snap_name(k: SnapKind) -> &'static str {
 
 /// A joint's menu (timeline and browser): Edit, Drive, Suppress, Delete.
 fn joint_menu(
-    app: &SolveApp,
+    app: &SketApp,
     ui: &mut egui::Ui,
     (id, kind, suppressed): (u64, JointKind, bool),
     open: &mut Option<Dialog>,
@@ -1829,7 +1828,7 @@ fn joint_menu(
 }
 
 /// Membership is indexed once so a collapsed folder with hundreds of joints stays cheap.
-fn timeline_joint_items(app: &SolveApp, ids: Option<&[u64]>) -> Vec<(u64, String, JointKind, bool)> {
+fn timeline_joint_items(app: &SketApp, ids: Option<&[u64]>) -> Vec<(u64, String, JointKind, bool)> {
     let members: std::collections::BTreeSet<u64> = match ids {
         Some(ids) => ids.iter().copied().collect(),
         None => app.session.doc.timeline_groups.iter().flat_map(|group| group.joints.iter().copied()).collect(),
@@ -1881,11 +1880,11 @@ impl JointRun<'_> {
 
 /// Whether `count` joints group as one button: from the second joint, once the preference is on
 /// (Preferences > Layout, "Group joints in the History"; off by default, which shows each joint).
-fn grouped(app: &SolveApp, count: usize) -> bool {
+fn grouped(app: &SketApp, count: usize) -> bool {
     count > JOINT_GROUP_MIN && app.preferences.history_group_joints
 }
 
-fn joints_open(app: &SolveApp, count: usize, run: JointRun) -> bool {
+fn joints_open(app: &SketApp, count: usize, run: JointRun) -> bool {
     !grouped(app, count)
         || match run {
             JointRun::Loose => crate::browser::is_open(app, &run.key(), false),
@@ -1895,7 +1894,7 @@ fn joints_open(app: &SolveApp, count: usize, run: JointRun) -> bool {
         }
 }
 
-fn toggle_joints(app: &mut SolveApp, run: JointRun) {
+fn toggle_joints(app: &mut SketApp, run: JointRun) {
     match run {
         JointRun::Loose => crate::browser::toggle(app, &run.key(), false),
         JointRun::Folder { .. } => {
@@ -1944,7 +1943,7 @@ fn joint_group_button(
 
 /// Joints after the features in the timeline, except those a feature folder holds (`held`):
 /// double-click edits, the menu drives, suppresses or deletes. Returns the x after them.
-pub fn timeline_joints(app: &mut SolveApp, ui: &mut egui::Ui, p: &egui::Painter, x: f32, r: egui::Rect, held: &HashSet<u64>) -> f32 {
+pub fn timeline_joints(app: &mut SketApp, ui: &mut egui::Ui, p: &egui::Painter, x: f32, r: egui::Rect, held: &HashSet<u64>) -> f32 {
     let loose: Vec<u64> = app.session.doc.assembly.joints.iter().map(|j| j.id).filter(|id| !held.contains(id)).collect();
     if loose.is_empty() {
         return x;
@@ -1954,7 +1953,7 @@ pub fn timeline_joints(app: &mut SolveApp, ui: &mut egui::Ui, p: &egui::Painter,
 
 /// The joints `ids` as chips from `x` on, grouped into one chip (open to show each) when there
 /// are many. Returns the x after them.
-pub(crate) fn joint_chips(app: &mut SolveApp, ui: &mut egui::Ui, p: &egui::Painter, mut x: f32, r: egui::Rect, ids: &[u64], set: JointRun) -> f32 {
+pub(crate) fn joint_chips(app: &mut SketApp, ui: &mut egui::Ui, p: &egui::Painter, mut x: f32, r: egui::Rect, ids: &[u64], set: JointRun) -> f32 {
     let t = Tokens::get();
     let wanted: HashSet<u64> = ids.iter().copied().collect();
     let joints: Vec<(u64, String, JointKind, bool)> =
@@ -2019,11 +2018,11 @@ pub(crate) fn joint_chips(app: &mut SolveApp, ui: &mut egui::Ui, p: &egui::Paint
 }
 
 /// Named joint rows for the vertical feature-history layout.
-pub fn timeline_joints_vertical(app: &mut SolveApp, ui: &mut egui::Ui) {
+pub fn timeline_joints_vertical(app: &mut SketApp, ui: &mut egui::Ui) {
     timeline_joint_rows(app, ui, None);
 }
 
-pub(crate) fn timeline_joint_rows(app: &mut SolveApp, ui: &mut egui::Ui, ids: Option<&[u64]>) {
+pub(crate) fn timeline_joint_rows(app: &mut SketApp, ui: &mut egui::Ui, ids: Option<&[u64]>) {
     let t = Tokens::get();
     let joints = timeline_joint_items(app, ids);
     if joints.is_empty() {
@@ -2109,7 +2108,7 @@ pub(crate) fn timeline_joint_rows(app: &mut SolveApp, ui: &mut egui::Ui, ids: Op
 
 /// The Joints folder at the end of the Browser: a row per joint (double-click edits, the menu
 /// edits, drives, suppresses or deletes).
-pub fn browser_joints(app: &mut SolveApp, ui: &mut egui::Ui, depth: usize) {
+pub fn browser_joints(app: &mut SketApp, ui: &mut egui::Ui, depth: usize) {
     use crate::browser::{Row, draw_row, is_open, toggle};
     let joints: Vec<(u64, String, JointKind, bool)> =
         app.session.doc.assembly.joints.iter().map(|j| (j.id, j.name.clone(), j.kind, j.suppressed)).collect();
@@ -2182,7 +2181,7 @@ pub fn browser_joints(app: &mut SolveApp, ui: &mut egui::Ui, depth: usize) {
 
 /// A click on a joint's browser row: it becomes the pick (or, with Ctrl, toggles in or out of
 /// it). Picked joints draw highlighted in the viewport, even hidden ones.
-pub fn pick_joint(app: &mut SolveApp, id: u64, add: bool) {
+pub fn pick_joint(app: &mut SketApp, id: u64, add: bool) {
     app.tree.picked_timeline_groups.clear();
     app.tree.timeline_anchor = None;
     if !add {
@@ -2207,7 +2206,7 @@ pub fn pick_joint(app: &mut SolveApp, id: u64, add: bool) {
 /// double-click edits it, the eye shows or hides its glyph and the menu is the joint's menu.
 /// The folder starts closed and has no eye of its own (the root folder's eye hides every joint
 /// glyph); it isn't drawn for a placement no joint attaches. `key` is the placement's row key.
-pub fn component_joints(app: &mut SolveApp, ui: &mut egui::Ui, path: &[u64], key: &str, depth: usize) {
+pub fn component_joints(app: &mut SketApp, ui: &mut egui::Ui, path: &[u64], key: &str, depth: usize) {
     use crate::browser::{Row, draw_row, is_open, toggle};
     let joints = placement_joints(&app.session.doc, path);
     if joints.is_empty() {
@@ -2354,7 +2353,7 @@ pub fn origin_drawn(s: &Session, name: &str) -> bool {
 }
 
 /// Named joint origins in the viewport: a small triad where each sits.
-pub fn origins(app: &SolveApp, painter: &egui::Painter, proj: &Proj) {
+pub fn origins(app: &SketApp, painter: &egui::Painter, proj: &Proj) {
     let t = Tokens::get();
     let len = app.cam.half_height() * 2.0 * 0.04;
     for (name, m) in origins_world(&app.session) {
@@ -2407,7 +2406,7 @@ pub fn joint_frames_world(s: &Session) -> Vec<(u64, sketcraft_engine::doc::Mat)>
 /// The joints whose glyph the viewport draws, and whether each is highlighted. A hidden joint
 /// isn't drawn (it still constrains and moves the parts), except while it is picked in the
 /// browser: then it shows highlighted until the pick goes away.
-pub fn drawn_joints(app: &SolveApp) -> Vec<(u64, bool)> {
+pub fn drawn_joints(app: &SketApp) -> Vec<(u64, bool)> {
     app.session
         .doc
         .assembly
@@ -2475,7 +2474,7 @@ pub(crate) struct JointGlyph {
 /// The glyphs to draw, in drawing order: picked joints first, then moving joints, then rigid
 /// ones. Each is sized to the view and to the parts it joins; one whose centre falls inside a
 /// glyph planned before it is faded, unless it is picked.
-pub(crate) fn joint_glyph_plan(app: &SolveApp, proj: &Proj) -> Vec<JointGlyph> {
+pub(crate) fn joint_glyph_plan(app: &SketApp, proj: &Proj) -> Vec<JointGlyph> {
     let drawn = drawn_joints(app);
     if drawn.is_empty() {
         return Vec::new();
@@ -2532,7 +2531,7 @@ pub(crate) fn joint_glyph_at(plan: &[JointGlyph], pos: Pos2) -> Option<u64> {
 
 /// A glyph's tooltip: the joint's name and type, e.g. "Glue (Rigid)", or the name alone when it says the type ("Rigid 7"), so the square, ring and
 /// axis explain themselves (#6404).
-pub(crate) fn joint_glyph_tip(app: &SolveApp, id: u64) -> Option<String> {
+pub(crate) fn joint_glyph_tip(app: &SketApp, id: u64) -> Option<String> {
     let j = app.session.doc.assembly.joints.iter().find(|j| j.id == id)?;
     let kind = app.tr(kind_label(j.kind));
     // A name that already says the type ("Rigid 7") is enough on its own.
@@ -2542,7 +2541,7 @@ pub(crate) fn joint_glyph_tip(app: &SolveApp, id: u64) -> Option<String> {
 /// Joint glyphs in the viewport: a ring where a moving joint sits, its motion axis and its
 /// limits (ticks on the ring for a turn, along the axis for a slide); a small square for a rigid
 /// joint. Glyphs are never picked in the viewport; hovering one names the joint and its type.
-pub fn joint_glyphs(app: &SolveApp, painter: &egui::Painter, proj: &Proj) {
+pub fn joint_glyphs(app: &SketApp, painter: &egui::Painter, proj: &Proj) {
     let plan = joint_glyph_plan(app, proj);
     if plan.is_empty() {
         return;

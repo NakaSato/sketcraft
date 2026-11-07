@@ -7,17 +7,17 @@ use super::*;
 use crate::Services;
 use crate::dialogs::{Dialog, apply_commands, for_feature as edit_dialog};
 
-fn app_with(cmds: &[(&str, Value)]) -> SolveApp {
+fn app_with(cmds: &[(&str, Value)]) -> SketApp {
     let mut s = Session::default();
     for (id, p) in cmds {
         s.execute(id, p).unwrap();
     }
-    SolveApp::new(s, Services::default())
+    SketApp::new(s, Services::default())
 }
 
 /// A 600 × 400 rectangle on XY as the frame sketch `Frame`, and, drawn after it on YZ, a ring of
 /// two circles as the section sketch `Ring` (its circles' ids are not the frame's line ids).
-fn frame_app() -> SolveApp {
+fn frame_app() -> SketApp {
     app_with(&[
         ("sketch.create", json!({"plane": "XY", "name": "Frame"})),
         ("sketch.rectangle.two_point", json!({"p0": [0, 0], "p1": [600, 400]})),
@@ -29,20 +29,20 @@ fn frame_app() -> SolveApp {
     ])
 }
 
-fn sketch_id(app: &SolveApp, name: &str) -> u64 {
+fn sketch_id(app: &SketApp, name: &str) -> u64 {
     app.session.doc.find_feature(name).unwrap().id
 }
 
-fn frame_lines(app: &SolveApp) -> Vec<String> {
+fn frame_lines(app: &SketApp) -> Vec<String> {
     app.session.doc.sketch(sketch_id(app, "Frame")).unwrap().curves.iter().map(|c| c.id.clone()).collect()
 }
 
-fn body_names(app: &SolveApp) -> Vec<String> {
+fn body_names(app: &SketApp) -> Vec<String> {
     crate::open_meshing::session_world(&app.session).bodies.iter().map(|b| b.name.clone()).collect()
 }
 
 /// The dialog started with the given lines picked.
-fn dialog_on(app: &mut SolveApp, lines: &[String]) -> Dialog {
+fn dialog_on(app: &mut SketApp, lines: &[String]) -> Dialog {
     app.session.selection = lines.iter().map(|id| Sel::SketchCurve { id: id.clone(), sketch: None }).collect();
     app.start("frame.member");
     app.dialog.clone().unwrap()
@@ -130,7 +130,7 @@ fn a_picked_section_and_the_placement() {
 fn a_whole_sketch_section_stays_whole_through_an_edit() {
     let mut app = frame_app();
     app.run("frame.member", json!({"sketch": "Frame", "profile_sketch": "Ring"})).unwrap();
-    let volume = |app: &mut SolveApp| app.session.execute("inspect.measure", &json!({})).unwrap()["bodies"][0]["volume_mm3"].as_f64().unwrap();
+    let volume = |app: &mut SketApp| app.session.execute("inspect.measure", &json!({})).unwrap()["bodies"][0]["volume_mm3"].as_f64().unwrap();
     let before = volume(&mut app);
     let f = app.session.doc.features.last().unwrap().id;
     let mut e = edit_dialog(&app, f, None).unwrap();

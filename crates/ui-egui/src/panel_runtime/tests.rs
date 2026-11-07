@@ -1874,7 +1874,7 @@ impl RawPanelHost {
         if let Some(dpi) = self.native_pixels_per_point {
             input.viewports.entry(egui::ViewportId::ROOT).or_default().native_pixels_per_point = Some(dpi);
         }
-        // Match SolveApp's native boundary before egui validates pointer and wheel events.
+        // Match SketApp's native boundary before egui validates pointer and wheel events.
         crate::finite_input(&mut input);
         self.foreign_responses.clear();
         self.painted_frames.clear();
@@ -5341,7 +5341,7 @@ impl AppPanelServices for AppFixtureServices {
 
 #[test]
 fn solve_app_integration_is_opt_in_and_cannot_dirty_or_mutate_document() {
-    let mut app = crate::SolveApp::new(sketcraft_engine::Session::default(), Default::default());
+    let mut app = crate::SketApp::new(sketcraft_engine::Session::default(), Default::default());
     assert!(app.panel_runtime().is_none());
     let doc = app.session.doc.clone();
     let model = app.session.model.state();
@@ -5732,7 +5732,7 @@ fn panel_command_native_move() -> serde_json::Value {
         "size":{"width":280,"height":240}}})
 }
 
-fn prepare_app_commands(app: &mut crate::SolveApp) {
+fn prepare_app_commands(app: &mut crate::SketApp) {
     if !app.universal_panel_host_enabled() {
         app.enable_universal_panel_host(HostOptions::default()).unwrap();
     }
@@ -5742,7 +5742,7 @@ fn prepare_app_commands(app: &mut crate::SolveApp) {
 #[test]
 fn application_structural_commands_require_a_captured_host_environment() {
     let PanelMountHarness { runtime, .. } = PanelMountHarness::new(false).unwrap();
-    let mut app = crate::SolveApp::new(sketcraft_engine::Session::default(), Default::default());
+    let mut app = crate::SketApp::new(sketcraft_engine::Session::default(), Default::default());
     app.enable_panel_runtime(runtime, Box::new(FakeAppPanelServices { models: FakeModels { editable: true }, ..Default::default() })).unwrap();
     assert_eq!(app.run_panel_command("panel.open", &panel_command_editor()).unwrap_err().rule, Rule::Availability);
     app.enable_universal_panel_host(HostOptions::default()).unwrap();
@@ -5890,7 +5890,7 @@ fn panel_native_close_command_redocks_without_cancelling_or_replacing_editor() {
 fn solve_app_panel_commands_use_injected_services_without_document_camera_or_cache_changes() {
     let PanelMountHarness { runtime, probe, .. } = PanelMountHarness::new(false).unwrap();
     let trace = std::rc::Rc::new(std::cell::RefCell::new(ForwardingTrace::default()));
-    let mut app = crate::SolveApp::new(sketcraft_engine::Session::default(), Default::default());
+    let mut app = crate::SketApp::new(sketcraft_engine::Session::default(), Default::default());
     let revision = app.session.revision;
     let doc = app.session.doc.clone();
     let model = app.session.model.state();
@@ -5948,7 +5948,7 @@ fn solve_app_forwards_dispatch_mount_content_switch_and_ticks_to_its_injected_pr
     let PanelMountHarness { runtime, probe, .. } = PanelMountHarness::new(false).unwrap();
     let catalogue = fixture_command_catalogue(runtime.layout().registry()).unwrap();
     let trace = std::rc::Rc::new(std::cell::RefCell::new(ForwardingTrace::default()));
-    let mut app = crate::SolveApp::new(sketcraft_engine::Session::default(), Default::default());
+    let mut app = crate::SketApp::new(sketcraft_engine::Session::default(), Default::default());
     let revision = app.session.revision;
     let doc = app.session.doc.clone();
     let model = app.session.model.state();
@@ -6042,13 +6042,13 @@ impl AppPanelServices for CurrentContextServices {
         ContentServices { models: &self.models, commands: &mut self.commands, local: &mut self.local }
     }
 }
-fn current_context_app() -> (crate::SolveApp, FixtureProbe) {
+fn current_context_app() -> (crate::SketApp, FixtureProbe) {
     let PanelMountHarness { runtime, probe, .. } = PanelMountHarness::new(false).unwrap();
     let mut session = sketcraft_engine::Session::default();
     session.execute("file.new", &serde_json::json!({"name":"Same name"})).unwrap();
     session.document_id = "context-a".into();
     session.execute("parameters.change", &serde_json::json!({"name":"fixture_editable","expression":1,"unit":""})).unwrap();
-    let mut app = crate::SolveApp::new(session, Default::default());
+    let mut app = crate::SketApp::new(session, Default::default());
     app.enable_panel_runtime(
         runtime,
         Box::new(CurrentContextServices {
@@ -6062,7 +6062,7 @@ fn current_context_app() -> (crate::SolveApp, FixtureProbe) {
     prepare_app_commands(&mut app);
     (app, probe)
 }
-fn context_control(app: &mut crate::SolveApp, method: &str, params: serde_json::Value) -> serde_json::Value {
+fn context_control(app: &mut crate::SketApp, method: &str, params: serde_json::Value) -> serde_json::Value {
     let (request, _) = crate::control::ControlRequest::new(method, params);
     match crate::control::handle(app, &egui::Context::default(), &request) {
         crate::control::Outcome::Done(value) => value,
@@ -6214,7 +6214,7 @@ fn solve_app_gui_and_command_routes_share_native_owner_and_refuse_adapter_hot_sw
     let PanelMountHarness { runtime, probe, .. } = PanelMountHarness::new(true).unwrap();
     let catalogue = fixture_command_catalogue(runtime.layout().registry()).unwrap();
     let native = std::rc::Rc::new(std::cell::RefCell::new(FakeNativeAdapter::new(true)));
-    let mut app = crate::SolveApp::new(sketcraft_engine::Session::default(), Default::default());
+    let mut app = crate::SketApp::new(sketcraft_engine::Session::default(), Default::default());
     app.enable_panel_runtime(runtime, Box::new(FakeAppPanelServices { models: FakeModels { editable: true }, ..Default::default() })).unwrap();
     app.panel_runtime_mut().unwrap().set_command_adapters(Box::new(catalogue), Box::new(SharedCommandNative(native.clone()))).unwrap();
     prepare_app_commands(&mut app);
@@ -6383,13 +6383,13 @@ fn boundary_app() -> (crate::scenario::Harness, FixtureProbe, BoundaryProbe) {
     (h, probe, trace)
 }
 
-fn app_editor_key(app: &crate::SolveApp) -> ControllerKey {
+fn app_editor_key(app: &crate::SketApp) -> ControllerKey {
     ControllerKey { instance: id("editor"), owner: ContentOwner::Document(DocumentId::new(app.session.document_id.clone()).unwrap()) }
 }
 
 /// Exercises the real app ordering: logic has ALREADY ticked, then a control/
 /// shortcut changes Session, then app UI (including app-bar tabs) mounts the host.
-fn boundary_frame(h: &mut crate::scenario::Harness, events: Vec<egui::Event>, mut after_logic: impl FnMut(&mut crate::SolveApp)) -> egui::FullOutput {
+fn boundary_frame(h: &mut crate::scenario::Harness, events: Vec<egui::Event>, mut after_logic: impl FnMut(&mut crate::SketApp)) -> egui::FullOutput {
     let time = h.ctx.input(|input| input.time) + 1.0 / 60.0;
     let mut output = h.ctx.run_ui(
         egui::RawInput {
@@ -6411,7 +6411,7 @@ fn boundary_frame(h: &mut crate::scenario::Harness, events: Vec<egui::Event>, mu
     output
 }
 
-fn app_control(app: &crate::SolveApp, target: HostControlTarget) -> HostFrameControl {
+fn app_control(app: &crate::SketApp, target: HostControlTarget) -> HostFrameControl {
     app.universal_panel_frame().unwrap().controls.iter().find(|control| control.target == target).unwrap().clone()
 }
 fn button_event(at: egui::Pos2, pressed: bool) -> egui::Event {
@@ -6651,7 +6651,7 @@ fn app_native_owner_is_persistent_with_host_off_or_on_and_refusals_preserve_reso
     for shared_host in [false, true] {
         let PanelMountHarness { runtime, probe, .. } = PanelMountHarness::new(true).unwrap();
         let trace = BoundaryProbe::default();
-        let mut app = crate::SolveApp::new(sketcraft_engine::Session::default(), Default::default());
+        let mut app = crate::SketApp::new(sketcraft_engine::Session::default(), Default::default());
         app.enable_panel_runtime(runtime, Box::new(BoundaryServices::new(trace.clone()))).unwrap();
         prepare_app_commands(&mut app);
         app.dispatch_panel_layout(transaction(vec![fixture_open("fixture.editor", "editor", "editor-section", Zone::Left, 0).unwrap()])).unwrap();
@@ -6709,7 +6709,7 @@ fn app_native_owner_is_persistent_with_host_off_or_on_and_refusals_preserve_reso
     }
 }
 
-fn mount_app_root(app: &mut crate::SolveApp, ctx: &egui::Context) {
+fn mount_app_root(app: &mut crate::SketApp, ctx: &egui::Context) {
     let session = &app.session;
     let integration = app.panel_runtime.as_mut().unwrap();
     integration.prepare_host(session, capacity()).unwrap();
@@ -9405,7 +9405,7 @@ fn command_storage_refusal_uses_the_same_host_admission_before_any_runtime_publi
 fn standalone_registered_action_needs_neither_host_environment_nor_layout_store() {
     let (mut h, trace) = review_cohort_host(|_| {});
     h.dispatch(vec![fixture_open("fixture.log", "log", "log", Zone::Left, 0).unwrap()]).unwrap();
-    let mut app = crate::SolveApp::new(sketcraft_engine::Session::default(), Default::default());
+    let mut app = crate::SketApp::new(sketcraft_engine::Session::default(), Default::default());
     app.enable_panel_runtime(h.runtime, Box::new(FakeAppPanelServices { models: FakeModels { editable: true }, ..Default::default() })).unwrap();
     let mut catalogue = commands::InMemoryCatalogue::default();
     catalogue.fail_stage = true;
@@ -9866,7 +9866,7 @@ fn immutable_metric_drift_inside_catalogue_prepare_rejects_retained_and_staged_o
                     },
                 )
                 .unwrap();
-            let mut app = crate::SolveApp::new(sketcraft_engine::Session::default(), Default::default());
+            let mut app = crate::SketApp::new(sketcraft_engine::Session::default(), Default::default());
             app.enable_panel_runtime(
                 runtime,
                 Box::new(SharedHeightServices {
@@ -10772,7 +10772,7 @@ fn raw_bottom_tab_header_top_edge_resize_owns_label_grip_and_close_overlaps() {
             let PanelMountHarness { runtime, probe, catalogue, .. } = content;
             let mut session = sketcraft_engine::Session::default();
             session.document_id = "fixture.document".into();
-            let mut app = crate::SolveApp::new(session, Default::default());
+            let mut app = crate::SketApp::new(session, Default::default());
             app.enable_panel_runtime(runtime, Box::new(FakeAppPanelServices { models: FakeModels { editable: true }, ..Default::default() }))
                 .unwrap();
             let native = std::rc::Rc::new(std::cell::RefCell::new(FakeNativeAdapter::new(false)));
@@ -10783,7 +10783,7 @@ fn raw_bottom_tab_header_top_edge_resize_owns_label_grip_and_close_overlaps() {
             ctx.set_pixels_per_point(scale);
             let capacity = rect(0.0, 0.0, 800.0, 800.0);
             let mut time = 0.0;
-            let mut frame = |app: &mut crate::SolveApp, events: Vec<egui::Event>| {
+            let mut frame = |app: &mut crate::SketApp, events: Vec<egui::Event>| {
                 time += 1.0 / 60.0;
                 app.panel_runtime.as_mut().unwrap().prepare_host(&app.session, capacity).unwrap();
                 let mut output = ctx.run_ui(
@@ -11613,7 +11613,7 @@ fn app_atomic_workspace_replacements_accept_distinct_incoming_contexts_and_match
             let native = std::rc::Rc::new(std::cell::RefCell::new(FakeNativeAdapter::new(true)));
             let mut session = sketcraft_engine::Session::default();
             session.document_id = "fixture.document".into();
-            let mut app = crate::SolveApp::new(session, Default::default());
+            let mut app = crate::SketApp::new(session, Default::default());
             let doc = app.session.doc.clone();
             let model = app.session.model.state();
             let camera = app.cam;

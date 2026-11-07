@@ -103,7 +103,7 @@ fn graphics_overlay_cards_apply_persist_and_reset_without_adding_unpaged_fields(
     }
     h.call("ui.prefs", json!({"button":"apply"}));
     let applied = h.app.preferences.clone();
-    let mut restored = SolveApp::new(Default::default(), Default::default());
+    let mut restored = SketApp::new(Default::default(), Default::default());
     restored.load_prefs(&h.app.prefs());
     assert!(restored.preferences.show_view_angles && restored.preferences.vertex_markers && restored.preferences.quick_measure);
     assert!(restored.preferences.show_frame_rate && restored.preferences.frame_rate_details);
@@ -235,19 +235,13 @@ fn graphics_disabled_controls_keep_stored_values_and_msaa_waits_for_restart() {
         let saved: serde_json::Value = serde_json::from_slice(&std::fs::read(&path).unwrap()).unwrap();
         assert_eq!(saved["msaa"], 2);
         assert_eq!(saved["backend"], "vulkan");
-        assert_eq!(
-            h.app.viewport.gpu.as_ref().map(|gpu| gpu.samples),
-            active_samples,
-            "changing the saved level leaves the running renderer alone"
-        );
+        assert_eq!(h.app.viewport.gpu.as_ref().map(|gpu| gpu.samples), active_samples, "changing the saved level leaves the running renderer alone");
         click_graphics(&mut h, "Only when the view is still", "prefs:supersampling_adaptive");
         assert!(h.app.preferences.supersampling_adaptive, "disabled adaptive control retains its saved value");
         click_graphics(&mut h, "Frame rate details", "prefs:frame_rate_details");
         assert!(h.app.preferences.frame_rate_details, "visible disabled details control retains its saved value");
         let tree = h.output.accesskit_update.as_ref().unwrap();
-        assert!(
-            tree.nodes.iter().any(|(_, node)| node.role() == Role::CheckBox && node.label() == Some("Frame rate details") && node.is_disabled())
-        );
+        assert!(tree.nodes.iter().any(|(_, node)| node.role() == Role::CheckBox && node.label() == Some("Frame rate details") && node.is_disabled()));
         click_graphics(&mut h, "Frame rate", "prefs:show_frame_rate");
         click_graphics(&mut h, "Frame rate details", "prefs:frame_rate_details");
         assert!(!h.app.preferences.frame_rate_details, "enabling Frame rate enables its details checkbox");
@@ -310,7 +304,7 @@ fn quality_selector_enables_ao_and_supports_persistence_and_cancel() {
         h.call("ui.click", json!({"x":pos.x,"y":pos.y}));
     }
     assert!(h.app.preferences.ambient_occlusion);
-    let mut restored = SolveApp::new(sketcraft_engine::Session::default(), Default::default());
+    let mut restored = SketApp::new(sketcraft_engine::Session::default(), Default::default());
     restored.load_prefs(&h.app.prefs());
     assert!(!restored.preferences.ambient_occlusion, "a change that was not applied is not saved (#9730)");
     h.call("ui.prefs", json!({"button":"cancel"}));
@@ -331,7 +325,7 @@ fn quality_selector_enables_ao_and_supports_persistence_and_cancel() {
     assert_eq!(h.app.preferences.supersampling, 2.0);
     assert!(h.app.preferences.supersampling_adaptive);
     // The dialog is closed now: what is saved is the live state, quality included (#9730).
-    let mut restored = SolveApp::new(sketcraft_engine::Session::default(), Default::default());
+    let mut restored = SketApp::new(sketcraft_engine::Session::default(), Default::default());
     restored.load_prefs(&h.app.prefs());
     for edit in [
         json!({"display_quality":"ultra"}),

@@ -1,5 +1,5 @@
 use super::{MAX_BVH_DEPTH, Node, Triangle, build};
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 use sketcraft_render::{job::CancelToken, surface::OpaqueSurface};
 
 // Triangle centres spread over 60 decades: a sixteen-bin SAH split on the

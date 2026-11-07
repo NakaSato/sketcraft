@@ -10,7 +10,7 @@ workspace = true
 
 [dependencies]
 serde = { workspace = true }
-solidcore-record = { workspace = true }
+sketcore-record = { workspace = true }
 thiserror = { workspace = true }
 
 [dev-dependencies]

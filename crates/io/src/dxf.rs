@@ -8,7 +8,7 @@
 use sketcraft_geom::prelude::*;
 use std::collections::HashMap;
 
-use solidcore_record::{MAX_BEZIER_DEGREE, Vec2};
+use sketcore_record::{MAX_BEZIER_DEGREE, Vec2};
 
 use crate::sketch2d::{Geom2, MAX_DRAWING_BYTES, MAX_ENTITIES, bulge_arc};
 use crate::{IoError, Result};

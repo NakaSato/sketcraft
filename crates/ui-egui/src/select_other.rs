@@ -30,7 +30,7 @@ use sketcraft_engine::geom::prelude::*;
 use sketcraft_engine::sketch::CurveKind;
 use std::hash::{Hash, Hasher};
 
-use crate::SolveApp;
+use crate::SketApp;
 use crate::theme::Tokens;
 use crate::tool_modifiers::Held;
 use crate::viewport::{Hit, Proj};
@@ -99,12 +99,12 @@ pub struct State {
 
 /// Every pickable thing under `pos`, front to back (the sketch being edited first): see
 /// [`order`].
-pub fn rows(app: &SolveApp, proj: &Proj, pos: Pos2) -> Vec<Row> {
+pub fn rows(app: &SketApp, proj: &Proj, pos: Pos2) -> Vec<Row> {
     rows_capped(app, proj, pos, app.preferences.select_other_hidden).0
 }
 
 /// [`rows`], with how many things were under the cursor in all.
-fn rows_capped(app: &SolveApp, proj: &Proj, pos: Pos2, through: bool) -> (Vec<Row>, usize) {
+fn rows_capped(app: &SketApp, proj: &Proj, pos: Pos2, through: bool) -> (Vec<Row>, usize) {
     let hits = if through { crate::viewport::pick_through(app, proj, pos) } else { crate::viewport::pick_all(app, proj, pos) };
     let mut found = crate::viewport::candidates(app, &hits);
     let dialog = app.dialog.as_ref().is_some_and(|d| d.wants_picks());
@@ -154,7 +154,7 @@ fn rows_capped(app: &SolveApp, proj: &Proj, pos: Pos2, through: bool) -> (Vec<Ro
 /// together, bodies by their nearest hit along the pick ray; within a body by kind (vertices,
 /// edges, its face, the body), each kind keeping the pick's nearest-first order. Profiles,
 /// planes and axes follow. The sort is stable.
-fn order(app: &SolveApp, proj: &Proj, pos: Pos2, found: Vec<(Hit, Sel)>, sketching: bool) -> Vec<(Hit, Sel)> {
+fn order(app: &SketApp, proj: &Proj, pos: Pos2, found: Vec<(Hit, Sel)>, sketching: bool) -> Vec<(Hit, Sel)> {
     let (o, d) = proj.ray(pos);
     let st = crate::open_meshing::shown_world(app);
     let index: std::collections::HashMap<&str, usize> = st.bodies.iter().enumerate().map(|(i, b)| (b.name.as_str(), i)).collect();
@@ -193,17 +193,17 @@ fn body_of(h: &Hit) -> Option<&str> {
 fn hit_depth(
     st: &sketcraft_engine::doc::ModelState,
     index: &std::collections::HashMap<&str, usize>,
-    o: solidcore_record::Vec3,
-    d: solidcore_record::Vec3,
+    o: sketcore_record::Vec3,
+    d: sketcore_record::Vec3,
     h: &Hit,
 ) -> Option<f64> {
-    let along = |p: solidcore_record::Vec3| Some((p - o).dot(d)).filter(|t| t.is_finite());
+    let along = |p: sketcore_record::Vec3| Some((p - o).dot(d)).filter(|t| t.is_finite());
     match h {
         Hit::Vertex { point, .. } | Hit::Face { point, .. } => along(*point),
         Hit::Edge { body, index: ei, mid, .. } => {
             let under = index.get(body.as_str()).and_then(|i| st.bodies.get(*i)).and_then(|b| {
                 let (m, place) = b.mesh_in_place();
-                let at = |p: solidcore_record::Vec3| sketcraft_engine::doc::apply_point(&place, p);
+                let at = |p: sketcore_record::Vec3| sketcraft_engine::doc::apply_point(&place, p);
                 let dd = d.dot(d);
                 m.edges
                     .get(*ei)?
@@ -268,7 +268,7 @@ fn curve_kind_name(k: &CurveKind) -> &'static str {
     }
 }
 
-fn sketch_name(app: &SolveApp, sketch: u64) -> String {
+fn sketch_name(app: &SketApp, sketch: u64) -> String {
     app.session.doc.feature(sketch).map(|f| f.name.clone()).unwrap_or_else(|| format!("Sketch {sketch}"))
 }
 
@@ -319,7 +319,7 @@ pub(crate) fn point_label(sk: &sketcraft_engine::sketch::Sketch, id: &str) -> St
 
 /// A row's name: "Line 3", "Point (arc 2 centre)", "Edge 4 · Body1", "XY Plane" (an origin plane
 /// by the name the preferences give it)…
-pub fn label(app: &SolveApp, sel: &Sel) -> String {
+pub fn label(app: &SketApp, sel: &Sel) -> String {
     let st = crate::open_meshing::session_world(&app.session);
     let in_sketch =
         |sketch: u64, f: &dyn Fn(&sketcraft_engine::sketch::Sketch) -> String| st.sketch(sketch).map(|ss| f(&ss.sketch)).unwrap_or_default();
@@ -345,7 +345,7 @@ pub fn label(app: &SolveApp, sel: &Sel) -> String {
     }
 }
 
-fn icon(app: &SolveApp, sel: &Sel) -> &'static str {
+fn icon(app: &SketApp, sel: &Sel) -> &'static str {
     let st = crate::open_meshing::session_world(&app.session);
     let curve = |sketch: Option<u64>, id: &str| {
         let kind = sketch.and_then(|s| st.sketch(s)).and_then(|ss| ss.sketch.curves.iter().find(|c| c.id == id).map(|c| c.kind.clone()));
@@ -381,18 +381,18 @@ fn icon(app: &SolveApp, sel: &Sel) -> &'static str {
 // Opening, picking, closing
 // ---------------------------------------------------------------------------------------------
 
-fn projection_now(app: &SolveApp) -> Option<Proj> {
+fn projection_now(app: &SketApp) -> Option<Proj> {
     app.viewport.rect.map(|r| crate::viewport::projection(app, r))
 }
 
 /// Open the list at a screen point; false (with a status message) when nothing is there. `held`:
 /// the keys held at the click that opened it.
-pub fn open(app: &mut SolveApp, at: Pos2, held: Held) -> bool {
+pub fn open(app: &mut SketApp, at: Pos2, held: Held) -> bool {
     let Some(proj) = projection_now(app) else { return false };
     open_with(app, &proj, at, held)
 }
 
-fn open_with(app: &mut SolveApp, proj: &Proj, at: Pos2, held: Held) -> bool {
+fn open_with(app: &mut SketApp, proj: &Proj, at: Pos2, held: Held) -> bool {
     let (rows, total) = rows_capped(app, proj, at, app.preferences.select_other_hidden);
     close(app);
     if rows.is_empty() {
@@ -413,7 +413,7 @@ fn open_with(app: &mut SolveApp, proj: &Proj, at: Pos2, held: Held) -> bool {
     true
 }
 
-pub fn close(app: &mut SolveApp) {
+pub fn close(app: &mut SketApp) {
     if let Some(p) = app.viewport.select_other.popup.take()
         && p.lit_body
     {
@@ -421,7 +421,7 @@ pub fn close(app: &mut SolveApp) {
     }
 }
 
-pub fn is_open(app: &SolveApp) -> bool {
+pub fn is_open(app: &SketApp) -> bool {
     app.viewport.select_other.popup.is_some()
 }
 
@@ -429,7 +429,7 @@ pub fn is_open(app: &SolveApp) -> bool {
 ///
 /// `add` / `toggle` match viewport selection (Shift pure-add, Primary toggle when
 /// `selection_shift_add_only` is on); the keys held when the list opened add too.
-pub fn choose(app: &mut SolveApp, i: usize, add: bool, toggle: bool) -> Result<Row, String> {
+pub fn choose(app: &mut SketApp, i: usize, add: bool, toggle: bool) -> Result<Row, String> {
     let Some(p) = app.viewport.select_other.popup.as_ref() else { return Err("Select Other is not open".into()) };
     let at = p.at;
     let (opened_add, opened_toggle) = crate::tool_modifiers::selection_click(p.held, app.preferences.selection_shift_add_only);
@@ -442,7 +442,7 @@ pub fn choose(app: &mut SolveApp, i: usize, add: bool, toggle: bool) -> Result<R
 }
 
 /// Select a row's entity: into the dialog's active input, or as a click does.
-fn apply(app: &mut SolveApp, row: &Row, add: bool, toggle: bool) {
+fn apply(app: &mut SketApp, row: &Row, add: bool, toggle: bool) {
     if app.dialog.as_ref().is_some_and(|d| d.wants_picks()) {
         crate::viewport::dialog_pick(app, &row.hit, row.sel.clone());
     } else {
@@ -451,7 +451,7 @@ fn apply(app: &mut SolveApp, row: &Row, add: bool, toggle: bool) {
 }
 
 /// The open list as JSON (for `ui.selectOther`).
-pub fn describe(app: &SolveApp) -> Value {
+pub fn describe(app: &SketApp) -> Value {
     match &app.viewport.select_other.popup {
         None => json!({ "open": false }),
         Some(p) => json!({
@@ -466,7 +466,7 @@ pub fn describe(app: &SolveApp) -> Value {
 
 /// The control channel's `ui.selectOther`: `{x, y}` opens the list there, `{pick: i, add?}`
 /// picks a row, `{hover: i}` lights one up, `{close: true}` closes it; it answers with the list.
-pub fn control(app: &mut SolveApp, p: &Value) -> Result<Value, String> {
+pub fn control(app: &mut SketApp, p: &Value) -> Result<Value, String> {
     if p.get("close").and_then(Value::as_bool) == Some(true) {
         close(app);
         return Ok(describe(app));
@@ -505,7 +505,7 @@ pub fn control(app: &mut SolveApp, p: &Value) -> Result<Value, String> {
 /// drag or box-select with it).
 #[allow(clippy::too_many_arguments)]
 pub fn track_hold(
-    app: &mut SolveApp,
+    app: &mut SketApp,
     ctx: &egui::Context,
     proj: &Proj,
     inside: bool,
@@ -547,7 +547,7 @@ pub fn track_hold(
 }
 
 /// While the list is open, the hovered row is what the viewport lights up.
-pub fn hover_override(app: &mut SolveApp) {
+pub fn hover_override(app: &mut SketApp) {
     let Some(p) = app.viewport.select_other.popup.as_mut() else { return };
     let row = p.hovered.and_then(|i| p.rows.get(i));
     let body = match row.map(|r| &r.sel) {
@@ -569,7 +569,7 @@ pub fn hover_override(app: &mut SolveApp) {
 }
 
 /// What a repeat click must find unchanged: the model, the view, the sketch and the filter.
-fn cycle_key(app: &SolveApp) -> u64 {
+fn cycle_key(app: &SketApp) -> u64 {
     let mut h = std::collections::hash_map::DefaultHasher::new();
     app.session.revision.hash(&mut h);
     for v in [app.cam.yaw, app.cam.pitch, app.cam.roll, app.cam.distance, app.cam.target.x, app.cam.target.y, app.cam.target.z] {
@@ -582,18 +582,18 @@ fn cycle_key(app: &SolveApp) -> u64 {
     h.finish()
 }
 
-fn remember(app: &mut SolveApp, at: Pos2, chosen: Option<Sel>) {
+fn remember(app: &mut SketApp, at: Pos2, chosen: Option<Sel>) {
     app.viewport.select_other.cycle = chosen.map(|chosen| Cycle { at, chosen, selection: app.session.selection.clone(), key: cycle_key(app) });
 }
 
 /// A plain click selected `sel` at `at`: a repeat click there may cycle from it.
-pub fn note_click(app: &mut SolveApp, at: Pos2, sel: Option<Sel>) {
+pub fn note_click(app: &mut SketApp, at: Pos2, sel: Option<Sel>) {
     remember(app, at, sel);
 }
 
 /// A plain click at `at`: when it repeats the last one (same spot, nothing changed since), select
 /// the next thing under the cursor and return true.
-pub fn cycle_click(app: &mut SolveApp, proj: &Proj, at: Pos2) -> bool {
+pub fn cycle_click(app: &mut SketApp, proj: &Proj, at: Pos2) -> bool {
     let Some(c) = app.viewport.select_other.cycle.clone() else { return false };
     if c.at.distance(at) > CYCLE_SLOP || c.key != cycle_key(app) || c.selection != app.session.selection {
         return false;
@@ -615,7 +615,7 @@ pub fn cycle_click(app: &mut SolveApp, proj: &Proj, at: Pos2) -> bool {
 // ---------------------------------------------------------------------------------------------
 
 /// Draw the open list; handle its hover, clicks, and a press elsewhere (which closes it).
-pub fn show(app: &mut SolveApp, ctx: &egui::Context) {
+pub fn show(app: &mut SketApp, ctx: &egui::Context) {
     let Some(p) = app.viewport.select_other.popup.clone() else { return };
     if p.revision != app.session.revision
         || p.dialog != app.dialog.is_some()

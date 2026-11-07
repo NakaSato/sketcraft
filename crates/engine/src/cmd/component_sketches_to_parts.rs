@@ -2,7 +2,7 @@
 //! keeps its place on the face, and `component.move_sketches.to_parts` (#10218) moves sketches
 //! to the part whose face they are drawn on.
 use serde_json::{Value, json};
-use solidcore_record::Plane;
+use sketcore_record::Plane;
 use sketcraft_doc::{EmbossFace, FeatureKind, PlaneRef, apply_point, apply_vector, mat_inverse, mat_mul};
 use sketcraft_geom::prelude::*;
 

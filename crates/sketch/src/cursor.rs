@@ -9,7 +9,7 @@ use crate::{
     linalg::{Mat, rref},
     union_find::{find, union},
 };
-use solidcore_record::Vec2;
+use sketcore_record::Vec2;
 use sketcraft_geom::prelude::*;
 
 const MAX_VARIABLES: usize = 400;

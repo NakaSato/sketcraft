@@ -2,7 +2,7 @@
 
 use sketcraft_engine::Session;
 
-use crate::SolveApp;
+use crate::SketApp;
 
 pub(crate) struct PendingFeatureEdit {
     source: Session,
@@ -39,7 +39,7 @@ impl PendingFeatureEdit {
     }
 }
 
-impl SolveApp {
+impl SketApp {
     pub(crate) fn prepare_feature_edit(&mut self, feature: u64, index: usize, marker: Option<usize>) {
         let source = self.session.scratch();
         let mut original = source.scratch();

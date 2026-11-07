@@ -4,7 +4,7 @@
 //! acceptance criteria the reporter's manual tool path needed.
 
 use serde_json::{Value, json};
-use solidcore_record::Vec2;
+use sketcore_record::Vec2;
 
 use crate::Session;
 

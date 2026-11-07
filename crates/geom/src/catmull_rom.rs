@@ -22,7 +22,7 @@
 //! so it is as smooth where it closes as anywhere else.
 
 use crate::prelude::*;
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 
 /// Samples per span of [`samples`].
 pub const SPAN_SAMPLES: usize = 24;

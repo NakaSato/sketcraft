@@ -5,7 +5,7 @@
 use crate::ui_kit::{choice_row, expr_row, text_row};
 use egui::{Pos2, Stroke};
 use serde_json::{Value, json};
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 use sketcraft_engine::doc::{IDENTITY, Mat, apply_point, mat_inverse, mat_mul};
 use sketcraft_engine::{Sel, Session};
 
@@ -134,7 +134,7 @@ pub(crate) fn stop_text(v: &Value) -> Option<String> {
 }
 
 /// The dialog's rows; true when Enter was pressed in a value.
-pub fn rows(app: &mut crate::SolveApp, ui: &mut egui::Ui, f: &mut TraceForm, inputs: &[SelInput]) -> bool {
+pub fn rows(app: &mut crate::SketApp, ui: &mut egui::Ui, f: &mut TraceForm, inputs: &[SelInput]) -> bool {
     let s = &app.session;
     let mut enter = false;
     let studies: Vec<&str> = s.doc.assembly.studies.iter().map(|m| m.name.as_str()).collect();

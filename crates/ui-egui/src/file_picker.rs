@@ -8,11 +8,11 @@ use std::task::{Context, Poll, Wake, Waker};
 
 use serde_json::{Value, json};
 
-use crate::SolveApp;
+use crate::SketApp;
 
 /// A host picker answer: a selected path, or `None` when cancelled.
 pub type FilePickerFuture = Pin<Box<dyn Future<Output = Option<String>>>>;
-type Completion = Box<dyn FnOnce(&mut SolveApp, Option<String>)>;
+type Completion = Box<dyn FnOnce(&mut SketApp, Option<String>)>;
 
 pub(crate) struct Pending {
     future: FilePickerFuture,
@@ -27,19 +27,19 @@ impl Wake for Repaint {
     }
 }
 
-impl SolveApp {
+impl SketApp {
     /// Keep the target design and editors unchanged until the picker answers.
     /// (A save being written keeps it unchanged too, see [`crate::save_job`].)
     pub fn file_picker_busy(&self) -> bool {
         self.file_picker.is_some() || self.saving.is_some() || self.disk_prompt
     }
 
-    pub(crate) fn pick_open(&mut self, complete: impl FnOnce(&mut SolveApp, Option<String>) + 'static) {
+    pub(crate) fn pick_open(&mut self, complete: impl FnOnce(&mut SketApp, Option<String>) + 'static) {
         self.pick_open_for(&[], complete);
     }
 
     /// Open a file of this type: the picker offers these extensions first (#1801).
-    pub(crate) fn pick_open_for(&mut self, extensions: &[&str], complete: impl FnOnce(&mut SolveApp, Option<String>) + 'static) {
+    pub(crate) fn pick_open_for(&mut self, extensions: &[&str], complete: impl FnOnce(&mut SketApp, Option<String>) + 'static) {
         if self.file_picker_busy() {
             return;
         }
@@ -51,7 +51,7 @@ impl SolveApp {
     /// Open dialog where the host has none. (The agent chat asks for its files; the web build has
     /// no chat.)
     #[cfg_attr(target_arch = "wasm32", allow(dead_code))]
-    pub(crate) fn pick_file(&mut self, label: &str, extensions: &[&str], complete: impl FnOnce(&mut SolveApp, Option<String>) + 'static) {
+    pub(crate) fn pick_file(&mut self, label: &str, extensions: &[&str], complete: impl FnOnce(&mut SketApp, Option<String>) + 'static) {
         if self.file_picker_busy() {
             return;
         }
@@ -62,7 +62,7 @@ impl SolveApp {
         self.begin_picker(future, Box::new(complete));
     }
 
-    pub(crate) fn pick_save(&mut self, name: &str, extensions: &[&str], complete: impl FnOnce(&mut SolveApp, Option<String>) + 'static) {
+    pub(crate) fn pick_save(&mut self, name: &str, extensions: &[&str], complete: impl FnOnce(&mut SketApp, Option<String>) + 'static) {
         if self.file_picker_busy() {
             return;
         }
@@ -71,7 +71,7 @@ impl SolveApp {
     }
 
     /// Ask for a program (a slicer). Without a host dialog, the answer is a cancel.
-    pub(crate) fn pick_program(&mut self, complete: impl FnOnce(&mut SolveApp, Option<String>) + 'static) {
+    pub(crate) fn pick_program(&mut self, complete: impl FnOnce(&mut SketApp, Option<String>) + 'static) {
         if self.file_picker_busy() {
             return;
         }
@@ -120,7 +120,7 @@ impl SolveApp {
     }
 }
 
-pub(crate) fn tick(app: &mut SolveApp, ctx: &egui::Context) {
+pub(crate) fn tick(app: &mut SketApp, ctx: &egui::Context) {
     let Some(pending) = app.file_picker.as_mut() else { return };
     let waker = Waker::from(Arc::new(Repaint(ctx.clone())));
     let Poll::Ready(path) = pending.future.as_mut().poll(&mut Context::from_waker(&waker)) else {
@@ -160,7 +160,7 @@ mod tests {
         }
     }
 
-    fn picker(app: &mut SolveApp, save: bool) -> Rc<Answer> {
+    fn picker(app: &mut SketApp, save: bool) -> Rc<Answer> {
         let answer = Rc::new(Answer::default());
         let captured = answer.clone();
         if save {
@@ -171,7 +171,7 @@ mod tests {
         answer
     }
 
-    fn finish(app: &mut SolveApp, answer: &Answer, path: Option<String>) {
+    fn finish(app: &mut SketApp, answer: &Answer, path: Option<String>) {
         *answer.path.borrow_mut() = Some(path);
         if let Some(waker) = answer.waker.borrow_mut().take() {
             waker.wake();
@@ -193,7 +193,7 @@ mod tests {
             let answer = picker(&mut h.app, save);
             let completed = Rc::new(Cell::new(0));
             let count = completed.clone();
-            let callback = move |_: &mut SolveApp, path: Option<String>| {
+            let callback = move |_: &mut SketApp, path: Option<String>| {
                 assert!(path.is_none());
                 count.set(count.get() + 1);
             };

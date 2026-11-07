@@ -3,8 +3,8 @@
 //! (`Brep::merge_faces`, its `SmBrep::RemoveTopologicalEdgesAndVertices`; its booleans do the
 //! same at their end), keeping apart the faces split on purpose along the body's split lines.
 
-use solidcore_record::Vec3;
-use solidcore_record::brep::Brep;
+use sketcore_record::Vec3;
+use sketcore_record::brep::Brep;
 use sketcraft_geom::brep::eval::CurveEval;
 use sketcraft_geom::prelude::*;
 

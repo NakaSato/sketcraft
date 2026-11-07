@@ -5,7 +5,7 @@
 //! (`SKETCRAFT_REQUIRE_GPU=1` makes that a failure).
 
 use serde_json::json;
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 use sketcraft_engine::Session;
 use sketcraft_engine::render::{Camera, Rgb, Scene, SceneLine};
 use sketcraft_engine::view::{self, Guides, colors};

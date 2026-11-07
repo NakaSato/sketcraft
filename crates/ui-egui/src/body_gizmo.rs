@@ -28,13 +28,13 @@ const MAX_PIXELS: usize = 512;
 const NONE: u32 = u32::MAX;
 
 /// Centre, radius (points) of the disc the body fills, and the cube's design scale.
-fn disc(app: &SolveApp, rect: Rect) -> (Pos2, f32, f32) {
+fn disc(app: &SketApp, rect: Rect) -> (Pos2, f32, f32) {
     let scale = axis_rect(app, rect).width() / navigation_cube::DESIGN_SIZE;
     (axis_center(app, rect), scale * RADIUS, scale)
 }
 
 /// A press anywhere on the body's disc orbits, as a press on the cube does.
-pub(super) fn drag_origin(app: &SolveApp, rect: Rect, p: Pos2) -> bool {
+pub(super) fn drag_origin(app: &SketApp, rect: Rect, p: Pos2) -> bool {
     let (c, r, _) = disc(app, rect);
     c.distance(p) <= r
 }
@@ -323,7 +323,7 @@ struct Cache {
 type Shared = Arc<Mutex<Option<Cache>>>;
 
 /// Draw the custom navigator as `shown` says (the panel's choices while it is open).
-pub(super) fn show(app: &mut SolveApp, ui: &mut egui::Ui, rect: Rect, shown: crate::view_gizmo::Shown) {
+pub(super) fn show(app: &mut SketApp, ui: &mut egui::Ui, rect: Rect, shown: crate::view_gizmo::Shown) {
     let Some(shape) = shown.shape else { return navigation_cube::show(app, ui, rect) };
     let outer = axis_rect(app, rect);
     if !outer.is_positive() {

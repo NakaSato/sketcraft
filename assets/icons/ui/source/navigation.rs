@@ -1,7 +1,7 @@
 //! Navigation drawing definitions. Camera projection and picking remain in the UI widgets.
 use crate::theme::Tokens;
 use egui::{Color32, FontId, Pos2, Rect, Shape, Stroke, pos2, vec2};
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 use sketcraft_engine::geom::Ring;
 pub(crate) struct Facet {
     pub(crate) direction: Vec3,

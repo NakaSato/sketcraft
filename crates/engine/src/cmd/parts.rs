@@ -10,7 +10,7 @@
 //! washer, the top of a set screw or pin); the shank runs down −z.
 
 use serde_json::{Value, json};
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 use sketcraft_geom::prelude::*;
 
 use super::CommandSpec;
@@ -994,14 +994,11 @@ mod tests {
         }
     }
 
-    fn bbox(s: &Session, prefix: &str) -> (solidcore_record::Vec3, solidcore_record::Vec3) {
+    fn bbox(s: &Session, prefix: &str) -> (sketcore_record::Vec3, sketcore_record::Vec3) {
         let st = s.world_state().unwrap();
         let comp = s.doc.components.iter().find(|c| c.name.starts_with(prefix)).map(|c| c.id).unwrap_or(0);
-        let b = st
-            .bodies
-            .iter()
-            .filter(|b| s.doc.model_body_component(b) == comp)
-            .fold(sketcraft_geom::Aabb3::EMPTY, |a, b| a.union(&b.mesh().bounds()));
+        let b =
+            st.bodies.iter().filter(|b| s.doc.model_body_component(b) == comp).fold(sketcraft_geom::Aabb3::EMPTY, |a, b| a.union(&b.mesh().bounds()));
         (b.min, b.max)
     }
 
@@ -1260,8 +1257,8 @@ mod tests {
         assert_eq!(Some(joint.a.occurrence), washer["occurrence"].as_u64());
         // The seating face is X = 41.6: the 20 mm shank runs along -X and the 8 mm head along +X.
         let (lo, hi) = bbox(&s, "SHCS M8x20");
-        assert!(lo.dist(solidcore_record::Vec3::new(21.6, 43.5, 53.5)) < 1e-6, "{lo:?}");
-        assert!(hi.dist(solidcore_record::Vec3::new(49.6, 56.5, 66.5)) < 1e-6, "{hi:?}");
+        assert!(lo.dist(sketcore_record::Vec3::new(21.6, 43.5, 53.5)) < 1e-6, "{lo:?}");
+        assert!(hi.dist(sketcore_record::Vec3::new(49.6, 56.5, 66.5)) < 1e-6, "{hi:?}");
     }
 
     /// #11729: placed at a point, the part's seating plane is at `point` and `direction` points
@@ -1442,8 +1439,8 @@ mod tests {
                     assert!(s.model.state().threads.iter().any(|t| t.designation == "M8" && (t.pitch - 1.25).abs() < 1e-9), "{family} {units}");
                 }
                 if family == "dowel_pin" {
-                    assert!(b.0.dist(solidcore_record::Vec3::new(10., 46., 56.)) < 1e-6, "{b:?}");
-                    assert!(b.1.dist(solidcore_record::Vec3::new(40., 54., 64.)) < 1e-6, "{b:?}");
+                    assert!(b.0.dist(sketcore_record::Vec3::new(10., 46., 56.)) < 1e-6, "{b:?}");
+                    assert!(b.1.dist(sketcore_record::Vec3::new(40., 54., 64.)) < 1e-6, "{b:?}");
                 }
                 bounds.push(b);
             }

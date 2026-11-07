@@ -1,4 +1,4 @@
-//! solidcore's B-rep to and from the C API's flat arrays ([`crate::flat`]): ports of
+//! sketcore's B-rep to and from the C API's flat arrays ([`crate::flat`]): ports of
 //! `capi/src/smlib_flat.cpp`, so a body converts exactly as it does through the C++ kernel.
 //! - [`to_arrays`]: `FlatFromBrep` (SmBrep, through `SmBrepData::FromBrep`, to arrays): the same
 //!   ids, the same face, edge and vertex order (`GetFaces`, `GetEdges`), analytic kinds with
@@ -24,39 +24,39 @@
 use std::borrow::Cow;
 use std::collections::HashMap;
 
-use solidcore::curve::curve::p1::ApproximateCurveOptions;
-use solidcore::curve::curve::{Curve, CurveKind};
-use solidcore::curve::ellipse::{Ellipse, EllipseOptions};
-use solidcore::curve::line::Line;
-use solidcore::geom::attribute::{AttributeStore, ObjectKey};
-use solidcore::geom::axis2_placement::Axis2Placement;
-use solidcore::geom::extent1d::Extent1d;
-use solidcore::geom::extent2d::Extent2d;
-use solidcore::geom::object::ObjectRef;
-use solidcore::geom::tol::approx_tol3d;
-use solidcore::nurbs::b_spline_curve::{BSplineCurve, BSplineCurveForm, CanonicalData, KnotType};
-use solidcore::nurbs::b_spline_surface::{BSplineSurface, BSplineSurfaceForm, CanonicalSurfaceData};
-use solidcore::nurbs::crv_basic::Curve as NurbCurve;
-use solidcore::nurbs::math::{CPoint, NOW, NOZ};
-use solidcore::nurbs::srf_basic::Surface as NurbSurface;
-use solidcore::query::brep::{BoundingBoxOptions, calculate_bounding_box};
-use solidcore::surface::ball_patch::BallPatch;
-use solidcore::surface::cone::Cone;
-use solidcore::surface::plane::Plane;
-use solidcore::surface::sphere::Sphere;
-use solidcore::surface::surface::{Surface, SurfaceKind};
-use solidcore::surface::torus::{Torus, TorusOptions};
-use solidcore::topology::brep::p1 as bl;
-use solidcore::topology::brep::p10::{HEALER_VERSION, MakeTopologyOptions, TopologyEnv, make_topology_from_data};
-use solidcore::topology::brep_data::{
+use sketcore::curve::curve::p1::ApproximateCurveOptions;
+use sketcore::curve::curve::{Curve, CurveKind};
+use sketcore::curve::ellipse::{Ellipse, EllipseOptions};
+use sketcore::curve::line::Line;
+use sketcore::geom::attribute::{AttributeStore, ObjectKey};
+use sketcore::geom::axis2_placement::Axis2Placement;
+use sketcore::geom::extent1d::Extent1d;
+use sketcore::geom::extent2d::Extent2d;
+use sketcore::geom::object::ObjectRef;
+use sketcore::geom::tol::approx_tol3d;
+use sketcore::nurbs::b_spline_curve::{BSplineCurve, BSplineCurveForm, CanonicalData, KnotType};
+use sketcore::nurbs::b_spline_surface::{BSplineSurface, BSplineSurfaceForm, CanonicalSurfaceData};
+use sketcore::nurbs::crv_basic::Curve as NurbCurve;
+use sketcore::nurbs::math::{CPoint, NOW, NOZ};
+use sketcore::nurbs::srf_basic::Surface as NurbSurface;
+use sketcore::query::brep::{BoundingBoxOptions, calculate_bounding_box};
+use sketcore::surface::ball_patch::BallPatch;
+use sketcore::surface::cone::Cone;
+use sketcore::surface::plane::Plane;
+use sketcore::surface::sphere::Sphere;
+use sketcore::surface::surface::{Surface, SurfaceKind};
+use sketcore::surface::torus::{Torus, TorusOptions};
+use sketcore::topology::brep::p1 as bl;
+use sketcore::topology::brep::p10::{HEALER_VERSION, MakeTopologyOptions, TopologyEnv, make_topology_from_data};
+use sketcore::topology::brep_data::{
     BrepData, DataSourceType, EdgeData, EuData, FaceData, FaceuseData, Keyed, LoopData, NO_OBJECT, RegionData, ShellData, UNDEF_ULONG, UNSURE,
     VertexData,
 };
-use solidcore::topology::brep_data_write::FromBrepEnv;
-use solidcore::topology::edgeuse::{p1 as eu1, p3 as eu3};
-use solidcore::topology::topology::NotifyRecords;
-use solidcore::topology::{Brep, EdgeId, EdgeuseId, FaceId, ShellId, VertexId, edge, shell, vertex};
-use solidcore::{EntityRef, Kernel, Point2, Point3, SolidError, Vec3};
+use sketcore::topology::brep_data_write::FromBrepEnv;
+use sketcore::topology::edgeuse::{p1 as eu1, p3 as eu3};
+use sketcore::topology::topology::NotifyRecords;
+use sketcore::topology::{Brep, EdgeId, EdgeuseId, FaceId, ShellId, VertexId, edge, shell, vertex};
+use sketcore::{EntityRef, Kernel, Point2, Point3, SolidError, Vec3};
 
 use crate::flat::*;
 use crate::import::Arrays;
@@ -66,14 +66,14 @@ use super::{Body, answer, run, with_body};
 
 // ---- shared ------------------------------------------------------------------------------------
 
-/// A solidcore error from `call`.
+/// A sketcore error from `call`.
 fn sc(call: &'static str) -> impl Fn(SolidError) -> Error {
-    move |e| Error::Solidcore(format!("{call}: {e}"))
+    move |e| Error::Sketcore(format!("{call}: {e}"))
 }
 
 /// The arrays (or the body) are not what the conversion can carry: SMLib's `SM_ERR`.
 fn bad(what: &str) -> Error {
-    Error::Solidcore(format!("flat arrays: {what}"))
+    Error::Sketcore(format!("flat arrays: {what}"))
 }
 
 fn get<T: Copy>(v: &[T], i: usize) -> Result<T> {
@@ -433,7 +433,7 @@ fn build_analytic_edge_curve(k: &Kernel, ty: i64, d_min: f64, d_max: f64, center
     analytic_edge_curve(k, ty, d_min, d_max, center, axis, refd, r1, r2).map_err(|(call, e)| sc(call)(e))
 }
 
-/// [`build_analytic_edge_curve`] with solidcore's own error, and the call that gave it.
+/// [`build_analytic_edge_curve`] with sketcore's own error, and the call that gave it.
 #[allow(clippy::too_many_arguments)] // BuildAnalyticEdgeCurve's
 fn analytic_edge_curve(
     k: &Kernel,
@@ -498,7 +498,7 @@ const NURBS_EXPORT: EdgeExport = EdgeExport {
 /// builds from it ([`build_analytic_edge_curve`]) matches it pointwise at the edge's ends and
 /// along the STEP parameter; anything else NURBS. A curve whose STEP parameter runs against its
 /// NURBS one goes with its axis reversed and its range negated. A call that returns a status
-/// other than success makes the edge NURBS, as there ([`answer`]); any other solidcore error
+/// other than success makes the edge NURBS, as there ([`answer`]); any other sketcore error
 /// fails the export.
 fn classify_edge_curve(k: &Kernel, c: Option<&Curve>, ivl: &Extent1d) -> Result<EdgeExport> {
     let Some(c) = c else { return Ok(NURBS_EXPORT) };
@@ -695,7 +695,7 @@ fn write_edge_curve(k: &Kernel, o: &mut Out, ids: &EdgeIds, e: &EdgeExport, c: O
 fn zone_tol_with_faces(b: &Brep, own: f64, brep_tol: f64, faces: &[FaceId]) -> Result<f64> {
     let mut tol = own.max(brep_tol);
     for &f in faces {
-        let t = solidcore::topology::face::p2::tolerance(b, f).map_err(sc("SmFace::GetTolerance"))?;
+        let t = sketcore::topology::face::p2::tolerance(b, f).map_err(sc("SmFace::GetTolerance"))?;
         if t.is_finite() && t > tol {
             tol = t;
         }
@@ -712,7 +712,7 @@ fn max_zone_tol(b: &Brep) -> Result<f64> {
         }
     };
     for f in bl::faces(b, None).map_err(sc("GetFaces"))? {
-        take(solidcore::topology::face::p2::tolerance(b, f).map_err(sc("SmFace::GetTolerance"))?);
+        take(sketcore::topology::face::p2::tolerance(b, f).map_err(sc("SmFace::GetTolerance"))?);
     }
     for e in bl::edges(b, None).map_err(sc("GetEdges"))? {
         take(edge::tolerance(b, e).map_err(sc("SmEdge::GetTolerance"))?);
@@ -766,7 +766,7 @@ pub(crate) fn key_of(e: EntityRef) -> ObjectRef {
 /// vertices and point-shell vertices, edgeuses and wire edgeuses are split apart, every index
 /// compacted for the split.
 fn flat_from_brep(k: &mut Kernel, b: &mut Brep) -> Result<Arrays> {
-    for eu in solidcore::topology::brep::p2::edgeuses(b, None).map_err(sc("GetEdgeuses"))? {
+    for eu in sketcore::topology::brep::p2::edgeuses(b, None).map_err(sc("GetEdgeuses"))? {
         if eu1::faceuse(b, eu).map_err(sc("GetFaceuse"))?.is_none()
             || eu1::uv_trim_curve_pointer(b, eu).map_err(sc("GetUVTrimCurvePointer"))?.is_some()
         {
@@ -2160,7 +2160,7 @@ fn flat_to_brep_data(k: &Kernel, f: &In<'_>, s: &Shape) -> Result<BrepData> {
         ObjectKey(next_key - 1)
     };
     let (n_edges, n_wire, n_point) = (s.edges as u64, s.wire_edges as u64, s.point_shells as u64);
-    let undefined = |t: &mut solidcore::topology::brep_data::TopologyData| {
+    let undefined = |t: &mut sketcore::topology::brep_data::TopologyData| {
         t.flags = 0;
         t.user_index1 = 0;
         t.user_index2 = 0;
@@ -2570,10 +2570,10 @@ const MAX_CONTAINMENT_TESTS: usize = 1 << 16;
 /// can be computed, largest box first (a stable sort: equal boxes keep the arrays' order). Only
 /// `SM_TRUE` counts as inside: `SM_FALSE` and `SM_UNSURE` rule the candidate out, as the capi's
 /// `== TRUE`, and a region where no candidate is shown to enclose the others keeps its order.
-/// solidcore errors the C++ has no counterpart for (a call without a port, a dangling id) refuse
+/// sketcore errors the C++ has no counterpart for (a call without a port, a dangling id) refuse
 /// the conversion, as does a body needing more than [`MAX_CONTAINMENT_TESTS`] containment tests.
 fn put_enclosing_shells_first(k: &mut Kernel, b: &mut Brep) -> Result<()> {
-    use solidcore::query::face::p1::calculate_shell_bounding_box;
+    use sketcore::query::face::p1::calculate_shell_bounding_box;
     let infinite = b.infinite_region();
     let mut tests = 0usize;
     for r in bl::regions(b, None).map_err(sc("GetRegions"))? {

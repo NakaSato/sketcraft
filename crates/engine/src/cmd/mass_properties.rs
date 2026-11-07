@@ -19,7 +19,7 @@ use sketcraft_geom::prelude::*;
 use std::collections::{BTreeMap, HashMap, HashSet};
 
 use serde_json::Value;
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 use sketcraft_doc::joints::{self, JointKind, MAX_JOINTS};
 use sketcraft_doc::{Document, IDENTITY, MAX_PLACEMENTS, Mat, ModelState, apply_point, mat_inverse, mat_mul};
 use sketcraft_geom::inertia::{self, Tensor3};

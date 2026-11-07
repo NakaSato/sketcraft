@@ -1,6 +1,6 @@
 use super::*;
 use crate::brep::eval::{CurveEval, SurfaceEval};
-use solidcore_record::brep::Frame;
+use sketcore_record::brep::Frame;
 use std::f64::consts::{FRAC_PI_2, PI, TAU};
 
 fn frame(origin: [f64; 3], x_axis: [f64; 3], y_axis: [f64; 3]) -> Frame {

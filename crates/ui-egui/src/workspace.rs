@@ -625,7 +625,7 @@ pub fn feature_icon(k: &FeatureKind) -> Option<&'static str> {
 
 /// Selected geometry identifies the active body; without a body selection use the last body
 /// of the active component, matching feature dialogs.
-fn active_body<'a>(app: &'a crate::SolveApp, state: &'a sketcraft_engine::doc::ModelState) -> Option<&'a str> {
+fn active_body<'a>(app: &'a crate::SketApp, state: &'a sketcraft_engine::doc::ModelState) -> Option<&'a str> {
     use sketcraft_engine::Sel;
     let selected = app.session.selection.iter().find_map(|s| match s {
         Sel::Body { name } => Some(name.as_str()),
@@ -641,14 +641,14 @@ fn active_body<'a>(app: &'a crate::SolveApp, state: &'a sketcraft_engine::doc::M
 }
 
 /// The active body when it is sheet metal. Rules on unrelated bodies do not count.
-pub fn sheet_body(app: &crate::SolveApp) -> Option<String> {
+pub fn sheet_body(app: &crate::SketApp) -> Option<String> {
     let state = app.session.model.state();
     let body = active_body(app, &state)?;
     state.sheets.iter().find(|s| s.body == body).map(|s| s.body.clone())
 }
 
 /// The active body when a Frame Member feature made it.
-pub fn frame_body(app: &crate::SolveApp) -> Option<String> {
+pub fn frame_body(app: &crate::SketApp) -> Option<String> {
     let state = app.session.model.state();
     let name = active_body(app, &state)?;
     let body = state.bodies.iter().find(|b| b.name == name)?;
@@ -692,12 +692,12 @@ pub fn choosable_tabs() -> impl Iterator<Item = &'static str> {
 }
 
 /// The person's choice. Every tab is on until explicitly hidden.
-pub fn tab_turned_on(app: &crate::SolveApp, tab: &str) -> bool {
+pub fn tab_turned_on(app: &crate::SketApp, tab: &str) -> bool {
     choosable_tabs().any(|t| t == tab) && !app.preferences.hidden_toolbar_tabs.iter().any(|t| t == tab)
 }
 
 /// Show or hide a tab (kept with the preferences); names not on the list are left alone.
-pub fn set_tab_shown(app: &mut crate::SolveApp, tab: &str, shown: bool) {
+pub fn set_tab_shown(app: &mut crate::SketApp, tab: &str, shown: bool) {
     if !choosable_tabs().any(|t| t == tab) {
         return;
     }
@@ -708,7 +708,7 @@ pub fn set_tab_shown(app: &mut crate::SolveApp, tab: &str, shown: bool) {
 }
 
 /// Every design tab stays hidden until the person chooses to show it again.
-pub fn visible_tabs(app: &crate::SolveApp) -> Vec<&'static str> {
+pub fn visible_tabs(app: &crate::SketApp) -> Vec<&'static str> {
     if crate::render_workspace::active(app) {
         return Vec::new();
     }
@@ -726,7 +726,7 @@ pub fn visible_tabs(app: &crate::SolveApp) -> Vec<&'static str> {
 
 /// Where the ribbon goes when the selected tab is not in the row: Model, or the first tab shown
 /// while Model is hidden; none when every tab is hidden.
-fn home_tab(app: &crate::SolveApp) -> &'static str {
+fn home_tab(app: &crate::SketApp) -> &'static str {
     let tabs = visible_tabs(app);
     [app.ui.home_tab, "MODEL"].into_iter().find(|t| tabs.contains(t)).or_else(|| tabs.first().copied()).unwrap_or_default()
 }
@@ -734,7 +734,7 @@ fn home_tab(app: &crate::SolveApp) -> &'static str {
 /// With the SKETCH tab kept shown (#7904) and no sketch open: whether `id` is one of the tools in
 /// its CREATE or REFERENCE sections, which then start a sketch first (Create Sketch, then the
 /// tool). Tools that work on a sketch's geometry (modify, pattern, constrain) wait for one.
-pub fn starts_a_sketch(app: &crate::SolveApp, id: &str) -> bool {
+pub fn starts_a_sketch(app: &crate::SketApp, id: &str) -> bool {
     (app.preferences.sketch_tab_always || app.ui.tab == SKETCHUP_TAB)
         && app.session.active_sketch.is_none()
         && sketcraft_engine::find_command(id)
@@ -745,7 +745,7 @@ pub fn starts_a_sketch(app: &crate::SolveApp, id: &str) -> bool {
 /// Select contextual tabs on entry (or a different sheet body or frame member), allowing the
 /// other tabs to remain usable for the rest of that context. Sketch takes precedence over sheet
 /// metal, and sheet metal over weldments.
-pub fn sync_context(app: &mut crate::SolveApp) {
+pub fn sync_context(app: &mut crate::SketApp) {
     if crate::render_workspace::active(app) {
         return;
     }
@@ -788,7 +788,7 @@ pub fn sync_context(app: &mut crate::SolveApp) {
     }
 }
 
-pub fn select_command_tab(app: &mut crate::SolveApp, id: &str) {
+pub fn select_command_tab(app: &mut crate::SketApp, id: &str) {
     sync_context(app);
     if let Some(tab) = command_tab(app, id) {
         app.ui.tab = tab.into();
@@ -797,7 +797,7 @@ pub fn select_command_tab(app: &mut crate::SolveApp, id: &str) {
 
 /// The tab to switch to so the ribbon shows command `id`, or `None` to stay: the current tab
 /// already lists it, or its home tab can't be shown.
-pub fn command_tab(app: &crate::SolveApp, id: &str) -> Option<&'static str> {
+pub fn command_tab(app: &crate::SketApp, id: &str) -> Option<&'static str> {
     let c = sketcraft_engine::find_command(id)?;
     // Keep the tab a toolbar click came from when it already lists this shared command.
     if crate::toolbar_custom::panel_lists(&app.ui.tab).iter().any(|(_, cmds, _)| cmds.iter().any(|c| c.id == id)) {
@@ -1109,7 +1109,7 @@ mod tests {
         assert!(h.call("ui.prefs", json!({"hidden_toolbar_tabs": ["SKETCH"]}))["error"].is_string(), "only choosable tabs");
         assert!(h.call("ui.prefs", json!({"hidden_toolbar_tabs": ["VIEW", "VIEW"]}))["error"].is_string(), "each once");
         assert!(h.call("ui.prefs", json!({"hidden_toolbar_tabs": choosable_tabs().collect::<Vec<_>>()}))["error"].is_null());
-        let mut other = crate::SolveApp::new(sketcraft_engine::Session::default(), crate::Services::default());
+        let mut other = crate::SketApp::new(sketcraft_engine::Session::default(), crate::Services::default());
         other.load_prefs(&h.app.prefs());
         assert!(visible_tabs(&other).is_empty());
 
@@ -1169,7 +1169,7 @@ mod tests {
         assert_eq!(h.app.preferences.hidden_toolbar_tabs, ["SHEET METAL"]);
         assert!(crate::scenario::handle_at("tab:SHEET METAL").is_none());
         assert!(visible_tabs(&h.app).contains(&"WELDMENTS"));
-        let mut other = crate::SolveApp::new(sketcraft_engine::Session::default(), crate::Services::default());
+        let mut other = crate::SketApp::new(sketcraft_engine::Session::default(), crate::Services::default());
         other.load_prefs(&h.app.prefs());
         assert!(!visible_tabs(&other).contains(&"SHEET METAL"));
 
@@ -1311,7 +1311,7 @@ mod tests {
     /// shown, and come back from the preferences.
     #[test]
     fn the_cad_tabs_start_hidden() {
-        let mut app = crate::SolveApp::new(sketcraft_engine::Session::default(), Default::default());
+        let mut app = crate::SketApp::new(sketcraft_engine::Session::default(), Default::default());
         assert_eq!(app.preferences.hidden_toolbar_tabs, HIDDEN_BY_DEFAULT);
         let shown = visible_tabs(&app);
         assert!(HIDDEN_BY_DEFAULT.iter().all(|t| !shown.contains(t)), "{shown:?}");
@@ -1324,7 +1324,7 @@ mod tests {
     /// the tab it was on goes away.
     #[test]
     fn the_app_opens_on_the_sketchup_tab() {
-        let mut app = crate::SolveApp::new(sketcraft_engine::Session::default(), Default::default());
+        let mut app = crate::SketApp::new(sketcraft_engine::Session::default(), Default::default());
         assert_eq!(app.ui.tab, SKETCHUP_TAB);
         assert_eq!(TABS.first(), Some(&SKETCHUP_TAB));
         assert_eq!(home_tab(&app), SKETCHUP_TAB);

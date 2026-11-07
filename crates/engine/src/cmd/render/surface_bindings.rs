@@ -4,7 +4,7 @@ use crate::schema::TypedContract;
 use crate::schema::render_bindings::{SurfaceBindParams, SurfaceBindingSaved, SurfaceUnbindParams};
 use crate::{Result, Session, params::bad};
 use serde_json::{Value, json};
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 use sketcraft_doc::{
     render_resources::HdrId,
     render_settings::{RenderJob, RenderSetup},

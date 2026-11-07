@@ -395,7 +395,7 @@ fn cpu_native_studio_cold_capture_matches_typed_source_every_prefix_and_raw_mast
     for id in ["NATIVE-STUDIO-001", "NATIVE-STUDIO-004", "RIG-020"] {
         let mut s = Session::default();
         s.execute("solid.box", &json!({"length":20,"width":15,"height":10,"body_name":"Subject"})).unwrap();
-        let camera = sketcraft_render::Camera { target: solidcore_record::Vec3::new(10.0, 7.5, 5.0), distance: 35.0, ..Default::default() };
+        let camera = sketcraft_render::Camera { target: sketcore_record::Vec3::new(10.0, 7.5, 5.0), distance: 35.0, ..Default::default() };
         s.execute("render.settings.set",&json!({"name":"Shot","set":{"width":8,"height":8,"camera":camera,"job":{"method":"cpu_raytrace","options":{"progressive":{"samples_per_pixel":3,"seed":47},"area_samples":1,"seed":731,"output":{"linear_exr":true}}}}})).unwrap();
         s.execute("render.library.environment.apply", &json!({"id":"HDR-001","name":"Shot","samples":1})).unwrap();
         if id == "RIG-020" {

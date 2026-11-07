@@ -3,7 +3,7 @@
 //! falls between two rows, so such lines came and went as the view zoomed. Skipped, with the
 //! reason printed, without a GPU adapter (`SKETCRAFT_REQUIRE_GPU=1` makes that a failure).
 
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 use sketcraft_engine::render::{Camera, Rgb, Scene, SceneLine, StandardView};
 use sketcraft_gpu::GpuError;
 use sketcraft_gpu::capture::Capturer;

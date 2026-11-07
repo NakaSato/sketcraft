@@ -270,7 +270,7 @@ impl JsonSchema for Distance {
 /// A point of `canvas.calibrate`: `[x, y]` or `{x, y}` of numbers, with the handler's one message
 /// for `a` and `b`.
 #[derive(Clone, Copy, Debug, PartialEq)]
-pub struct CalibrationPoint(pub solidcore_record::Vec2);
+pub struct CalibrationPoint(pub sketcore_record::Vec2);
 
 impl<'de> Deserialize<'de> for CalibrationPoint {
     fn deserialize<D: Deserializer<'de>>(d: D) -> Result<Self, D::Error> {

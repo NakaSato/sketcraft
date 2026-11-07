@@ -28,8 +28,8 @@
 use sketcraft_geom::prelude::*;
 use std::f64::consts::TAU;
 
-use solidcore_record::Vec3;
-use solidcore_record::brep::{self, Curve as BCurve};
+use sketcore_record::Vec3;
+use sketcore_record::brep::{self, Curve as BCurve};
 
 use super::{Builder, LoopB, R};
 

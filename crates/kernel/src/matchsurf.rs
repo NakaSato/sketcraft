@@ -16,8 +16,8 @@
 //! of the target meet, with shapes that part company, is a seam the target itself does not hold
 //! beyond that order, and no surface can be told to carry a condition the target has not got.
 
-use solidcore_record::Vec3;
-use solidcore_record::brep::{self as b};
+use sketcore_record::Vec3;
+use sketcore_record::brep::{self as b};
 use sketcraft_geom::brep::{eval::CurveEval, eval::SurfaceEval};
 use sketcraft_geom::prelude::*;
 

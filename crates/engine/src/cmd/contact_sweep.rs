@@ -8,7 +8,7 @@ use std::cell::Cell;
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::sync::Arc;
 
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 use sketcraft_doc::joints;
 use sketcraft_doc::{Document, IDENTITY, Mat, apply_point, mat_mul};
 use sketcraft_geom::{Aabb3, Bvh, Mesh};

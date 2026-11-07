@@ -274,7 +274,7 @@ fn fillet_replies_match_its_output_schema() {
     run(json!({"edges": [[20, 0, 10]], "radius": 1, "type": "chord"}));
     run(json!({"edges": [{"body": "B", "index": 0}], "radius": 0.5, "tangent_chain": false}));
     run(json!({"edges": [[20, 0, 10]], "radius": 1, "type": "curvature"}));
-    // Variable and spline radii: solidcore fails a variable round on a box edge at this pin (status
+    // Variable and spline radii: sketcore fails a variable round on a box edge at this pin (status
     // 1001, as `variable_radius_on_a_box_edge`), so their forms are checked against the contract.
     for p in [
         json!({"edges": [[20, 0, 10]], "radius": 1, "type": "variable", "radius2": 2, "start": [0, 0, 10], "mid": [[0.5, "1.5 mm"]], "smooth": true}),

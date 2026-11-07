@@ -1,4 +1,4 @@
-//! The Measure and Check families on solidcore's primitives: mass properties, area and bounds
+//! The Measure and Check families on sketcore's primitives: mass properties, area and bounds
 //! against their closed forms ([`crate::measure::closed`]), one solid each, edges on their faces.
 
 use super::{Body, area, bounds, check, edge_face_distance, is_manifold_solid, make_box, make_cone, make_cylinder, make_sphere, make_torus};
@@ -97,7 +97,7 @@ fn checks_valid(name: &str) {
 /// identities (`check_brep` has no error for it, so no error of its can turn into a refusal).
 #[test]
 fn check_refuses_only_an_unknown_naming() {
-    use solidcore::topology::NamingScheme;
+    use sketcore::topology::NamingScheme;
     let name = |naming| {
         let (b, _) = case("box");
         b.0.lock().unwrap().set_naming(naming);
@@ -185,7 +185,7 @@ fn hostile_numbers_are_refused() {
     assert!(rel(mass_properties(&b, 10.0).unwrap().volume, 6000.0) < TOL);
 }
 
-/// A 20 mm box minus a centred 10 mm box (a sealed void), as solidcore's boolean makes it and as
+/// A 20 mm box minus a centred 10 mm box (a sealed void), as sketcore's boolean makes it and as
 /// it comes back from arrays listing its solid region's shells inner first.
 fn sealed_voids() -> [(&'static str, Body); 2] {
     use crate::BooleanOp;
@@ -208,7 +208,7 @@ fn sealed_voids() -> [(&'static str, Body); 2] {
         x.swap_with_slice(y);
     }
     let reordered = super::from_arrays(&a).unwrap();
-    [("solidcore's", body), ("inner first", reordered)]
+    [("sketcore's", body), ("inner first", reordered)]
 }
 
 /// The sealed void's mass properties: 8000 − 1000 to 1e-9, centroid at the origin, one solid,
@@ -233,9 +233,9 @@ fn a_sealed_void_measures_its_volume() {
 /// "Suspicious Shell Count", warns of it, and the capi's check counts no warning.
 #[test]
 fn faces_apart_with_a_shell_each_check_valid() {
-    use solidcore::geom::axis2_placement::Axis2Placement;
-    use solidcore::geom::vector3d::Vec3;
-    use solidcore::primitive::primitive_creation::p1::create_rectangle;
+    use sketcore::geom::axis2_placement::Axis2Placement;
+    use sketcore::geom::vector3d::Vec3;
+    use sketcore::primitive::primitive_creation::p1::create_rectangle;
 
     use super::boolean::boolean2d;
     use super::run;
@@ -294,9 +294,9 @@ fn points_classify_as_the_capi() {
 /// 100, not the cube's boundary alone; its volume the cube's.
 #[test]
 fn a_sheet_hung_on_a_solid_counts_in_the_area() {
-    use solidcore::boolean::api_brep::boolean_merge;
-    use solidcore::geom::vector3d::Vec3;
-    use solidcore::primitive::api_primitives::{create_box, create_plane};
+    use sketcore::boolean::api_brep::boolean_merge;
+    use sketcore::geom::vector3d::Vec3;
+    use sketcore::primitive::api_primitives::{create_box, create_plane};
     let both = super::run("cube and flap", |k| {
         let cube = create_box(k, Vec3::new(0.0, 0.0, 0.0), 10.0, 10.0, 10.0)?;
         let flap = create_plane(k, Vec3::new(10.0, 0.0, 10.0), 10.0, 10.0)?;

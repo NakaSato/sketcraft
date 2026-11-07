@@ -15,7 +15,7 @@
 use sketcraft_geom::prelude::*;
 use std::f64::consts::{PI, TAU};
 
-use solidcore_record::{Loop2, Region2, Seg2, Vec2};
+use sketcore_record::{Loop2, Region2, Seg2, Vec2};
 
 use crate::model::{CurveKind, Result, Sketch, SketchError};
 use crate::profiles::{find_profiles, merge_regions};

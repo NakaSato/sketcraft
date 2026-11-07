@@ -1,7 +1,7 @@
 //! Selected-light editor and transient visibility. Saved settings are edited only by commands.
 use super::{ImageMethod, RenderSelection, cpu, setups, studio};
 use crate::ui_kit::BackingTooltipExt as _;
-use crate::{SolveApp, ui_kit};
+use crate::{SketApp, ui_kit};
 use serde_json::{Value, json};
 use sketcraft_engine::doc::render_settings::{CpuJob, GpuJob, RenderJob, RenderSetup, SkyEnvironment};
 use sketcraft_engine::geom::prelude::*;
@@ -73,7 +73,7 @@ struct Draft {
 }
 
 /// Lighting-only read snapshot also works with unsaved HDR paths and temporary bindings.
-fn settings(app: &SolveApp) -> Result<RenderSetup, String> {
+fn settings(app: &SketApp) -> Result<RenderSetup, String> {
     let view = &app.render_workspace.view;
     let job = match view.method {
         ImageMethod::Raster => RenderJob::Raster { transparent_background: false },
@@ -122,7 +122,7 @@ fn settings(app: &SolveApp) -> Result<RenderSetup, String> {
 
 /// Copy the common analytic rig without inventing a backend's implicit studio.
 /// This is a pure prospective conversion; the caller publishes only after full validation.
-pub(super) fn celestial_method(app: &SolveApp, next: &mut super::ViewState, method: ImageMethod) -> Result<(), String> {
+pub(super) fn celestial_method(app: &SketApp, next: &mut super::ViewState, method: ImageMethod) -> Result<(), String> {
     let sources = rows(app)?;
     let mut setup = RenderSetup {
         camera: app.cam,
@@ -199,7 +199,7 @@ pub(super) fn celestial_method(app: &SolveApp, next: &mut super::ViewState, meth
 /// Preserve transient visibility only when its prior Arc/method source is proven;
 /// equal row values or counts alone never establish identity.
 pub(super) fn celestial_method_applied(
-    app: &mut SolveApp,
+    app: &mut SketApp,
     before: &std::sync::Weak<sketcraft_engine::doc::render_settings::RenderSettings>,
     method: ImageMethod,
 ) {
@@ -220,11 +220,11 @@ pub(super) fn celestial_method_applied(
     }
 }
 
-pub(super) fn rows(app: &SolveApp) -> Result<Vec<Light>, String> {
+pub(super) fn rows(app: &SketApp) -> Result<Vec<Light>, String> {
     sketcraft_engine::render_lights::inspect(&settings(app)?)
 }
 
-pub(super) fn name(app: &SolveApp, light: &Light) -> String {
+pub(super) fn name(app: &SketApp, light: &Light) -> String {
     if light.number <= 3 { app.tr(&light.name_key).into() } else { crate::i18n::format(&light.name_key, &[("number", &light.number.to_string())]) }
 }
 
@@ -232,7 +232,7 @@ pub(super) fn name(app: &SolveApp, light: &Light) -> String {
 /// Equal values alone are insufficient: prove both the cached pre-command Arc
 /// and its saved rows, then retain only this one exact Undo/Redo edge.
 pub(super) fn volume_edited(
-    app: &mut SolveApp,
+    app: &mut SketApp,
     before: &std::sync::Weak<sketcraft_engine::doc::render_settings::RenderSettings>,
     method: ImageMethod,
     draft: &RenderSetup,
@@ -265,7 +265,7 @@ pub(super) fn volume_edited(
     view.draft = None;
 }
 
-pub(crate) fn validate_visibility(app: &SolveApp, params: &Value) -> Result<(), String> {
+pub(crate) fn validate_visibility(app: &SketApp, params: &Value) -> Result<(), String> {
     if let Some(id) = params.get("id").and_then(Value::as_str)
         && !rows(app)?.iter().any(|light| light.id == id)
     {
@@ -274,7 +274,7 @@ pub(crate) fn validate_visibility(app: &SolveApp, params: &Value) -> Result<(), 
     Ok(())
 }
 
-pub(crate) fn apply_visibility(app: &mut SolveApp, command: &str, reply: &Value) {
+pub(crate) fn apply_visibility(app: &mut SketApp, command: &str, reply: &Value) {
     let visibility = &mut app.render_workspace.view.lights.visibility;
     let id = reply.get("id").and_then(Value::as_str);
     if command == "render.lights.solo" {
@@ -288,7 +288,7 @@ pub(crate) fn apply_visibility(app: &mut SolveApp, command: &str, reply: &Value)
     }
 }
 
-pub(super) fn loaded(app: &mut SolveApp) {
+pub(super) fn loaded(app: &mut SketApp) {
     let scope_changed = app.render_workspace.view.lights.scope != app.render_workspace.view.name;
     if scope_changed {
         app.render_workspace.view.lights = View { scope: app.render_workspace.view.name.clone(), ..Default::default() };
@@ -320,7 +320,7 @@ pub(super) fn loaded(app: &mut SolveApp) {
 }
 
 /// Runs after successful command dispatch, including programmatic control-channel edits.
-pub(crate) fn edited(app: &mut SolveApp, command: &str, params: &Value, reply: &Value) {
+pub(crate) fn edited(app: &mut SketApp, command: &str, params: &Value, reply: &Value) {
     let Some(name) = reply.get("name").and_then(Value::as_str) else { return };
     if name != app.render_workspace.view.name {
         return;
@@ -389,13 +389,13 @@ pub(crate) fn edited(app: &mut SolveApp, command: &str, params: &Value, reply: &
     app.render_workspace.view.selection = reply.get("id").and_then(Value::as_str).map_or(selection, |id| RenderSelection::Light(id.into()));
 }
 
-fn product_centre(app: &SolveApp) -> [f64; 3] {
+fn product_centre(app: &SketApp) -> [f64; 3] {
     let bounds = sketcraft_engine::view::bounds(&app.session).unwrap_or(sketcraft_engine::geom::Aabb3::EMPTY);
     let point = if bounds.is_empty() { app.cam.target } else { bounds.center() };
     [point.x, point.y, point.z]
 }
 
-pub(super) fn edit(app: &mut SolveApp, command: &str, id: Option<&str>, mut set: Option<Value>) -> Result<(), String> {
+pub(super) fn edit(app: &mut SketApp, command: &str, id: Option<&str>, mut set: Option<Value>) -> Result<(), String> {
     let snapshot = setups::snapshot(app)?;
     let mut request = json!({"name":app.render_workspace.view.name,"settings":snapshot,"expected_revision":app.session.revision});
     if let Some(id) = id {
@@ -416,9 +416,9 @@ pub(super) fn edit(app: &mut SolveApp, command: &str, id: Option<&str>, mut set:
     app.run(command, request).map(|_| ())
 }
 
-/// Applied to copies at the request boundary, including engine.execute through SolveApp::run.
+/// Applied to copies at the request boundary, including engine.execute through SketApp::run.
 /// The draft and saved RenderSetup remain unfiltered, including while saving or undoing.
-pub(crate) fn filter_request(app: &SolveApp, mut request: Value) -> Result<Value, String> {
+pub(crate) fn filter_request(app: &SketApp, mut request: Value) -> Result<Value, String> {
     let visibility = &app.render_workspace.view.lights.visibility;
     if !visibility.active() {
         return Ok(request);
@@ -508,7 +508,7 @@ pub(crate) fn filter_request(app: &SolveApp, mut request: Value) -> Result<Value
 
 /// Unshadowed analytic preview: area sources use their centre and projected area.
 /// Final rendering retains the full emitter and transport contracts.
-pub(super) fn preview(app: &SolveApp) -> Result<Vec<[f32; 16]>, String> {
+pub(super) fn preview(app: &SketApp) -> Result<Vec<[f32; 16]>, String> {
     let mut output = Vec::new();
     for light in rows(app)? {
         if !app.render_workspace.view.lights.visibility.visible(&light.id) {
@@ -538,9 +538,9 @@ pub(super) fn preview(app: &SolveApp) -> Result<Vec<[f32; 16]>, String> {
                 emitted_axis, inner_half_angle_radians, outer_half_angle_radians, reference_distance_mm, minimum_distance_mm, ..
             } => (emitted_axis, inner_half_angle_radians.cos(), outer_half_angle_radians.cos(), reference_distance_mm.powi(2), minimum_distance_mm),
             Geometry::Area { edge_u_mm: [ux, uy, uz], edge_v_mm: [vx, vy, vz], .. } => {
-                let normal = solidcore_record::Vec3::new(ux, uy, uz).cross(solidcore_record::Vec3::new(vx, vy, vz));
+                let normal = sketcore_record::Vec3::new(ux, uy, uz).cross(sketcore_record::Vec3::new(vx, vy, vz));
                 let area = normal.len();
-                let n = sketcraft_engine::render::surface::unit_direction(normal).unwrap_or(-solidcore_record::Vec3::Z);
+                let n = sketcraft_engine::render::surface::unit_direction(normal).unwrap_or(-sketcore_record::Vec3::Z);
                 ([n.x, n.y, n.z], 0.0, 0.0, area, 0.001)
             }
             _ => ([0.0; 3], 0.0, 0.0, 1.0, 0.001),
@@ -582,7 +582,7 @@ pub(super) fn preview(app: &SolveApp) -> Result<Vec<[f32; 16]>, String> {
 }
 
 /// The group row and legacy Lighting page share this one editor.
-pub(super) fn lighting(app: &mut SolveApp, ui: &mut egui::Ui) {
+pub(super) fn lighting(app: &mut SketApp, ui: &mut egui::Ui) {
     crate::scenario::publish_target("render:lighting:editor", ui.available_rect_before_wrap());
     let method = app.render_workspace.view.method;
     let cpu = method == ImageMethod::CpuRaytrace;
@@ -739,7 +739,7 @@ pub(super) fn lighting(app: &mut SolveApp, ui: &mut egui::Ui) {
     });
 }
 
-pub(super) fn add_menu(app: &mut SolveApp, ui: &mut egui::Ui) {
+pub(super) fn add_menu(app: &mut SketApp, ui: &mut egui::Ui) {
     let gpu = app.render_workspace.view.method == ImageMethod::GpuRaytrace;
     let raster = app.render_workspace.view.method == ImageMethod::Raster;
     let lights = rows(app).unwrap_or_default();
@@ -789,7 +789,7 @@ pub(super) fn add_menu(app: &mut SolveApp, ui: &mut egui::Ui) {
     });
 }
 
-fn review_preset(app: &mut SolveApp, preset: sketcraft_engine::render::job::LightingPreset) {
+fn review_preset(app: &mut SketApp, preset: sketcraft_engine::render::job::LightingPreset) {
     match setups::snapshot(app) {
         Ok(mut setup) => {
             let source = setup.clone();
@@ -810,14 +810,14 @@ fn review_preset(app: &mut SolveApp, preset: sketcraft_engine::render::job::Ligh
     }
 }
 
-fn save_lighting(app: &mut SolveApp, setup: RenderSetup) -> Result<(), String> {
+fn save_lighting(app: &mut SketApp, setup: RenderSetup) -> Result<(), String> {
     app.run("render.settings.set", json!({"name":app.render_workspace.view.name,"set":setup}))?;
     // Full settings replacement has no source map. Respect loaded()'s proven-
     // provenance policy instead of restoring visibility by reused ordinal IDs.
     setups::load(app);
     Ok(())
 }
-fn update_cpu(app: &mut SolveApp, update: impl FnOnce(&mut CpuJob)) {
+fn update_cpu(app: &mut SketApp, update: impl FnOnce(&mut CpuJob)) {
     let result = (|| {
         let mut setup = setups::snapshot(app)?;
         if let Some(RenderJob::CpuRaytrace { options, .. }) = &mut setup.job {
@@ -830,7 +830,7 @@ fn update_cpu(app: &mut SolveApp, update: impl FnOnce(&mut CpuJob)) {
     }
 }
 
-pub(super) fn confirmation(app: &mut SolveApp, ctx: &egui::Context) {
+pub(super) fn confirmation(app: &mut SketApp, ctx: &egui::Context) {
     let Some(mut review) = app.render_workspace.view.lights.review.take() else { return };
     if review.revision != app.session.revision
         || review.name != app.render_workspace.view.name
@@ -861,7 +861,7 @@ pub(super) fn confirmation(app: &mut SolveApp, ctx: &egui::Context) {
         _ => app.render_workspace.view.lights.review = Some(review),
     }
 }
-pub(super) fn editor(app: &mut SolveApp, ui: &mut egui::Ui, id: &str) {
+pub(super) fn editor(app: &mut SketApp, ui: &mut egui::Ui, id: &str) {
     let lights = match rows(app) {
         Ok(lights) => lights,
         Err(error) => {
@@ -1201,16 +1201,16 @@ fn bounded(value: f64, low: f64, high: f64) -> f64 {
 fn length([x, y, z]: [f64; 3]) -> f64 {
     x.hypot(y).hypot(z)
 }
-fn subject_size(app: &SolveApp) -> f64 {
+fn subject_size(app: &SketApp) -> f64 {
     bounded(sketcraft_engine::view::bounds(&app.session).unwrap_or(sketcraft_engine::geom::Aabb3::EMPTY).diagonal(), 1.0, 1e6)
 }
-fn note(app: &SolveApp, ui: &mut egui::Ui, key: &'static str) {
+fn note(app: &SketApp, ui: &mut egui::Ui, key: &'static str) {
     ui_kit::text(ui, app.tr(key), ui_kit::Text::Note(key));
 }
 
 #[allow(clippy::too_many_arguments)]
 fn slider_field(
-    app: &mut SolveApp,
+    app: &mut SketApp,
     ui: &mut egui::Ui,
     id: &str,
     label: &str,
@@ -1239,7 +1239,7 @@ fn slider_field(
 
 #[allow(clippy::too_many_arguments)]
 fn vector_field(
-    app: &mut SolveApp,
+    app: &mut SketApp,
     ui: &mut egui::Ui,
     id: &str,
     label: &str,
@@ -1267,7 +1267,7 @@ fn vector_field(
 fn accepted(response: &egui::Response) -> bool {
     response.drag_stopped() || (response.changed() && (response.has_focus() || response.lost_focus()))
 }
-fn dispatch(app: &mut SolveApp, command: &str, id: Option<&str>, set: Option<Value>) {
+fn dispatch(app: &mut SketApp, command: &str, id: Option<&str>, set: Option<Value>) {
     if let Err(error) = edit(app, command, id, set) {
         app.set_status(error, true);
     }
@@ -1275,7 +1275,7 @@ fn dispatch(app: &mut SolveApp, command: &str, id: Option<&str>, set: Option<Val
 
 #[allow(clippy::too_many_arguments)]
 fn field(
-    app: &mut SolveApp,
+    app: &mut SketApp,
     ui: &mut egui::Ui,
     id: &str,
     label: &str,
@@ -1306,6 +1306,6 @@ fn field(
 }
 
 #[cfg(test)]
-pub(super) fn editor_draft(app: &SolveApp) -> Option<(String, u64, f64, f64)> {
+pub(super) fn editor_draft(app: &SketApp) -> Option<(String, u64, f64, f64)> {
     app.render_workspace.view.lights.draft.as_ref().map(|draft| (draft.id.clone(), draft.revision, draft.ev, draft.softness))
 }

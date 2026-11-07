@@ -233,7 +233,7 @@ impl From<&sketcraft_doc::ThreadInfo> for ModelThread {
             },
             starts: t.starts,
             axis_point: t.axis_point.into(),
-            axis: solidcore_record::Vec3::from(t.axis).into(),
+            axis: sketcore_record::Vec3::from(t.axis).into(),
             start: t.start,
             end: t.end,
         }

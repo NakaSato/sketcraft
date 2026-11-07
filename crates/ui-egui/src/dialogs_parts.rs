@@ -9,7 +9,7 @@ use egui::vec2;
 use serde_json::{Value, json};
 use sketcraft_engine::{Sel, Session};
 
-use crate::SolveApp;
+use crate::SketApp;
 use crate::dialogs::{Kind, combo, form_row};
 use crate::selection::{EDGES, FACES, SelInput};
 use crate::theme::Tokens;
@@ -81,7 +81,7 @@ pub struct Pt {
 }
 
 /// The dialog for Insert Part.
-pub fn start(_app: &SolveApp, id: &str) -> Option<(Kind, Vec<SelInput>)> {
+pub fn start(_app: &SketApp, id: &str) -> Option<(Kind, Vec<SelInput>)> {
     // Standard Parts itself only lists the library: started from the app it opens the dialog
     // that shows it (#8735), which did nothing before.
     matches!(id, "parts.fastener" | "parts.insert" | "parts.library").then(|| {
@@ -92,7 +92,7 @@ pub fn start(_app: &SolveApp, id: &str) -> Option<(Kind, Vec<SelInput>)> {
     })
 }
 
-fn library(app: &mut SolveApp) -> Vec<Family> {
+fn library(app: &mut SketApp) -> Vec<Family> {
     app.session.execute("parts.library", &json!({})).map(|v| families(&v)).unwrap_or_default()
 }
 
@@ -128,7 +128,7 @@ pub fn insert_params(lib: &[Family], k: &Pt, holes: &[Sel]) -> Result<Value, Str
 
 /// A length (mm) of a part of the family: in fractional inches for an inch family, in the
 /// design's units otherwise.
-pub(crate) fn length_label(app: &SolveApp, family: &str, mm: f64) -> String {
+pub(crate) fn length_label(app: &SketApp, family: &str, mm: f64) -> String {
     sketcraft_engine::cmd::part_length_label(family, mm).unwrap_or_else(|| crate::prefs::show_mm(app, mm, 1))
 }
 
@@ -158,7 +158,7 @@ fn picture(p: &Value) -> Option<egui::ColorImage> {
 }
 
 /// The dialog's rows.
-pub fn rows(app: &mut SolveApp, ui: &mut egui::Ui, k: &mut Pt, inputs: &[SelInput]) -> bool {
+pub fn rows(app: &mut SketApp, ui: &mut egui::Ui, k: &mut Pt, inputs: &[SelInput]) -> bool {
     let t = Tokens::get();
     let lib = match &k.lib {
         Some(l) => l.clone(),
@@ -271,7 +271,7 @@ pub fn rows(app: &mut SolveApp, ui: &mut egui::Ui, k: &mut Pt, inputs: &[SelInpu
 }
 
 /// The commands OK runs.
-pub fn commands(app: &SolveApp, k: &Pt, inputs: &[SelInput]) -> Result<Vec<(String, Value)>, String> {
+pub fn commands(app: &SketApp, k: &Pt, inputs: &[SelInput]) -> Result<Vec<(String, Value)>, String> {
     let lib = match &k.lib {
         Some(l) => l.clone(),
         None => app.session.scratch().execute("parts.library", &json!({})).map(|v| families(&v)).unwrap_or_default(),
@@ -306,7 +306,7 @@ fn dimension_label(key: &str) -> Option<&'static str> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use solidcore_record::Vec3;
+    use sketcore_record::Vec3;
 
     fn lib() -> Vec<Family> {
         families(&json!({"families": [

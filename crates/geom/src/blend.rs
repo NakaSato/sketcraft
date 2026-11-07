@@ -3,7 +3,7 @@
 //! geometry `sketch.blend_curve` builds; it knows nothing about sketches or the document.
 
 use crate::{MAX_DERIVATIVE_ORDER, profile::binom};
-use solidcore_record::Vec2;
+use sketcore_record::Vec2;
 
 /// Control points of the Bézier of degree `2k + 1`, `k = d0.len()`, that starts at `p0` with
 /// derivatives `d0` and ends at `p1` with derivatives `d1`, all with respect to its own parameter
