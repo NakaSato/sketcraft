@@ -274,11 +274,16 @@ impl KetchupApp {
         {
             let _ = ctx;
             let ext = self.project.import_format.clone();
+            let filters: Vec<&str> = if ext == "any" {
+                crate::mesh_exchange::IMPORT_EXTENSIONS.to_vec()
+            } else {
+                vec![ext.as_str()]
+            };
             self.project.file_dialog.open_dialog(
                 crate::file_dialog::FileDialogMode::ImportGeometry(ext.clone()),
                 crate::file_dialog::FileDialogPayload::ImportGeometry { extension: ext.clone() },
-                &[&ext],
-                "Import geometry (STL: mm; OBJ: metres; DXF: declared units or mm)",
+                &filters,
+                "Import geometry (STL: mm; OBJ, glTF: metres; DXF, 3MF: declared units or mm)",
                 "",
                 self.project.path.as_deref(),
             );

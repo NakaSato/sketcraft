@@ -114,6 +114,12 @@ fn exchange_choices_survive_reload_without_a_model_edit() {
     restored.restore_inspector_preferences(&egui::Context::default(), Some(&storage));
     assert_eq!(restored.project.import_format, "dxf");
     assert!(restored.project.export_stl);
+    for format in ["3mf", "glb", "gltf", "any"] {
+        app.project.import_format = format.into();
+        app.persist_inspector_changes(&ctx, Some(&mut storage), false);
+        restored.restore_inspector_preferences(&egui::Context::default(), Some(&storage));
+        assert_eq!(restored.project.import_format, format);
+    }
     let old: InspectorPreferences = serde_json::from_str("{}").unwrap();
     assert_eq!(old.import_format, "skp");
     assert!(!old.export_stl);

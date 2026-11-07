@@ -426,6 +426,26 @@ fn open_pdf(path: &std::path::Path) -> Result<(), String> {
     Ok(())
 }
 
+/// The format to read: the chosen one, or in "any" mode the file's own extension.
+pub(crate) fn import_extension(chosen: &str, file_name: &str) -> Result<String, String> {
+    if chosen != "any" {
+        return Ok(chosen.to_owned());
+    }
+    let extension = std::path::Path::new(file_name)
+        .extension()
+        .and_then(|e| e.to_str())
+        .map(str::to_ascii_lowercase)
+        .unwrap_or_default();
+    if crate::mesh_exchange::IMPORT_EXTENSIONS.contains(&extension.as_str()) {
+        Ok(extension)
+    } else {
+        Err(format!(
+            "Unsupported import format. Choose a .{} file",
+            crate::mesh_exchange::IMPORT_EXTENSIONS.join(", .")
+        ))
+    }
+}
+
 #[cfg(not(target_arch = "wasm32"))]
 pub fn import_path(
     ctx: &eframe::egui::Context,
@@ -433,7 +453,9 @@ pub fn import_path(
     path: PathBuf,
     extension: String,
 ) -> Pending {
+    let extension = import_extension(&extension, &path.to_string_lossy());
     run(ctx, move || {
+        let extension = extension?;
         if std::fs::metadata(&path).map_err(|e| e.to_string())?.len()
             > crate::interchange::MAX_SKP_BYTES as u64
         {
@@ -473,8 +495,12 @@ pub fn import(
 ) -> Pending {
     let (sender, receiver) = mpsc::channel();
     let ctx = ctx.clone();
-    let accept = format!(".{extension}");
-    let ext_clone = extension.clone();
+    let accept = if extension == "any" {
+        crate::mesh_exchange::IMPORT_EXTENSIONS.map(|e| format!(".{e}")).join(",")
+    } else {
+        format!(".{extension}")
+    };
+    let chosen = extension.clone();
     let res = pick_browser_file(&accept, move |file| {
         wasm_bindgen_futures::spawn_local(async move {
             if file.size() > crate::interchange::MAX_SKP_BYTES as f64 {
@@ -484,7 +510,9 @@ pub fn import(
             }
             let buffer_promise = file.array_buffer();
             let result = match wasm_bindgen_futures::JsFuture::from(buffer_promise).await {
-                Ok(buffer) => {
+                Ok(buffer) => match import_extension(&chosen, &file.name()) {
+                    Err(message) => Err(message),
+                    Ok(ext_clone) => {
                     let name = file.name();
                     let name = std::path::Path::new(&name)
                         .file_stem()
@@ -504,7 +532,8 @@ pub fn import(
                         )
                     })
                     .and_then(|imported| prepare_import(model, &imported))
-                }
+                    }
+                },
                 Err(_) => Err("The browser could not read this geometry file".into()),
             };
             let _ = sender.send(result);

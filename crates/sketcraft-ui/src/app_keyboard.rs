@@ -58,12 +58,17 @@ impl KetchupApp {
             (egui::Modifiers::COMMAND, Key::O, 1),
             (egui::Modifiers::COMMAND | egui::Modifiers::SHIFT, Key::S, 2),
             (egui::Modifiers::COMMAND, Key::S, 3),
+            (egui::Modifiers::COMMAND, Key::I, 4),
         ] {
             if ctx.input_mut(|i| i.consume_key(modifiers, key)) {
                 match action {
                     0 => self.request_project(projects::Action::New, ctx),
                     1 => self.request_project(projects::Action::Open, ctx),
                     2 => self.save_project(ctx, true),
+                    4 => {
+                        self.project.import_format = "any".into();
+                        self.import_model(ctx);
+                    }
                     _ => self.save_project(ctx, false),
                 }
                 return;

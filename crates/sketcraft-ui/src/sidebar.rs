@@ -438,7 +438,9 @@ impl KetchupApp {
         self.project.recent = preferences.recent_projects.clone();
         self.project.recent.truncate(10);
         self.project.import_format =
-            if ["skp", "stl", "obj", "dxf"].contains(&preferences.import_format.as_str()) {
+            if preferences.import_format == "any"
+                || crate::mesh_exchange::IMPORT_EXTENSIONS.contains(&preferences.import_format.as_str())
+            {
                 preferences.import_format.clone()
             } else {
                 "skp".into()

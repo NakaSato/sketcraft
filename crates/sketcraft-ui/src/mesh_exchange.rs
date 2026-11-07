@@ -2,6 +2,13 @@
 use ketchup_core::{DVec3, Model};
 use std::collections::{BTreeMap, BTreeSet};
 const LIMIT: usize = 200_000;
+#[path = "mesh_exchange_3mf.rs"]
+mod threemf;
+#[path = "mesh_exchange_gltf.rs"]
+mod gltf_in;
+
+/// Every extension `import` accepts, for file pickers and the "all supported files" choice.
+pub const IMPORT_EXTENSIONS: [&str; 7] = ["skp", "stl", "obj", "dxf", "3mf", "glb", "gltf"];
 fn number(s: &str) -> Result<f64, String> {
     let n: f64 = s.parse().map_err(|_| format!("Invalid number: {s}"))?;
     if !n.is_finite() || n.abs() > 1e9 {
@@ -22,6 +29,15 @@ impl Mesh {
         }
         self.points.push(p);
         Ok(self.points.len() - 1)
+    }
+    /// Add a triangle face, skipping zero-area triangles that exporters often leave behind.
+    fn triangle(&mut self, [a, b, c]: [DVec3; 3]) -> Result<(), String> {
+        if (b - a).cross(c - a).length_squared() <= 1e-24 {
+            return Ok(());
+        }
+        let face = vec![self.point(a)?, self.point(b)?, self.point(c)?];
+        self.faces.push(face);
+        Ok(())
     }
     fn finish(self, name: &str) -> Result<Model, String> {
         let mut vertices = BTreeMap::new();
@@ -102,6 +118,8 @@ pub fn import(bytes: &[u8], extension: &str, name: &str) -> Result<Model, String
         "dxf" => {
             dxf(std::str::from_utf8(bytes).map_err(|_| "Only text DXF is supported")?)?.finish(name)
         }
+        "3mf" => threemf::read(bytes)?.finish(name),
+        "glb" | "gltf" => gltf_in::read(bytes)?.finish(name),
         _ => Err("Unsupported import format".into()),
     }
 }
@@ -438,6 +456,9 @@ pub fn export_stl(model: &Model) -> Result<Vec<u8>, String> {
     out[80..84].copy_from_slice(&count.to_le_bytes());
     Ok(out)
 }
+#[cfg(test)]
+#[path = "mesh_exchange_format_tests.rs"]
+mod format_tests;
 #[cfg(test)]
 mod tests {
     #[test]

@@ -269,11 +269,24 @@ impl KetchupApp {
                             if self.account.sharing_available() && ui.button(self.share_menu_label()).clicked() { self.start_sharing(&ctx); ui.close(); }
                             ui.separator();
                             ui.menu_button("Import", |ui| {
+                                let all = ui.add(
+                                    egui::Button::new("All supported files…")
+                                        .shortcut_text(ctx.format_shortcut(&egui::KeyboardShortcut::new(egui::Modifiers::COMMAND, Key::I))),
+                                ).on_hover_text("SketchUp, STL, OBJ, DXF, 3MF and glTF. The file's extension chooses the format.");
+                                if all.clicked() && !self.project.blocked() {
+                                    self.project.import_format = "any".into();
+                                    self.import_model(&ctx);
+                                    ui.close();
+                                }
+                                ui.separator();
                                 for (extension, label, help) in [
                                     ("skp", "SketchUp (.skp)…", "Editable groups, holes and solid colors. No textures or annotations."),
                                     ("stl", "STL (.stl; millimetres)…", "ASCII or binary. Geometry only; coordinates interpreted as millimetres, Z up."),
                                     ("obj", "Wavefront OBJ (.obj; metres)…", "Faces and lines, including negative vertex indices. Metres, Z up. No materials, textures or group hierarchy."),
                                     ("dxf", "DXF 2D (.dxf)…", "Text DXF: LINE, straight LWPOLYLINE, ARC and CIRCLE in XY. Curves approximated with up to 96 segments per circle. No blocks, bulges or widths. Declared units; unitless files use millimetres."),
+                                    ("3mf", "3MF (.3mf)…", "Meshes, components and build items with their transforms, in the file's declared unit (millimetres by default). No colors, materials or textures."),
+                                    ("glb", "glTF binary (.glb)…", "Triangle meshes placed by the default scene's nodes. Metres, converted from Y up to Z up. No materials, textures or animation."),
+                                    ("gltf", "glTF (.gltf; embedded buffers)…", "As .glb, for .gltf files whose buffers are embedded. Files that load separate .bin files are not supported."),
                                 ] {
                                     if ui.button(label).on_hover_text(help).clicked() && !self.project.blocked() {
                                         self.project.import_format = extension.into();
