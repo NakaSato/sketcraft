@@ -3767,6 +3767,21 @@ pub fn shortcuts(app: &mut SolveApp, ctx: &egui::Context) {
             Key::T if !mods.shift && !mods.alt && !mods.command => {
                 app.start("inspect.measure");
             }
+            Key::G if !mods.shift && !mods.alt && !mods.command && app.session.active_sketch.is_none() => {
+                let bodies: Vec<String> = app.session.selection.iter().filter_map(|s| match s {
+                    sketcraft_engine::Sel::Body { name } => Some(name.clone()),
+                    sketcraft_engine::Sel::Face { body, .. } => Some(body.clone()),
+                    _ => None,
+                }).collect();
+                if !bodies.is_empty() {
+                    let _ = app.run("component.from_bodies", json!({ "bodies": bodies }));
+                } else {
+                    app.start("component.create");
+                }
+            }
+            Key::B if !mods.shift && !mods.alt && !mods.command && app.session.active_sketch.is_none() => {
+                app.start("appearance.paint");
+            }
             Key::Delete | Key::Backspace | Key::E => {
                 if !crate::timeline_left::delete_selected_folders(app) {
                     crate::viewport::delete_selection(app);
