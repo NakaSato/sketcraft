@@ -3997,7 +3997,7 @@ checksum = "33f4fe9184a62d842c9ef383018f3306d8ba224fd9d836f56d7288308847c256"
 
 [[package]]
 name = "sketcraft"
-version = "0.40.0-rc.2"
+version = "0.1.0"
 dependencies = [
  "block2 0.6.2",
  "eframe",
@@ -4032,7 +4032,7 @@ dependencies = [
 
 [[package]]
 name = "sketcraft-cli"
-version = "0.40.0-rc.2"
+version = "0.1.0"
 dependencies = [
  "image",
  "log",
@@ -4046,7 +4046,7 @@ dependencies = [
 
 [[package]]
 name = "sketcraft-derive"
-version = "0.40.0-rc.2"
+version = "0.1.0"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -4055,7 +4055,7 @@ dependencies = [
 
 [[package]]
 name = "sketcraft-doc"
-version = "0.40.0-rc.2"
+version = "0.1.0"
 dependencies = [
  "log",
  "serde",
@@ -4074,7 +4074,7 @@ dependencies = [
 
 [[package]]
 name = "sketcraft-engine"
-version = "0.40.0-rc.2"
+version = "0.1.0"
 dependencies = [
  "image",
  "log",
@@ -4097,7 +4097,7 @@ dependencies = [
 
 [[package]]
 name = "sketcraft-geom"
-version = "0.40.0-rc.2"
+version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
@@ -4107,7 +4107,7 @@ dependencies = [
 
 [[package]]
 name = "sketcraft-gpu"
-version = "0.40.0-rc.2"
+version = "0.1.0"
 dependencies = [
  "image",
  "log",
@@ -4128,7 +4128,7 @@ dependencies = [
 
 [[package]]
 name = "sketcraft-io"
-version = "0.40.0-rc.2"
+version = "0.1.0"
 dependencies = [
  "cadmpeg-core",
  "cadmpeg-ir",
@@ -4156,7 +4156,7 @@ dependencies = [
 
 [[package]]
 name = "sketcraft-kernel"
-version = "0.40.0-rc.2"
+version = "0.1.0"
 dependencies = [
  "log",
  "proptest",
@@ -4175,7 +4175,7 @@ dependencies = [
 
 [[package]]
 name = "sketcraft-mcp"
-version = "0.40.0-rc.2"
+version = "0.1.0"
 dependencies = [
  "image",
  "serde_json",
@@ -4185,7 +4185,7 @@ dependencies = [
 
 [[package]]
 name = "sketcraft-profile"
-version = "0.40.0-rc.2"
+version = "0.1.0"
 dependencies = [
  "serde_json",
  "web-time",
@@ -4193,7 +4193,7 @@ dependencies = [
 
 [[package]]
 name = "sketcraft-render"
-version = "0.40.0-rc.2"
+version = "0.1.0"
 dependencies = [
  "flate2",
  "image",
@@ -4211,7 +4211,7 @@ dependencies = [
 
 [[package]]
 name = "sketcraft-sketch"
-version = "0.40.0-rc.2"
+version = "0.1.0"
 dependencies = [
  "harfrust",
  "serde",
@@ -4225,7 +4225,7 @@ dependencies = [
 
 [[package]]
 name = "sketcraft-skp"
-version = "0.40.0-rc.2"
+version = "0.1.0"
 dependencies = [
  "cc",
  "earcutr",
@@ -4236,7 +4236,7 @@ dependencies = [
 
 [[package]]
 name = "sketcraft-smlib"
-version = "0.40.0-rc.2"
+version = "0.1.0"
 dependencies = [
  "flate2",
  "log",
@@ -4249,7 +4249,7 @@ dependencies = [
 
 [[package]]
 name = "sketcraft-step"
-version = "0.40.0-rc.2"
+version = "0.1.0"
 dependencies = [
  "sketcraft-geom",
  "sketcraft-profile",
@@ -4258,11 +4258,11 @@ dependencies = [
 
 [[package]]
 name = "sketcraft-testkit"
-version = "0.40.0-rc.2"
+version = "0.1.0"
 
 [[package]]
 name = "sketcraft-ui-egui"
-version = "0.40.0-rc.2"
+version = "0.1.0"
 dependencies = [
  "arboard",
  "egui",
@@ -4293,7 +4293,7 @@ dependencies = [
 
 [[package]]
 name = "sketcraft-web"
-version = "0.40.0-rc.2"
+version = "0.1.0"
 dependencies = [
  "eframe",
  "egui",
@@ -5794,7 +5794,7 @@ checksum = "e450f9b2ed1dff33c94c12589a87338689467b9c4f5d8a5710bd09a847d2c8a7"
 
 [[package]]
 name = "xtask"
-version = "0.40.0-rc.2"
+version = "0.1.0"
 dependencies = [
  "flate2",
  "proc-macro2",
