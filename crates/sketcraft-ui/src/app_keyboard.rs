@@ -8,7 +8,7 @@ impl KetchupApp {
             return;
         }
 
-        if self.project.blocked() || self.screenshot.open {
+        if self.project.blocked() || self.screenshot.open || self.tape_resize.is_some() {
             return;
         }
         if self.section_drag.is_some() {
@@ -275,6 +275,7 @@ impl KetchupApp {
                         Key::Enter if self.drawing.is_some() => self.commit_drawing(ctx),
                         Key::Enter if self.modeling.is_some() => self.commit_modeling(ctx),
                         Key::Enter if self.last_move_copy.is_some() => self.commit_move_array(ctx),
+                        Key::Enter if self.tape_resize_available() => self.request_tape_resize(ctx),
                         Key::ArrowRight | Key::ArrowLeft | Key::ArrowUp
                             if self.tool == Tool::Flip =>
                         {

@@ -300,6 +300,7 @@ impl KetchupApp {
                     || edit.rotation.as_ref().is_some_and(|rotation| rotation.reference.is_some())
             })
             || self.last_move_copy.is_some()
+            || self.tape_resize_available()
     }
 
     pub(super) fn precise_drawing_points(&self) -> Result<Vec<DVec3>, &'static str> {

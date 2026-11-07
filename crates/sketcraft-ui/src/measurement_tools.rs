@@ -1,6 +1,13 @@
 use super::*;
 use ketchup_core::{Dimension, DimensionAnchor, angle_arc, angle_degrees};
 
+/// Tape Measure rescaling waiting for confirmation: scale by `factor` about `center`.
+pub(super) struct TapeResize {
+    pub(super) factor: f64,
+    pub(super) center: DVec3,
+    pub(super) target: f64,
+}
+
 #[derive(Default)]
 pub(super) struct Measurement {
     pub(super) points: Vec<DVec3>,
@@ -210,6 +217,89 @@ impl KetchupApp {
             plane: self.plane_lock(),
         })
     }
+    /// A completed Tape Measure reading between two distinct points can resize the model.
+    pub(super) fn tape_resize_available(&self) -> bool {
+        self.tool == Tool::TapeMeasure
+            && self.measurement.as_ref().is_some_and(|m| {
+                m.complete && m.points.len() == 2 && m.points[0].distance(m.points[1]) > 1e-9
+            })
+    }
+    /// Enter after typing a length: ask before scaling everything in the current context.
+    pub(super) fn request_tape_resize(&mut self, ctx: &egui::Context) {
+        let Some(m) = self.measurement.as_ref().filter(|_| self.tape_resize_available()) else {
+            return;
+        };
+        let measured = m.points[0].distance(m.points[1]);
+        let center = m.points[0];
+        let target = match precision::length(&self.length_input, self.doc.display.units.length) {
+            Ok(target) if target > 1e-9 && target.is_finite() => target,
+            Ok(_) => return self.say(ctx, "Enter a length greater than zero"),
+            Err(message) => return self.say(ctx, message),
+        };
+        self.length_input.clear();
+        self.tape_resize = Some(TapeResize { factor: target / measured, center, target });
+    }
+    pub(super) fn tape_resize_window(&mut self, ctx: &egui::Context) {
+        let Some(resize) = &self.tape_resize else {
+            return;
+        };
+        let factor = resize.factor;
+        let target = self.doc.display.units.format_length(resize.target);
+        let scope = if self.doc.model.edit_context.is_some() {
+            "Everything in the group or component you are editing"
+        } else {
+            "The whole model"
+        };
+        let mut apply = false;
+        let response = crate::modal::Modal::new("tape_resize_confirmation", 420.).show(ctx, |modal| {
+            modal.header(|ui| {
+                ui.text_heading("Resize model");
+            });
+            modal.body(|ui| {
+                ui.text_label(format!("Resize so the measured length becomes {target}?"));
+                ui.text_weak(format!(
+                    "{scope} scales by {factor:.4}× around the first measured point. You can undo this."
+                ));
+            });
+            modal.footer(|ui| {
+                if ui.button("Cancel").clicked() {
+                    ui.close();
+                }
+                if crate::modal::primary_button(ui, "Resize", true).clicked() {
+                    apply = true;
+                    ui.close();
+                }
+            });
+        });
+        if apply {
+            self.apply_tape_resize(ctx);
+        } else if response.should_close() {
+            self.tape_resize = None;
+        }
+    }
+    /// Scale everything in the current context (hidden entities included) as confirmed.
+    pub(super) fn apply_tape_resize(&mut self, ctx: &egui::Context) {
+        let Some(TapeResize { factor, center, .. }) = self.tape_resize.take() else {
+            return;
+        };
+        let model = &self.doc.model;
+        let entities = model
+            .edit_context
+            .and_then(|id| model.objects.get(&id))
+            .map(|object| object.entities.clone())
+            .unwrap_or_else(|| model.root_entities());
+        let before = self.doc.model.clone();
+        match self.doc.model.scale_selection(&entities, center, factor) {
+            Ok(()) => {
+                self.measurement = None;
+                self.finish_edit("Resize model", before, ctx);
+            }
+            Err(message) => {
+                self.doc.model = before;
+                self.say(ctx, message);
+            }
+        }
+    }
     pub(super) fn measurement_value(&self) -> Option<String> {
         if self.tool == Tool::Text {
             return None;
@@ -240,6 +330,9 @@ impl KetchupApp {
         let Some(m) = &self.measurement else {
             return self.tool.instructions();
         };
+        if m.complete && self.tool == Tool::TapeMeasure {
+            return "Type a new length and press Enter to resize the model · Click to start another · Esc to clear";
+        }
         if m.complete {
             return "Measurement complete · Click to start another · Esc to clear";
         }

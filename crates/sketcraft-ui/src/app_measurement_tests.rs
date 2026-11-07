@@ -2,6 +2,43 @@
 use super::*;
 
 #[test]
+fn tape_measure_typed_length_resizes_the_model_after_confirmation_and_undoes() {
+    let mut h = Harness::new();
+    let (a, b) = (DVec3::new(0., 0., 2.), DVec3::new(3., 4., 2.));
+    h.app.doc.model.add_edge(a, b).unwrap();
+    let before = h.app.doc.model.clone();
+    h.key(Key::T);
+    h.click(h.at(a));
+    h.click(h.at(b));
+    assert!(h.app.tape_resize_available());
+    h.frame(vec![egui::Event::Text("10".into())], egui::Modifiers::NONE);
+    assert_eq!(h.app.length_input, "10");
+    h.key(Key::Enter);
+    let factor = h.app.tape_resize.as_ref().expect("asks before resizing").factor;
+    assert!((factor - 2.).abs() < 1e-9);
+    assert_eq!(h.app.doc.model, before, "nothing changes until confirmed");
+
+    h.app.apply_tape_resize(&h.ctx);
+    assert!(h.app.tape_resize.is_none());
+    let mut points: Vec<DVec3> = h.app.doc.model.vertices.values().map(|v| v.position).collect();
+    points.sort_by(|p, q| p.x.total_cmp(&q.x));
+    assert!(points[0].distance(a) < 1e-9, "the first measured point stays put");
+    assert!((points[0].distance(points[1]) - 10.).abs() < 1e-9);
+    assert_eq!(h.app.doc.history.undo_label().as_deref(), Some("Resize model"));
+    h.app.undo(&h.ctx, false);
+    assert_eq!(h.app.doc.model, before);
+
+    // Invalid lengths explain themselves and leave the model alone.
+    h.key(Key::T);
+    h.click(h.at(a));
+    h.click(h.at(b));
+    h.frame(vec![egui::Event::Text("0".into())], egui::Modifiers::NONE);
+    h.key(Key::Enter);
+    assert!(h.app.tape_resize.is_none());
+    assert_eq!(h.app.doc.model, before);
+}
+
+#[test]
 fn tape_measure_snaps_reads_distance_and_restarts_without_editing_geometry() {
     let mut h = Harness::new();
     let (a, b) = (DVec3::new(0., 0., 2.), DVec3::new(3., 4., 2.));

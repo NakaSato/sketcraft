@@ -431,6 +431,7 @@ pub struct KetchupApp {
     paste_preview: Option<PastePreview>,
     context_position: Option<Pos2>,
     object_creation: Option<ObjectCreation>,
+    tape_resize: Option<measurement_tools::TapeResize>,
     object_rename: Option<(u64, String)>,
 }
 
@@ -600,6 +601,7 @@ impl KetchupApp {
             paste_preview: None,
             context_position: None,
             object_creation: None,
+            tape_resize: None,
             object_rename: None,
         }
     }
@@ -1065,6 +1067,7 @@ impl eframe::App for KetchupApp {
             save_preference(&ctx, storage);
         }
         self.object_creation_window(&ctx);
+        self.tape_resize_window(&ctx);
         self.rename_object_window(&ctx);
         self.connection_sidebar_selection(&ctx);
         self.rename_viewport_window(&ctx);
