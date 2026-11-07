@@ -36,7 +36,6 @@ solidcore = { git = "https://github.com/tangency-labs/solidcore", rev = "8ddce90
 solidcore-record = { git = "https://github.com/tangency-labs/solidcore", rev = "f5e8e9a29e0c9b7cf6c4040a5bc8878382b3c62f" }
 sketcraft-testkit = { path = "crates/testkit" }
 sketcraft-core = { path = "crates/sketcraft-core" }
-sketcraft-ui = { path = "crates/sketcraft-ui" }
 
 # foundation
 thiserror = "2"

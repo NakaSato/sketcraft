@@ -280,7 +280,7 @@ Verified during implementation: native Linux and browser WASM Cargo checks; core
 ## Layout
 
 - `crates/sketcraft-core`: double-precision document geometry, planar face discovery/triangulation, inference, picking, camera, tool definitions, and bounded history. It has no GUI or GPU dependencies.
-- `crates/sketcraft-ui`: egui workspace, gesture routing, local persistence, native/browser launchers, and the wgpu/WGSL edge renderer. Model coordinates remain independent of GPU resources.
+- `crates/ui-egui`: egui workspace, toolbar, timeline, dialogs, local persistence, native/browser launchers, and the GPU viewport renderer. Model coordinates remain independent of GPU resources.
 - `index.html` and `Trunk.toml`: static browser host and WASM development configuration.
 
 The viewport uses depth-tested filled triangles and antialiased triangle strips for consistent edge widths, CPU projection/clipping, and the same shader and editor behavior on every target. Rendering is event-driven rather than a continuous idle loop.
