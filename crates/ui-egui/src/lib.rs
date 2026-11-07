@@ -2542,6 +2542,19 @@ impl SolveApp {
         {
             self.animate_to(to);
         }
+        if self.preferences.sketch_auto_split_face
+            && let Some(sid) = open
+            && let Some(feature) = self.session.doc.feature(sid)
+            && let sketcraft_engine::doc::FeatureKind::Sketch { plane: sketcraft_engine::doc::PlaneRef::Face { at, .. }, sketch } = &feature.kind
+            && sketch.curves.iter().any(|c| !c.construction)
+        {
+            let already_split = self.session.doc.features.iter().any(|f| {
+                matches!(&f.kind, sketcraft_engine::doc::FeatureKind::SplitFace { sketch: Some(sk_id), .. } if sk_id.0 == sid)
+            });
+            if !already_split {
+                let _ = self.run("solid.split_face", json!({ "faces": [[at.x, at.y, at.z]], "sketch": sid }));
+            }
+        }
     }
 
     /// Visibility in the editor's scene: hidden face-profile sources are temporarily shown

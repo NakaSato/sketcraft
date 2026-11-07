@@ -200,6 +200,13 @@ fn opening(app: &mut SolveApp, ui: &mut egui::Ui) {
         );
         check(
             ui,
+            "sketch_auto_split_face",
+            "prefs.sketch_auto_split_face",
+            Some("prefs.sketch_auto_split_face_note"),
+            &mut app.preferences.sketch_auto_split_face,
+        );
+        check(
+            ui,
             "sketch_open_look_at",
             "prefs.sketch_open_look_at",
             Some("prefs.sketch_open_look_at_note"),

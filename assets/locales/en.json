@@ -2877,6 +2877,8 @@
   "prefs.sketch_conflict_colour": "Conflicting geometry in the conflict color",
   "prefs.sketch_conflict_colour_note": "While a sketch's constraints conflict, the curves and points a failing constraint holds are drawn in the conflict color too, not only its glyph or dimension. Off: they keep their usual colors.",
   "prefs.sketch_construction_lines": "Extended construction line tools",
+  "prefs.sketch_auto_split_face": "Automatically subdivide face when drawing curves on it",
+  "prefs.sketch_auto_split_face_note": "Drawing lines, rectangles, or shapes across a body face splits it into sub-faces for direct Push/Pull modeling (SketchUp workflow).",
   "prefs.sketch_exit_view": "When a sketch ends",
   "prefs.sketch_exit_view.keep": "Keep the current view",
   "prefs.sketch_exit_view.previous": "Return to the previous view",
