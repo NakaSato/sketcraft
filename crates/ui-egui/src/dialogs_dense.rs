@@ -1120,7 +1120,7 @@ fn fmt_mm(app: &SolveApp, v: &Value) -> String {
 
 /// The measurement in the dialog: each item's size, then the distance (a pair of round items
 /// offers centre to centre, closest and farthest), its ΔX/Y/Z and the angle between two items.
-fn measure_rows(app: &SolveApp, ui: &mut egui::Ui, r: Option<&Value>, show: &mut Option<Shown>) {
+fn measure_rows(app: &mut SolveApp, ui: &mut egui::Ui, r: Option<&Value>, show: &mut Option<Shown>) {
     let Some(r) = r else {
         ui_kit::text(ui, tr("pick one or two vertices, edges or faces"), ui_kit::Text::Hint("measure"));
         return;
@@ -1144,6 +1144,7 @@ fn measure_rows(app: &SolveApp, ui: &mut egui::Ui, r: Option<&Value>, show: &mut
             ui_kit::text(ui, &text, ui_kit::Text::Report(&format!("measure_item_{i}_{k}"), false));
         }
     }
+    let mut rescale_target: Option<(f64, f64)> = None;
     if let Some((now, d, a, b)) = shown_distance(r, *show) {
         if r.get("center_distance").is_some() {
             // Centre, min and max all listed; the chosen one is drawn and broken into ΔX/Y/Z.
@@ -1172,10 +1173,46 @@ fn measure_rows(app: &SolveApp, ui: &mut egui::Ui, r: Option<&Value>, show: &mut
                     ui.ctx().copy_text(text.clone());
                 }
             });
+
+            // SketchUp Tape Measure Model Rescaling:
+            if d > 1e-6 {
+                let temp_id = ui.make_persistent_id("tape_measure_target_length");
+                let mut target_str = ui.ctx().data(|data| data.get_temp::<String>(temp_id)).unwrap_or_default();
+                form_row(ui, "Resize Model", |ui| {
+                    let resp = ui.add(egui::TextEdit::singleline(&mut target_str).hint_text("New length mm"));
+                    if resp.changed() {
+                        ui.ctx().data_mut(|data| data.insert_temp(temp_id, target_str.clone()));
+                    }
+                    if (resp.lost_focus() && ui.input(|i| i.key_pressed(egui::Key::Enter)))
+                        || (ui.button("Apply").clicked())
+                    {
+                        if let Ok(val) = target_str.trim().trim_end_matches("mm").trim().parse::<f64>() {
+                            if val > 1e-6 {
+                                rescale_target = Some((d, val));
+                            }
+                        }
+                    }
+                });
+            }
         }
         let delta = b - a;
         for (l, v) in [("ΔX", delta.x), ("ΔY", delta.y), ("ΔZ", delta.z)] {
             value(ui, l, &crate::prefs::show_mm(app, v.abs(), 1));
+        }
+    }
+    if let Some((current_d, target_d)) = rescale_target {
+        let factor = target_d / current_d;
+        let bodies: Vec<String> = app.session.model.state().bodies.iter().map(|b| b.name.clone()).collect();
+        if !bodies.is_empty() {
+            let factor_str = format!("{:.6}", factor);
+            let _ = app.run("solid.scale", serde_json::json!({
+                "bodies": bodies,
+                "factor": factor_str,
+                "origin": [0.0, 0.0, 0.0]
+            }));
+            app.set_status(format!("Model rescaled by factor {factor_str} ({current_d:.2} mm → {target_d:.2} mm)"), false);
+            let temp_id = ui.make_persistent_id("tape_measure_target_length");
+            ui.ctx().data_mut(|data| data.remove_temp::<String>(temp_id));
         }
     }
     if let Some(a) = r["angle_deg"].as_f64()
