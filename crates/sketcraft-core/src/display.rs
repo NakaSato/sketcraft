@@ -50,9 +50,6 @@ pub struct DisplaySettings {
     pub axis_colors: [[u8; 3]; 3],
     pub inference_color: [u8; 3],
     pub midpoint_color: [u8; 3],
-    pub endpoint_color: [u8; 3],
-    pub on_edge_color: [u8; 3],
-    pub on_face_color: [u8; 3],
     pub axes: bool,
     pub guides: bool,
     pub dimensions: bool,
@@ -81,15 +78,6 @@ pub struct DisplaySettings {
     pub shadow_darkness: f64,
     pub sun_angle: f64,
     pub sun_elevation: f64,
-    /// Derive `sun_angle` and `sun_elevation` from the date, time and latitude below.
-    pub sun_from_time: bool,
-    /// Month (1–12) and day of the month for the solar position.
-    pub sun_month: u8,
-    pub sun_day: u8,
-    /// Local solar time in minutes after midnight.
-    pub sun_minutes: u16,
-    /// Degrees north (positive) or south of the equator. The model's green axis points north.
-    pub sun_latitude: f64,
     pub fog: bool,
     pub fog_start: f64,
     pub fog_end: f64,
@@ -118,9 +106,6 @@ impl Default for DisplaySettings {
             axis_colors: [[192, 94, 76], [97, 145, 92], [90, 133, 176]],
             inference_color: [97, 145, 92],
             midpoint_color: [85, 150, 183],
-            endpoint_color: [46, 160, 67],
-            on_edge_color: [214, 56, 56],
-            on_face_color: [52, 110, 220],
             axes: true,
             guides: true,
             dimensions: true,
@@ -148,11 +133,6 @@ impl Default for DisplaySettings {
             shadow_darkness: 0.35,
             sun_angle: 135.,
             sun_elevation: 45.,
-            sun_from_time: false,
-            sun_month: 6,
-            sun_day: 21,
-            sun_minutes: 15 * 60,
-            sun_latitude: 40.,
             fog: false,
             fog_start: 10.,
             fog_end: 50.,
@@ -165,54 +145,7 @@ impl Default for DisplaySettings {
         }
     }
 }
-/// Days in `month` (1–12) of a non-leap year; the solar position ignores leap days.
-pub fn days_in_month(month: u8) -> u8 {
-    match month {
-        2 => 28,
-        4 | 6 | 9 | 11 => 30,
-        _ => 31,
-    }
-}
-
-/// Where the sun is for a date, local solar time and latitude, as
-/// `(compass azimuth clockwise from north, elevation above the horizon)` in degrees.
-/// Uses the standard declination and hour-angle approximation, accurate to about a degree.
-pub fn solar_position(month: u8, day: u8, minutes: u16, latitude: f64) -> (f64, f64) {
-    let month = month.clamp(1, 12);
-    let day_of_year: u32 = (1..month).map(|m| u32::from(days_in_month(m))).sum::<u32>()
-        + u32::from(day.clamp(1, days_in_month(month)));
-    let declination = 23.44f64.to_radians()
-        * (std::f64::consts::TAU * (284. + f64::from(day_of_year)) / 365.).sin();
-    let hour_angle = (f64::from(minutes.min(24 * 60 - 1)) / 60. - 12.) * 15f64.to_radians();
-    let latitude = latitude.clamp(-90., 90.).to_radians();
-    let elevation = (latitude.sin() * declination.sin()
-        + latitude.cos() * declination.cos() * hour_angle.cos())
-    .clamp(-1., 1.)
-    .asin();
-    let azimuth = (-declination.cos() * hour_angle.sin()).atan2(
-        declination.sin() * latitude.cos() - declination.cos() * latitude.sin() * hour_angle.cos(),
-    );
-    (azimuth.to_degrees().rem_euclid(360.), elevation.to_degrees())
-}
-
 impl DisplaySettings {
-    /// The sun's true elevation for the saved date, time and latitude; negative at night.
-    pub fn solar_elevation(&self) -> f64 {
-        solar_position(self.sun_month, self.sun_day, self.sun_minutes, self.sun_latitude).1
-    }
-    /// With `sun_from_time` on, point the sun from the date, time and latitude. The model's
-    /// green (+Y) axis is north and red (+X) is east. Elevation stays within the renderer's
-    /// 5°–85° range, so a sun below the horizon casts the longest shadows instead of none.
-    pub fn apply_solar_time(&mut self) {
-        if !self.sun_from_time {
-            return;
-        }
-        self.sun_day = self.sun_day.clamp(1, days_in_month(self.sun_month.clamp(1, 12)));
-        let (azimuth, elevation) =
-            solar_position(self.sun_month, self.sun_day, self.sun_minutes, self.sun_latitude);
-        self.sun_angle = (90. - azimuth).rem_euclid(360.);
-        self.sun_elevation = elevation.clamp(5., 85.);
-    }
     /// Z retains the legacy height field so older documents keep their cut.
     pub fn section_limits(&self) -> [Option<f64>; 3] {
         let offsets = [
@@ -292,10 +225,6 @@ impl DisplaySettings {
             && (0. ..=1.).contains(&self.shadow_darkness)
             && (0. ..=360.).contains(&self.sun_angle)
             && (5. ..=85.).contains(&self.sun_elevation)
-            && (1..=12).contains(&self.sun_month)
-            && (1..=days_in_month(self.sun_month)).contains(&self.sun_day)
-            && self.sun_minutes < 24 * 60
-            && (-90. ..=90.).contains(&self.sun_latitude)
             && self.fog_start.is_finite()
             && self.fog_start >= 0.
             && self.fog_end.is_finite()
@@ -307,55 +236,6 @@ impl DisplaySettings {
 mod tests {
     use super::*;
     use crate::Document;
-
-    #[test]
-    fn solar_position_matches_known_noon_elevations_and_directions() {
-        // Noon elevation at 40°N is 90° − 40° + declination.
-        for (month, day, expected) in [(6, 21, 73.44), (3, 21, 50.), (12, 21, 26.56)] {
-            let (azimuth, elevation) = solar_position(month, day, 12 * 60, 40.);
-            assert!((elevation - expected).abs() < 1., "{month}/{day}: {elevation}");
-            assert!((azimuth - 180.).abs() < 1e-6, "noon sun is due south: {azimuth}");
-        }
-        // Equinox sunrise at the equator is due east on the horizon.
-        let (azimuth, elevation) = solar_position(3, 21, 6 * 60, 0.);
-        assert!(elevation.abs() < 1.5 && (azimuth - 90.).abs() < 1.5, "{azimuth} {elevation}");
-        // Southern hemisphere noon sun is due north.
-        assert!(solar_position(12, 21, 12 * 60, -35.).0.abs() < 1e-6);
-        // Morning in the east, afternoon in the west.
-        assert!(solar_position(6, 21, 9 * 60, 40.).0 < 180.);
-        assert!(solar_position(6, 21, 15 * 60, 40.).0 > 180.);
-    }
-
-    #[test]
-    fn solar_time_points_the_light_with_green_north_and_clamps_night() {
-        let mut d = DisplaySettings { sun_from_time: true, ..Default::default() };
-        d.apply_solar_time(); // June 21, 15:00 at 40°N: high in the south-west.
-        let a = d.sun_angle.to_radians();
-        assert!(a.cos() < 0. && a.sin() < 0., "light comes from the south-west: {}", d.sun_angle);
-        assert!(d.sun_elevation > 40. && d.sun_elevation < 60.);
-        assert!(d.valid());
-
-        d.sun_minutes = 0;
-        d.apply_solar_time();
-        assert!(d.solar_elevation() < 0.);
-        assert_eq!(d.sun_elevation, 5.);
-        assert!(d.valid());
-
-        // Manual mode leaves the saved angles alone.
-        let mut manual = DisplaySettings { sun_angle: 10., sun_elevation: 20., ..Default::default() };
-        manual.apply_solar_time();
-        assert_eq!((manual.sun_angle, manual.sun_elevation), (10., 20.));
-    }
-
-    #[test]
-    fn older_display_settings_load_with_the_manual_sun() {
-        let json = serde_json::json!({ "shadows": true, "sun_angle": 30., "sun_elevation": 25. });
-        let d: DisplaySettings = serde_json::from_value(json).unwrap();
-        assert!(!d.sun_from_time);
-        assert_eq!((d.sun_angle, d.sun_elevation), (30., 25.));
-        assert_eq!((d.sun_month, d.sun_day, d.sun_minutes), (6, 21, 900));
-        assert!(d.valid());
-    }
 
     #[test]
     fn grid_and_wood_joinery_default_on_and_preserve_saved_visibility() {

@@ -16,7 +16,7 @@ import tomllib
 
 ROOT = Path(__file__).resolve().parents[1]
 APP_ID = "io.github.Ketchup3D.Ketchup"
-VPK_VERSION = "1.2.161"  # Must match the exact Rust dependency.
+VPK_VERSION = "1.2.161"  # Must match VPK_VERSION in .github/workflows/build.yml.
 RELEASE_NOTES = ROOT / "assets/release-notes.json"
 STABLE_VERSION = r"(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)"
 PLATFORMS = {
@@ -32,11 +32,6 @@ def version(tag):
         raise ValueError("Desktop releases require a stable version tag such as v0.1.0.")
     if tag != f"v{current}":
         raise ValueError(f"Tag {tag} must match Cargo.toml version v{current}.")
-    dependency = tomllib.loads((ROOT / "crates/sketcraft-ui/Cargo.toml").read_text())["target"][
-        'cfg(not(target_arch = "wasm32"))'
-    ]["dependencies"]["velopack"]
-    if dependency != f"={VPK_VERSION}":
-        raise ValueError("The Rust Velopack dependency and vpk tool versions must match.")
     if os.environ.get("VPK_VERSION", VPK_VERSION) != VPK_VERSION:
         raise ValueError("The workflow vpk version must match the Rust Velopack dependency.")
     release_notes(current)
@@ -80,7 +75,7 @@ def release_notes(current):
 
 
 def format_notes(release):
-    lines = [f"# SketCraft {release['version']} — {release['title']}", "", release["date"]]
+    lines = [f"# KetchUp {release['version']} — {release['title']}", "", release["date"]]
     for section in release["sections"]:
         lines += ["", f"## {section['title']}", ""]
         lines += [f"- {change}" for change in section["changes"]]
@@ -100,7 +95,7 @@ def package(platform, tag, pack_dir, output_dir):
     if not (pack_dir / executable).is_file():
         raise ValueError(f"Missing staged executable: {pack_dir / executable}")
     args = [
-        "vpk", "pack", "--packId", APP_ID, "--packTitle", "SketCraft",
+        "vpk", "pack", "--packId", APP_ID, "--packTitle", "KetchUp",
         "--packAuthors", "Ketchup3D", "--packVersion", current,
         "--packDir", str(pack_dir.resolve()), "--mainExe", executable,
         "--runtime", runtime, "--channel", runtime,

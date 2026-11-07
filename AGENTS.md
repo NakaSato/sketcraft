@@ -2,11 +2,11 @@
 
 Every future user-facing option, setting, tool choice, and expandable section throughout the app must remember its last state across reloads and app restarts. This applies to toolbars, menus, dialogs, and panels as well as the right sidebar. Persistence is part of implementing a control, not a separate follow-up task.
 
-- Use the shared preferences in `crates/sketcraft-ui/src/sidebar.rs`. Put display options in the serialized `DisplaySettings`; put other user preferences in `InspectorPreferences` and include them in capture/restore.
-- Use `inspector_section` for sidebar sections. For custom `CollapsingHeader` disclosures, use `restored_header_open` and `remember_section`; for `CollapsingState`, use `restore_section` and `remember_section`. Supply a stable, unique key. Keys must not depend on display titles, section order, or docked/floating layout.
+- Put user preferences in the serialized `Prefs` in `crates/ui-egui/src/prefs.rs` (stored under `prefs::STORAGE_KEY`; pages live in `crates/ui-egui/src/prefs/`). Put per-model display options in the serialized `DisplaySettings` in `crates/sketcraft-core/src/display.rs`.
+- Use the `ui_kit` section helpers in `crates/ui-egui/src/ui_kit/layout.rs` (`section`, `section_count`, `section_method`, `editor_section`, `method_section`) for expandable sections; they keep the open state under the id you pass. For panel headers use `ui_kit::panel::collapsible_header`, and draw disclosures with `ui_kit/disclosure.rs`. Do not add raw `egui::CollapsingHeader`/`CollapsingState` disclosures. Supply a stable, unique id. Ids must not depend on display titles, section order, or docked/floating layout.
 - Keep preference loading compatible with older saved data using defaults for added fields. Preserve existing section order and append new sections.
 - Keep model-specific state, such as tag visibility and entity assignments, in the document; do not apply those values to unrelated projects.
-- Save changes through `persist_inspector_changes` so preferences survive immediate reloads, without requiring a model edit or waiting for framework autosave.
+- Change preferences on the app's `Prefs` so the apps' preference writer picks them up (desktop: `PrefsWriter::store` in `apps/sketcraft/src/main.rs`, which writes and flushes changed prefs each frame, rate-limited; web: `apps/sketcraft-web/src/main.rs`). Preferences must survive an immediate reload without requiring a model edit or waiting for framework autosave.
 - Add regression coverage for newly persisted controls, defaults, and restoration where appropriate, including changes saved without a model edit.
 
 # Release workflow
@@ -26,21 +26,21 @@ Whenever the user asks to push a new version tag:
 
 Trunk output is saved to `/tmp/ketchup-trunk.log` (started with `trunk serve 2>&1 | tee /tmp/ketchup-trunk.log`). Read this file for the compilation check.
 
-Only at the end of each change, immediately before reporting completion, check the currently running SketCraft process, if one exists, and its associated compiler or development-server output for new compilation errors. Perform this check once per fix, not during intermediate edits. Use the existing process and logs; do not start a new build just for this check. If the output is unavailable, report that the check could not be completed.
+Only at the end of each change, immediately before reporting completion, check the currently running KetchUp process, if one exists, and its associated compiler or development-server output for new compilation errors. Perform this check once per fix, not during intermediate edits. Use the existing process and logs; do not start a new build just for this check. If the output is unavailable, report that the check could not be completed.
 
 # Modal actions
 
-In every modal, place the least impactful action (usually Cancel or Close) on the right. Use the shared `Modal` shell in `crates/sketcraft-ui/src/modal.rs`; its footer renders right to left, so declare actions from least to most impactful. For unsaved changes, the visual order is Discard changes, Save, Cancel. Apply this convention to all future modals.
+In every modal, place the least impactful action (usually Cancel or Close) on the right. Use the shared modal pieces in `crates/ui-egui/src/ui_kit/`: `confirm::Confirm` for confirmations, `container::ModalHost` for other modals, and `actions::footer` for the button row. Do not build modals with raw `egui::Modal` or `egui::Window`. For unsaved changes, the visual order is Discard changes, Save, Cancel. Apply this convention to all future modals.
 
 # Inspector tables
 
-All current and future right-sidebar tables use `crate::inspector_table::InspectorTable` with shared columns for headers and rows. Tables fill the available width, cells align to consistent column boundaries and are always vertically centered within each row, and inputs fill their cells. Use minimum column widths with the existing persisted horizontal scroll helpers for wide catalogs; do not introduce standalone `egui::Grid` layouts in the inspector.
+All current and future right-sidebar tables use the shared table in `crates/ui-egui/src/ui_kit/table.rs` (`table_custom` with `Column`s, then `Table::headers` and `Table::row`/`TableRow::cell`) so headers and rows share columns. Tables fill the available width, cells align to consistent column boundaries and are always vertically centered within each row, and inputs fill their cells. Use minimum column widths with the existing persisted horizontal scroll helpers for wide catalogs; do not introduce standalone `egui::Grid` layouts in the inspector.
 
 - Always vertically center the contents of every table cell, including headers, text, values, and controls. This applies to all current and future tables throughout the app. Use the shared table layout’s default centering; never opt a table into top alignment. Wrapped or multiline content must remain centered relative to the tallest cell in its row.
 
 # Project names
 
-- “SketCraft”, “KetchUp” and “Ketchup app” all refer to the existing Rust desktop/WebAssembly client at this repository root. Its user-facing name is SketCraft. Keep the existing `.ketchup` extension, preference and storage keys, app ID and `Ketchup3D` URLs so saved projects, settings and updates keep working.
+- “KetchUp” / “Ketchup app” refers to the existing Rust desktop/WebAssembly client at this repository root.
 - “Ketchup Server” refers to the separate PHP repository at `/home/dcoulombe/dev/ketchup-server`. When the user names Ketchup Server, scope the work to that directory and read `/home/dcoulombe/dev/ketchup-server/AGENTS.md`.
 
 # Application language
@@ -49,4 +49,4 @@ All user-facing application text must be in English, even when the user requests
 
 # PDF export header
 
-All PDF exports, current and future, must use the shared header in `crates/sketcraft-ui/src/pdf_header.rs`, based on Time & Cost Estimates: the bundled logo and SketCraft brand, report type, project name, generation date, and separator on every page. Keep body content below `body_top`; preserve page size, orientation, readability and existing transparency. Do not introduce a separate PDF header implementation.
+This tree has no PDF export yet (`crates/io/src/paper.rs` writes sheets as SVG; PDF is planned there). When PDF export is added, build one shared header module for every PDF export: the bundled KetchUp logo and brand, report type, project name, generation date, and separator on every page, with a body-top offset that all body content stays below. Preserve page size, orientation, readability and existing transparency. Every later PDF export must reuse it; do not introduce a separate PDF header implementation.

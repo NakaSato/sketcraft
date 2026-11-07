@@ -1,0 +1,24 @@
+[package]
+name = "sketcraft-doc"
+description = "SketCraft document model: parameters and expressions, sketches and features on a parametric timeline, incremental evaluation"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+solidcore-record = { workspace = true }
+sketcraft-geom = { workspace = true }
+sketcraft-sketch = { workspace = true }
+sketcraft-kernel = { workspace = true }
+sketcraft-profile = { workspace = true }
+sketcraft-render = { workspace = true }
+sketcraft-derive = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true, features = ["raw_value"] }
+thiserror = { workspace = true }
+log = { workspace = true }
+sha2 = { workspace = true }
+web-time = { workspace = true }

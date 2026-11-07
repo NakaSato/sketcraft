@@ -1,7 +1,8 @@
 [workspace]
 resolver = "3"
-members = ["crates/sketcraft-core", "crates/sketcraft-ui"]
-default-members = ["crates/sketcraft-ui"]
+members = ["crates/*", "apps/*", "xtask"]
+# Third-party code kept with local fixes (see vendor/README.md); not linted as ours.
+exclude = ["vendor"]
 
 [workspace.package]
 version = "0.40.0-rc.2"
@@ -9,26 +10,140 @@ edition = "2024"
 license = "MIT OR Apache-2.0"
 rust-version = "1.95"
 authors = ["SketCraft contributors"]
+repository = "https://github.com/tangency-labs/solidcraft"
 
 [workspace.dependencies]
-serde = { version = "1", features = ["derive", "rc"] }
-serde_json = { version = "1", features = ["float_roundtrip"] }
+robust = "1.2"
 glam = { version = "0.30", features = ["serde"] }
+# internal sketcraft
+sketcraft-geom = { path = "crates/geom" }
+sketcraft-profile = { path = "crates/profile" }
+sketcraft-sketch = { path = "crates/sketch" }
+sketcraft-kernel = { path = "crates/kernel" }
+sketcraft-smlib = { path = "crates/smlib" }
+sketcraft-step = { path = "crates/step" }
+sketcraft-render = { path = "crates/render" }
+sketcraft-gpu = { path = "crates/gpu" }
+sketcraft-doc = { path = "crates/doc" }
+sketcraft-io = { path = "crates/io" }
+sketcraft-engine = { path = "crates/engine" }
+sketcraft-ui-egui = { path = "crates/ui-egui" }
+sketcraft-space-mouse = { path = "crates/space-mouse" }
+sketcraft-mcp = { path = "crates/mcp" }
+sketcraft-derive = { path = "crates/derive" }
+sketcraft-3dx-client = { path = "crates/threedx-client" }
+solidcore = { git = "https://github.com/tangency-labs/solidcore", rev = "8ddce901671f1cebd9214a31d21895d725e886c8" }
+solidcore-record = { git = "https://github.com/tangency-labs/solidcore", rev = "f5e8e9a29e0c9b7cf6c4040a5bc8878382b3c62f" }
+sketcraft-testkit = { path = "crates/testkit" }
+sketcraft-core = { path = "crates/sketcraft-core" }
 
-# Keep the development UI responsive without disabling debugger symbols,
-# debug assertions, or overflow checks. Optimize third-party rendering/UI code
-# and the geometry core more heavily than frequently edited application code.
-[profile.dev]
-opt-level = 1
+# foundation
+thiserror = "2"
+serde = { version = "1", features = ["derive", "rc"] }
+# derive macros (crates/derive); already in the tree through serde_derive
+proc-macro2 = "1"
+quote = "1"
+syn = { version = "2", features = ["full"] }
+serde_json = { version = "1", features = ["float_roundtrip"] }
+# command parameter and result schemas
+schemars = "1.2"
+serde_path_to_error = "0.1"
+log = "0.4"
+sha2 = "0.10"
+moxcms = { version = "0.8.1", default-features = false, features = ["extended_range"] }
+semver = "1"
+
+# constrained Delaunay + Ruppert refinement for trimmed faces (MIT OR Apache-2.0).
+spade = { version = "2.15", default-features = false, features = ["std"] }
+rayon = "1.12"
+
+# packages (3MF)
+zip = { version = "9", default-features = false, features = ["deflate"] }
+quick-xml = "0.41"
+# STEP text in a legacy encoding (GBK, Shift_JIS, …) instead of Part 21 escapes (#2344): detect
+# and decode it. Both MIT OR Apache-2.0 (encoding_rs adds BSD-3-Clause data); encoding_rs is
+# already in the tree through cadmpeg-codec-step.
+chardetng = "0.1"
+encoding_rs = "0.8"
+# glTF 2.0 import (MIT OR Apache-2.0): the document model and GLB container only; buffers are
+# read by crates/io itself, so no image decoding or file access comes with it.
+gltf = { version = "1.4", default-features = false, features = ["names"] }
+# The computer's name in a design's "open elsewhere" lock file (MIT OR Apache-2.0; already in the
+# tree through x11rb).
+gethostname = "1"
+
+# FreeCAD and Rhino import (Apache-2.0, pure Rust; native and browser builds).
+cadmpeg-core = "=0.6.7"
+cadmpeg-ir = "=0.6.7"
+cadmpeg-registry = { version = "=0.6.7", default-features = false, features = ["fcstd", "rhino", "step"] }
+
+# fonts (sketch text outlines; MIT OR Apache-2.0, pure Rust)
+ttf-parser = { version = "0.25", default-features = false, features = ["std", "variable-fonts"] }
+
+# Ends a process group with the system call (MIT; already in the tree through zip).
+nix = { version = "0.31", default-features = false, features = ["signal"] }
+
+# images
+image = { version = "0.25", default-features = false, features = ["png", "hdr"] }
+png = "0.18.1"
+# LZW for GIF animations (MIT OR Apache-2.0, pure Rust; already in the tree through image's tiff).
+weezl = "0.1.12"
+# rasterises the UI icon SVGs (BSD-3-Clause, pure Rust, builds for wasm)
+tiny-skia = { version = "0.12", default-features = false, features = ["std", "simd"] }
+# build scripts: reads the icon palette (MIT OR Apache-2.0)
+toml = "1"
+
+# ui
+egui = { version = "0.37", features = ["default_fonts"] }
+eframe = { version = "0.37", default-features = false, features = ["persistence"] }
+# Instant/SystemTime that also work in the browser (std panics on wasm32-unknown-unknown).
+web-time = "1"
+egui-wgpu = "0.37"
+# the wgpu egui-wgpu uses, for compute (crates/gpu); backends come from the apps' features
+wgpu = { version = "30", default-features = false, features = ["std", "wgsl"] }
+naga = { version = "30", default-features = false }
+pollster = "0.4"
+rfd = "0.17"
+
+[workspace.lints.rust]
+unsafe_code = "forbid"
+
+[workspace.lints.clippy]
+dbg_macro = "warn"
+todo = "warn"
+too_many_arguments = "allow"
+type_complexity = "allow"
+neg_cmp_op_on_partial_ord = "allow"
 
 [profile.dev.package."*"]
 opt-level = 2
 
-[profile.dev.package.sketcraft-core]
+[profile.dev]
+opt-level = 1
+
+[profile.ci]
+inherits = "dev"
+opt-level = 1
+debug = "line-tables-only"
+debug-assertions = false
+overflow-checks = true
+incremental = false
+
+[profile.ci.package."*"]
 opt-level = 2
+debug = false
 
 [profile.release]
 opt-level = 3
 lto = "thin"
 codegen-units = 16
 debug = "line-tables-only"
+
+# Vendored crates with fixes
+[patch.crates-io]
+egui-wgpu = { path = "vendor/egui-wgpu" }
+winit = { path = "vendor/winit" }
+
+[profile.mutants]
+inherits = "ci"
+incremental = true

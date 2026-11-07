@@ -17,4 +17,6 @@ earcutr = "0.5"
 
 uuid = { version = "1", features = ["v4", "js", "serde"] }
 
+[build-dependencies]
+cc = "1"
 
