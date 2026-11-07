@@ -228,6 +228,55 @@ pub(super) fn show(app: &mut SolveApp, ui: &mut egui::Ui) {
                 ui.add_enabled_ui(app.ui.perspective || app.ui.auto_ortho_faces, |ui| field_of_view_row(app, ui));
             });
         });
+        ui_kit::settings_section(ui, "solar_shadows", app.tr("prefs.solar_shadows_heading"), |ui| {
+            let response = setting::solar_shadows(app, ui).backing_on_hover_text(app.tr("prefs.solar_shadows_help"));
+            crate::scenario::publish_target("prefs:solar_shadows", response.rect);
+            ui.add_enabled_ui(app.preferences.solar_shadows && app.ui.ground_shadow, |ui| {
+                ui_kit::settings_form(ui, t.form_label_width + t.space_24, |ui| {
+                    ui_kit::row(ui, app.tr("prefs.solar_time"), |ui| {
+                        ui_kit::slider(
+                            ui,
+                            &mut app.preferences.solar_time_hours,
+                            0.0..=24.0,
+                            ui_kit::Slider {
+                                step: Some(0.25),
+                                format: format_solar_time,
+                                ..Default::default()
+                            },
+                        )
+                    });
+                    let mut day_f64 = app.preferences.solar_day_of_year as f64;
+                    ui_kit::row(ui, app.tr("prefs.solar_date"), |ui| {
+                        let resp = ui_kit::slider(
+                            ui,
+                            &mut day_f64,
+                            1.0..=365.0,
+                            ui_kit::Slider {
+                                step: Some(1.0),
+                                format: format_solar_date,
+                                ..Default::default()
+                            },
+                        );
+                        if resp.changed() {
+                            app.preferences.solar_day_of_year = day_f64.round() as u32;
+                        }
+                        resp
+                    });
+                    ui_kit::row(ui, app.tr("prefs.solar_latitude"), |ui| {
+                        ui_kit::slider(
+                            ui,
+                            &mut app.preferences.solar_latitude_deg,
+                            -90.0..=90.0,
+                            ui_kit::Slider {
+                                step: Some(0.5),
+                                format: format_solar_latitude,
+                                ..Default::default()
+                            },
+                        )
+                    });
+                });
+            });
+        });
         ui_kit::settings_section(ui, "in_view", app.tr("prefs.graphics_page.in_view"), |ui| {
             let width = ((ui.available_width() - t.space_10 * 3.0) / 4.0).max(t.space_24 * 5.0 + t.space_10).min(ui.available_width());
             let tiles: [(_, _, _, _, fn(&egui::Painter, egui::Rect)); 4] = [
@@ -553,4 +602,48 @@ fn field_of_view_row(app: &mut SolveApp, ui: &mut egui::Ui) {
         }
         response
     });
+}
+
+fn format_solar_time(hours: f64) -> String {
+    let clamped = hours.clamp(0.0, 24.0);
+    let h = clamped.floor() as u32;
+    let m = ((clamped - h as f64) * 60.0).round() as u32;
+    let (h_display, ampm) = match h % 24 {
+        0 => (12, "AM"),
+        1..=11 => (h, "AM"),
+        12 => (12, "PM"),
+        _ => (h - 12, "PM"),
+    };
+    format!("{h:02}:{m:02} ({h_display}:{m:02} {ampm})")
+}
+
+fn format_solar_date(day: f64) -> String {
+    let day = (day as u32).clamp(1, 365);
+    let months = [
+        ("Jan", 31), ("Feb", 28), ("Mar", 31), ("Apr", 30),
+        ("May", 31), ("Jun", 30), ("Jul", 31), ("Aug", 31),
+        ("Sep", 30), ("Oct", 31), ("Nov", 30), ("Dec", 31),
+    ];
+    let mut rem = day;
+    let mut month_str = "Dec";
+    let mut day_in_month = 31;
+    for (m_name, m_days) in months {
+        if rem <= m_days {
+            month_str = m_name;
+            day_in_month = rem;
+            break;
+        }
+        rem -= m_days;
+    }
+    format!("{month_str} {day_in_month} (Day {day})")
+}
+
+fn format_solar_latitude(lat: f64) -> String {
+    if lat > 0.0 {
+        format!("{lat:.1}° N")
+    } else if lat < 0.0 {
+        format!("{:.1}° S", lat.abs())
+    } else {
+        "0.0° (Equator)".to_string()
+    }
 }

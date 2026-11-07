@@ -632,6 +632,10 @@ fn base_scene_key(app: &SolveApp) -> u64 {
     app.preferences.vertex_markers.hash(&mut h);
     // The cached ground AO receiver and the ellipse share the selected ground plane.
     app.preferences.ground_shadow_follows_model.hash(&mut h);
+    app.preferences.solar_shadows.hash(&mut h);
+    app.preferences.solar_time_hours.to_bits().hash(&mut h);
+    app.preferences.solar_day_of_year.hash(&mut h);
+    app.preferences.solar_latitude_deg.to_bits().hash(&mut h);
     sketcraft_engine::doc::display_quality::current().hash(&mut h);
     // How bodies are drawn: from their plans on the GPU, or built here (until the evaluation
     // shader has compiled, #4860).
@@ -682,6 +686,10 @@ fn sketch_scene_key(app: &SolveApp, proj: &Proj) -> u64 {
     let mut h = std::collections::hash_map::DefaultHasher::new();
     scene_key(app).hash(&mut h);
     app.ui.ground_shadow.hash(&mut h);
+    app.preferences.solar_shadows.hash(&mut h);
+    app.preferences.solar_time_hours.to_bits().hash(&mut h);
+    app.preferences.solar_day_of_year.hash(&mut h);
+    app.preferences.solar_latitude_deg.to_bits().hash(&mut h);
     // The grid this scene draws follows the view when the preference says so (#1470): turning it
     // on or off redraws even while the camera holds still.
     app.ui.show_grid.hash(&mut h);
@@ -2184,6 +2192,25 @@ fn ground_height(app: &SolveApp, bounds: sketcraft_engine::geom::Aabb3) -> f64 {
     ground - 1e-3 * (1.0 + bounds.diagonal())
 }
 
+pub fn calculate_sun_direction(time_hours: f64, day_of_year: u32, latitude_deg: f64) -> solidcore_record::Vec3 {
+    use std::f64::consts::PI;
+    let rad = |deg: f64| deg * PI / 180.0;
+    let lat = rad(latitude_deg);
+    let declination = rad(23.45 * ((360.0 / 365.0) * (day_of_year as f64 - 81.0)).to_radians().sin());
+    let hour_angle = rad(15.0 * (time_hours - 12.0));
+    let sin_alt = lat.sin() * declination.sin() + lat.cos() * declination.cos() * hour_angle.cos();
+    let alt = sin_alt.clamp(-1.0, 1.0).asin();
+    let cos_az = (declination.sin() - sin_alt * lat.sin()) / (alt.cos().max(1e-4) * lat.cos().max(1e-4));
+    let mut az = cos_az.clamp(-1.0, 1.0).acos();
+    if hour_angle > 0.0 {
+        az = 2.0 * PI - az;
+    }
+    let sx = alt.cos() * az.sin();
+    let sy = alt.cos() * az.cos();
+    let sz = alt.sin();
+    solidcore_record::Vec3::new(sx, sy, sz)
+}
+
 /// A soft dark ellipse on the ground under each group of shown bodies (darkest in the middle).
 fn ground_shadow(sc: &mut GpuScene, app: &SolveApp, framed: Vec<sketcraft_engine::geom::Aabb3>) {
     let all = framed.iter().fold(sketcraft_engine::geom::Aabb3::EMPTY, |a, b| a.union(b));
@@ -2192,13 +2219,45 @@ fn ground_shadow(sc: &mut GpuScene, app: &SolveApp, framed: Vec<sketcraft_engine
     }
     // Every ellipse lies on the lowest body's ground, so none floats beside a lower body.
     let z = ground_height(app, all);
-    let dark = if crate::theme::viewport_dark() { 150 } else { 80 };
+    let mut dark = if crate::theme::viewport_dark() { 150 } else { 80 };
+    let (sun, use_solar) = if app.preferences.solar_shadows {
+        let s = calculate_sun_direction(
+            app.preferences.solar_time_hours,
+            app.preferences.solar_day_of_year,
+            app.preferences.solar_latitude_deg,
+        );
+        (s, true)
+    } else {
+        (solidcore_record::Vec3::Z, false)
+    };
+
+    if use_solar && sun.z <= 0.02 {
+        // Sun is at or below horizon: no solar ground shadow
+        return;
+    }
+
+    if use_solar {
+        dark = ((dark as f64) * (sun.z / 0.7).clamp(0.25, 1.0)).round() as u32;
+    }
+
     for b in shadow_groups(framed) {
         let (c, (rx, ry)) = (b.center(), shadow_radii(&b));
         if !(rx > 0.0 && ry > 0.0) {
             continue;
         }
-        let at = |r: f64, a: f64| app.cam.from_frame(Vec3::new(c.x + rx * r * a.cos(), c.y + ry * r * a.sin(), z)).to_f32();
+        let (cx, cy, rx_final, ry_final) = if use_solar && sun.z > 0.02 {
+            let h = (c.z - z).max(b.size().z * 0.5);
+            let dx = -h * (sun.x / sun.z);
+            let dy = -h * (sun.y / sun.z);
+            let elong = (1.0 / sun.z).clamp(1.0, 3.5);
+            let horiz = (sun.x * sun.x + sun.y * sun.y).sqrt().max(1e-4);
+            let rx_stretch = rx * (1.0 + (elong - 1.0) * (sun.x.abs() / horiz));
+            let ry_stretch = ry * (1.0 + (elong - 1.0) * (sun.y.abs() / horiz));
+            (c.x + dx, c.y + dy, rx_stretch, ry_stretch)
+        } else {
+            (c.x, c.y, rx, ry)
+        };
+        let at = |r: f64, a: f64| app.cam.from_frame(Vec3::new(cx + rx_final * r * a.cos(), cy + ry_final * r * a.sin(), z)).to_f32();
         shadow_ellipse(sc, dark, at);
     }
 }

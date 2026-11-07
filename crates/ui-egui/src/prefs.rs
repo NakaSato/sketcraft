@@ -1210,6 +1210,14 @@ preference_settings! {
     /// Show the view's pitch, yaw and roll and its projection under the orientation gizmo (#6032).
     /// Off by default; View ▸ View angles and `view.angle_readout` turn it on.
     show_view_angles: bool = false, PAGE_GRAPHICS;
+    /// Cast directional solar shadows based on sun position (time of day and season).
+    solar_shadows: bool = true, PAGE_GRAPHICS => check_tr("prefs.solar_shadows");
+    /// Solar time of day in decimal hours (0.0..24.0; default 14.0 = 2:00 PM).
+    solar_time_hours: f64 = 14.0, PAGE_GRAPHICS, accept(0.0..=24.0);
+    /// Solar day of year (1..365; default 172 = June 21, Summer Solstice).
+    solar_day_of_year: u32 = 172, PAGE_GRAPHICS, accept(1..=365);
+    /// Solar latitude in degrees (-90.0..90.0; default 37.77 = San Francisco / Mid-latitude).
+    solar_latitude_deg: f64 = 37.77, PAGE_GRAPHICS, accept(-90.0..=90.0);
     /// Show world X/Y/Z component dimensions beside the total distance in Measure.
     measure_axis_distances: bool = true, PAGE_TOOLS;
     /// Perspective view's vertical field of view in radians (#5364), 15° to 90°. The view reads a
@@ -4095,6 +4103,9 @@ fn prepare_preferences(
     }
     if !accepted::dimension_step_mm(&new) || !accepted::dimension_step_deg(&new) {
         return Err("`dimension_step_mm` must be 0.001…1000 and `dimension_step_deg` 0.001…180".into());
+    }
+    if !accepted::solar_time_hours(&new) || !accepted::solar_day_of_year(&new) || !accepted::solar_latitude_deg(&new) {
+        return Err("`solar_time_hours` must be 0…24, `solar_day_of_year` 1…365, and `solar_latitude_deg` -90…90".into());
     }
     if sketcraft_engine::doc::display_quality::DisplayQuality::parse(&new.display_quality).is_none() {
         return Err("`display_quality` must be coarse, normal, fine or ultra".into());
