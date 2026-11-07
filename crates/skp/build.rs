@@ -19,26 +19,12 @@ fn main() {
     if reader.get_compiler().is_like_msvc() {
         reader.flag("/EHsc").define("_CRT_SECURE_NO_WARNINGS", None);
     }
-    for name in [
-        "core",
-        "errors",
-        "geometry",
-        "json_export",
-        "legacy",
-        "model",
-        "observability",
-        "pages_dimensions",
-        "tlv",
-        "transforms",
-        "vff",
-    ] {
+    for name in ["core", "errors", "geometry", "json_export", "legacy", "model", "observability", "pages_dimensions", "tlv", "transforms", "vff"] {
         reader.file(format!("{base}/{name}.cpp"));
     }
     reader.compile("sketcraft_skp");
     let mut zip = cc::Build::new();
-    zip.warnings(false)
-        .opt_level(2)
-        .include(format!("{base}/miniz"));
+    zip.warnings(false).opt_level(2).include(format!("{base}/miniz"));
     for name in ["miniz", "miniz_tdef", "miniz_tinfl", "miniz_zip"] {
         zip.file(format!("{base}/miniz/{name}.c"));
     }

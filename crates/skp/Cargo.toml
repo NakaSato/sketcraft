@@ -1,6 +1,6 @@
 [package]
 name = "sketcraft-skp"
-description = "SketchUp (.skp) reader: the vendored OpenSKP C++ parser and the faces it produces"
+description = "SketchUp (.skp) reader in pure Rust (a port of OpenSKP) and the faces it produces"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
@@ -12,9 +12,15 @@ path = "src/lib.rs"
 
 [dependencies]
 serde.workspace = true
-serde_json.workspace = true
 glam.workspace = true
 earcutr = "0.5"
+miniz_oxide = "0.8"
+crc32fast = "1"
 
+[dev-dependencies]
+serde_json.workspace = true
+
+# The vendored OpenSKP C++ reader is compiled on desktop only as the oracle for the
+# differential tests in src/parity.rs.
 [build-dependencies]
 cc = "1"

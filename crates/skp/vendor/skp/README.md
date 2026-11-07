@@ -1,9 +1,14 @@
-# SketchUp reader
+# SketchUp reader (C++ oracle)
 
-`crates/skp` compiles this C++ reader on desktop. Textures, scenes, annotations
-and linked component definitions are not imported; component placements become
-separate bodies. Texture material base colors are kept. The adjacent LICENSE
-files must accompany redistribution.
+SketCraft reads `.skp` files with the pure-Rust reader in `crates/skp/src/reader`, a port
+of this C++ code. The C++ is kept only as the oracle for the differential tests in
+`crates/skp/src/parity.rs`: `build.rs` still compiles it on desktop, and nothing outside
+those tests calls it. It can be removed (with `build.rs` and `src/skp_native.cpp`) once
+parity is settled. The adjacent LICENSE files must accompany redistribution; the Rust port
+is derived from OpenSKP and keeps its MIT notice.
+
+Textures, scenes, annotations and linked component definitions are not imported; component
+placements become separate bodies. Texture material base colors are kept.
 
 `native/` contains the parsing/model/JSON source subset and public headers from
 OpenSKP commit `23a15e8742e936694bf14aa029cb0e2862dce5b9` (MIT, see
@@ -18,3 +23,10 @@ network access. A C/C++17 compiler is required for native development. Browser
 builds bypass native compilation entirely. SketCraft's C ABI and topology adapter
 are in `src/skp_native.cpp`; no interpreter or JavaScript engine is linked on
 desktop.
+
+The Rust port reads the same parts of the format the C++ import path reached
+(`full_parse` + `build_model` + the adapter). It does not port the parts whose
+results the import never used and which never failed a parse: scenes, the saved
+camera, styles (beyond the ZIP size check on `style.xml`), dimensions,
+construction geometry, UV transforms, units, attribute dictionaries (legacy ones
+are consumed, not decoded), texture images and the exporters.

@@ -1,9 +1,18 @@
 //! SketchUp (.skp) reader.
 //!
-//! On desktop the vendored OpenSKP C++ reader (`vendor/skp/native`, wrapped by
-//! `src/skp_native.cpp`) turns a file into JSON: vertices, edges, planar faces,
-//! groups, colors and hidden state. [`import_skp`] decodes that into a [`Model`]
-//! that can triangulate its faces. Positions are metres, Z up.
+//! [`import_skp`] reads a file into a [`Model`] of vertices, edges, planar faces, groups, colors
+//! and hidden state, and the model triangulates its faces. Positions are metres, Z up. The
+//! reader (`src/reader`) is pure Rust and runs on every target, the browser included. It is a
+//! port of the vendored OpenSKP C++ reader, which is still compiled on desktop as the oracle
+//! for the differential tests in `src/parity.rs`.
+
+#![deny(unsafe_code)]
+#![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic, clippy::unimplemented, clippy::todo, clippy::unreachable)]
+
+mod reader;
+
+#[cfg(all(test, not(target_arch = "wasm32")))]
+mod parity;
 
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -107,12 +116,7 @@ impl Model {
             return false;
         }
         self.any_ancestor(id, |e| {
-            self.hidden.contains(&e)
-                || self
-                    .entity_tags
-                    .get(&e)
-                    .and_then(|tag| self.tags.get(tag))
-                    .is_some_and(|tag| !tag.visible)
+            self.hidden.contains(&e) || self.entity_tags.get(&e).and_then(|tag| self.tags.get(tag)).is_some_and(|tag| !tag.visible)
         })
     }
 
@@ -154,7 +158,9 @@ impl Model {
         }
         earcutr::earcut(&coordinates, &holes, 2)
             .unwrap_or_default()
-            .chunks_exact(3)
+            .as_chunks::<3>()
+            .0
+            .iter()
             .map(|i| [points[i[0]], points[i[1]], points[i[2]]])
             .collect()
     }
@@ -169,11 +175,7 @@ impl Model {
             let cross = u.cross(v.position - origin);
             (cross.length() > PLANE_TOL).then(|| cross.normalize())
         })?;
-        let planar = ring.iter().all(|id| {
-            self.vertices
-                .get(id)
-                .is_some_and(|v| (v.position - origin).dot(normal).abs() <= PLANE_TOL)
-        });
+        let planar = ring.iter().all(|id| self.vertices.get(id).is_some_and(|v| (v.position - origin).dot(normal).abs() <= PLANE_TOL));
         planar.then(|| Plane { origin, u, v: normal.cross(u) })
     }
 }
@@ -220,56 +222,15 @@ where
     deserializer.deserialize_any(MapVisitor(std::marker::PhantomData))
 }
 
-fn decode_model(json: &str, name: &str) -> Result<Model, String> {
-    let mut model: Model = serde_json::from_str(json).map_err(|e| e.to_string())?;
-    if model.vertices.len() > 100_000_000 || model.faces.len() > 100_000_000 || model.objects.len() > 100_000_000 {
-        return Err("Model is too large".into());
-    }
-    // The reader puts the file's root group last; name it after the file.
-    if let Some(root) = model.objects.values_mut().next_back() {
-        root.name = name.to_owned();
-    }
-    Ok(model)
-}
-
 /// Reads a SketchUp file. `name` becomes the name of the root group.
-#[cfg(not(target_arch = "wasm32"))]
 pub fn import_skp(bytes: &[u8], name: &str) -> Result<Model, String> {
     if bytes.len() > MAX_SKP_BYTES {
         return Err("SketchUp import is limited to 1 GiB per file".into());
     }
-    let json = parse_skp(bytes).map_err(|e| format!("Could not read SketchUp file: {e}"))?;
-    decode_model(&json, name)
+    reader::import(bytes, name).map_err(|e| format!("Could not read SketchUp file: {e}"))
 }
 
-/// The browser build has no SketchUp reader.
-#[cfg(target_arch = "wasm32")]
-pub fn import_skp(_bytes: &[u8], _name: &str) -> Result<Model, String> {
-    Err("SketchUp import is only available in the desktop app".into())
-}
-
-#[cfg(not(target_arch = "wasm32"))]
-fn parse_skp(bytes: &[u8]) -> Result<String, String> {
-    use std::ffi::{CStr, c_char};
-    unsafe extern "C" {
-        fn ketchup_skp_parse(bytes: *const u8, len: usize, success: *mut i32) -> *mut c_char;
-        fn ketchup_skp_free(value: *mut c_char);
-    }
-    let mut success = 0;
-    // SAFETY: `bytes` is valid for `bytes.len()` reads. The reader returns a newly
-    // allocated, null-terminated string, or null when out of memory.
-    let value = unsafe { ketchup_skp_parse(bytes.as_ptr(), bytes.len(), &mut success) };
-    if value.is_null() {
-        return Err("Not enough memory to read this SketchUp file".into());
-    }
-    // SAFETY: `value` is non-null and null-terminated.
-    let text = unsafe { CStr::from_ptr(value) }.to_string_lossy().into_owned();
-    // SAFETY: `value` came from `ketchup_skp_parse` and is freed once.
-    unsafe { ketchup_skp_free(value) };
-    if success == 1 { Ok(text) } else { Err(text) }
-}
-
-#[cfg(all(test, not(target_arch = "wasm32")))]
+#[cfg(test)]
 mod tests {
     use super::*;
 
@@ -323,9 +284,72 @@ mod tests {
         }
     }
 
+    const WINDOW: &[u8] = include_bytes!("../tests/fixtures/placed-window.skp");
+    const TRIANGLE: &[u8] = include_bytes!("../tests/fixtures/modern-triangle.skp");
+
+    /// Every prefix of both fixtures reads without panicking, and a cut through the geometry
+    /// is an error.
+    #[test]
+    fn truncated_files_are_errors() {
+        for fixture in [WINDOW, TRIANGLE] {
+            for len in 0..fixture.len() {
+                let _ = import_skp(&fixture[..len], "Cut");
+            }
+            assert!(import_skp(&fixture[..fixture.len() / 2], "Cut").is_err());
+        }
+        assert!(import_skp(&[], "Empty").is_err());
+    }
+
+    /// Random bytes, with and without a valid header and version string, are errors.
+    #[test]
+    fn random_bytes_are_errors() {
+        let mut state = 0x9e37_79b9_7f4a_7c15u64;
+        let mut noise = |n: usize| -> Vec<u8> {
+            (0..n)
+                .map(|_| {
+                    state ^= state << 13;
+                    state ^= state >> 7;
+                    state ^= state << 17;
+                    state as u8
+                })
+                .collect()
+        };
+        for n in [1, 4, 64, 4096, 100_000] {
+            assert!(import_skp(&noise(n), "Noise").is_err());
+            let mut modern = TRIANGLE[..0x1b].to_vec();
+            modern.extend(noise(n));
+            assert!(import_skp(&modern, "Noise").is_err());
+            let mut legacy = WINDOW[..0x40].to_vec();
+            legacy.extend(noise(n));
+            assert!(import_skp(&legacy, "Noise").is_err());
+        }
+    }
+
+    /// Every single-byte change to both fixtures reads without panicking; a damaged header or
+    /// ZIP directory is an error.
+    #[test]
+    fn flipped_bytes_never_panic() {
+        for fixture in [WINDOW, TRIANGLE] {
+            for at in 0..fixture.len() {
+                for mask in [0x01, 0x80, 0xff] {
+                    let mut bytes = fixture.to_vec();
+                    bytes[at] ^= mask;
+                    let _ = import_skp(&bytes, "Flip");
+                }
+            }
+            let mut bytes = fixture.to_vec();
+            bytes[1] ^= 0xff;
+            assert!(import_skp(&bytes, "Flip").is_err());
+        }
+        // The central directory signature of the modern fixture.
+        let mut bytes = TRIANGLE.to_vec();
+        let cdh = bytes.windows(4).position(|w| w == b"PK\x01\x02").unwrap();
+        bytes[cdh] ^= 0xff;
+        assert_eq!(import_skp(&bytes, "Flip").unwrap_err(), "Could not read SketchUp file: Invalid ZIP container | stage=zip_extract");
+    }
+
     #[test]
     fn non_empty_arrays_are_rejected() {
         assert!(serde_json::from_str::<Model>(r#"{"faces":[1]}"#).is_err());
     }
 }
-
