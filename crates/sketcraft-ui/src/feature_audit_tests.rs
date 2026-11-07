@@ -92,6 +92,9 @@ pub(super) fn render_cases() -> Vec<RenderCase> {
         "horizon_color",
         "inference_color",
         "midpoint_color",
+        "endpoint_color",
+        "on_edge_color",
+        "on_face_color",
     ] {
         pair(
             key,

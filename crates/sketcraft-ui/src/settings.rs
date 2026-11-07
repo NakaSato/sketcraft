@@ -388,12 +388,18 @@ impl KetchupApp {
                 color_row(ui, "Z axis", &mut d.axis_colors[2]);
                 color_row(ui, "Inference points", &mut d.inference_color);
                 color_row(ui, "Midpoints", &mut d.midpoint_color);
+                color_row(ui, "Endpoints", &mut d.endpoint_color);
+                color_row(ui, "On edge", &mut d.on_edge_color);
+                color_row(ui, "On face", &mut d.on_face_color);
                 ui.text_weak("Axis inferences use the corresponding axis color.");
                 if ui.button("Restore default colors").clicked() {
                     let defaults = ketchup_core::DisplaySettings::default();
                     d.axis_colors = defaults.axis_colors;
                     d.inference_color = defaults.inference_color;
                     d.midpoint_color = defaults.midpoint_color;
+                    d.endpoint_color = defaults.endpoint_color;
+                    d.on_edge_color = defaults.on_edge_color;
+                    d.on_face_color = defaults.on_face_color;
                 }
             }
             Section::Navigation => {
