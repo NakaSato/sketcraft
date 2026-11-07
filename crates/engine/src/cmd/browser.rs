@@ -129,7 +129,16 @@ pub static COMMANDS: &[CommandSpec] = &[
         "path?: [occurrence ids]; component?: id; omit both for the whole tree. The row it starts from (the design row for the whole tree) stays open, so its first level remains visible. \
          Display only; not an undo step → open, open_by_default, closed_by_default",
     ),
+    CommandSpec::new("tags.manage", "Tags & Layers", tags_manage)
+        .icon("list")
+        .noundo()
+        .doc_only()
+        .params("Open the Tags & Layers manager panel"),
 ];
+
+fn tags_manage(_s: &mut Session, _p: &Value) -> Result<Value> {
+    Ok(json!({"open": true}))
+}
 
 const FOLDERS: [&str; 3] = ["bodies", "sketches", "construction"];
 

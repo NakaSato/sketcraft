@@ -871,6 +871,10 @@ fn file_menu(app: &mut SolveApp, ctx: &egui::Context) {
                     close = true;
                 }
                 ui.separator();
+                if item_if(ui, "Tags & Layers…", "", "list", shown) {
+                    FileAction::Command("tags.manage").run(app);
+                    close = true;
+                }
                 if item_if(ui, &format!("{}…", app.tr_label("Design Properties")), "", "settings", shown) {
                     FileAction::Command("document.metadata").run(app);
                     close = true;
