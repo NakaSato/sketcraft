@@ -3,7 +3,7 @@
 //! (read only), Messages (every status message of the run, #2763), and Report an Issue, which
 //! opens a local editable report draft.
 
-use crate::SolveApp;
+use crate::SketApp;
 use crate::ui_kit;
 use crate::ui_kit::{Container, Surface};
 
@@ -26,7 +26,7 @@ pub struct HelpState {
 }
 
 /// One line per fact, for bug reports.
-pub fn diagnostics(app: &SolveApp) -> String {
+pub fn diagnostics(app: &SketApp) -> String {
     let renderer = if app.viewport.gpu.is_some() { "GPU" } else { "CPU" };
     let count = |n: usize, one: &str, many: &str| format!("{n} {}", if n == 1 { one } else { many });
     format!(
@@ -43,13 +43,13 @@ pub fn diagnostics(app: &SolveApp) -> String {
 
 /// Whether a Help menu item can run now: behind an open bug report, the items that open a
 /// window would cover it (#7188). Report an Issue… shows the report.
-pub fn available(app: &SolveApp, item: &str) -> bool {
+pub fn available(app: &SketApp, item: &str) -> bool {
     app.issue_report.draft.is_none() || !matches!(item, "about" | "shortcuts" | "messages" | "crashes" | "connect" | "updates")
 }
 
 /// Run a Help menu item: `docs`, `about`, `updates`, `version` (the release notes), `shortcuts`, `messages`, `report`, `crashes`,
 /// `connect`, `install_cli` (macOS).
-pub fn run(app: &mut SolveApp, ctx: &egui::Context, item: &str) {
+pub fn run(app: &mut SketApp, ctx: &egui::Context, item: &str) {
     app.help.menu = false;
     if !available(app, item) {
         return;
@@ -102,7 +102,7 @@ fn connect_assistants() -> Vec<String> {
 }
 
 /// The Connect AI assistants result window.
-fn connect(app: &mut SolveApp, ctx: &egui::Context) {
+fn connect(app: &mut SketApp, ctx: &egui::Context) {
     let Some(lines) = app.help.connect.clone() else {
         return;
     };
@@ -123,7 +123,7 @@ fn connect(app: &mut SolveApp, ctx: &egui::Context) {
 }
 
 /// The Help menu under the ? button, and the About window.
-pub fn show(app: &mut SolveApp, ctx: &egui::Context, anchor: egui::Pos2) {
+pub fn show(app: &mut SketApp, ctx: &egui::Context, anchor: egui::Pos2) {
     if app.help.menu {
         let mut pick: Option<&str> = None;
         let resp = Container::new(ctx, Surface::Popup)
@@ -177,7 +177,7 @@ pub fn show(app: &mut SolveApp, ctx: &egui::Context, anchor: egui::Pos2) {
     crate::messages::show(app, ctx);
 }
 
-fn about(app: &mut SolveApp, ctx: &egui::Context) {
+fn about(app: &mut SketApp, ctx: &egui::Context) {
     if !app.help.about {
         return;
     }
@@ -190,11 +190,7 @@ fn about(app: &mut SolveApp, ctx: &egui::Context) {
                 &crate::i18n::format("help.build", &[("version", VERSION), ("commit", COMMIT), ("date", BUILD_DATE)]),
                 ui_kit::Text::Report("version", false),
             );
-            ui_kit::text(
-                ui,
-                crate::i18n::tr("help.about_description"),
-                ui_kit::Text::Note("description"),
-            );
+            ui_kit::text(ui, crate::i18n::tr("help.about_description"), ui_kit::Text::Note("description"));
             let copy = ui_kit::button(ui, crate::i18n::tr_label("Copy diagnostic information"), ui_kit::Button::Normal);
             crate::scenario::publish_target("about:copy_diagnostics", copy.rect);
             if copy.clicked() {
@@ -237,7 +233,7 @@ mod tests {
     fn about_knows_its_build_and_diagnostics_say_where_it_runs() {
         assert!(!COMMIT.is_empty() && BUILD_DATE.len() == 10, "{COMMIT} {BUILD_DATE}");
         assert!(ATTRIBUTION.contains("ATTRIBUTION") || ATTRIBUTION.contains("Attribution"));
-        let app = SolveApp::new(sketcraft_engine::Session::default(), Default::default());
+        let app = SketApp::new(sketcraft_engine::Session::default(), Default::default());
         let d = diagnostics(&app);
         assert!(d.contains(VERSION) && d.contains(std::env::consts::OS) && d.contains("Renderer: CPU"), "{d}");
     }
@@ -245,7 +241,7 @@ mod tests {
     /// One feature and one body are counted in the singular (#9085), more in the plural.
     #[test]
     fn diagnostics_count_one_feature_and_one_body_in_the_singular() {
-        let mut app = SolveApp::new(sketcraft_engine::Session::default(), Default::default());
+        let mut app = SketApp::new(sketcraft_engine::Session::default(), Default::default());
         assert!(diagnostics(&app).ends_with("(0 features, 0 bodies)"), "{}", diagnostics(&app));
         app.session.execute("solid.box", &serde_json::json!({"length": 10, "width": 10, "height": 10})).unwrap();
         assert!(diagnostics(&app).ends_with("(1 feature, 1 body)"), "{}", diagnostics(&app));

@@ -8,20 +8,20 @@
 use crate::ui_kit::BackingTooltipExt as _;
 use crate::ui_kit::{Container, Surface};
 use egui::{Color32, Pos2, Stroke, vec2};
-use solidcore_record::{Vec2, Vec3};
+use sketcore_record::{Vec2, Vec3};
 use sketcraft_engine::Sel;
 use sketcraft_engine::doc::expr::Kind as ValueKind;
 use sketcraft_engine::geom::Mesh;
 use sketcraft_engine::geom::prelude::*;
 
-use crate::SolveApp;
+use crate::SketApp;
 use crate::dialogs::{Dialog, Kind};
 use crate::theme::Tokens;
 use crate::viewport::{Proj, projected_polygon};
 
 /// Where the dialog's geometry is: a base point and, for values that can be dragged, the
 /// direction a growing value points.
-pub fn anchor(app: &SolveApp, d: &Dialog) -> Option<(Vec3, Option<Vec3>)> {
+pub fn anchor(app: &SketApp, d: &Dialog) -> Option<(Vec3, Option<Vec3>)> {
     let st = crate::open_meshing::session_world(&app.session);
     let item = anchor_item(app, d);
     let Some(first) = &item else { return section_plane(d) };
@@ -43,7 +43,7 @@ pub fn anchor(app: &SolveApp, d: &Dialog) -> Option<(Vec3, Option<Vec3>)> {
                     .collect();
                 let regions = sketcraft_engine::sketch::merge_regions(&regions);
                 let points: Vec<_> = regions.iter().flat_map(|r| r.outer.polyline(1e-2)).collect();
-                points.iter().fold(solidcore_record::Vec2::default(), |sum, p| sum + *p) * (1.0 / points.len().max(1) as f64)
+                points.iter().fold(sketcore_record::Vec2::default(), |sum, p| sum + *p) * (1.0 / points.len().max(1) as f64)
             } else {
                 p.region.interior_point()
             };
@@ -81,9 +81,8 @@ pub fn anchor(app: &SolveApp, d: &Dialog) -> Option<(Vec3, Option<Vec3>)> {
         // made, as a body sits at the middle of its box.
         Sel::Feature { id } => (crate::viewport::feature_bounds(app, *id)?.center(), None),
         Sel::Plane { name } => {
-            let pl = solidcore_record::Plane::named(name).or_else(|| {
-                sketcraft_engine::view::construction_planes(&app.session).into_iter().find(|(_, n, _)| n == name).map(|(_, _, pl)| pl)
-            })?;
+            let pl = sketcore_record::Plane::named(name)
+                .or_else(|| sketcraft_engine::view::construction_planes(&app.session).into_iter().find(|(_, n, _)| n == name).map(|(_, _, pl)| pl))?;
             (pl.origin, Some(pl.normal()))
         }
         _ => return None,
@@ -91,7 +90,7 @@ pub fn anchor(app: &SolveApp, d: &Dialog) -> Option<(Vec3, Option<Vec3>)> {
     Some(match &d.kind {
         Kind::Extrude { start, .. } => {
             let n = normal?;
-            let plane = solidcore_record::Plane::from_normal(at, n)?;
+            let plane = sketcore_record::Plane::from_normal(at, n)?;
             let from = reference_height(app, d, "From Object", &plane, at).unwrap_or(0.0);
             let offset = if start.trim().is_empty() { 0.0 } else { crate::length_input::eval(&app.session.doc, start, ValueKind::Length).ok()? };
             (at + n * (from + offset), Some(n))
@@ -157,7 +156,7 @@ pub fn anchor(app: &SolveApp, d: &Dialog) -> Option<(Vec3, Option<Vec3>)> {
 /// The direction a rectangular pattern's Spacing 2 grows along (#2462): a solid pattern's picked
 /// (or kept) second direction, none until it has one; a sketch pattern's second direction, which
 /// is square to the first unless one is picked.
-fn pattern_dir2(app: &SolveApp, d: &Dialog) -> Option<Vec3> {
+fn pattern_dir2(app: &SketApp, d: &Dialog) -> Option<Vec3> {
     match &d.kind {
         Kind::PatternRect { .. } => match d.inputs.get(2).and_then(|i| i.items.first()) {
             Some(x) => crate::dialogs::axis_of(app, x).map(|a| a.1),
@@ -193,19 +192,19 @@ fn poly_mid(poly: &[Vec2]) -> Option<(Vec2, Vec2)> {
     last
 }
 
-pub(crate) fn profile_plane(app: &SolveApp, sketch: u64) -> Option<solidcore_record::Plane> {
+pub(crate) fn profile_plane(app: &SketApp, sketch: u64) -> Option<sketcore_record::Plane> {
     let component = app.session.doc.feature(sketch)?.component;
     let state = app.session.model.state();
     let plane = state.sketch(sketch)?.plane;
     let frame = crate::dialogs::feature_frame(&app.session, component);
-    solidcore_record::Plane::new(
+    sketcore_record::Plane::new(
         sketcraft_engine::doc::apply_point(&frame, plane.origin),
         sketcraft_engine::doc::apply_vector(&frame, plane.x),
         sketcraft_engine::doc::apply_vector(&frame, plane.y),
     )
 }
 
-fn reference_height(app: &SolveApp, d: &Dialog, label: &str, plane: &solidcore_record::Plane, centre: Vec3) -> Option<f64> {
+fn reference_height(app: &SketApp, d: &Dialog, label: &str, plane: &sketcore_record::Plane, centre: Vec3) -> Option<f64> {
     let point = crate::dialogs::object_point(&d.inputs, label)?;
     let p = point.as_array()?;
     let p = Vec3::new(p.first()?.as_f64()?, p.get(1)?.as_f64()?, p.get(2)?.as_f64()?);
@@ -269,7 +268,7 @@ fn section_plane(d: &Dialog) -> Option<(Vec3, Option<Vec3>)> {
 /// The pick the dialog's arrow sits on: the first, or for a fillet or chamfer reopened from a
 /// click on one of its faces (Press Pull), its edge nearest the click, at the point on it nearest
 /// the click (#4986).
-fn anchor_item(app: &SolveApp, d: &Dialog) -> Option<Sel> {
+fn anchor_item(app: &SketApp, d: &Dialog) -> Option<Sel> {
     let items = &d.inputs.first()?.items;
     let first = items.first()?.clone();
     let (Some(hint), Kind::Fillet { .. }) = (d.anchor_hint, &d.kind) else { return Some(first) };
@@ -301,7 +300,7 @@ fn nearest_on_polyline(pts: &[Vec3], p: Vec3) -> Option<Vec3> {
 /// The directions Distance 1 and Distance 2 of a chamfer of two distances run from its edge at
 /// `at`: along the face that faces up most, or the other one with Flip, and along the remaining
 /// face (the kernel's `chamfer_tool_sides` picks them the same way). None for any other dialog.
-pub(crate) fn chamfer_face_dirs(app: &SolveApp, d: &Dialog, at: Vec3) -> Option<(Vec3, Vec3)> {
+pub(crate) fn chamfer_face_dirs(app: &SketApp, d: &Dialog, at: Vec3) -> Option<(Vec3, Vec3)> {
     let Kind::Fillet { chamfer: true, ctype: 1, flip, .. } = &d.kind else { return None };
     let Some(Sel::Edge { body, index, .. }) = &anchor_item(app, d) else { return None };
     let st = crate::open_meshing::session_world(&app.session);
@@ -320,7 +319,7 @@ pub(crate) fn chamfer_face_dirs(app: &SolveApp, d: &Dialog, at: Vec3) -> Option<
 }
 
 /// Whether a dynamically registered canvas handle owns this point before navigation.
-pub(crate) fn owns_pointer(app: &SolveApp, proj: &Proj, p: Pos2) -> bool {
+pub(crate) fn owns_pointer(app: &SketApp, proj: &Proj, p: Pos2) -> bool {
     // The triad only registers an egui hit widget after a handle is under the pointer.
     // Test its geometry before navigation, including the first frame entering a handle.
     crate::joint_handles::owns_pointer(app, proj, p)
@@ -339,7 +338,7 @@ pub(crate) fn owns_pointer(app: &SolveApp, proj: &Proj, p: Pos2) -> bool {
 }
 
 /// Draw the manipulator and the value box (called by the viewport after the model is drawn).
-pub fn show(app: &mut SolveApp, ui: &mut egui::Ui, painter: &egui::Painter, proj: &Proj) {
+pub fn show(app: &mut SketApp, ui: &mut egui::Ui, painter: &egui::Painter, proj: &Proj) {
     crate::extrude_face_snap::set(None);
     // While OK computes, the inputs hold what it computes: no arrow to drag, no box to type in.
     if app.applying.is_some() {
@@ -451,7 +450,7 @@ impl MoveRotation {
     }
 }
 
-fn move_rotation(app: &SolveApp, d: &Dialog, proj: &Proj) -> Option<MoveRotation> {
+fn move_rotation(app: &SketApp, d: &Dialog, proj: &Proj) -> Option<MoveRotation> {
     let Kind::Move { angle, .. } = &d.kind else { return None };
     let (centre, axis) = crate::dialogs_move::rotation_axis(app, d)?;
     let angle = crate::length_input::eval(&app.session.doc, angle, ValueKind::Angle).ok().filter(|a| a.is_finite()).unwrap_or(0.0);
@@ -459,7 +458,7 @@ fn move_rotation(app: &SolveApp, d: &Dialog, proj: &Proj) -> Option<MoveRotation
 }
 
 /// Reuse the angular handle's snapping and edge-on projection for Move's selected axis.
-fn draw_move_rotation(app: &SolveApp, ui: &mut egui::Ui, painter: &egui::Painter, proj: &Proj, d: &mut Dialog) -> Option<(Pos2, bool)> {
+fn draw_move_rotation(app: &SketApp, ui: &mut egui::Ui, painter: &egui::Painter, proj: &Proj, d: &mut Dialog) -> Option<(Pos2, bool)> {
     let r = move_rotation(app, d, proj)?;
     let points: Vec<_> = (0..=64).filter_map(|i| proj.to_screen(r.point(i as f64 / 64.0 * std::f64::consts::TAU))).collect();
     painter.add(egui::Shape::line(points, Stroke::new(1.8, Tokens::get().manipulator)));
@@ -520,7 +519,7 @@ pub(crate) fn format_len(doc: &sketcraft_engine::doc::Document, v: f64) -> Strin
 }
 
 /// Where a sketch point picked as "<sketch id>:<point id>" (or a bare id of the active sketch) is.
-fn sketch_point_at(app: &SolveApp, st: &sketcraft_engine::doc::ModelState, id: &str) -> Option<Vec3> {
+fn sketch_point_at(app: &SketApp, st: &sketcraft_engine::doc::ModelState, id: &str) -> Option<Vec3> {
     let (sketch, point) = match id.split_once(':') {
         Some((sketch, point)) => (sketch.parse().ok()?, point),
         None => (app.session.active_sketch?, id),
@@ -537,10 +536,10 @@ fn offset_plane_quad(proj: &Proj, c: Vec3, n: Vec3, h: f64) -> Option<Vec<Pos2>>
 }
 
 #[allow(clippy::too_many_arguments)]
-fn draw(app: &SolveApp, ui: &mut egui::Ui, painter: &egui::Painter, proj: &Proj, d: &mut Dialog, base: Vec3, bs: Pos2, dir: Option<Vec3>) {
+fn draw(app: &SketApp, ui: &mut egui::Ui, painter: &egui::Painter, proj: &Proj, d: &mut Dialog, base: Vec3, bs: Pos2, dir: Option<Vec3>) {
     let t = Tokens::get();
     let to_span = dir.and_then(|n| {
-        let plane = solidcore_record::Plane::from_normal(base, n)?;
+        let plane = sketcore_record::Plane::from_normal(base, n)?;
         reference_height(app, d, "To Object", &plane, base)
     });
     let all_span = if matches!(d.kind, Kind::Extrude { all: true, .. }) {
@@ -548,7 +547,7 @@ fn draw(app: &SolveApp, ui: &mut egui::Ui, painter: &egui::Painter, proj: &Proj,
             let state = crate::open_meshing::session_world(&app.session);
             let plane = match d.inputs.first()?.items.first()? {
                 Sel::Profile { sketch, .. } => profile_plane(app, *sketch)?,
-                _ => solidcore_record::Plane::from_normal(base, n)?,
+                _ => sketcore_record::Plane::from_normal(base, n)?,
             };
             let targets: Vec<String> = d
                 .extra
@@ -679,7 +678,7 @@ fn draw(app: &SolveApp, ui: &mut egui::Ui, painter: &egui::Painter, proj: &Proj,
             let ang = crate::length_input::eval(&app.session.doc, taper, ValueKind::Angle).ok().filter(|v| v.is_finite()).unwrap_or(0.0);
             let before = taper.clone();
             let st = crate::open_meshing::session_world(&app.session);
-            let regions: Vec<&solidcore_record::Region2> = d
+            let regions: Vec<&sketcore_record::Region2> = d
                 .inputs
                 .first()
                 .map(|i| &i.items[..])
@@ -847,7 +846,7 @@ pub(crate) struct BoxPlace {
 
 /// The place the value boxes of a command may take: clear of the command window, inside the
 /// drawing area. The handles are added by the caller that draws a manipulator.
-pub(crate) fn box_place(app: &SolveApp, proj: &Proj) -> BoxPlace {
+pub(crate) fn box_place(app: &SketApp, proj: &Proj) -> BoxPlace {
     BoxPlace { dialog: app.viewport.dialog_rect, view: Some(proj.rect), handles: None }
 }
 
@@ -1201,7 +1200,7 @@ fn drag_arrow_to(
 /// share one spline, so every edge's handles edit it. A taper's handles show on a single edge
 /// only: the first edit makes the fillet a spline fillet starting from that edge's taper, which
 /// would put the same radius on every other edge. Whether the handles are shown.
-fn radius_spline_handles(app: &SolveApp, ui: &mut egui::Ui, painter: &egui::Painter, proj: &Proj, d: &mut Dialog) -> bool {
+fn radius_spline_handles(app: &SketApp, ui: &mut egui::Ui, painter: &egui::Painter, proj: &Proj, d: &mut Dialog) -> bool {
     use serde_json::{Value, json};
     use sketcraft_engine::doc::kernel::RadiusSpline;
     enum Edit {
@@ -1480,7 +1479,7 @@ fn moved_label(proj: &Proj, rect: egui::Rect, offset: egui::Vec2) -> egui::Rect 
 /// centre to centre, the closest or farthest points) with its length. Its labels can be dragged
 /// away from the part; a moved one keeps a leader to what it measures.
 fn measure_line(
-    app: &SolveApp,
+    app: &SketApp,
     ui: &mut egui::Ui,
     painter: &egui::Painter,
     proj: &Proj,
@@ -1541,7 +1540,7 @@ fn pick_numbers(painter: &egui::Painter, sa: Pos2, sb: Pos2) {
 /// the user can drag each away (`labels` 1 to 3).
 #[allow(clippy::too_many_arguments)]
 fn measure_components(
-    app: &SolveApp,
+    app: &SketApp,
     ui: &mut egui::Ui,
     painter: &egui::Painter,
     proj: &Proj,
@@ -1630,7 +1629,7 @@ pub(crate) fn taper_limits((inward, outward): (f64, f64), height: f64) -> (f64, 
 /// The smallest inradius of `regions` and of their holes (infinite for none), which
 /// [`taper_limits`] turns into angles. A grid search over every side of every loop, so the
 /// extrude window keeps it while its profiles stay the same ([`taper_radii_kept`]).
-pub(crate) fn taper_radii(regions: &[&solidcore_record::Region2]) -> (f64, f64) {
+pub(crate) fn taper_radii(regions: &[&sketcore_record::Region2]) -> (f64, f64) {
     #[cfg(test)]
     TAPER_RADII_WORKED_OUT.with(|n| n.set(n.get() + 1));
     let inward = regions.iter().map(|r| r.inradius(1e-3)).fold(f64::INFINITY, f64::min);
@@ -1640,7 +1639,7 @@ pub(crate) fn taper_radii(regions: &[&solidcore_record::Region2]) -> (f64, f64) 
 
 /// [`taper_radii`] of `regions`, worked out again only when they differ from the ones `kept`
 /// holds: the extrude window draws its taper handle every frame, and only the height changes.
-fn taper_radii_kept(kept: &mut Option<(Vec<solidcore_record::Region2>, (f64, f64))>, regions: &[&solidcore_record::Region2]) -> (f64, f64) {
+fn taper_radii_kept(kept: &mut Option<(Vec<sketcore_record::Region2>, (f64, f64))>, regions: &[&sketcore_record::Region2]) -> (f64, f64) {
     if let Some((was, radii)) = kept
         && was.len() == regions.len()
         && was.iter().zip(regions).all(|(a, b)| a == *b)
@@ -1710,7 +1709,7 @@ fn taper_handle(
 }
 
 /// The revolve axis (a point on it and its unit direction).
-pub(crate) fn revolve_axis(app: &SolveApp, d: &Dialog) -> Option<(Vec3, Vec3)> {
+pub(crate) fn revolve_axis(app: &SketApp, d: &Dialog) -> Option<(Vec3, Vec3)> {
     if !matches!(d.kind, Kind::Revolve { .. }) {
         return None;
     }
@@ -1748,7 +1747,7 @@ pub(crate) fn revolve_axis(app: &SolveApp, d: &Dialog) -> Option<(Vec3, Vec3)> {
 /// Draw angular extents in the same clockwise sense as the modeled solid.
 #[allow(clippy::too_many_arguments)]
 fn draw_revolve(
-    app: &SolveApp,
+    app: &SketApp,
     ui: &mut egui::Ui,
     painter: &egui::Painter,
     proj: &Proj,
@@ -1894,7 +1893,7 @@ fn revolve_convention(d: &Dialog) -> sketcraft_engine::doc::RevolveConvention {
         .unwrap_or(sketcraft_engine::doc::RevolveConvention::SketchNormal)
 }
 
-fn revolve_display_extent(app: &SolveApp, d: &Dialog, axis: (Vec3, Vec3)) -> Option<sketcraft_engine::doc::RevolveExtent> {
+fn revolve_display_extent(app: &SketApp, d: &Dialog, axis: (Vec3, Vec3)) -> Option<sketcraft_engine::doc::RevolveExtent> {
     let Sel::Profile { sketch, .. } = d.inputs.first()?.items.first()? else { return None };
     let state = crate::open_meshing::session_world(&app.session);
     let ss = state.sketch(*sketch)?;
@@ -2225,7 +2224,7 @@ mod tests {
 #[cfg(test)]
 mod taper_limit_tests {
     use super::{taper_limits, taper_radii};
-    use solidcore_record::{Loop2, Region2, Vec2};
+    use sketcore_record::{Loop2, Region2, Vec2};
     use sketcraft_engine::geom::prelude::*;
 
     /// #1602: a drag stops just short of the taper that closes the profile, either way.

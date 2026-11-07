@@ -28,12 +28,10 @@ sketcraft-doc = { path = "crates/doc" }
 sketcraft-io = { path = "crates/io" }
 sketcraft-engine = { path = "crates/engine" }
 sketcraft-ui-egui = { path = "crates/ui-egui" }
-sketcraft-space-mouse = { path = "crates/space-mouse" }
 sketcraft-mcp = { path = "crates/mcp" }
 sketcraft-derive = { path = "crates/derive" }
-sketcraft-3dx-client = { path = "crates/threedx-client" }
-solidcore = { git = "https://github.com/tangency-labs/solidcore", rev = "8ddce901671f1cebd9214a31d21895d725e886c8" }
-solidcore-record = { git = "https://github.com/tangency-labs/solidcore", rev = "f5e8e9a29e0c9b7cf6c4040a5bc8878382b3c62f" }
+sketcore = { git = "https://github.com/tangency-labs/solidcore", rev = "8ddce901671f1cebd9214a31d21895d725e886c8", package = "solidcore" }
+sketcore-record = { git = "https://github.com/tangency-labs/solidcore", rev = "f5e8e9a29e0c9b7cf6c4040a5bc8878382b3c62f", package = "solidcore-record" }
 sketcraft-testkit = { path = "crates/testkit" }
 sketcraft-skp = { path = "crates/skp" }
 

@@ -1,14 +1,14 @@
 use super::build_scene;
-use crate::{Services, SolveApp};
+use crate::{Services, SketApp};
 use serde_json::json;
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 use sketcraft_engine::{Session, doc, kernel};
 
 #[test]
 fn a_finished_sketch_on_a_face_draws_a_halo_under_its_own_curves_only() {
     use crate::theme::{self, ColorVision, Tokens};
 
-    let mut app = SolveApp::new(Session::default(), Services::default());
+    let mut app = SketApp::new(Session::default(), Services::default());
     app.run("solid.box", json!({"length":40,"width":30,"height":20})).unwrap();
     app.run("sketch.create", json!({"plane":{"face":[20,15,20]},"project_edges":true})).unwrap();
     app.run("sketch.rectangle.two_point", json!({"p0":[-5,-5],"p1":[5,5]})).unwrap();
@@ -97,7 +97,7 @@ fn placed_step_body_uses_imported_opacity_until_a_design_look_overrides_it() {
     let source = session.model.state().bodies[0].name.clone();
     assert!((session.doc.model_body_opacity(&session.model.state().bodies[0]) - 0.4).abs() < 1e-6);
     session.execute("occurrence.copy", &json!({"component":component,"translate":[30,0,0]})).unwrap();
-    let mut app = SolveApp::new(session, Services::default());
+    let mut app = SketApp::new(session, Services::default());
     app.ui.ground_shadow = false;
     app.set_origin_shown(false);
     let placed = app.session.world_state().unwrap().bodies.iter().find(|b| b.name != source).unwrap().name.clone();
@@ -172,7 +172,7 @@ fn selection_does_not_rebuild_the_model_scene() {
 
 #[test]
 fn an_appearance_edit_resolves_only_the_bodies_it_changes() {
-    let mut app = SolveApp::new(Session::default(), Services::default());
+    let mut app = SketApp::new(Session::default(), Services::default());
     app.ui.ground_shadow = false;
     app.set_origin_shown(false);
     app.run("solid.box", json!({"length": 20, "width": 15, "height": 10, "body_name": "A"})).unwrap();
@@ -187,7 +187,7 @@ fn an_appearance_edit_resolves_only_the_bodies_it_changes() {
 
 #[test]
 fn a_colour_edit_reuses_every_block_vertex() {
-    let mut app = SolveApp::new(Session::default(), Services::default());
+    let mut app = SketApp::new(Session::default(), Services::default());
     app.ui.ground_shadow = false;
     app.set_origin_shown(false);
     app.run("solid.box", json!({"length": 20, "width": 15, "height": 10})).unwrap();
@@ -204,14 +204,14 @@ fn a_colour_edit_reuses_every_block_vertex() {
 
 #[test]
 fn a_material_colour_edit_its_undo_and_redo_reach_the_viewport() {
-    let mut app = SolveApp::new(Session::default(), Services::default());
+    let mut app = SketApp::new(Session::default(), Services::default());
     app.ui.ground_shadow = false;
     app.set_origin_shown(false);
     app.run("solid.box", json!({"length": 20, "width": 15, "height": 10})).unwrap();
     let name = crate::open_meshing::session_world(&app.session).bodies[0].name.clone();
     app.run("material.create", json!({"name": "Wood dark", "density_g_cm3": 0.7, "color": "#c8a573"})).unwrap();
     app.run("material.assign", json!({"bodies": [name], "material": "Wood dark"})).unwrap();
-    let colour = |app: &SolveApp| {
+    let colour = |app: &SketApp| {
         let scene = build_scene(app);
         let block = scene.blocks.iter().find(|b| !b.bytes.vertices.is_empty()).expect("the box has a block");
         first_vertex(&scene, &block.bytes.vertices).1
@@ -227,7 +227,7 @@ fn a_material_colour_edit_its_undo_and_redo_reach_the_viewport() {
 
 #[test]
 fn an_opacity_class_change_keeps_vertices_and_rewrites_only_the_runs() {
-    let mut app = SolveApp::new(Session::default(), Services::default());
+    let mut app = SketApp::new(Session::default(), Services::default());
     app.ui.ground_shadow = false;
     app.set_origin_shown(false);
     app.run("solid.box", json!({"length": 20, "width": 15, "height": 10})).unwrap();
@@ -262,7 +262,7 @@ fn appearance_edits_upload_palette_rows_only() {
         eprintln!("skipping: no GPU adapter");
         return;
     };
-    let mut app = SolveApp::new(Session::default(), Services::default());
+    let mut app = SketApp::new(Session::default(), Services::default());
     app.ui.ground_shadow = false;
     app.set_origin_shown(false);
     app.viewport.gpu =
@@ -272,7 +272,7 @@ fn appearance_edits_upload_palette_rows_only() {
     let name = app.session.world_state().unwrap().bodies[0].name.clone();
     let highlight: crate::gpu::SceneSlot = std::sync::Arc::new(std::sync::Mutex::new(None));
     let mut key = 0;
-    let mut draw = |app: &SolveApp| {
+    let mut draw = |app: &SketApp| {
         key += 1;
         let slot: crate::gpu::SceneSlot = std::sync::Arc::new(std::sync::Mutex::new(Some(build_scene(app))));
         frames.frame(crate::scale_tests::view_frame(app, SIZE, (key, &slot), (0, &highlight)));
@@ -304,7 +304,7 @@ fn bodies_out_of_the_view_are_not_drawn() {
         eprintln!("skipping: no GPU adapter");
         return;
     };
-    let mut app = SolveApp::new(Session::default(), Services::default());
+    let mut app = SketApp::new(Session::default(), Services::default());
     app.ui.ground_shadow = false;
     app.set_origin_shown(false);
     app.viewport.gpu = frames.target();
@@ -327,7 +327,7 @@ fn bodies_out_of_the_view_are_not_drawn() {
     frames.frame(crate::scale_tests::view_frame(&app, SIZE, (1, &slot), (0, &none)));
     let both = frames.stats().triangles;
     assert_eq!(both, near + far, "both boxes in view");
-    app.cam.target = solidcore_record::Vec3::new(5.0, 5.0, 5.0);
+    app.cam.target = sketcore_record::Vec3::new(5.0, 5.0, 5.0);
     app.cam.distance = 40.0;
     frames.frame(crate::scale_tests::view_frame(&app, SIZE, (1, &slot), (0, &none)));
     assert_eq!(frames.stats().triangles, near, "the far box is not drawn");
@@ -392,7 +392,7 @@ fn cancelling_theme_preview_restores_viewport_palette_keys() {
     h.app.home.open = false;
     h.call("ui.prefs", json!({"theme": "gruvbox-dark"}));
     h.frame();
-    let keys = |app: &SolveApp| (super::scene_key(app), super::highlight_geometry_key(app));
+    let keys = |app: &SketApp| (super::scene_key(app), super::highlight_geometry_key(app));
     let before = keys(&h.app);
     h.call("ui.prefs", json!({"open": "Interface"}));
     h.call("ui.prefs", json!({"theme": "blueprint"}));
@@ -501,7 +501,7 @@ fn conflicting_curves_points_glyphs_and_dimensions_take_the_conflict_colour_unti
     let other = app.run("sketch.line", json!({"points": [[-20, 5], [-5, 5]]})).unwrap()["curves"][0].as_str().unwrap().to_string();
     app.run("sketch.finish", json!({})).unwrap();
     let rect = egui::Rect::from_min_size(egui::Pos2::ZERO, egui::vec2(800.0, 600.0));
-    let conflict_lines = |app: &SolveApp| {
+    let conflict_lines = |app: &SketApp| {
         let scene = super::build_sketch_scene(app, &super::projection(app, rect));
         let (lines, _) = scene.overlay.as_chunks::<{ crate::gpu::LINE_SIZE }>();
         // A line names its colour by palette index (bytes 24..28).
@@ -561,7 +561,7 @@ fn conflicting_curves_points_glyphs_and_dimensions_take_the_conflict_colour_unti
 /// edges), faintly behind the model where hidden edges are, and not at all in plain shaded.
 #[test]
 fn vertex_markers_follow_the_edges_display_mode() {
-    let mut app = SolveApp::new(Session::default(), Services::default());
+    let mut app = SketApp::new(Session::default(), Services::default());
     app.ui.ground_shadow = false;
     app.set_origin_shown(false);
     app.run("solid.box", json!({"length": 20, "width": 15, "height": 10})).unwrap();
@@ -599,7 +599,7 @@ fn vertex_markers_follow_the_edges_display_mode() {
 fn the_ambient_occlusion_radius_follows_what_is_drawn() {
     use sketcraft_engine::geom::Aabb3;
 
-    let mut app = SolveApp::new(Session::default(), Services::default());
+    let mut app = SketApp::new(Session::default(), Services::default());
     app.preferences.ambient_occlusion = true;
     app.ui.visual_style = 0;
     assert_eq!(super::ao_radius(&app), 0.0, "nothing to occlude");

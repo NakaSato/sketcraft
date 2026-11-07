@@ -7,9 +7,9 @@ use super::CommandSpec;
 use crate::params::{bad, num, req_vec2, req_vec3, vec3};
 use crate::schema::view_navigation::{
     AmbientOcclusionParams, AmbientOcclusionResult, CameraReply, GraphicsPreset, GraphicsPresetParams, GraphicsPresetResult, HistoryDock,
-    HistoryLayoutParams, HistoryLayoutResult, LayoutMode, LayoutParams, LayoutResult, NavigateParams, NavigateResult, NavigatorParams,
+    HistoryLayoutParams, HistoryLayoutResult, LayoutMode, LayoutParams, LayoutResult, NavToolLatch, NavigateParams, NavigateResult, NavigatorParams,
     NormalToParams, PresetQuality, RenderBrowser, RenderFocus, RenderLive, RenderSelect, RibbonTabsOnly, RibbonTabsOnlyParams, StandardViewParams,
-    NavToolLatch, TabStep, TabStepParams, ZoomTool,
+    TabStep, TabStepParams, ZoomTool,
 };
 use crate::schema::{TypedContract, output_schema_for};
 use crate::{Result, Sel, Session};
@@ -245,14 +245,14 @@ fn turn_to(s: &mut Session, p: &Value, cmd: &str) -> Result<Value> {
     camera_reply(cmd, cam)
 }
 
-fn normal_target(s: &Session) -> Option<(solidcore_record::Vec3, solidcore_record::Vec3)> {
+fn normal_target(s: &Session) -> Option<(sketcore_record::Vec3, sketcore_record::Vec3)> {
     let state = s.world_state().ok()?;
     s.selection.iter().find_map(|selection| match selection {
         Sel::Face { body, index, point } if point.is_finite() => {
             let plane = state.body(body)?.body.planar_face(*index)?;
             Some((*point, plane.normal()))
         }
-        Sel::Plane { name } => solidcore_record::Plane::named(name).map(|plane| (plane.origin, plane.normal())),
+        Sel::Plane { name } => sketcore_record::Plane::named(name).map(|plane| (plane.origin, plane.normal())),
         _ => None,
     })
 }
@@ -578,7 +578,7 @@ fn navigate(_s: &mut Session, p: &Value) -> Result<Value> {
                 .map(|d| if d == 90.0 { (1.0, 0.0) } else { d.to_radians().sin_cos() })
                 .ok_or_else(|| bad(cmd, "degrees must be a number above 0 and at most 180"))?,
         };
-        let turn = |toward: solidcore_record::Vec3| cam.looking_from(b * cos + toward * sin);
+        let turn = |toward: sketcore_record::Vec3| cam.looking_from(b * cos + toward * sin);
         match p.get("action").and_then(Value::as_str) {
             Some("left") => cam = turn(-r),
             Some("right") => cam = turn(r),
@@ -619,7 +619,7 @@ fn continuous(mut cam: Camera, p: &Value) -> Result<Value> {
             }
             let orbit = |cam: &mut Camera| {
                 if free_orbit {
-                    cam.rotate_in_view(solidcore_record::Vec3::new(-delta.y * 0.008, -delta.x * 0.008, 0.0));
+                    cam.rotate_in_view(sketcore_record::Vec3::new(-delta.y * 0.008, -delta.x * 0.008, 0.0));
                 } else {
                     cam.orbit(delta.x, delta.y);
                 }
@@ -670,7 +670,7 @@ pub(crate) fn square_heading(yaw: f64) -> f64 {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use solidcore_record::Vec3;
+    use sketcore_record::Vec3;
     use sketcraft_render::UpAxis;
 
     #[test]
@@ -695,9 +695,15 @@ mod tests {
                 assert!(s.execute(id, &json!({key:value})).is_err(), "{id}: {value}");
             }
         }
-        for (id, key) in
-            [("view.tool.zoom", "on"), ("view.tool.orbit", "on"), ("view.tool.pan", "on"), ("view.spin", "on"), ("view.grid", "on"), ("view.ground_shadow", "on"), ("view.navigation_bar", "visible")]
-        {
+        for (id, key) in [
+            ("view.tool.zoom", "on"),
+            ("view.tool.orbit", "on"),
+            ("view.tool.pan", "on"),
+            ("view.spin", "on"),
+            ("view.grid", "on"),
+            ("view.ground_shadow", "on"),
+            ("view.navigation_bar", "visible"),
+        ] {
             assert_eq!(s.execute(id, &json!({})).unwrap(), json!({}));
             assert_eq!(s.execute(id, &Value::Null).unwrap(), json!({}));
             for on in [false, true] {

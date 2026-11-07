@@ -12,7 +12,7 @@ use sketcraft_engine::Session;
 use sketcraft_engine::doc::joints::JointKind;
 
 use super::{ROUND, joint_row, occurrence, pick, picked_radius, trim, turn};
-use crate::SolveApp;
+use crate::SketApp;
 use crate::dialogs::{combo, field, form_row};
 use crate::dialogs_assembly::Asm;
 use crate::selection::{EDGES, FACES, PROFILES, SelInput, SelectionExt as _, VERTICES};
@@ -50,7 +50,7 @@ fn joints_of(s: &Session, kinds: &[JointKind]) -> Vec<(u64, String)> {
     s.doc.assembly.joints.iter().filter(|j| kinds.contains(&j.kind)).map(|j| (j.id, crate::dialogs_assembly::joint_choice(&j.name, j.kind))).collect()
 }
 
-pub fn start(app: &SolveApp) -> (Asm, Vec<SelInput>) {
+pub fn start(app: &SketApp) -> (Asm, Vec<SelInput>) {
     let s = &app.session;
     let cams = joints_of(s, &[JointKind::Revolute]);
     let followers = joints_of(s, &[JointKind::Slider, JointKind::Revolute]);
@@ -90,7 +90,7 @@ fn profile_occurrence(s: &Session, inputs: &[SelInput]) -> Option<(String, u64)>
 }
 
 /// The dialog's rows; true when Enter was pressed in a value.
-pub fn rows(app: &mut SolveApp, ui: &mut egui::Ui, f: &mut CamForm, inputs: &[SelInput]) -> bool {
+pub fn rows(app: &mut SketApp, ui: &mut egui::Ui, f: &mut CamForm, inputs: &[SelInput]) -> bool {
     let t = Tokens::get();
     let s = &app.session;
     let (cams, followers) = (joints_of(s, &[JointKind::Revolute]), joints_of(s, &[JointKind::Slider, JointKind::Revolute]));
@@ -150,7 +150,7 @@ pub fn rows(app: &mut SolveApp, ui: &mut egui::Ui, f: &mut CamForm, inputs: &[Se
 }
 
 /// The command OK runs.
-pub fn commands(app: &SolveApp, f: &CamForm, inputs: &[SelInput]) -> Result<Vec<(String, Value)>, String> {
+pub fn commands(app: &SketApp, f: &CamForm, inputs: &[SelInput]) -> Result<Vec<(String, Value)>, String> {
     let s = &app.session;
     let joint = |id: u64| {
         s.doc.assembly.joints.iter().find(|j| j.id == id).map(|j| j.id).ok_or_else(|| "choose the cam's and the follower's joints".to_string())

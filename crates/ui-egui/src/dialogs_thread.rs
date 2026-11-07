@@ -721,14 +721,14 @@ mod tests;
 mod contribution_tests {
     use super::*;
     use crate::{
-        Services, SolveApp,
+        Services, SketApp,
         dialogs::{Dialog, Kind, apply_commands},
     };
     use serde_json::json;
-    use solidcore_record::Vec3;
+    use sketcore_record::Vec3;
     use sketcraft_engine::{Sel, Session};
-    fn hole() -> (SolveApp, Dialog) {
-        let mut app = SolveApp::new(Session::default(), Services::default());
+    fn hole() -> (SketApp, Dialog) {
+        let mut app = SketApp::new(Session::default(), Services::default());
         app.run("solid.box", json!({"length":20,"width":20,"height":10,"body_name":"Plate"})).unwrap();
         app.session.selection = vec![Sel::Face { body: "Plate".into(), index: 5, point: Vec3::new(10.0, 10.0, 10.0) }];
         let d = Dialog::for_command(&app, "solid.hole").unwrap();
@@ -1196,7 +1196,7 @@ mod contribution_tests {
         use sketcraft_engine::doc::{TappedThreadFamily, tapped_thread_sizes};
         for family in [TappedThreadFamily::G, TappedThreadFamily::Rp] {
             for size in tapped_thread_sizes(family) {
-                let mut app = SolveApp::new(Session::default(), Services::default());
+                let mut app = SketApp::new(Session::default(), Services::default());
                 app.run("solid.box", json!({"length":80,"width":80,"height":15,"body_name":"Plate"})).unwrap();
                 let result = app.run("solid.hole", json!({"position":[40,40,15],"thread":size.designation,"depth":10})).unwrap();
                 let saved = app.session.doc.to_json();

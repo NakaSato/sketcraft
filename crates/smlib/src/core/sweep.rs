@@ -1,4 +1,4 @@
-//! Extrusions, revolutions, sweeps, lofts and planar faces on solidcore: the C API's logic round
+//! Extrusions, revolutions, sweeps, lofts and planar faces on sketcore: the C API's logic round
 //! SM_API's sweeps, ported from the fork's `capi/src/smlib_sweeps.cpp` (`coord_ok`, `unit`,
 //! `line`, `arc`, `nurbs`, `parse`, `finish`, `one_loop`, `FlatArc`, `one_circle`, `angle_on`,
 //! `one_wall_per_circle`, `straight`, `circular`, `joined`,
@@ -16,46 +16,46 @@
 //!
 //! The screw sweeps are the capi's own: it builds their walls from SMLib's B-spline surfaces,
 //! cylinders and face builders (`Stations`, `screw_wall`, `cylinder_piece`), with no SM_API
-//! sweep behind them, and solidcore leaves them to the capi (solidcore PR #1326, closed as
+//! sweep behind them, and sketcore leaves them to the capi (sketcore PR #1326, closed as
 //! fork-only; #1162 and #1163 triaged not applicable). So they are ported here.
 
 use std::f64::consts::{PI, TAU};
 
-use solidcore::curve::curve::p3::compute_crvs_normal;
-use solidcore::curve::curve::{Curve, CurveKind};
-use solidcore::curve::ellipse::Ellipse;
-use solidcore::curve::line::Line;
-use solidcore::geom::axis2_placement::Axis2Placement;
-use solidcore::geom::extent1d::Extent1d;
-use solidcore::geom::tol::{SmallTopoType, USE_DEFAULT, context_zone_tol_3d};
-use solidcore::geom::vector3d::{Point3, Vec3};
-use solidcore::heal::stitch::p1::api_stitch_into_solid;
-use solidcore::kernel::Kernel;
-use solidcore::nurbs::b_spline_curve::{BSplineCurve, BSplineCurveForm, CanonicalData, CurveCanonical, KnotType};
-use solidcore::nurbs::b_spline_surface::{BSplineSurface, BSplineSurfaceForm, CanonicalSurfaceData};
-use solidcore::nurbs::b_spline_surface_n_lib::p2::OrientType;
-use solidcore::primitive::primitive_creation::SweepOptions;
-use solidcore::surface::cone::Cone;
-use solidcore::surface::surface::Surface;
-use solidcore::sweep::api_brep::{
+use sketcore::curve::curve::p3::compute_crvs_normal;
+use sketcore::curve::curve::{Curve, CurveKind};
+use sketcore::curve::ellipse::Ellipse;
+use sketcore::curve::line::Line;
+use sketcore::geom::axis2_placement::Axis2Placement;
+use sketcore::geom::extent1d::Extent1d;
+use sketcore::geom::tol::{SmallTopoType, USE_DEFAULT, context_zone_tol_3d};
+use sketcore::geom::vector3d::{Point3, Vec3};
+use sketcore::heal::stitch::p1::api_stitch_into_solid;
+use sketcore::kernel::Kernel;
+use sketcore::nurbs::b_spline_curve::{BSplineCurve, BSplineCurveForm, CanonicalData, CurveCanonical, KnotType};
+use sketcore::nurbs::b_spline_surface::{BSplineSurface, BSplineSurfaceForm, CanonicalSurfaceData};
+use sketcore::nurbs::b_spline_surface_n_lib::p2::OrientType;
+use sketcore::primitive::primitive_creation::SweepOptions;
+use sketcore::surface::cone::Cone;
+use sketcore::surface::surface::Surface;
+use sketcore::sweep::api_brep::{
     CornerRefusal, OffsetCornerType, TaperCornerRefusal, TaperExtrude, create_curve_sweep_with_placements, create_linear_sweep,
     create_rotational_sweep, create_taper_extrude_with_corner,
 };
-use solidcore::sweep::api_surfaces::create_skin_primitive;
-use solidcore::topology::brep::p1 as brep_p1;
-use solidcore::topology::brep::p1::{ParallelProjectionOptions, create_parallel_projection_curves};
-use solidcore::topology::brep::p2::{ArenaNotifyState, is_manifold_solid};
-use solidcore::topology::brep::p3::new_brep;
-use solidcore::topology::brep::p4::stitch_faces;
-use solidcore::topology::brep::p5::{StitchAndOrientOptions, stitch_and_orient};
-use solidcore::topology::brep::p7::copy_faces;
-use solidcore::topology::brep::p8::{
+use sketcore::sweep::api_surfaces::create_skin_primitive;
+use sketcore::topology::brep::p1 as brep_p1;
+use sketcore::topology::brep::p1::{ParallelProjectionOptions, create_parallel_projection_curves};
+use sketcore::topology::brep::p2::{ArenaNotifyState, is_manifold_solid};
+use sketcore::topology::brep::p3::new_brep;
+use sketcore::topology::brep::p4::stitch_faces;
+use sketcore::topology::brep::p5::{StitchAndOrientOptions, stitch_and_orient};
+use sketcore::topology::brep::p7::copy_faces;
+use sketcore::topology::brep::p8::{
     FaceBuildEnv, create_face_from_surface, create_faces_with_curves, create_planar_face_with_3d_curves, create_planar_faces_with_3d_curves,
 };
-use solidcore::topology::brep::planar_section::{PlanarSectionOptions, SectionOutputs, create_planar_section_curves};
-use solidcore::topology::topology_traverser::Marks;
-use solidcore::topology::{Brep, FaceId};
-use solidcore::{EntityRef, SolidError};
+use sketcore::topology::brep::planar_section::{PlanarSectionOptions, SectionOutputs, create_planar_section_curves};
+use sketcore::topology::topology_traverser::Marks;
+use sketcore::topology::{Brep, FaceId};
+use sketcore::{EntityRef, SolidError};
 
 use super::blend::status;
 use super::offset::{face_miss, pick_faces};
@@ -99,7 +99,7 @@ fn unit(v: [f64; 3]) -> Option<Vec3> {
 }
 
 /// An SMLib call's own status passed on (`status(...)` in the capi), else the value.
-fn called<T>(r: solidcore::Result<T>) -> Out<T> {
+fn called<T>(r: sketcore::Result<T>) -> Out<T> {
     r.map_err(status)
 }
 
@@ -233,7 +233,7 @@ fn parse(k: &Kernel, curves: &[Profile]) -> Out<Vec<Curve>> {
 }
 
 /// `finish`: the result must have faces, and be a closed manifold solid when `solid`.
-fn finish(b: Brep, solid: bool) -> solidcore::Result<Out<Brep>> {
+fn finish(b: Brep, solid: bool) -> sketcore::Result<Out<Brep>> {
     if b.face_list().is_empty() {
         return Ok(Err(Error::Empty));
     }
@@ -244,13 +244,13 @@ fn finish(b: Brep, solid: bool) -> solidcore::Result<Out<Brep>> {
 }
 
 /// Both ends of `c` (`GetEnds`).
-fn ends(k: &Kernel, c: &Curve) -> solidcore::Result<(Point3, Point3)> {
+fn ends(k: &Kernel, c: &Curve) -> sketcore::Result<(Point3, Point3)> {
     let e = c.ends(k)?;
     Ok((e.start, e.end))
 }
 
 /// `one_loop`: whether the curves, in order, run end to end round one closed loop (within `tol`).
-fn one_loop(k: &Kernel, curves: &[Curve], tol: f64) -> solidcore::Result<bool> {
+fn one_loop(k: &Kernel, curves: &[Curve], tol: f64) -> sketcore::Result<bool> {
     let (mut first, mut prev) = (None, None);
     for c in curves {
         let (a, b) = ends(k, c)?;
@@ -325,7 +325,7 @@ fn one_circle(a: &FlatArc, b: &FlatArc, tol: f64) -> bool {
 /// own start, angle 0 of that frame; otherwise at the middle of the run's longest arc (the first
 /// of equal ones, in profile order). `tol` is the model's zone tolerance, within which
 /// consecutive curves already meet.
-fn one_wall_per_circle(k: &Kernel, given: &[Profile], curves: Vec<Curve>, tol: f64) -> solidcore::Result<Out<Vec<Curve>>> {
+fn one_wall_per_circle(k: &Kernel, given: &[Profile], curves: Vec<Curve>, tol: f64) -> sketcore::Result<Out<Vec<Curve>>> {
     let n = curves.len();
     if given.len() != n {
         return Ok(Err(Error::Argument));
@@ -433,7 +433,7 @@ fn one_wall_per_circle(k: &Kernel, given: &[Profile], curves: Vec<Curve>, tol: f
 }
 
 /// Runs a call that makes a new body: the kernel locked, its own status as the capi passes it.
-fn making(call: &'static str, f: impl FnOnce(&mut Kernel) -> solidcore::Result<Out<Brep>>) -> Result<Body> {
+fn making(call: &'static str, f: impl FnOnce(&mut Kernel) -> sketcore::Result<Out<Brep>>) -> Result<Body> {
     run(call, f)?.map(Body::new)
 }
 
@@ -560,7 +560,7 @@ pub(crate) fn revolve(profile: &[Profile], origin: [f64; 3], axis: [f64; 3], ang
 
 /// `straight`: whether the path is lines end to end along one direction; then that unit
 /// direction and the path's length.
-fn straight(k: &Kernel, path: &[Curve]) -> solidcore::Result<Option<(Vec3, f64)>> {
+fn straight(k: &Kernel, path: &[Curve]) -> sketcore::Result<Option<(Vec3, f64)>> {
     let (mut dir, mut distance, mut prev) = (None::<Vec3>, 0.0, None::<Point3>);
     for c in path {
         if !matches!(c.kind(), CurveKind::Line(_)) {
@@ -589,7 +589,7 @@ fn straight(k: &Kernel, path: &[Curve]) -> solidcore::Result<Option<(Vec3, f64)>
 
 /// `circular`: whether the path is arcs end to end about one axis; then the centre, the unit axis
 /// they turn about counter-clockwise and the total angle (radians).
-fn circular(k: &Kernel, given: &[Profile], path: &[Curve]) -> solidcore::Result<Option<(Point3, Vec3, f64)>> {
+fn circular(k: &Kernel, given: &[Profile], path: &[Curve]) -> sketcore::Result<Option<(Point3, Vec3, f64)>> {
     if given.len() != path.len() || path.is_empty() {
         return Ok(None);
     }
@@ -619,7 +619,7 @@ fn circular(k: &Kernel, given: &[Profile], path: &[Curve]) -> solidcore::Result<
 
 /// A curve's B-spline (`SM_CAST_PTR(SmBSplineCurve, c)`: SMLib's lines and circles are
 /// B-splines too); `None` for another kind.
-fn bspline(c: &Curve) -> solidcore::Result<Option<BSplineCurve>> {
+fn bspline(c: &Curve) -> sketcore::Result<Option<BSplineCurve>> {
     Ok(match c.kind() {
         CurveKind::BSpline(b) => Some(b.clone()),
         CurveKind::Line(l) => Some(l.base_with_nurb()?.into_owned()),
@@ -629,7 +629,7 @@ fn bspline(c: &Curve) -> solidcore::Result<Option<BSplineCurve>> {
 }
 
 /// `joined`: a path of end-to-end curves as one B-spline (`CreateCurveSweep` takes one curve).
-fn joined(path: &[Curve]) -> solidcore::Result<Out<BSplineCurve>> {
+fn joined(path: &[Curve]) -> sketcore::Result<Out<BSplineCurve>> {
     let mut parts = Vec::with_capacity(path.len());
     for c in path {
         let Some(b) = bspline(c)? else { return Ok(Err(Error::Argument)) };
@@ -706,7 +706,7 @@ impl Segment {
 
 /// `segmented`: whether `path` (parsed from `given`) is two or more lines and arcs end to end,
 /// each leaving in the direction the one before arrives in, and not closed: then its segments.
-fn segmented(k: &Kernel, given: &[Profile], path: &[Curve]) -> solidcore::Result<Option<Vec<Segment>>> {
+fn segmented(k: &Kernel, given: &[Profile], path: &[Curve]) -> sketcore::Result<Option<Vec<Segment>>> {
     if given.len() != path.len() || path.len() < 2 {
         return Ok(None);
     }
@@ -753,7 +753,7 @@ fn segmented(k: &Kernel, given: &[Profile], path: &[Curve]) -> solidcore::Result
 }
 
 /// `carried`: copies of the profile's curves carried by `m`.
-fn carried(k: &Kernel, profile: &[Curve], m: &Rigid) -> solidcore::Result<Vec<Curve>> {
+fn carried(k: &Kernel, profile: &[Curve], m: &Rigid) -> sketcore::Result<Vec<Curve>> {
     let at = m.placement();
     let mut out = Vec::with_capacity(profile.len());
     for c in profile {
@@ -768,7 +768,7 @@ fn carried(k: &Kernel, profile: &[Curve], m: &Rigid) -> solidcore::Result<Vec<Cu
 /// swept on its own, exactly (a line by SM_API's linear sweep, an arc by its rotational sweep), the
 /// profile carried from each to the next, and the walls sewn along the sections they share; with
 /// the motions to the first section, the one half-way along and the last.
-fn piecewise(k: &mut Kernel, profile: &[Curve], segs: &[Segment], cap: bool) -> solidcore::Result<Out<(Brep, [Affine; 3])>> {
+fn piecewise(k: &mut Kernel, profile: &[Curve], segs: &[Segment], cap: bool) -> sketcore::Result<Out<(Brep, [Affine; 3])>> {
     let mut b = new_brep(k, USE_DEFAULT, USE_DEFAULT)?;
     let mut m = Rigid::IDENTITY;
     let mut starts = Vec::with_capacity(segs.len());
@@ -1297,7 +1297,7 @@ fn path_curve(m: &Screw, p: Point3, st: &Stations) -> Out<Curve> {
 
 /// `axial_radius`: the radius of the cylinder a profile line parallel to the axis sweeps (within
 /// a thousandth of `tolerance`, at least 1e-6 off it); 0 for any other curve.
-fn axial_radius(k: &Kernel, m: &Screw, c: &Curve, tolerance: f64) -> solidcore::Result<f64> {
+fn axial_radius(k: &Kernel, m: &Screw, c: &Curve, tolerance: f64) -> sketcore::Result<f64> {
     if !matches!(c.kind(), CurveKind::Line(_)) {
         return Ok(0.0);
     }
@@ -1316,7 +1316,7 @@ fn axial_radius(k: &Kernel, m: &Screw, c: &Curve, tolerance: f64) -> solidcore::
 /// sweeps over `st`: an exact cylinder about the axis, bounded by the line placed at both ends of
 /// the piece and its ends' paths (`CreateFacesWithCurves`). The cylinder's own turn starts a
 /// quarter turn before the piece and its height runs past it.
-fn cylinder_piece(k: &mut Kernel, b: &mut Brep, m: &Screw, a: Point3, e: Point3, radius: f64, st: &Stations) -> solidcore::Result<Out<()>> {
+fn cylinder_piece(k: &mut Kernel, b: &mut Brep, m: &Screw, a: Point3, e: Point3, radius: f64, st: &Stations) -> sketcore::Result<Out<()>> {
     let (a0, a1) = (st.first(), st.last());
     let w = a - m.o;
     let r = w - m.k * w.dot(m.k);
@@ -1411,7 +1411,7 @@ fn screw_placed(m: &Screw, c: &Profile, a: f64) -> Profile {
 /// by span (SM_API's curve sweep carries the profile on its own frame, which along a helix turns
 /// it away from the screw motion), lines parallel to the axis as exact cylinder pieces, the caps
 /// where the motion starts and ends, all stitched and oriented.
-fn screw(k: &mut Kernel, profile: &[Profile], mut m: Screw, turns: f64, tolerance: f64) -> solidcore::Result<Out<Brep>> {
+fn screw(k: &mut Kernel, profile: &[Profile], mut m: Screw, turns: f64, tolerance: f64) -> sketcore::Result<Out<Brep>> {
     let curves = match parse(k, profile) {
         Ok(c) => c,
         Err(e) => return Ok(Err(e)),
@@ -1584,7 +1584,7 @@ pub(crate) fn screw_sweep(
 
 /// `put_curve`: `c` as the NURBS it is, with its interval; [`Error::Unsupported`] for a curve that
 /// is no B-spline or whose knots are not clamped.
-fn put_curve(c: &Curve) -> solidcore::Result<Out<(Profile, [f64; 2])>> {
+fn put_curve(c: &Curve) -> sketcore::Result<Out<(Profile, [f64; 2])>> {
     let Some(b) = bspline(c)? else { return Ok(Err(Error::Unsupported)) };
     let can = b.canonical()?;
     let degree = can.degree;
@@ -1608,7 +1608,7 @@ fn tolerances_ok(pick: f64, tolerance: f64) -> bool {
 }
 
 /// The face of `b` nearest `point` (`smlib_pick::pick_faces` of one point).
-fn picked_face(k: &mut Kernel, b: &mut Brep, point: [f64; 3], tol: f64) -> solidcore::Result<Out<FaceId>> {
+fn picked_face(k: &mut Kernel, b: &mut Brep, point: [f64; 3], tol: f64) -> sketcore::Result<Out<FaceId>> {
     Ok(match pick_faces(k, b, &[point], tol)? {
         Ok(f) => f.first().copied().ok_or(Error::NoMatch { point: 0 }),
         Err(m) => Err(face_miss(m)),

@@ -1,7 +1,7 @@
 //! Bounded native acceptance probe for explicit CPU profiles. This is not a speed
 //! benchmark or an application/UI test. Writes only to a new caller-selected folder.
 use serde_json::json;
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 use sketcraft_geom::Mesh;
 use sketcraft_render::job::{CpuBudget, CpuHost, DirectionalLightOptions, ImageRequest, Integrator, JobId, JobOptions, Phase, RaytraceOptions};
 use sketcraft_render::{Camera, ProductMesh, ProductScene, StandardView, surface::OpaqueSurface};

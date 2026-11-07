@@ -2,8 +2,8 @@
 //! No tessellated face names, centroids, or nearest-plane choices are used.
 use super::{Body, FaceSource};
 use crate::{KernelError, Result, guard};
-use solidcore_record::brep::{self, Surface};
-use solidcore_record::{Plane, Vec3};
+use sketcore_record::brep::{self, Surface};
+use sketcore_record::{Plane, Vec3};
 use sketcraft_geom::prelude::*;
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -666,7 +666,7 @@ mod tests {
     /// the top cap's source, every bottom face the bottom cap's, however many there are.
     #[test]
     fn many_coplanar_pieces_of_a_holed_plate_all_keep_their_cap_source() {
-        use solidcore_record::{Loop2, Region2, Vec2};
+        use sketcore_record::{Loop2, Region2, Vec2};
         let holes: Vec<Loop2> =
             (0..60).flat_map(|k| (0..5).map(move |r| Loop2::circle(Vec2::new(10. + 10. * k as f64, 5. + 10. * r as f64), 1.))).collect();
         let outer = Loop2::polygon(&[Vec2::new(0., 0.), Vec2::new(610., 0.), Vec2::new(610., 50.), Vec2::new(0., 50.)]);
@@ -875,7 +875,7 @@ mod tests {
 
     #[test]
     fn pocket_cut_removes_internal_wall_faces_in_actual_topology() {
-        use solidcore_record::{Loop2, Region2, Vec2};
+        use sketcore_record::{Loop2, Region2, Vec2};
         let region = Region2 {
             outer: Loop2::polygon(&[Vec2::new(-30., -27.), Vec2::new(30., -27.), Vec2::new(30., 27.), Vec2::new(-30., 27.)]),
             holes: vec![],

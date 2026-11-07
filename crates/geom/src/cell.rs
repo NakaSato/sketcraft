@@ -30,7 +30,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::paper::MAX_COORDINATE_MM;
 use crate::{Aabb2, EPS};
-use solidcore_record::Vec2;
+use sketcore_record::Vec2;
 
 /// The most parts a cell's content may have.
 pub const MAX_PARTS: usize = 64;

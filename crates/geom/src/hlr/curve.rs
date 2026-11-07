@@ -7,8 +7,8 @@ use super::HlrError;
 use crate::brep::eval::{CurveEval, SurfaceEval};
 use crate::prelude::*;
 use crate::section::CurveAccuracy;
-use solidcore_record::Vec3;
-use solidcore_record::brep::{Curve, Edge, Frame};
+use sketcore_record::Vec3;
+use sketcore_record::brep::{Curve, Edge, Frame};
 
 #[derive(Clone, Debug)]
 pub(crate) enum C3 {
@@ -47,7 +47,7 @@ pub(crate) fn frame_axes(f: &Frame) -> (Vec3, Vec3, Vec3) {
 
 /// Whether every sample of `c`, a few to each of its breaks, lies within `tolerance` of both
 /// `surfaces`.
-fn on_both_surfaces(c: &C3, surfaces: &[Box<solidcore_record::brep::Surface>; 2], tolerance: f64) -> bool {
+fn on_both_surfaces(c: &C3, surfaces: &[Box<sketcore_record::brep::Surface>; 2], tolerance: f64) -> bool {
     /// Most samples checked; a longer curve's are spread evenly over it.
     const MAX_SAMPLES: usize = 512;
     let [Ok(a), Ok(b)] = [SurfaceEval::new(&surfaces[0]), SurfaceEval::new(&surfaces[1])] else { return false };

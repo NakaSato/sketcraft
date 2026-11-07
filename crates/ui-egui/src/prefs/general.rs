@@ -1,7 +1,7 @@
 //! General preferences, composed from shared settings form blocks.
 use super::*;
 
-pub(super) fn show(app: &mut SolveApp, ui: &mut egui::Ui) {
+pub(super) fn show(app: &mut SketApp, ui: &mut egui::Ui) {
     ui_kit::settings_page(ui, |ui| {
         let t = Tokens::get();
         let labels = t.space_24 * 6.0 + t.space_6;
@@ -156,7 +156,7 @@ pub(super) fn show(app: &mut SolveApp, ui: &mut egui::Ui) {
 
 /// Preferences › General › Largest file to open (#4086): the STEP/import and design file limits,
 /// in MB. The browser keeps its limits, so there it is a note instead.
-fn file_size_rows(app: &mut SolveApp, ui: &mut egui::Ui, labels: f32) {
+fn file_size_rows(app: &mut SketApp, ui: &mut egui::Ui, labels: f32) {
     use sketcraft_engine::io::limits;
     if !limits::ADJUSTABLE {
         ui.horizontal(|ui| {

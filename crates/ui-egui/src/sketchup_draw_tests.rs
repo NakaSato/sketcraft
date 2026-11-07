@@ -3,8 +3,8 @@
 use crate::scenario::Harness;
 use crate::workspace::SKETCHUP_TAB;
 use serde_json::json;
+use sketcore_record::Vec3;
 use sketcraft_engine::geom::prelude::*;
-use solidcore_record::Vec3;
 
 fn on_sketchup_tab() -> Harness {
     let mut h = Harness::new();

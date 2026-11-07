@@ -13,7 +13,7 @@ default = []
 raytrace-cpu = ["dep:robust"]
 
 [dependencies]
-solidcore-record = { workspace = true }
+sketcore-record = { workspace = true }
 sketcraft-geom = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }

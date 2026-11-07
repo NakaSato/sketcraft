@@ -11,7 +11,7 @@
 use serde_json::Value;
 use sketcraft_engine::io::vfs::{Remote, design_path_refusal};
 
-use crate::SolveApp;
+use crate::SketApp;
 use crate::ui_kit;
 
 /// What runs once the servers are allowed.
@@ -54,7 +54,7 @@ pub(crate) fn blocked_hosts<'a>(links: impl IntoIterator<Item = &'a Value>) -> V
 }
 
 /// Update Links from the toolbar: ask first when a link is on a server not allowed yet.
-pub(crate) fn update_links(app: &mut SolveApp) {
+pub(crate) fn update_links(app: &mut SketApp) {
     let hosts = match app.session.execute("component.links", &serde_json::json!({})) {
         Ok(links) => blocked_hosts(links["links"].as_array().into_iter().flatten()),
         Err(_) => Vec::new(),
@@ -67,7 +67,7 @@ pub(crate) fn update_links(app: &mut SolveApp) {
 }
 
 /// Open Linked Design for a link `component.links` reported (`link`).
-pub(crate) fn open_linked(app: &mut SolveApp, link: &Value) {
+pub(crate) fn open_linked(app: &mut SketApp, link: &Value) {
     let Some(file) = link["file"].as_str() else {
         app.set_status("The linked design has no file path", true);
         return;
@@ -88,7 +88,7 @@ pub(crate) fn open_linked(app: &mut SolveApp, link: &Value) {
 
 /// Reload from file on the Edit Point Cloud card: ask first when the cloud's file (`source`) is on
 /// a server not allowed yet. A path that is refused for good says so through the command's error.
-pub(crate) fn reload_cloud(app: &mut SolveApp, cloud: u64, source: &str) {
+pub(crate) fn reload_cloud(app: &mut SketApp, cloud: u64, source: &str) {
     let design = app.session.path.as_deref();
     if let Some(Remote::Network(host)) = design_path_refusal(source, design) {
         app.network_prompt = Some(NetworkPrompt { hosts: vec![host], then: Then::ReloadCloud(cloud) });
@@ -98,7 +98,7 @@ pub(crate) fn reload_cloud(app: &mut SolveApp, cloud: u64, source: &str) {
 }
 
 /// Run the action with `hosts` allowed for it alone.
-fn run(app: &mut SolveApp, hosts: Vec<String>, then: Then) {
+fn run(app: &mut SketApp, hosts: Vec<String>, then: Then) {
     match then {
         Then::UpdateLinks => {
             let mut request = crate::file_load::Request::new("", crate::file_load::Kind::UpdateLinks);
@@ -118,7 +118,7 @@ fn run(app: &mut SolveApp, hosts: Vec<String>, then: Then) {
 }
 
 /// Act on the answer to the waiting question.
-pub fn answer(app: &mut SolveApp, answer: Answer) {
+pub fn answer(app: &mut SketApp, answer: Answer) {
     let Some(NetworkPrompt { hosts, then }) = app.network_prompt.take() else { return };
     match answer {
         Answer::Cancel => {}
@@ -136,7 +136,7 @@ pub fn answer(app: &mut SolveApp, answer: Answer) {
 }
 
 /// The question, when one is waiting.
-pub fn show(app: &mut SolveApp, ctx: &egui::Context) {
+pub fn show(app: &mut SketApp, ctx: &egui::Context) {
     let Some(prompt) = app.network_prompt.as_ref() else { return };
     let _language = crate::i18n::scope(&app.preferences.language);
     let hosts = prompt.hosts.iter().map(|h| format!("\\\\{h}")).collect::<Vec<_>>().join(", ");

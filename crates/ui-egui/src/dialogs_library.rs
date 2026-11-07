@@ -3,7 +3,7 @@
 use crate::dialogs_appearance::selected_params;
 #[cfg(not(target_arch = "wasm32"))]
 use crate::ui_kit::BackingTooltipExt as _;
-use crate::{SolveApp, dialogs_appearance::Ap, selection::SelInput, ui_kit};
+use crate::{SketApp, dialogs_appearance::Ap, selection::SelInput, ui_kit};
 use serde_json::json;
 use sketcraft_engine::io::catalog::Catalog;
 #[cfg(not(target_arch = "wasm32"))]
@@ -28,13 +28,13 @@ fn display_order(mut catalog: Catalog) -> Catalog {
     catalog
 }
 
-fn editor<'a>(app: &'a mut SolveApp, token: &Arc<()>) -> Option<&'a mut Ap> {
+fn editor<'a>(app: &'a mut SketApp, token: &Arc<()>) -> Option<&'a mut Ap> {
     let crate::dialogs::Kind::Appearance(k) = &mut app.dialog.as_mut()?.kind else { return None };
     Arc::ptr_eq(&k.local.token, token).then_some(k)
 }
 
 /// Parameterless UI activation of the existing export command. JSON execution never picks files.
-pub(crate) fn start_export(app: &mut SolveApp) {
+pub(crate) fn start_export(app: &mut SketApp) {
     let origin = app.session.doc.clone();
     app.pick_save("my-library.sketcraft-library.json", &["json"], move |app, path| {
         if let Some(path) = path
@@ -46,7 +46,7 @@ pub(crate) fn start_export(app: &mut SolveApp) {
     });
 }
 
-fn save_library(app: &mut SolveApp, token: Arc<()>, overwrite: bool) {
+fn save_library(app: &mut SketApp, token: Arc<()>, overwrite: bool) {
     let origin = app.session.doc.clone();
     app.pick_save("my-library.sketcraft-library.json", &["json"], move |app, path| {
         let Some(path) = path else { return };
@@ -76,7 +76,7 @@ fn save_library(app: &mut SolveApp, token: Arc<()>, overwrite: bool) {
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-fn open_library(app: &mut SolveApp, token: Arc<()>) {
+fn open_library(app: &mut SketApp, token: Arc<()>) {
     app.pick_open(move |app, path| {
         let Some(path) = path else { return };
         let Some(k) = editor(app, &token) else { return };
@@ -93,7 +93,7 @@ fn open_library(app: &mut SolveApp, token: Arc<()>) {
 }
 
 /// Exports the design's library to `path` and shows it as the local library.
-fn export(app: &mut SolveApp, k: &mut Ap, path: String, overwrite: bool) {
+fn export(app: &mut SketApp, k: &mut Ap, path: String, overwrite: bool) {
     k.note = Some(match app.run("library.export", json!({"path":path,"overwrite":overwrite})) {
         Ok(result) => {
             let parsed = result.get("catalog").cloned().and_then(|v| serde_json::from_value::<Catalog>(v).ok()).map(display_order);
@@ -109,7 +109,7 @@ fn export(app: &mut SolveApp, k: &mut Ap, path: String, overwrite: bool) {
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-fn load(app: &mut SolveApp, library: &mut LocalLibrary) -> Result<String, String> {
+fn load(app: &mut SketApp, library: &mut LocalLibrary) -> Result<String, String> {
     let result = app.run("library.inspect", json!({"path":library.path}))?;
     let catalog: Catalog = serde_json::from_value(result.get("catalog").cloned().ok_or("Library response is missing")?).map_err(|e| e.to_string())?;
     let note = format!("Opened {} ({} entries)", catalog.name, catalog.entries.len());
@@ -119,7 +119,7 @@ fn load(app: &mut SolveApp, library: &mut LocalLibrary) -> Result<String, String
     Ok(note)
 }
 
-pub fn rows(app: &mut SolveApp, ui: &mut egui::Ui, k: &mut Ap, inputs: &[SelInput]) {
+pub fn rows(app: &mut SketApp, ui: &mut egui::Ui, k: &mut Ap, inputs: &[SelInput]) {
     ui_kit::section(ui, "local_library", "Local library", true, |ui| {
         #[cfg(not(target_arch = "wasm32"))]
         import_rows(app, ui, k, inputs);
@@ -151,7 +151,7 @@ pub fn rows(app: &mut SolveApp, ui: &mut egui::Ui, k: &mut Ap, inputs: &[SelInpu
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-fn import_rows(app: &mut SolveApp, ui: &mut egui::Ui, k: &mut Ap, inputs: &[SelInput]) {
+fn import_rows(app: &mut SketApp, ui: &mut egui::Ui, k: &mut Ap, inputs: &[SelInput]) {
     let path = ui_kit::row(ui, "Library file", |ui| {
         let id = ui.make_persistent_id("library_path");
         ui_kit::cell_editor(ui, id, &mut k.local.path, "Library file", false)

@@ -5,7 +5,7 @@
 //! have a direction (planar faces, straight edges), the angle.
 
 use serde_json::{Value, json};
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 use sketcraft_geom::prelude::*;
 use sketcraft_geom::{Mesh, UnitVec3};
 
@@ -218,7 +218,7 @@ fn sketch_curve(ss: &sketcraft_doc::SolvedSketch, id: &str) -> Option<Item> {
 /// A profile (closed region of a sketch): its area, and when it is a circle or a slot, its
 /// sizes.
 fn profile(ss: &sketcraft_doc::SolvedSketch, index: usize) -> Option<Item> {
-    use solidcore_record::{Seg2, Vec2};
+    use sketcore_record::{Seg2, Vec2};
     let pr = ss.profiles.get(index)?;
     let outline: Vec<Vec3> = pr.region.outer.polyline(1e-3).iter().map(|p| ss.plane.to_world(*p)).collect();
     let mut json = json!({"type": "profile", "area_mm2": pr.region.area()});

@@ -7,7 +7,7 @@
 //! constants; they still bound profiles and take constraints and dimensions like any curve.
 
 use serde::{Deserialize, Serialize};
-use solidcore_record::{Vec2, Vec3};
+use sketcore_record::{Vec2, Vec3};
 use sketcraft_geom::Aabb2;
 use sketcraft_geom::prelude::*;
 
@@ -273,7 +273,7 @@ impl LinkGeom {
                     && nurbs.as_ref().is_none_or(|k| *control && !*periodic && k.check(pts.len(), *degree).is_ok())
                     && (2..=crate::curves::MAX_SPLINE_POINTS).contains(&pts.len())
                     && pts.iter().all(ok)
-                    && (1..=solidcore_record::MAX_BEZIER_DEGREE as u8).contains(degree)
+                    && (1..=sketcore_record::MAX_BEZIER_DEGREE as u8).contains(degree)
             }
         }
     }

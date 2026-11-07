@@ -16,8 +16,8 @@
 //! speed) by finite differences: the second derivative of a surface curve with a unit tangent is
 //! its curvature vector, and the third is the arclength derivative of that curvature vector.
 
-use solidcore_record::Vec3;
-use solidcore_record::brep::Brep;
+use sketcore_record::Vec3;
+use sketcore_record::brep::Brep;
 use sketcraft_geom::brep::eval::{CurveEval, SurfaceEval};
 use sketcraft_geom::bspline::{CurveN, HPoint, NurbsSurface};
 use sketcraft_geom::prelude::*;
@@ -403,7 +403,7 @@ impl Support {
             .shells
             .iter()
             .find_map(|s| match s {
-                solidcore_record::brep::Shell::Faces { faces, .. } => faces.iter().find(|o| o.face as usize == face).map(|o| o.forward),
+                sketcore_record::brep::Shell::Faces { faces, .. } => faces.iter().find(|o| o.face as usize == face).map(|o| o.forward),
                 _ => None,
             })
             .unwrap_or(true);

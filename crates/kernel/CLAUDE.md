@@ -2,7 +2,7 @@
 
 The B-rep kernel boundary. Every solid operation goes through this crate: extrude, revolve, sweep and loft, booleans, fillets and chamfers, shells, surfaces, tessellation, measurement, and STEP and IGES import and export. It is layer L1. It may use `geom`, `profile`, `smlib` and `step`. See the root CLAUDE.md.
 
-The backend is solidcore, reached through `sketcraft-smlib`. This crate depends only on `solidcore-record`, not on `solidcore` itself. The `lib.rs` doc comment still mentions `truck`; that is out of date.
+The backend is sketcore, reached through `sketcraft-smlib`. This crate depends only on `sketcore-record`, not on `sketcore` itself. The `lib.rs` doc comment still mentions `truck`; that is out of date.
 
 ## Commands
 
@@ -36,7 +36,7 @@ NATIVE_BREP_BLESS=1 cargo test -p sketcraft-kernel box_and_fillet_have_stable_wi
 
 ## Rules
 
-- No `solidcore` type in the public API. Callers see this crate's types, `solidcore-record` records and a few smlib re-exports (`Stop`, `hold_a_kernel`, `smlib_trace`).
+- No `sketcore` type in the public API. Callers see this crate's types, `sketcore-record` records and a few smlib re-exports (`Stop`, `hold_a_kernel`, `smlib_trace`).
 - Run third-party kernel code under `guard`. It turns a panic into `KernelError::Internal`. `par.rs` already wraps each item.
 - Kernel threads need `KERNEL_STACK`. Use `kernel_thread` or the helpers in `par.rs`, not a plain `std::thread::spawn`.
 - STEP and IGES files are hostile. Cap sizes, counts and nesting. Turn what cannot be read into a warning when the rest of the file is still usable. See `skills/sketcraft-crash-safety/SKILL.md`.

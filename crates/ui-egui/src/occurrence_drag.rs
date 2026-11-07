@@ -13,10 +13,10 @@ use std::sync::Arc;
 
 use egui::Pos2;
 use serde_json::json;
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 use sketcraft_engine::doc::{Document, apply_point, mat_inverse};
 
-use crate::SolveApp;
+use crate::SketApp;
 use crate::viewport::{Hit, Proj};
 
 /// A drag under way.
@@ -37,7 +37,7 @@ pub struct Drag {
 }
 
 /// The placement a drag on `body` moves: the one on its path just inside the active placement.
-fn placement_of(app: &SolveApp, body: &str) -> Option<Vec<u64>> {
+fn placement_of(app: &SketApp, body: &str) -> Option<Vec<u64>> {
     let s = &app.session;
     let (_, _, path, _) = s.doc.body_frames(&s.model.state()).into_iter().find(|f| f.0 == body)?;
     let active = if s.active_component == 0 {
@@ -55,7 +55,7 @@ fn placement_of(app: &SolveApp, body: &str) -> Option<Vec<u64>> {
 }
 
 /// Begin a drag on the part under `p` when nothing holds it in place. True when one began.
-pub fn start(app: &mut SolveApp, proj: &Proj, p: Pos2) -> bool {
+pub fn start(app: &mut SketApp, proj: &Proj, p: Pos2) -> bool {
     // The face under the pointer, past the part's own edges and vertices (not past sketches or
     // construction geometry in front of it).
     let hits = crate::viewport::pick(app, proj, p);
@@ -80,12 +80,12 @@ pub fn start(app: &mut SolveApp, proj: &Proj, p: Pos2) -> bool {
     true
 }
 
-pub fn active(app: &SolveApp) -> bool {
+pub fn active(app: &SketApp) -> bool {
     app.viewport.occurrence_drag.is_some()
 }
 
 /// Bring the grabbed point to the pointer at `p`.
-pub fn to(app: &mut SolveApp, proj: &Proj, p: Pos2) {
+pub fn to(app: &mut SketApp, proj: &Proj, p: Pos2) {
     let Some(d) = app.viewport.occurrence_drag.clone() else { return };
     // Something else took the drag's undo step (undo pressed mid-drag): the drag ends there.
     if let Some(doc) = &d.step
@@ -131,14 +131,14 @@ pub fn to(app: &mut SolveApp, proj: &Proj, p: Pos2) {
 }
 
 /// Let go: the part stays where it was dragged.
-pub fn end(app: &mut SolveApp) {
+pub fn end(app: &mut SketApp) {
     if let Some(Drag { checkpoint: Some(checkpoint), .. }) = app.viewport.occurrence_drag.take() {
         let _ = app.session.execute("edit.restore_checkpoint", &json!({"checkpoint": checkpoint, "forget": true}));
     }
 }
 
 /// Escape: the part goes back, and the drag leaves no undo step. True when a drag was cancelled.
-pub fn cancel(app: &mut SolveApp) -> bool {
+pub fn cancel(app: &mut SketApp) -> bool {
     let Some(d) = app.viewport.occurrence_drag.take() else { return false };
     match d.checkpoint {
         Some(checkpoint) => drop(app.session.execute("edit.restore_checkpoint", &json!({"checkpoint": checkpoint}))),

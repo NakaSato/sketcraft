@@ -7,7 +7,7 @@
 use std::collections::HashMap;
 
 use serde_json::{Value, json};
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 use sketcraft_engine::{Sel, Session};
 
 /// The most items one message carries; the rest are counted, not dropped silently.

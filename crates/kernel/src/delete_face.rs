@@ -13,8 +13,8 @@
 use sketcraft_geom::prelude::*;
 use std::collections::{BTreeSet, HashMap};
 
-use solidcore_record::Vec3;
-use solidcore_record::brep::Curve;
+use sketcore_record::Vec3;
+use sketcore_record::brep::Curve;
 use sketcraft_geom::Aabb3;
 
 use crate::assemble::{AFace, AUse, Assembly};
@@ -327,7 +327,7 @@ pub fn delete_faces(body: &Body, faces: &[usize]) -> Result<Body> {
 
 #[cfg(test)]
 mod tests {
-    use solidcore_record::Vec3;
+    use sketcore_record::Vec3;
 
     use super::delete_faces;
     use crate::{BoolOp, boolean, box_solid, chamfer, cylinder, fillet};

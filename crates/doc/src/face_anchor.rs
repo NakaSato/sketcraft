@@ -4,7 +4,7 @@ use crate::config::ConfigFaceTarget;
 use crate::{DocError, Document, EmbossFace, FeatureKind, Model, ModelBody, ModelState, PlaneRef, Result};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use solidcore_record::Plane;
+use sketcore_record::Plane;
 use sketcraft_geom::prelude::*;
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -500,7 +500,7 @@ pub fn validate_face_anchors_json(value: &Value) -> Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use solidcore_record::Vec3;
+    use sketcore_record::Vec3;
     fn fixture() -> (Document, ModelBody, usize, Plane) {
         let mut doc = Document::default();
         let kind: FeatureKind =
@@ -627,7 +627,7 @@ mod tests {
     }
     #[test]
     fn extrude_cap_profile_reordering_never_retargets_an_ordinal_body() {
-        use solidcore_record::Vec2;
+        use sketcore_record::Vec2;
         let mut sketch = sketcraft_sketch::Sketch::new();
         for offset in [0., 30.] {
             let points: Vec<_> = [(0., 0.), (10., 0.), (10., 10.), (0., 10.)]
@@ -720,7 +720,7 @@ mod tests {
     }
     #[test]
     fn warm_root_body_offset_edit_matches_cold_attached_sketch_and_downstream_bounds() {
-        use solidcore_record::Vec2;
+        use sketcore_record::Vec2;
         let (mut doc, _, _, _) = fixture();
         let mut warm = Model::new();
         warm.evaluate(&doc);

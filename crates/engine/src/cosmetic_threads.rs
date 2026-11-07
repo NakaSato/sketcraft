@@ -3,7 +3,7 @@
 use sketcraft_geom::prelude::*;
 use std::collections::HashMap;
 
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 use sketcraft_doc::{ModelBody, ThreadInfo};
 use sketcraft_geom::Mesh;
 

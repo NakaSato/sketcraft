@@ -6,7 +6,7 @@
 use serde_json::Value;
 use sketcraft_engine::Session;
 
-use crate::SolveApp;
+use crate::SketApp;
 
 /// A save being written on a worker thread.
 pub struct Saving {
@@ -17,7 +17,7 @@ pub struct Saving {
 /// Run `file.save` or `file.save_as` with `params`. On the desktop it runs on a worker and is
 /// taken up by [`tick`] (true: it is under way); in the browser, or when no thread can start, it
 /// runs here and is finished on return (false).
-pub fn start(app: &mut SolveApp, command: &'static str, params: Value) -> bool {
+pub fn start(app: &mut SketApp, command: &'static str, params: Value) -> bool {
     // An assembly reading its links for a part edited in place takes them up when the read is
     // done: a save before then would record a design that is about to change as saved.
     if let Some(name) = crate::edit_in_place::refreshing_assembly(app) {
@@ -46,7 +46,7 @@ pub fn start(app: &mut SolveApp, command: &'static str, params: Value) -> bool {
 }
 
 /// Take up a finished save (`wait`: wait for a running one).
-pub fn tick(app: &mut SolveApp, wait: bool) {
+pub fn tick(app: &mut SketApp, wait: bool) {
     let Some(saving) = app.saving.as_ref() else { return };
     let outcome = if wait {
         saving.done.recv().ok()

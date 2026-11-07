@@ -1,16 +1,16 @@
-//! Surface/surface intersection on solidcore (`smlib_ssi.cpp`'s `smlib_ssi`, `smlib_surface_domain`,
+//! Surface/surface intersection on sketcore (`smlib_ssi.cpp`'s `smlib_ssi`, `smlib_surface_domain`,
 //! `smlib_surface_evaluate`), on the surfaces [`crate::core::split`] makes from a [`Spec`]:
 //! `SmSurface::GlobalSurfaceIntersect` and `SmAdvSurfaceIntersector`, whose results are read as the
 //! capi reads them.
 
 use std::borrow::Cow;
 
-use solidcore::curve::curve::Curve;
-use solidcore::geom::vector2d::Point2;
-use solidcore::intersect::surface_intersector::p5::do_intersection;
-use solidcore::kernel::Kernel;
-use solidcore::nurbs::b_spline_curve::BSplineCurve;
-use solidcore::surface::surface::p2::{SurfaceIntersection, TsectCurveType};
+use sketcore::curve::curve::Curve;
+use sketcore::geom::vector2d::Point2;
+use sketcore::intersect::surface_intersector::p5::do_intersection;
+use sketcore::kernel::Kernel;
+use sketcore::nurbs::b_spline_curve::BSplineCurve;
+use sketcore::surface::surface::p2::{SurfaceIntersection, TsectCurveType};
 
 use super::convert::bspline_curve_part;
 use super::run;
@@ -36,7 +36,7 @@ pub(crate) fn evaluate(s: &Tool, u: f64, v: f64) -> Result<[f64; 3]> {
     }
     let p = run("smlib_surface_evaluate", |k| s.surface.evaluate_point(k, Point2::new(u, v)))?;
     let r = [p.x, p.y, p.z];
-    if r.iter().all(|x| x.is_finite()) { Ok(r) } else { Err(Error::Solidcore("smlib_surface_evaluate: not a finite point".into())) }
+    if r.iter().all(|x| x.is_finite()) { Ok(r) } else { Err(Error::Sketcore("smlib_surface_evaluate: not a finite point".into())) }
 }
 
 fn curve_type(t: TsectCurveType) -> CurveType {
@@ -58,7 +58,7 @@ fn nurbs(k: &Kernel, c: &Curve, dim: usize) -> Result<Option<Nurbs>> {
     let Some(n) = part.gw_nurb() else { return Ok(None) };
     let mut out = Nurbs { points: Vec::with_capacity(n.cpts().len() * dim), weights: Vec::with_capacity(n.cpts().len()), knots: n.knots().to_vec() };
     for p in n.cpts() {
-        let w = if p.w != solidcore::nurbs::math::NOW { p.w } else { 1.0 };
+        let w = if p.w != sketcore::nurbs::math::NOW { p.w } else { 1.0 };
         let q = [p.x / w, p.y / w, p.z / w];
         out.points.extend_from_slice(q.get(..dim).unwrap_or(&q));
         out.weights.push(w);

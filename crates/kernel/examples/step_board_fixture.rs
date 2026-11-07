@@ -17,7 +17,7 @@ fn main() {
 }
 
 mod run {
-    use solidcore_record::Vec3;
+    use sketcore_record::Vec3;
     use sketcraft_kernel::{Body, ExportBody, ExportProduct, StepHeader, box_solid, cylinder, fillet, step_export_products};
 
     /// A count from `SKETCRAFT_<name>`, or `default` when it is unset.

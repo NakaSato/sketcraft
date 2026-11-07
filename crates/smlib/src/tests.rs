@@ -21,10 +21,10 @@ fn bad_arguments_are_errors() {
     assert_eq!(b.volume(f64::INFINITY).unwrap_err(), Error::Argument);
 }
 
-/// `.smb` files on solidcore, in both forms and with a curved body, and a missing or corrupt file
+/// `.smb` files on sketcore, in both forms and with a curved body, and a missing or corrupt file
 /// is an error, not a panic.
 #[test]
-fn solidcore_reads_back_the_files_it_writes() {
+fn sketcore_reads_back_the_files_it_writes() {
     use std::f64::consts::PI;
     let dir = std::env::temp_dir().join(format!("sketcraft-smlib-core-file-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
@@ -47,10 +47,10 @@ fn solidcore_reads_back_the_files_it_writes() {
 }
 
 /// ASCII that is no B-rep file is refused like binary. It comes back as an empty body today:
-/// default-solidcore/bugs/ascii-junk-reads-as-empty.md.
+/// default-sketcore/bugs/ascii-junk-reads-as-empty.md.
 #[test]
-#[ignore = "solidcore: an ASCII file of junk reads as an empty B-rep instead of an error"]
-fn solidcore_refuses_an_ascii_file_of_junk() {
+#[ignore = "sketcore: an ASCII file of junk reads as an empty B-rep instead of an error"]
+fn sketcore_refuses_an_ascii_file_of_junk() {
     let dir = std::env::temp_dir().join(format!("sketcraft-smlib-core-junk-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     let junk = dir.join("junk.smb");
@@ -296,7 +296,7 @@ fn only_a_failing_call_serialises_its_inputs() {
     let v = core::volume(&a, 1e-8);
     let u = core::boolean::boolean(&a, &b, BooleanOp::Union);
     let answered = serialised() - before;
-    let r: Result<()> = core::with_body("smlib_test_failure", &a, |_, _| Err(solidcore::SolidError::invalid_input("test", "refused")));
+    let r: Result<()> = core::with_body("smlib_test_failure", &a, |_, _| Err(sketcore::SolidError::invalid_input("test", "refused")));
     let failed = serialised() - before - answered;
     core::dump::set_dir(None);
     let _ = std::fs::remove_dir_all(&dir);
@@ -304,11 +304,11 @@ fn only_a_failing_call_serialises_its_inputs() {
     assert_eq!((answered, failed), (0, 1));
 }
 
-/// A failing solidcore call leaves its inputs and what failed, and an answered one leaves nothing;
+/// A failing sketcore call leaves its inputs and what failed, and an answered one leaves nothing;
 /// the call in flight is named, and gone after. A folder is process-wide, so this test is the one
 /// that sets it.
 #[test]
-fn a_failing_solidcore_call_leaves_a_dump_and_names_itself() {
+fn a_failing_sketcore_call_leaves_a_dump_and_names_itself() {
     let _dumps = DUMP_DIR_TESTS.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
     let dir = std::env::temp_dir().join(format!("sketcraft-smlib-core-dump-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
@@ -317,7 +317,7 @@ fn a_failing_solidcore_call_leaves_a_dump_and_names_itself() {
     let seen: std::sync::Mutex<Option<String>> = std::sync::Mutex::new(None);
     let r: Result<()> = core::with_body("smlib_test_failure", &a, |_, _| {
         *seen.lock().unwrap() = core::dump::current();
-        Err(solidcore::SolidError::invalid_input("test", "refused"))
+        Err(sketcore::SolidError::invalid_input("test", "refused"))
     });
     core::dump::set_dir(None);
     assert!(r.is_err());
@@ -339,7 +339,7 @@ fn a_failing_solidcore_call_leaves_a_dump_and_names_itself() {
 /// ending them 0.1 um short) is held at that tolerance.
 #[test]
 fn a_pcurve_smlib_ends_within_the_edges_tolerance_is_mapped_onto_our_interval() {
-    use solidcore_record::brep::{Curve, Curve2};
+    use sketcore_record::brep::{Curve, Curve2};
     use sketcraft_geom::brep::pcurve::TrimEdge;
     let line = Curve::Line { start: [0.0, 0.0, 0.0], end: [2.0, 0.0, 0.0] };
     let edge = TrimEdge { curve: &line, nurbs: None, interval: [0.0, 1.0], vertices: [0, 1], tolerance: 1e-5 };
@@ -365,7 +365,7 @@ fn a_pcurve_smlib_ends_within_the_edges_tolerance_is_mapped_onto_our_interval() 
 /// own interval, ending at the patch's corner.
 #[test]
 fn an_edge_a_few_um_past_its_patch_keeps_its_interval() {
-    use solidcore_record::brep::{Curve, Surface};
+    use sketcore_record::brep::{Curve, Surface};
     use sketcraft_geom::brep::pcurve::{TrimEdge, TrimFace, TrimUse, Trims};
     // S(u, v) = (10u, 10v, 2v^2), bicubic
     let g = [0.0, 1.0 / 3.0, 2.0 / 3.0, 1.0];
@@ -401,7 +401,7 @@ fn an_edge_a_few_um_past_its_patch_keeps_its_interval() {
     assert!((u - 1.0).abs() < 1e-9 && v.abs() < 1e-9, "{u} {v}");
 }
 
-/// A solidcore call blocked on a channel until `release`, on its own thread: a call that runs long
+/// A sketcore call blocked on a channel until `release`, on its own thread: a call that runs long
 /// or never returns, as one design's slow operation does.
 fn call_held_open(body: &str) -> (std::sync::mpsc::Sender<()>, std::thread::JoinHandle<Result<()>>) {
     let call: &'static str = Box::leak(body.to_owned().into_boxed_str());
@@ -539,7 +539,7 @@ fn the_kernel_pool_stays_bounded_when_calls_stick() {
     assert_eq!(pool.idle, [1]);
 }
 
-/// A stop reaches a running call at solidcore's next check and later calls before they start;
+/// A stop reaches a running call at sketcore's next check and later calls before they start;
 /// the kernel it ran on is not used again; calls of other work and answers from a body go on.
 #[test]
 fn a_stopped_call_ends_at_its_next_check_and_holds_up_nothing() {
@@ -551,7 +551,7 @@ fn a_stopped_call_ends_at_its_next_check_and_holds_up_nothing() {
             stop.within(|| {
                 let first: Result<()> = core::run("stopped_call", |k| {
                     let _ = started.send(());
-                    // A long solidcore loop, until it is stopped.
+                    // A long sketcore loop, until it is stopped.
                     loop {
                         k.check_cancelled("stopped_call")?;
                         std::thread::yield_now();
@@ -583,7 +583,7 @@ fn a_stopped_call_ends_at_its_next_check_and_holds_up_nothing() {
 /// depends on them answers the same on any kernel of the pool.
 #[test]
 fn every_call_starts_clean_on_any_kernel() {
-    let draw = |k: &mut solidcore::kernel::Kernel| Ok(k.rng.next_f64());
+    let draw = |k: &mut sketcore::kernel::Kernel| Ok(k.rng.next_f64());
     let first = core::run("draw", draw).unwrap();
     assert_eq!(core::run("draw", draw).unwrap(), first, "the same kernel, later");
     let held = hold_a_kernel();

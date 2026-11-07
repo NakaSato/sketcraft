@@ -11,7 +11,7 @@
 //! creator joins [`dimension_roles`] with its roles and entities, and `locate` gets a frame with a
 //! Z direction; the UI routes the 3D tools through `tools::draw`, which asks `dimension_roles`.
 use serde_json::{Map, Value, json};
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 use sketcraft_doc::expr::{Kind, definition};
 
 use crate::{

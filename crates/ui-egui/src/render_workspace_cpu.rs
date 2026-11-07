@@ -3,9 +3,9 @@ use serde_json::{Value, json};
 use sketcraft_engine::render::job::{CpuBudget, RaytraceEnvironmentOptions, ReflectionBody, ReflectionMode};
 
 use super::hdr;
-use crate::{SolveApp, ui_kit};
+use crate::{SketApp, ui_kit};
 
-pub(super) fn validate_progressive_image(app: &SolveApp) -> Result<(), String> {
+pub(super) fn validate_progressive_image(app: &SketApp) -> Result<(), String> {
     let view = &app.render_workspace.view;
     if view.method == super::ImageMethod::GpuRaytrace {
         return Ok(());
@@ -35,7 +35,7 @@ pub(super) fn validate_progressive_image(app: &SolveApp) -> Result<(), String> {
     Ok(())
 }
 
-pub(super) fn image_limits(app: &SolveApp) -> sketcraft_engine::render::RenderLimits {
+pub(super) fn image_limits(app: &SketApp) -> sketcraft_engine::render::RenderLimits {
     if app.render_workspace.view.method == super::ImageMethod::GpuRaytrace {
         return sketcraft_engine::render::job::GPU_PATH_LIMITS;
     }
@@ -48,9 +48,8 @@ pub(super) fn image_limits(app: &SolveApp) -> sketcraft_engine::render::RenderLi
         limits.max_dimension = limits.max_dimension.min(8192);
         limits.max_pixels = limits.max_pixels.min(16_777_216);
     }
-    let sampling =
-        sketcraft_engine::render::job::cpu_camera_sampling(options.progressive, app.render_workspace.view.studio.adaptive, options.budget)
-            .unwrap_or(options.progressive);
+    let sampling = sketcraft_engine::render::job::cpu_camera_sampling(options.progressive, app.render_workspace.view.studio.adaptive, options.budget)
+        .unwrap_or(options.progressive);
     if let Some(progressive) = sampling {
         limits.max_pixels = limits.max_pixels.min(options.budget.limits().max_camera_samples / u64::from(progressive.samples_per_pixel.max(1)));
     }
@@ -61,7 +60,7 @@ pub(super) fn image_limits(app: &SolveApp) -> sketcraft_engine::render::RenderLi
 /// name in a hint. `None` for GPU path tracing, for sizes that fit, and past every profile. CPU
 /// raster has no profiles of its own, so its hint also names CPU ray tracing. Neither the method
 /// nor the profile is switched here: they and the resolution change only when chosen.
-pub(super) fn profile_for_size(app: &SolveApp, width: u64, height: u64) -> Option<CpuBudget> {
+pub(super) fn profile_for_size(app: &SketApp, width: u64, height: u64) -> Option<CpuBudget> {
     if app.render_workspace.view.method == super::ImageMethod::GpuRaytrace {
         return None;
     }
@@ -84,7 +83,7 @@ pub(super) fn profile_for_size(app: &SolveApp, width: u64, height: u64) -> Optio
 }
 
 /// The translated name of a profile, as the profile selector shows it.
-pub(super) fn budget_name(app: &SolveApp, budget: CpuBudget) -> &str {
+pub(super) fn budget_name(app: &SketApp, budget: CpuBudget) -> &str {
     app.tr(budget_key(budget))
 }
 
@@ -96,7 +95,7 @@ fn budget_key(budget: CpuBudget) -> &'static str {
     }
 }
 
-fn budget_controls(app: &mut SolveApp, ui: &mut egui::Ui) {
+fn budget_controls(app: &mut SketApp, ui: &mut egui::Ui) {
     let budgets = CpuBudget::ALL;
     let mut selected = budgets.iter().position(|b| *b == app.render_workspace.view.raytrace.budget).unwrap_or(0);
     let labels = budgets.map(|b| app.tr(budget_key(b)).to_string());
@@ -134,7 +133,7 @@ fn budget_controls(app: &mut SolveApp, ui: &mut egui::Ui) {
     );
     ui_kit::text(ui, &note, ui_kit::Text::Note("render.cpu_budget_help"));
 }
-fn set_progressive(app: &mut SolveApp, enabled: bool) {
+fn set_progressive(app: &mut SketApp, enabled: bool) {
     app.render_workspace.view.cpu_sampling_initialized = true;
     let options = &mut app.render_workspace.view.raytrace;
     if enabled {
@@ -146,7 +145,7 @@ fn set_progressive(app: &mut SolveApp, enabled: bool) {
     app.render_workspace.view.dirty = true;
 }
 
-pub(super) fn progressive_controls(app: &mut SolveApp, ui: &mut egui::Ui) -> bool {
+pub(super) fn progressive_controls(app: &mut SketApp, ui: &mut egui::Ui) -> bool {
     budget_controls(app, ui);
     let mut selected = usize::from(app.render_workspace.view.raytrace.progressive.is_some());
     let legacy = app.preferences.render_legacy_image_defaults;
@@ -228,7 +227,7 @@ pub(super) fn progressive_controls(app: &mut SolveApp, ui: &mut egui::Ui) -> boo
     enabled
 }
 /// Shared explicit adoption for Sampling and the CPU Glass transport entry point.
-pub(super) fn progressive_adoption_reason(app: &SolveApp) -> Option<String> {
+pub(super) fn progressive_adoption_reason(app: &SketApp) -> Option<String> {
     let options = &app.render_workspace.view.raytrace;
     if options.reflections.as_ref().is_some_and(|r| !r.bodies.is_empty() && r.samples != 1) {
         Some(app.tr("render.cpu_progressive_reflection_adopt").into())
@@ -240,7 +239,7 @@ pub(super) fn progressive_adoption_reason(app: &SolveApp) -> Option<String> {
             .map(|e| e.to_string())
     }
 }
-pub(super) fn adopt_progressive(app: &mut SolveApp) -> Result<(), String> {
+pub(super) fn adopt_progressive(app: &mut SketApp) -> Result<(), String> {
     if let Some(reason) = progressive_adoption_reason(app) {
         return Err(reason);
     }
@@ -249,7 +248,7 @@ pub(super) fn adopt_progressive(app: &mut SolveApp) -> Result<(), String> {
     Ok(())
 }
 /// A prospective opt-in never changes old fixed sampling or removes optical bindings.
-pub(super) fn path_reason(app: &SolveApp) -> Option<String> {
+pub(super) fn path_reason(app: &SketApp) -> Option<String> {
     if let Err(reason) = super::materials::path_compatibility(app) {
         return Some(reason);
     }
@@ -257,7 +256,7 @@ pub(super) fn path_reason(app: &SolveApp) -> Option<String> {
     options.path.get_or_insert_default();
     options.validate().err().map(|error| error.to_string())
 }
-fn path_controls(app: &mut SolveApp, ui: &mut egui::Ui) {
+fn path_controls(app: &mut SketApp, ui: &mut egui::Ui) {
     let mut enabled = app.render_workspace.view.raytrace.path.is_some();
     let reason = path_reason(app);
     let label = app.tr("render.cpu_path_lighting").to_string();
@@ -355,7 +354,7 @@ fn valid_name(name: &str) -> bool {
     !name.is_empty() && name.len() <= 128 && !name.chars().any(char::is_control)
 }
 
-fn target(app: &SolveApp, name: &str) -> Option<Target> {
+fn target(app: &SketApp, name: &str) -> Option<Target> {
     if !valid_name(name) || app.session.model.is_stale() {
         return None;
     }
@@ -368,11 +367,11 @@ fn target(app: &SolveApp, name: &str) -> Option<Target> {
     Some(Target { ordinal, feature: body.feature, component: body.component })
 }
 
-fn unique_visible_body(app: &SolveApp, name: &str) -> bool {
+fn unique_visible_body(app: &SketApp, name: &str) -> bool {
     target(app, name).is_some()
 }
 
-fn binding_current(app: &SolveApp, name: &str) -> bool {
+fn binding_current(app: &SketApp, name: &str) -> bool {
     app.render_workspace.view.cpu.bindings.get(name).is_some_and(|binding| {
         binding.revision == app.session.revision
             && std::sync::Weak::ptr_eq(&binding.document, &std::sync::Arc::downgrade(&app.session.doc))
@@ -380,7 +379,7 @@ fn binding_current(app: &SolveApp, name: &str) -> bool {
     })
 }
 
-pub(super) fn revalidate(app: &mut SolveApp, name: &str) -> Result<(), String> {
+pub(super) fn revalidate(app: &mut SketApp, name: &str) -> Result<(), String> {
     let current = target(app, name).ok_or_else(|| app.tr("render.cpu_body_missing").to_string())?;
     if app.render_workspace.view.cpu.bindings.get(name).is_none_or(|binding| binding.target != current) {
         return Err(app.tr("render.cpu_body_missing").to_string());
@@ -394,7 +393,7 @@ pub(super) fn revalidate(app: &mut SolveApp, name: &str) -> Result<(), String> {
     Ok(())
 }
 
-pub(super) fn refresh_render_revision(app: &mut SolveApp) {
+pub(super) fn refresh_render_revision(app: &mut SketApp) {
     let mut sources = super::setups::SourceCache::default();
     let eligible: Vec<String> = app
         .render_workspace
@@ -414,7 +413,7 @@ pub(super) fn refresh_render_revision(app: &mut SolveApp) {
 }
 
 /// A removed, hidden or ambiguous body never silently becomes a different target.
-pub(super) fn set_reflection(app: &mut SolveApp, name: &str, mode: Option<ReflectionMode>) -> Result<(), String> {
+pub(super) fn set_reflection(app: &mut SketApp, name: &str, mode: Option<ReflectionMode>) -> Result<(), String> {
     let selected = if mode.is_some() { Some(target(app, name).ok_or_else(|| app.tr("render.cpu_body_missing").to_string())?) } else { None };
     // Changing the mode of an existing row is not a new body selection. Only an
     // explicit confirmation of the same target, or Off followed by Add, may
@@ -467,7 +466,7 @@ pub(super) fn set_reflection(app: &mut SolveApp, name: &str, mode: Option<Reflec
 }
 
 /// Shared by the parent Check and Start builder. This does not read an HDR file.
-pub(super) fn params(app: &SolveApp, params: &mut Value) -> Result<(), String> {
+pub(super) fn params(app: &SketApp, params: &mut Value) -> Result<(), String> {
     let base = &app.render_workspace.view.raytrace;
     if base.anisotropic_faces.iter().any(Option::is_some)
         || !base.dielectrics.is_empty()
@@ -545,7 +544,7 @@ pub(super) fn params(app: &SolveApp, params: &mut Value) -> Result<(), String> {
 }
 
 #[cfg(test)]
-pub(super) fn controls(app: &mut SolveApp, ui: &mut egui::Ui) {
+pub(super) fn controls(app: &mut SketApp, ui: &mut egui::Ui) {
     for (id, key, section) in [
         ("render_cpu_reflections", "render.cpu_reflections", 0),
         ("render_cpu_environment", "render.cpu_environment", 1),
@@ -562,7 +561,7 @@ pub(super) fn controls(app: &mut SolveApp, ui: &mut egui::Ui) {
 }
 
 #[cfg(test)]
-pub(super) fn reflection_controls(app: &mut SolveApp, ui: &mut egui::Ui) {
+pub(super) fn reflection_controls(app: &mut SketApp, ui: &mut egui::Ui) {
     ui.small(app.tr("render.cpu_reflection_help"));
     let entries = app.render_workspace.view.raytrace.reflections.as_ref().map(|r| r.bodies.clone()).unwrap_or_default();
     for entry in entries {
@@ -641,7 +640,7 @@ pub(super) fn reflection_controls(app: &mut SolveApp, ui: &mut egui::Ui) {
 }
 
 /// Existing global reflection budget, shared during the Sampling-editor migration.
-pub(super) fn reflection_sampling_controls(app: &mut SolveApp, ui: &mut egui::Ui) {
+pub(super) fn reflection_sampling_controls(app: &mut SketApp, ui: &mut egui::Ui) {
     let depth = app.tr("render.cpu_reflection_depth").to_string();
     let samples = app.tr("render.cpu_reflection_samples").to_string();
     if let Some(reflections) = &mut app.render_workspace.view.raytrace.reflections {
@@ -653,7 +652,7 @@ pub(super) fn reflection_sampling_controls(app: &mut SolveApp, ui: &mut egui::Ui
 }
 
 #[cfg(test)]
-pub(super) fn environment_controls(app: &mut SolveApp, ui: &mut egui::Ui) {
+pub(super) fn environment_controls(app: &mut SketApp, ui: &mut egui::Ui) {
     let selected = app.render_workspace.view.cpu.environment;
     let key = match selected {
         Environment::None => "render.cpu_environment_none",
@@ -718,11 +717,11 @@ fn vector(ui: &mut egui::Ui, label: &str, value: &mut [f64; 3], range: std::ops:
 }
 
 #[cfg(test)]
-pub(super) fn light_controls(app: &mut SolveApp, ui: &mut egui::Ui) {
+pub(super) fn light_controls(app: &mut SketApp, ui: &mut egui::Ui) {
     super::light::lighting(app, ui);
 }
 
-pub(super) fn record_checked(app: &mut SolveApp, params: &Value, reply: &Value) {
+pub(super) fn record_checked(app: &mut SketApp, params: &Value, reply: &Value) {
     if params["integrator"] == "raytrace" || params["settings"]["job"]["method"] == "cpu_raytrace" {
         app.render_workspace.view.cpu.checked = Some(Checked {
             request: params.clone(),
@@ -733,7 +732,7 @@ pub(super) fn record_checked(app: &mut SolveApp, params: &Value, reply: &Value) 
     }
 }
 
-fn metadata(app: &SolveApp, ui: &mut egui::Ui, info: &Value) {
+fn metadata(app: &SketApp, ui: &mut egui::Ui, info: &Value) {
     let Some(hash) = info["source_sha256"].as_array().filter(|hash| hash.len() == 32) else {
         return;
     };
@@ -749,7 +748,7 @@ fn metadata(app: &SolveApp, ui: &mut egui::Ui, info: &Value) {
     ui.label(format!("SHA-256: {digest}"));
 }
 
-pub(super) fn checked_status(app: &SolveApp, ui: &mut egui::Ui, params: Option<&Value>) {
+pub(super) fn checked_status(app: &SketApp, ui: &mut egui::Ui, params: Option<&Value>) {
     if app.render_workspace.view.method != super::ImageMethod::CpuRaytrace {
         return;
     }
@@ -768,7 +767,7 @@ pub(super) fn checked_status(app: &SolveApp, ui: &mut egui::Ui, params: Option<&
     }
 }
 
-pub(super) fn captured_status(app: &SolveApp, ui: &mut egui::Ui, status: &Value) {
+pub(super) fn captured_status(app: &SketApp, ui: &mut egui::Ui, status: &Value) {
     if status["request"]["integrator"] == "raytrace" && status["environment"]["source_sha256"].is_array() {
         let title = app.tr("render.cpu_captured_hdr").to_string();
         ui_kit::section(ui, "cpu_captured_hdr", &title, false, |ui| metadata(app, ui, &status["environment"]));

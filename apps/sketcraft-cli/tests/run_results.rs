@@ -712,12 +712,7 @@ fn render_preserves_typed_raster_and_legacy_runtime_controls() {
         let script = render_setup_script(&dir, job.clone());
         let out = dir.0.join("raster.png");
         let mut command = cli();
-        command
-            .arg("render")
-            .arg(&script)
-            .args(["--setup", "Portable setup", "--out"])
-            .arg(&out)
-            .env("SKETCRAFT_GPU", "must-not-be-read-for-raster");
+        command.arg("render").arg(&script).args(["--setup", "Portable setup", "--out"]).arg(&out).env("SKETCRAFT_GPU", "must-not-be-read-for-raster");
         if job.is_null() {
             command.arg("--transparent");
         }

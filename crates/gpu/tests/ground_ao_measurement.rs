@@ -3,7 +3,7 @@
 //! SKETCRAFT_BENCH_OUTPUT_DIR is the folder for JSON evidence. Not a CI speed threshold.
 #![cfg(not(target_arch = "wasm32"))]
 use serde_json::json;
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 use sketcraft_engine::{geom::Aabb3, render::Camera};
 use sketcraft_gpu as gpu;
 use sketcraft_gpu::view::{Frame, GpuScene, GpuTarget, Renderer};

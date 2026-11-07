@@ -8,7 +8,7 @@ fn bar_rect(canvas: Rect) -> Rect {
     crate::navigation_bar_view::measure(canvas, &Default::default(), crate::navigation::NavCaps::MODEL, |_| 0.0).rect
 }
 
-fn assert_navigator_shared_zoom(app: &crate::SolveApp, camera: Camera) {
+fn assert_navigator_shared_zoom(app: &crate::SketApp, camera: Camera) {
     let context = format!(
         "host={}, measured={}, render={}, fov={}, up={:?}, viewport={:?}, shell_content={:?}",
         app.universal_panel_host_enabled(),
@@ -414,7 +414,7 @@ fn hostile_or_empty_fit_keeps_the_existing_camera_valid() {
     assert!(fit_bounds(cam, &Aabb3::EMPTY, &measured, 0.0).is_none());
     let bad = Aabb3 { min: Vec3::new(f64::NAN, 0.0, 0.0), max: Vec3::new(1.0, 1.0, 1.0) };
     assert!(fit_bounds(cam, &bad, &measured, 0.6).is_none());
-    let mut app = crate::SolveApp::new(Default::default(), Default::default());
+    let mut app = crate::SketApp::new(Default::default(), Default::default());
     let tiny = layout(Rect::from_min_size(pos2(0.0, 0.0), vec2(5.0, 5.0)), &[], 1.0, crate::prefs::NavigatorStyle::Axes, true);
     app.viewport.layout = Some(tiny);
     let bounds = Aabb3 { min: Vec3::ZERO, max: Vec3::new(20.0, 1.0, 1.0) };

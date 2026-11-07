@@ -254,7 +254,7 @@ fn fillet_corner_rows(
 }
 
 /// A Constant radius fillet's "Face limits" row (`fit`), with the radius a reduced fillet used.
-fn fillet_fit_rows(app: &SolveApp, ui: &mut egui::Ui, extra: &mut serde_json::Map<String, Value>, setback: &mut Option<String>) {
+fn fillet_fit_rows(app: &SketApp, ui: &mut egui::Ui, extra: &mut serde_json::Map<String, Value>, setback: &mut Option<String>) {
     let t = Tokens::get();
     let before = extra.get("fit").cloned();
     let row = ui.scope(|ui| form_row(ui, "ui.fillet_fit", |ui| extra_choice(ui, extra, "fi_fit", "fit", &FILLET_FITS)));
@@ -337,7 +337,7 @@ fn choose_fillet_type(extra: &mut serde_json::Map<String, Value>, index: usize, 
     }
 }
 
-pub(super) fn rows(app: &mut SolveApp, ctx: &egui::Context, d: &mut Dialog, ui: &mut egui::Ui) -> bool {
+pub(super) fn rows(app: &mut SketApp, ctx: &egui::Context, d: &mut Dialog, ui: &mut egui::Ui) -> bool {
     let t = Tokens::get();
     let mut enter = false;
     if matches!(d.kind, Kind::Appearance(_)) {
@@ -825,7 +825,7 @@ fn coil_rows(ui: &mut egui::Ui, extra: &mut serde_json::Map<String, Value>) -> b
     enter
 }
 
-fn additional_rows(app: &mut SolveApp, d: &mut Dialog, ui: &mut egui::Ui) -> bool {
+fn additional_rows(app: &mut SketApp, d: &mut Dialog, ui: &mut egui::Ui) -> bool {
     let mut enter = false;
     let through_point = offset_through_point(d).is_some();
     match &mut d.kind {
@@ -1120,13 +1120,13 @@ fn additional_rows(app: &mut SolveApp, d: &mut Dialog, ui: &mut egui::Ui) -> boo
     enter
 }
 
-fn fmt_mm(app: &SolveApp, v: &Value) -> String {
+fn fmt_mm(app: &SketApp, v: &Value) -> String {
     v.as_f64().map(|x| crate::prefs::show_mm(app, x, 1)).unwrap_or_default()
 }
 
 /// The measurement in the dialog: each item's size, then the distance (a pair of round items
 /// offers centre to centre, closest and farthest), its ΔX/Y/Z and the angle between two items.
-fn measure_rows(app: &mut SolveApp, ui: &mut egui::Ui, r: Option<&Value>, show: &mut Option<Shown>) {
+fn measure_rows(app: &mut SketApp, ui: &mut egui::Ui, r: Option<&Value>, show: &mut Option<Shown>) {
     let Some(r) = r else {
         ui_kit::text(ui, tr("pick one or two vertices, edges or faces"), ui_kit::Text::Hint("measure"));
         return;
@@ -1189,9 +1189,7 @@ fn measure_rows(app: &mut SolveApp, ui: &mut egui::Ui, r: Option<&Value>, show: 
                     if resp.changed() {
                         ui.ctx().data_mut(|data| data.insert_temp(temp_id, target_str.clone()));
                     }
-                    if (resp.lost_focus() && ui.input(|i| i.key_pressed(egui::Key::Enter)))
-                        || (ui.button("Apply").clicked())
-                    {
+                    if (resp.lost_focus() && ui.input(|i| i.key_pressed(egui::Key::Enter))) || (ui.button("Apply").clicked()) {
                         if let Ok(val) = target_str.trim().trim_end_matches("mm").trim().parse::<f64>() {
                             if val > 1e-6 {
                                 rescale_target = Some((d, val));
@@ -1211,11 +1209,14 @@ fn measure_rows(app: &mut SolveApp, ui: &mut egui::Ui, r: Option<&Value>, show: 
         let bodies: Vec<String> = app.session.model.state().bodies.iter().map(|b| b.name.clone()).collect();
         if !bodies.is_empty() {
             let factor_str = format!("{:.6}", factor);
-            let _ = app.run("solid.scale", serde_json::json!({
-                "bodies": bodies,
-                "factor": factor_str,
-                "origin": [0.0, 0.0, 0.0]
-            }));
+            let _ = app.run(
+                "solid.scale",
+                serde_json::json!({
+                    "bodies": bodies,
+                    "factor": factor_str,
+                    "origin": [0.0, 0.0, 0.0]
+                }),
+            );
             app.set_status(format!("Model rescaled by factor {factor_str} ({current_d:.2} mm → {target_d:.2} mm)"), false);
             let temp_id = ui.make_persistent_id("tape_measure_target_length");
             ui.ctx().data_mut(|data| data.remove_temp::<String>(temp_id));

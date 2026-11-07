@@ -25,7 +25,7 @@ pub fn native_preview_mesh(body: &Body, detail: usize, remaining: &mut usize) ->
 #[cfg(test)]
 mod tests {
     use super::*;
-    use solidcore_record::Vec3;
+    use sketcore_record::Vec3;
     #[test]
     fn native_preview_is_finite_and_budgeted_before_meshing() {
         for body in [

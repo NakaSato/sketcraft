@@ -6,7 +6,7 @@ use sketcraft_engine::doc::physical_material::{
 };
 use sketcraft_engine::doc::{Document, UserMaterial, appearance::Look};
 
-use crate::{SolveApp, i18n::tr, ui_kit};
+use crate::{SketApp, i18n::tr, ui_kit};
 
 const KINDS: [&str; 9] = [
     "density",
@@ -68,7 +68,7 @@ impl Editor {
         self.note = None;
     }
 
-    pub(crate) fn save(&mut self, app: &mut SolveApp, index: &mut usize) -> Result<(), String> {
+    pub(crate) fn save(&mut self, app: &mut SketApp, index: &mut usize) -> Result<(), String> {
         let draft = self.draft.as_ref().ok_or_else(|| tr("material.editor.no_draft").to_string())?;
         let name = draft.name.trim().to_string();
         if let Some((command, params)) = draft.command(&app.session.doc)? {
@@ -434,7 +434,7 @@ fn card_rows(ui: &mut egui::Ui, card: &mut CardDraft) {
     }
 }
 
-pub(crate) fn rows(app: &mut SolveApp, ui: &mut egui::Ui, index: &mut usize, editor: &mut Editor) {
+pub(crate) fn rows(app: &mut SketApp, ui: &mut egui::Ui, index: &mut usize, editor: &mut Editor) {
     let names = app.session.doc.material_names();
     if editor.draft.is_none() {
         let placeholder = if editor.mixed_materials { "material.selection.mixed" } else { "material.selection.choose" };

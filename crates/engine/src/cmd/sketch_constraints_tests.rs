@@ -1,5 +1,5 @@
 use serde_json::{Value, json};
-use solidcore_record::Vec2;
+use sketcore_record::Vec2;
 use sketcraft_geom::prelude::*;
 use sketcraft_sketch::ConstraintKind;
 
@@ -183,7 +183,7 @@ fn curvature_polygon_arc_length_linear_diameter() {
     let sk = sketch(&s);
     let ai = sk.curve_index(&a).unwrap();
     let len = match sk.segs(ai)[0] {
-        solidcore_record::Seg2::Arc { radius, sweep, .. } => radius * sweep,
+        sketcore_record::Seg2::Arc { radius, sweep, .. } => radius * sweep,
         _ => 0.0,
     };
     assert!((len - 20.0).abs() < 1e-6, "{len}");
@@ -1713,7 +1713,7 @@ fn an_arc_and_its_end_point_dimension_the_arc_length() {
     let arc_length = |s: &Session, a: &str| {
         let sk = sketch(s);
         match sk.segs(sk.curve_index(a).unwrap())[0] {
-            solidcore_record::Seg2::Arc { radius, sweep, .. } => radius * sweep.abs(),
+            sketcore_record::Seg2::Arc { radius, sweep, .. } => radius * sweep.abs(),
             _ => f64::NAN,
         }
     };

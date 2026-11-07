@@ -8,7 +8,7 @@
 use sketcraft_geom::prelude::*;
 use std::collections::BTreeMap;
 
-use solidcore_record::Vec2;
+use sketcore_record::Vec2;
 use sketcraft_sketch::{EquationCurve, MAX_COORD, MAX_EQUATION_TEXT, MAX_SPLINE_POINTS, Sketch, VariableUnit, fit_beziers_mode};
 
 use crate::expr::{self, Defaults, Kind, Value};

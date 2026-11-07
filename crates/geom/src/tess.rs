@@ -15,7 +15,7 @@
 use crate::Mesh;
 use crate::bspline::MAX_SPLINE_DEGREE;
 use crate::prelude::*;
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 
 pub mod partials;
 pub mod uv;

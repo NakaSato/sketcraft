@@ -2,7 +2,7 @@
 use std::collections::BTreeMap;
 use std::hash::{Hash, Hasher};
 
-use crate::SolveApp;
+use crate::SketApp;
 use sketcraft_engine::render::{Camera, job::CancelToken};
 
 pub(super) const LIMIT: usize = 16;
@@ -101,7 +101,7 @@ impl Cache {
     }
 }
 
-pub(super) fn refresh(app: &mut SolveApp, ctx: &egui::Context) {
+pub(super) fn refresh(app: &mut SketApp, ctx: &egui::Context) {
     let mut scene = std::collections::hash_map::DefaultHasher::new();
     app.session.visibility.hidden_bodies.hash(&mut scene);
     app.session.visibility.hidden_occurrences.hash(&mut scene);

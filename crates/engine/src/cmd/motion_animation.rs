@@ -6,7 +6,7 @@
 use std::collections::BTreeSet;
 
 use serde_json::{Value, json};
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 use sketcraft_doc::Mat;
 
 use super::{Plan, drive_with_contact, explode_moves, exploded_at, motion_plan, sample_count, view_index};

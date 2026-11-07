@@ -3,7 +3,7 @@
 
 use crate::MassProperties;
 use crate::prelude::*;
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 
 /// A symmetric 3 × 3 tensor, row by row.
 pub type Tensor3 = [[f64; 3]; 3];

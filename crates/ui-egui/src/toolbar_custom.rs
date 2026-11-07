@@ -19,7 +19,7 @@ use serde_json::{Value, json};
 use sketcraft_engine::{CommandSpec, command_specs};
 
 use crate::context_menu::Item;
-use crate::{SolveApp, ui_kit};
+use crate::{SketApp, ui_kit};
 
 /// The only workspace so far.
 pub const WORKSPACE: &str = "DESIGN";
@@ -203,7 +203,7 @@ fn key(tab: &str, panel: &str) -> String {
 }
 
 /// The buttons a panel shows: the user's list, or the first `promoted` commands of the panel.
-pub fn buttons(app: &SolveApp, tab: &str, panel: &str, cmds: &[&'static CommandSpec], promoted: usize) -> Vec<&'static CommandSpec> {
+pub fn buttons(app: &SketApp, tab: &str, panel: &str, cmds: &[&'static CommandSpec], promoted: usize) -> Vec<&'static CommandSpec> {
     match app.toolbar_custom.panels.get(&key(tab, panel)) {
         Some(ids) => ids.iter().filter_map(|id| sketcraft_engine::find_command(id)).collect(),
         None => cmds.iter().take(promoted).copied().collect(),
@@ -236,7 +236,7 @@ fn panel_lists_of(tab: &str) -> PanelLists {
 }
 
 /// The buttons of a panel as ids, made the user's own list (so it can change).
-fn own(app: &mut SolveApp, tab: &str, panel: &str) -> Vec<String> {
+fn own(app: &mut SketApp, tab: &str, panel: &str) -> Vec<String> {
     let k = key(tab, panel);
     if let Some(v) = app.toolbar_custom.panels.get(&k) {
         return v.clone();
@@ -248,7 +248,7 @@ fn own(app: &mut SolveApp, tab: &str, panel: &str) -> Vec<String> {
 }
 
 /// Where a command is a button on a tab now: its panel.
-pub fn pinned_on(app: &SolveApp, tab: &str, id: &str) -> Option<&'static str> {
+pub fn pinned_on(app: &SketApp, tab: &str, id: &str) -> Option<&'static str> {
     panel_lists(tab).into_iter().find(|(panel, cmds, n)| buttons(app, tab, panel, cmds, *n).iter().any(|c| c.id == id)).map(|(p, ..)| p)
 }
 
@@ -265,7 +265,7 @@ fn fixed(tab: &str, panel: &str, id: &str) -> bool {
 }
 
 /// Pin a command to the toolbar of a tab (as a button of its panel, at the end).
-pub fn pin(app: &mut SolveApp, tab: &str, id: &str) -> Result<(), String> {
+pub fn pin(app: &mut SketApp, tab: &str, id: &str) -> Result<(), String> {
     if sketcraft_engine::find_command(id).is_none() {
         return Err(format!("no command `{id}`"));
     }
@@ -280,7 +280,7 @@ pub fn pin(app: &mut SolveApp, tab: &str, id: &str) -> Result<(), String> {
 }
 
 /// Remove a command's button from a tab (it stays in its panel's drop-down).
-pub fn remove(app: &mut SolveApp, tab: &str, id: &str) {
+pub fn remove(app: &mut SketApp, tab: &str, id: &str) {
     let Some(panel) = pinned_on(app, tab, id).filter(|panel| !fixed(tab, panel, id)) else { return };
     let mut ids = own(app, tab, panel);
     ids.retain(|x| x != id);
@@ -288,7 +288,7 @@ pub fn remove(app: &mut SolveApp, tab: &str, id: &str) {
 }
 
 /// Move a button before another one (`before`: None puts it at the end of `panel`).
-pub fn reorder(app: &mut SolveApp, tab: &str, id: &str, panel: &str, before: Option<&str>) {
+pub fn reorder(app: &mut SketApp, tab: &str, id: &str, panel: &str, before: Option<&str>) {
     if fixed(tab, panel, id) {
         return;
     }
@@ -315,7 +315,7 @@ pub fn reorder(app: &mut SolveApp, tab: &str, id: &str, panel: &str, before: Opt
 }
 
 /// The pin icon of a drop-down row: pin the command, or remove it when it is pinned.
-pub fn toggle(app: &mut SolveApp, tab: &str, id: &str) {
+pub fn toggle(app: &mut SketApp, tab: &str, id: &str) {
     if pinned_on(app, tab, id).is_some() {
         remove(app, tab, id);
     } else if let Err(e) = pin(app, tab, id) {
@@ -324,7 +324,7 @@ pub fn toggle(app: &mut SolveApp, tab: &str, id: &str) {
 }
 
 /// Add a command to the end of the quick-access bar (#10223); a command already there stays put.
-pub fn quick_add(app: &mut SolveApp, id: &str) -> Result<(), String> {
+pub fn quick_add(app: &mut SketApp, id: &str) -> Result<(), String> {
     let spec = sketcraft_engine::find_command(id).ok_or_else(|| format!("no command `{id}`"))?;
     let list = &mut app.toolbar_custom.quick_access;
     if list.iter().any(|q| q == spec.id) {
@@ -338,12 +338,12 @@ pub fn quick_add(app: &mut SolveApp, id: &str) -> Result<(), String> {
 }
 
 /// Take a command off the quick-access bar.
-pub fn quick_remove(app: &mut SolveApp, id: &str) {
+pub fn quick_remove(app: &mut SketApp, id: &str) {
     app.toolbar_custom.quick_access.retain(|q| q != id);
 }
 
 /// Move a quick-access button before another one (`before`: None puts it at the end).
-pub fn quick_move(app: &mut SolveApp, id: &str, before: Option<&str>) {
+pub fn quick_move(app: &mut SketApp, id: &str, before: Option<&str>) {
     let list = &mut app.toolbar_custom.quick_access;
     if !list.iter().any(|q| q == id) || before == Some(id) {
         return;
@@ -382,24 +382,24 @@ pub const SKETCHUP_LARGE_TOOLSET: &[&str] = &[
 ];
 
 /// Load SketchUp Large Tool Set into the quick access bar.
-pub fn load_sketchup_toolset(app: &mut SolveApp) {
+pub fn load_sketchup_toolset(app: &mut SketApp) {
     app.toolbar_custom.quick_access = SKETCHUP_LARGE_TOOLSET.iter().map(|s| s.to_string()).collect();
 }
 
 /// Clear the quick access bar.
-pub fn clear_quick_access(app: &mut SolveApp) {
+pub fn clear_quick_access(app: &mut SketApp) {
     app.toolbar_custom.quick_access.clear();
 }
 
 /// Reset Toolbar: a tab's panels back to their defaults.
-pub fn reset(app: &mut SolveApp, tab: &str) {
+pub fn reset(app: &mut SketApp, tab: &str) {
     let prefix = format!("{WORKSPACE}/{tab}/");
     app.toolbar_custom.panels.retain(|k, _| !k.starts_with(&prefix));
     app.toolbar_custom.gallery_buttons.remove(&format!("{WORKSPACE}/{tab}"));
 }
 
 /// The menu of a command (toolbar button, drop-down row, S box row).
-pub fn command_items(app: &SolveApp, id: &str) -> Vec<Item> {
+pub fn command_items(app: &SketApp, id: &str) -> Vec<Item> {
     let tab = app.ui.tab.clone();
     let on = pinned_on(app, &tab, id).is_some();
     let fav = app.sbox.pinned.iter().any(|p| p == id);
@@ -429,7 +429,7 @@ pub fn command_items(app: &SolveApp, id: &str) -> Vec<Item> {
 
 /// The toolbar's own menu (right-click on its empty space or a tab): every tab that can be shown
 /// or hidden, ticked when on, then the button customisation of the selected tab.
-pub fn toolbar_items(app: &SolveApp) -> Vec<Item> {
+pub fn toolbar_items(app: &SketApp) -> Vec<Item> {
     let mut v = Vec::new();
     if !crate::render_workspace::active(app) {
         v.push(Item::heading(app.tr("prefs.toolbar_tabs")));
@@ -462,7 +462,7 @@ pub fn toolbar_items(app: &SolveApp) -> Vec<Item> {
 }
 
 /// Run a toolbar item from a menu.
-pub fn run(app: &mut SolveApp, action: &str, p: &Value) {
+pub fn run(app: &mut SketApp, action: &str, p: &Value) {
     let tab = p.get("tab").and_then(Value::as_str).map(str::to_string).unwrap_or_else(|| app.ui.tab.clone());
     let id = p.get("command").and_then(Value::as_str).unwrap_or("");
     match action {
@@ -489,14 +489,14 @@ pub fn run(app: &mut SolveApp, action: &str, p: &Value) {
 }
 
 /// Shortcut keys, S box favourites, toolbar and navigation bar as one file (Keyboard Shortcuts › Export).
-pub fn export(app: &SolveApp) -> Value {
+pub fn export(app: &SketApp) -> Value {
     json!({ "format": "sketcraft-shortcuts/1", "shortcuts": app.keymap.prefs(), "favourites": app.sbox.pinned, "toolbar": app.toolbar_custom.prefs(), "navigation_bar": app.preferences.navigation_bar })
 }
 
 /// The largest shortcuts file Import… reads (hostile input; an export is a few tens of KiB).
 pub const MAX_IMPORT_BYTES: usize = 1 << 20;
 
-pub fn import(app: &mut SolveApp, v: &Value) -> Result<(), String> {
+pub fn import(app: &mut SketApp, v: &Value) -> Result<(), String> {
     // "solvecraft-shortcuts/1": files exported before the rename (compatibility shim).
     if !matches!(v.get("format").and_then(Value::as_str), Some("sketcraft-shortcuts/1" | "solvecraft-shortcuts/1")) {
         return Err("not a SketCraft shortcuts file".into());
@@ -525,7 +525,7 @@ pub fn import(app: &mut SolveApp, v: &Value) -> Result<(), String> {
 
 /// Customize Toolbar: every command of the tab's panels with a check box (on the toolbar or
 /// not), how to drag them, and Reset Toolbar.
-pub fn window(app: &mut SolveApp, ctx: &egui::Context) {
+pub fn window(app: &mut SketApp, ctx: &egui::Context) {
     if !app.toolbar_custom.customizing {
         return;
     }

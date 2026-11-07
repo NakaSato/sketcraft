@@ -29,7 +29,7 @@ pub(in crate::render_workspace) struct Draft {
 }
 
 impl Draft {
-    fn current(&self, app: &SolveApp) -> bool {
+    fn current(&self, app: &SketApp) -> bool {
         self.revision == app.session.revision
             && self.shot == app.render_workspace.view.name
             && self.method == app.render_workspace.view.method
@@ -38,7 +38,7 @@ impl Draft {
     }
 }
 
-pub(in crate::render_workspace) fn open(app: &mut SolveApp, variant: &'static str, name: String, plan: Value, action: Apply) -> Result<(), String> {
+pub(in crate::render_workspace) fn open(app: &mut SketApp, variant: &'static str, name: String, plan: Value, action: Apply) -> Result<(), String> {
     let snapshot = patch(app)?;
     app.render_workspace.view.library.review = Some(Draft {
         variant,
@@ -60,7 +60,7 @@ pub(in crate::render_workspace) fn open(app: &mut SolveApp, variant: &'static st
     Ok(())
 }
 
-pub(in crate::render_workspace) fn quality(app: &mut SolveApp, id: &str) -> Result<(), String> {
+pub(in crate::render_workspace) fn quality(app: &mut SketApp, id: &str) -> Result<(), String> {
     if app.render_workspace.view.method != ImageMethod::GpuRaytrace {
         return Err(app.tr("render.stage_panels.gpu_required").into());
     }
@@ -68,7 +68,7 @@ pub(in crate::render_workspace) fn quality(app: &mut SolveApp, id: &str) -> Resu
     open(app, "quality", plan["name"].as_str().unwrap_or(id).into(), plan.clone(), Apply::Quality(plan))
 }
 
-pub(in crate::render_workspace) fn light(app: &mut SolveApp, view: &View, id: &str) -> Result<(), String> {
+pub(in crate::render_workspace) fn light(app: &mut SketApp, view: &View, id: &str) -> Result<(), String> {
     if let Some(reason) = selected_light_reason(app, view) {
         return Err(reason);
     }
@@ -132,14 +132,14 @@ pub(in crate::render_workspace) fn light(app: &mut SolveApp, view: &View, id: &s
 }
 
 #[cfg(test)]
-pub(in crate::render_workspace) fn command(app: &mut SolveApp, id: &str, params: Value) {
+pub(in crate::render_workspace) fn command(app: &mut SketApp, id: &str, params: Value) {
     let result = open(app, "stage", app.tr("render.passive_stage").into(), Value::Null, Apply::Command { id: id.into(), params });
     if let Err(error) = result {
         app.set_status(error, true);
     }
 }
 
-fn apply(app: &mut SolveApp, draft: &mut Draft) -> Result<(), String> {
+fn apply(app: &mut SketApp, draft: &mut Draft) -> Result<(), String> {
     if !draft.current(app) || !draft.acknowledged {
         return Err(app.tr("render.review_stale").into());
     }
@@ -172,7 +172,7 @@ fn apply(app: &mut SolveApp, draft: &mut Draft) -> Result<(), String> {
     Ok(())
 }
 
-pub(in crate::render_workspace) fn dialog(app: &mut SolveApp, ctx: &egui::Context) {
+pub(in crate::render_workspace) fn dialog(app: &mut SketApp, ctx: &egui::Context) {
     let Some(mut draft) = app.render_workspace.view.library.review.take() else { return };
     let current = draft.current(app);
     let title = app.tr(&format!("render.stage_panels.review_{}", draft.variant)).to_string();
@@ -324,11 +324,11 @@ pub(in crate::render_workspace) struct Removal {
     document: Weak<Document>,
 }
 #[cfg(test)]
-pub(in crate::render_workspace) fn remove(app: &mut SolveApp, command: &str, params: Value) {
+pub(in crate::render_workspace) fn remove(app: &mut SketApp, command: &str, params: Value) {
     app.render_workspace.view.library.removal =
         Some(Removal { command: command.into(), params, revision: app.session.revision, document: Arc::downgrade(&app.session.doc) });
 }
-pub(in crate::render_workspace) fn confirmation(app: &mut SolveApp, ctx: &egui::Context) {
+pub(in crate::render_workspace) fn confirmation(app: &mut SketApp, ctx: &egui::Context) {
     let Some(pending) = app.render_workspace.view.library.removal.take() else { return };
     if pending.revision != app.session.revision || !Weak::ptr_eq(&pending.document, &Arc::downgrade(&app.session.doc)) {
         return;

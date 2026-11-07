@@ -13,7 +13,7 @@ use std::sync::Arc;
 use sketcraft_engine::doc::{Document, Mat, ModelState};
 use sketcraft_engine::geom::Aabb3;
 
-use super::{GpuScene, SolveApp};
+use super::{GpuScene, SketApp};
 use crate::gpu::MovingLayer;
 
 /// The most a dragged body's move may differ from the others' (per matrix entry, millimetres
@@ -48,13 +48,13 @@ pub(crate) struct DragLayer {
 }
 
 /// A whole model scene was built from the world shown now: a drag starting next draws from it.
-pub(super) fn whole_scene_built(app: &mut SolveApp) {
+pub(super) fn whole_scene_built(app: &mut SketApp) {
     app.viewport.scene_world =
         Some(SceneWorld { world: crate::open_meshing::shown_world(app), doc: app.session.doc.clone(), base: super::base_scene_key(app) });
 }
 
 /// Follow a component's drag: whether this frame draws it as a layer.
-pub(super) fn follow(app: &mut SolveApp) -> bool {
+pub(super) fn follow(app: &mut SketApp) -> bool {
     let layer = app.viewport.drag.take();
     if drawable(app) {
         app.viewport.drag = next_layer(app, layer);
@@ -66,7 +66,7 @@ pub(super) fn follow(app: &mut SolveApp) -> bool {
 /// (`layered`) and "Highlight what is under the pointer while Move's arrows drag a component"
 /// is off. Picking the dragged bodies would mesh them where they stand at every step, and a
 /// highlight has the Browser look up its row again.
-pub(super) fn holds_pointer(app: &SolveApp, layered: bool, manipulator_dragging: bool) -> bool {
+pub(super) fn holds_pointer(app: &SketApp, layered: bool, manipulator_dragging: bool) -> bool {
     layered && manipulator_dragging && !app.preferences.move_drag_highlights
 }
 
@@ -77,7 +77,7 @@ fn transform(delta: &Mat) -> [[f32; 4]; 4] {
 /// A drag can be drawn as a layer: the model is drawn on the GPU, components are moved without
 /// being captured, and no section, analysis or isocurve is shown (their outlines, colours and
 /// curves follow the bodies' places).
-fn drawable(app: &SolveApp) -> bool {
+fn drawable(app: &SketApp) -> bool {
     app.viewport.gpu.is_some()
         && !app.session.pending_moves.is_empty()
         && app.session.analysis.is_none()
@@ -91,7 +91,7 @@ fn drawable(app: &SolveApp) -> bool {
 /// is not that world with one rigid motion of some of its bodies, or nothing is dragged yet. The
 /// world's body boxes are those of the layer's world, the dragged ones moved, so no step works out
 /// a box from a mesh.
-fn next_layer(app: &SolveApp, layer: Option<DragLayer>) -> Option<DragLayer> {
+fn next_layer(app: &SketApp, layer: Option<DragLayer>) -> Option<DragLayer> {
     let base = super::base_scene_key(app);
     let now = crate::open_meshing::shown_world(app);
     let valid = |w: &SceneWorld| w.base == base && Arc::ptr_eq(&w.doc, &app.session.doc) && !Arc::ptr_eq(&w.world, &now);
@@ -213,7 +213,7 @@ fn layer_key(from: &SceneWorld, moving: &[bool]) -> u64 {
 /// This frame's model scene and moving layer, for a drag drawn as a layer: its scenes are built
 /// once, and afterwards only the ground the model's ambient occlusion darkens follows them. The
 /// ground shadow is the sketch scene's, which follows the world shown now.
-pub(super) fn scenes(app: &mut SolveApp) -> Option<MovingLayer> {
+pub(super) fn scenes(app: &mut SketApp) -> Option<MovingLayer> {
     let mut layer = app.viewport.drag.take()?;
     let t0 = crate::now_ms();
     if layer.statics.is_none() {
@@ -253,7 +253,7 @@ pub(super) fn scenes(app: &mut SolveApp) -> Option<MovingLayer> {
 }
 
 /// The bodies a drag drawn as a layer moves, by name.
-pub(super) fn dragged_names(app: &SolveApp) -> std::collections::HashSet<&str> {
+pub(super) fn dragged_names(app: &SketApp) -> std::collections::HashSet<&str> {
     app.viewport
         .drag
         .iter()
@@ -264,7 +264,7 @@ pub(super) fn dragged_names(app: &SolveApp) -> std::collections::HashSet<&str> {
 /// The layer's model scene without the dragged bodies (no ground), and the dragged
 /// bodies' scene put in the moving slot; both from the blocks the last scene built where they
 /// come back the same.
-fn build(app: &mut SolveApp, layer: &DragLayer) -> GpuScene {
+fn build(app: &mut SketApp, layer: &DragLayer) -> GpuScene {
     let world = &layer.from.world;
     let moved = |i: usize| layer.moving.get(i).copied().unwrap_or(false);
     let mut kept = app.viewport.blocks.lock().map(|mut b| std::mem::take(&mut *b)).unwrap_or_default();
@@ -300,7 +300,7 @@ mod tests {
         (s, dragged)
     }
 
-    fn with_gpu(app: &mut SolveApp) {
+    fn with_gpu(app: &mut SketApp) {
         app.viewport.gpu =
             Some(crate::gpu::GpuTarget { format: egui_wgpu::wgpu::TextureFormat::Rgba8Unorm, depth: None, samples: 1, tess: false, oit: false });
     }
@@ -313,7 +313,7 @@ mod tests {
         let (mut s, dragged) = two_parts();
         // Nothing faded (faded bodies are built apart): the design itself active.
         s.execute("component.activate", &json!({"component": 0})).unwrap();
-        let mut app = SolveApp::new(s, crate::Services::default());
+        let mut app = SketApp::new(s, crate::Services::default());
         app.set_origin_shown(false);
         with_gpu(&mut app);
         let _ = super::super::build_scene(&app);
@@ -325,7 +325,7 @@ mod tests {
         let world = app.session.world_state().unwrap();
         let moving = world.bodies.iter().find(|b| before.body(&b.name).is_some_and(|w| w.mesh_bounds().min.x != b.mesh_bounds().min.x)).unwrap();
         let moving = moving.name.clone();
-        let select = |app: &mut SolveApp, names: &[&str]| {
+        let select = |app: &mut SketApp, names: &[&str]| {
             app.session.selection = names.iter().map(|n| sketcraft_engine::Sel::Body { name: (*n).to_string() }).collect();
             super::super::build_highlight(app)
         };
@@ -351,7 +351,7 @@ mod tests {
     #[test]
     fn a_layer_drag_picks_under_the_pointer_only_with_its_preference() {
         let (s, dragged) = two_parts();
-        let mut app = SolveApp::new(s, crate::Services::default());
+        let mut app = SketApp::new(s, crate::Services::default());
         with_gpu(&mut app);
         let _ = super::super::build_scene(&app);
         whole_scene_built(&mut app);
@@ -372,12 +372,12 @@ mod tests {
     #[test]
     fn a_drag_with_isocurves_shown_is_not_drawn_as_a_layer() {
         let (s, dragged) = two_parts();
-        let mut app = SolveApp::new(s, crate::Services::default());
+        let mut app = SketApp::new(s, crate::Services::default());
         with_gpu(&mut app);
         let base = app.session.doc.occurrences.iter().find(|o| o.id == dragged).map(|o| o.transform).unwrap();
         app.run("occurrence.move", json!({"occurrence": dragged, "base_transform": base, "translate": [4, 0, 0], "capture": false})).unwrap();
         assert!(drawable(&app), "a plain drag is drawn as a layer");
-        let at = solidcore_record::Vec3::new(2.5, 2.5, 5.0);
+        let at = sketcore_record::Vec3::new(2.5, 2.5, 5.0);
         app.session.isocurves.push(sketcraft_engine::IsoPick { body: "Stays".into(), at, count: 3 });
         assert!(!drawable(&app), "with isocurves shown the model is drawn whole");
     }

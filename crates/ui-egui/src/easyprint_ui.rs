@@ -9,7 +9,7 @@ use std::sync::{Arc, Mutex};
 
 use serde_json::{Value, json};
 
-use crate::SolveApp;
+use crate::SketApp;
 use crate::ui_kit;
 
 /// What the host answers: the address to open, or why the upload failed.
@@ -46,7 +46,7 @@ impl Default for State {
 }
 
 /// Give the session the host's way to upload (call after the services are set).
-pub fn install(app: &mut SolveApp) {
+pub fn install(app: &mut SketApp) {
     let Some(upload) = app.services.easyprint_upload.clone() else { return };
     let (tx, busy) = (app.easyprint.tx.clone(), app.easyprint.busy.clone());
     app.session.easyprint_upload = Some(Arc::new(move |name, bytes| {
@@ -59,20 +59,20 @@ pub fn install(app: &mut SolveApp) {
 }
 
 /// Whether this host can upload to EasyPrint.
-pub fn available(app: &SolveApp) -> bool {
+pub fn available(app: &SketApp) -> bool {
     app.services.easyprint_upload.is_some()
 }
 
 /// Send the bodies of `params` to EasyPrint: at once when the user has agreed before, else after
 /// asking.
-pub fn request(app: &mut SolveApp, params: Value) {
+pub fn request(app: &mut SketApp, params: Value) {
     if app.preferences.easyprint_consent {
         return go(app, params);
     }
     app.easyprint.ask = Some(params);
 }
 
-fn go(app: &mut SolveApp, mut params: Value) {
+fn go(app: &mut SketApp, mut params: Value) {
     let _language = crate::i18n::scope(&app.preferences.language);
     params["consent"] = json!(true);
     if app.run("file.open_in_easyprint", params).is_ok() {
@@ -81,7 +81,7 @@ fn go(app: &mut SolveApp, mut params: Value) {
 }
 
 /// Per frame: open the answer of an upload, or report its failure.
-pub fn tick(app: &mut SolveApp, ctx: &egui::Context) {
+pub fn tick(app: &mut SketApp, ctx: &egui::Context) {
     let answer = app.easyprint.rx.lock().ok().and_then(|rx| rx.try_recv().ok());
     let Some(answer) = answer else {
         if app.easyprint.busy.load(Ordering::SeqCst) {
@@ -105,7 +105,7 @@ pub fn tick(app: &mut SolveApp, ctx: &egui::Context) {
 }
 
 /// The question: what is uploaded where, for how long.
-pub fn show(app: &mut SolveApp, ctx: &egui::Context) {
+pub fn show(app: &mut SketApp, ctx: &egui::Context) {
     let Some(params) = app.easyprint.ask.clone() else { return };
     let _language = crate::i18n::scope(&app.preferences.language);
     let (closed, action) =

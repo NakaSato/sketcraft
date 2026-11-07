@@ -17,7 +17,7 @@ name = "solve_profile"
 required-features = ["solver-profiling"]
 
 [dependencies]
-solidcore-record = { workspace = true }
+sketcore-record = { workspace = true }
 harfrust = "0.12"
 sketcraft-geom = { workspace = true }
 serde = { workspace = true }

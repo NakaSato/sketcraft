@@ -14,11 +14,11 @@ use std::sync::Arc;
 
 use egui::{Align2, FontId, Stroke};
 use serde_json::{Map, Value, json};
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 use sketcraft_engine::doc::metadata::{DESCRIPTION, Owner, keys};
 use sketcraft_engine::doc::progress::Progress;
 
-use crate::SolveApp;
+use crate::SketApp;
 use crate::ui_kit;
 use crate::viewport::Proj;
 
@@ -39,7 +39,7 @@ pub struct DesignProperties {
 }
 
 impl DesignProperties {
-    pub fn new(app: &SolveApp) -> Self {
+    pub fn new(app: &SketApp) -> Self {
         let m = &app.session.doc.metadata;
         let opened: Vec<String> = keys(Owner::Design).map(|k| m.text(k.name).unwrap_or_default().to_string()).collect();
         DesignProperties { fields: opened.clone(), opened, error: None }
@@ -57,12 +57,12 @@ impl DesignProperties {
 }
 
 /// Open the window (a fresh copy of the design's properties).
-pub fn open(app: &mut SolveApp) {
+pub fn open(app: &mut SketApp) {
     app.design_properties = Some(DesignProperties::new(app));
 }
 
 /// Apply the edits; the window stays open with the reason when they are refused.
-fn apply(app: &mut SolveApp, d: &mut DesignProperties) -> bool {
+fn apply(app: &mut SketApp, d: &mut DesignProperties) -> bool {
     let values = d.changes();
     if values.is_empty() {
         return true;
@@ -83,7 +83,7 @@ fn preview(v: &Value) -> String {
 }
 
 /// Draw the window when it is open. Called once per frame.
-pub fn show(app: &mut SolveApp, ctx: &egui::Context) {
+pub fn show(app: &mut SketApp, ctx: &egui::Context) {
     let Some(mut d) = app.design_properties.take() else { return };
     let metadata = app.session.doc.metadata.clone();
     let title = crate::i18n::tr_label("Design Properties");
@@ -127,7 +127,7 @@ pub fn show(app: &mut SolveApp, ctx: &egui::Context) {
 /// Open the Properties window on `command`'s reply (`component.properties`,
 /// `occurrence.properties` or `inspect.measure`), titled with the reply's name, else `fallback`.
 /// A refusal goes to the status line.
-pub fn open_object(app: &mut SolveApp, command: &str, params: &Value, fallback: String) {
+pub fn open_object(app: &mut SketApp, command: &str, params: &Value, fallback: String) {
     close_object(app);
     // A large assembly takes seconds to measure, which froze the window (#5203): measured on a
     // copy beside it, the card shows when done. Headless and in tests (no wait set), here.
@@ -160,7 +160,7 @@ pub fn open_object(app: &mut SolveApp, command: &str, params: &Value, fallback: 
 }
 
 /// Close the Properties card, and drop a measurement still running for it.
-pub fn close_object(app: &mut SolveApp) {
+pub fn close_object(app: &mut SketApp) {
     app.menu.props = None;
     app.menu.props_measuring = None;
 }
@@ -191,7 +191,7 @@ impl Drop for Measuring {
 
 /// Show `reply` in the card, titled with its name (else `fallback`); a refusal goes to the
 /// status line.
-fn opened(app: &mut SolveApp, reply: Result<Value, String>, fallback: String) {
+fn opened(app: &mut SketApp, reply: Result<Value, String>, fallback: String) {
     match reply {
         Ok(v) => {
             let title = v["name"].as_str().map(str::to_string).unwrap_or(fallback);
@@ -238,7 +238,7 @@ fn measure_beside(
 
 /// While a measurement runs beside the window: a card saying so (Close drops it), and the
 /// Properties card in its place once the reply is in.
-fn show_measuring(app: &mut SolveApp, ctx: &egui::Context) {
+fn show_measuring(app: &mut SketApp, ctx: &egui::Context) {
     let Some(mut m) = app.menu.props_measuring.take() else { return };
     match m.rx.try_recv() {
         Ok(reply) => return opened(app, reply, std::mem::take(&mut m.fallback)),
@@ -269,7 +269,7 @@ fn show_measuring(app: &mut SolveApp, ctx: &egui::Context) {
 
 /// Inspect → Measure → Properties (#8095): the window of the one selected placement, else of the
 /// active component (at the root, the whole design).
-pub fn open_selected(app: &mut SolveApp) {
+pub fn open_selected(app: &mut SketApp) {
     let (command, params) = match app.session.selection.as_slice() {
         [sketcraft_engine::Sel::Occurrence { path }] if !path.is_empty() => {
             ("occurrence.properties", json!({"occurrence": path.last(), "path": path}))
@@ -291,7 +291,7 @@ fn point(v: &Value) -> Option<Vec3> {
 
 /// `x` with the length decimals, or with more where those would leave fewer than three
 /// significant digits; never a signed zero.
-fn number_text(app: &SolveApp, x: f64) -> String {
+fn number_text(app: &SketApp, x: f64) -> String {
     let decimals = i32::from(app.preferences.length_decimals.min(8));
     let lead = if x == 0.0 || !x.is_finite() { 0 } else { x.abs().log10().floor() as i32 };
     let digits = decimals.max(2 - lead).clamp(0, 12);
@@ -301,7 +301,7 @@ fn number_text(app: &SolveApp, x: f64) -> String {
 
 /// The tensor the window shows (#8095): in g × the design's length unit squared, with the
 /// products of inertia that are round-off against the largest entry as zero.
-fn shown_tensor(app: &SolveApp, total: &Value) -> Option<[[f64; 3]; 3]> {
+fn shown_tensor(app: &SketApp, total: &Value) -> Option<[[f64; 3]; 3]> {
     let k = crate::prefs::unit_scale(&app.session.doc.units).0;
     let i = tensor(&total["inertia_g_mm2"])?.map(|r| r.map(|x| x * k * k));
     let largest = i.iter().flatten().fold(0.0f64, |m, x| m.max(x.abs()));
@@ -315,7 +315,7 @@ fn tensor_text(t: &[[f64; 3]; 3]) -> String {
 }
 
 /// The rows under Moment of inertia (#8095): label and cells, the tensor's three first.
-fn inertia_rows(app: &SolveApp, total: &Value) -> Vec<(String, Vec<String>)> {
+fn inertia_rows(app: &SketApp, total: &Value) -> Vec<(String, Vec<String>)> {
     let k = crate::prefs::unit_scale(&app.session.doc.units).0;
     let Some(i) = shown_tensor(app, total) else {
         return Vec::new();
@@ -361,7 +361,7 @@ fn centre_and_axes(v: &Value) -> Option<(Vec3, Vec<Vec3>, f64)> {
 
 /// While the Properties window is open: its centre of mass, with each principal axis standing
 /// out of it in the X, Y and Z colours in turn and numbered as the window lists them (#8095).
-pub fn overlay(app: &SolveApp, painter: &egui::Painter, proj: &Proj) {
+pub fn overlay(app: &SketApp, painter: &egui::Painter, proj: &Proj) {
     let Some((centre, axes, reach)) = app.menu.props.as_ref().and_then(|(_, v)| centre_and_axes(v)) else { return };
     let Some(at) = proj.to_screen(centre) else { return };
     let tk = crate::theme::Tokens::view();
@@ -378,7 +378,7 @@ pub fn overlay(app: &SolveApp, painter: &egui::Painter, proj: &Proj) {
 /// Draw the Properties window of the body or component the menu asked about (mass, volume,
 /// area, centre of mass, bounding box and counts; a component's first moments and moment of
 /// inertia), when it is open. Close dismisses it.
-pub fn show_object(app: &mut SolveApp, ctx: &egui::Context) {
+pub fn show_object(app: &mut SketApp, ctx: &egui::Context) {
     show_measuring(app, ctx);
     let Some((title, v)) = app.menu.props.clone() else { return };
     let number = |x: &Value, k: &str| x.get(k).and_then(Value::as_f64).unwrap_or(f64::NAN);
@@ -583,7 +583,7 @@ mod tests {
     /// its centre of mass with three principal axes a third of the box's diagonal long.
     #[test]
     fn the_measure_panels_properties_button_opens_the_window_with_the_moment_of_inertia() {
-        use solidcore_record::Vec3;
+        use sketcore_record::Vec3;
         let mut h = Harness::new();
         h.app.run("solid.box", json!({"length": 10, "width": 20, "height": 30, "body_name": "Block"})).unwrap();
         h.step(&json!({"start": "component.properties"})).unwrap();

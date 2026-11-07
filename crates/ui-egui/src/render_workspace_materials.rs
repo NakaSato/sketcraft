@@ -1,6 +1,6 @@
 //! Shared body-level optical editing: transient request overlays and explicit
 //! stable saved bindings. Engineering geometry/materials never change here.
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 use std::sync::{Arc, Weak};
 
 use serde::Deserialize;
@@ -20,7 +20,7 @@ use sketcraft_engine::{
 
 #[cfg(test)]
 use crate::theme::Tokens;
-use crate::{SolveApp, ui_kit};
+use crate::{SketApp, ui_kit};
 
 const MAX_BINDINGS: usize = 128;
 
@@ -152,7 +152,7 @@ pub(super) struct Binding {
     coat_edited: bool,
 }
 impl Binding {
-    pub(super) fn new(target: Target, app: &SolveApp) -> Self {
+    pub(super) fn new(target: Target, app: &SketApp) -> Self {
         Self {
             target,
             revision: app.session.revision,
@@ -170,7 +170,7 @@ impl Binding {
             coat_edited: false,
         }
     }
-    pub(super) fn from_saved(target: Target, app: &SolveApp, optics: sketcraft_engine::doc::render_optics::OpticalMaterial) -> Self {
+    pub(super) fn from_saved(target: Target, app: &SketApp, optics: sketcraft_engine::doc::render_optics::OpticalMaterial) -> Self {
         let mut binding = Self::new(target, app);
         binding.saved_source = Some(optics);
         binding.glass_enabled = true;
@@ -225,7 +225,7 @@ impl Binding {
             subsurface: self.glass.subsurface,
         }
     }
-    fn current(&self, app: &SolveApp) -> bool {
+    fn current(&self, app: &SketApp) -> bool {
         self.revision == app.session.revision && Weak::ptr_eq(&self.document, &Arc::downgrade(&app.session.doc)) && !app.session.model.is_stale()
     }
     fn active(&self) -> bool {
@@ -288,7 +288,7 @@ struct PendingRemoval {
     document: Weak<Document>,
 }
 
-pub(super) fn read_targets(app: &mut SolveApp) -> Result<Vec<Target>, String> {
+pub(super) fn read_targets(app: &mut SketApp) -> Result<Vec<Target>, String> {
     let reply = app.run("render.scene", json!({}))?;
     let values = reply.get("bodies").and_then(Value::as_array).ok_or_else(|| crate::i18n::tr("render.error_scene_bodies").to_string())?;
     if values.len() > sketcraft_engine::render::job::MAX_GPU_PATH_BODIES {
@@ -306,7 +306,7 @@ pub(super) fn read_targets(app: &mut SolveApp) -> Result<Vec<Target>, String> {
     Ok(targets)
 }
 
-pub(super) fn revalidate(app: &mut SolveApp, binding: &mut Binding) -> Result<(), String> {
+pub(super) fn revalidate(app: &mut SketApp, binding: &mut Binding) -> Result<(), String> {
     let targets = read_targets(app)?;
     if (binding.coat_enabled || binding.saved_coat_source.is_some() || binding.coat_edited)
         && let Some(stable) = &binding.target.stable_target
@@ -327,7 +327,7 @@ pub(super) fn revalidate(app: &mut SolveApp, binding: &mut Binding) -> Result<()
 
 /// Render settings may change document identity without changing the reviewed source.
 /// A changed model, material, placement or target still needs explicit revalidation.
-pub(super) fn refresh_render_revision(app: &mut SolveApp) {
+pub(super) fn refresh_render_revision(app: &mut SketApp) {
     if app.render_workspace.view.materials.bindings.is_empty() {
         return;
     }
@@ -364,12 +364,12 @@ pub(super) fn refresh_render_revision(app: &mut SolveApp) {
 
 /// Overlay stable Glass drafts into a captured request only. Explicit binding
 /// remains the sole save action; ordinal inputs never replace these rows.
-pub(super) fn overlay_saved(app: &SolveApp, setup: &mut sketcraft_engine::doc::render_settings::RenderSetup) -> Result<(), String> {
+pub(super) fn overlay_saved(app: &SketApp, setup: &mut sketcraft_engine::doc::render_settings::RenderSetup) -> Result<(), String> {
     overlay_coats(app, setup)?;
     overlay_optics(app, setup)
 }
 
-fn overlay_optics(app: &SolveApp, setup: &mut sketcraft_engine::doc::render_settings::RenderSetup) -> Result<(), String> {
+fn overlay_optics(app: &SketApp, setup: &mut sketcraft_engine::doc::render_settings::RenderSetup) -> Result<(), String> {
     let view = &app.render_workspace.view.materials;
     for binding in
         view.bindings.iter().filter(|binding| binding.stable_optics() && binding.active() && (view.enabled || binding.saved_source.is_some()))
@@ -409,7 +409,7 @@ fn overlay_optics(app: &SolveApp, setup: &mut sketcraft_engine::doc::render_sett
 
 /// Stable coat edits use the same captured settings for CPU and GPU. This is a
 /// pure overlay; generic Save still requires the explicit coat binding action.
-pub(super) fn overlay_coats(app: &SolveApp, setup: &mut sketcraft_engine::doc::render_settings::RenderSetup) -> Result<(), String> {
+pub(super) fn overlay_coats(app: &SketApp, setup: &mut sketcraft_engine::doc::render_settings::RenderSetup) -> Result<(), String> {
     if !app.render_workspace.view.materials.enabled {
         return Ok(());
     }
@@ -447,7 +447,7 @@ pub(super) fn overlay_coats(app: &SolveApp, setup: &mut sketcraft_engine::doc::r
 }
 
 /// Pure prospective compatibility: no request, resources, host or document mutation.
-pub(super) fn path_compatibility(app: &SolveApp) -> Result<(), String> {
+pub(super) fn path_compatibility(app: &SketApp) -> Result<(), String> {
     // This is the same pure stable-target overlay used by image/live capture.
     // A user's explicit unsaved removal of an unsupported flag must already be
     // reflected by the availability of the transport it makes compatible.
@@ -474,7 +474,7 @@ pub(super) fn path_compatibility(app: &SolveApp) -> Result<(), String> {
 }
 /// Called for every Check and Start through the one shared image request builder.
 /// No files are read until the engine captures the actual request.
-pub(super) fn params(app: &SolveApp, params: &mut Value) -> Result<(), String> {
+pub(super) fn params(app: &SketApp, params: &mut Value) -> Result<(), String> {
     let view = &app.render_workspace.view.materials;
     // A file HDR can select this lane even when every Glass row is stable.
     // Preserve those rows in settings, not a second ordinal representation.
@@ -609,12 +609,12 @@ pub(super) fn params(app: &SolveApp, params: &mut Value) -> Result<(), String> {
     Ok(())
 }
 
-fn vector(app: &SolveApp, ui: &mut egui::Ui, key: &str, values: &mut [f64; 3], range: std::ops::RangeInclusive<f64>, suffix: &str) -> bool {
+fn vector(app: &SketApp, ui: &mut egui::Ui, key: &str, values: &mut [f64; 3], range: std::ops::RangeInclusive<f64>, suffix: &str) -> bool {
     ui_kit::row(ui, app.tr(key), |ui| ui_kit::vector3_field(ui, values, range, suffix))
 }
 
 #[cfg(test)]
-pub(super) fn controls(app: &mut SolveApp, ui: &mut egui::Ui) {
+pub(super) fn controls(app: &mut SketApp, ui: &mut egui::Ui) {
     let title = app.tr("render.material_title").to_string();
     ui_kit::section(ui, "render_materials", &title, false, |ui| {
         let mut view = std::mem::take(&mut app.render_workspace.view.materials);
@@ -718,7 +718,7 @@ pub(super) fn controls(app: &mut SolveApp, ui: &mut egui::Ui) {
     });
 }
 
-fn glass_controls(app: &mut SolveApp, ui: &mut egui::Ui, binding: &mut Binding) {
+fn glass_controls(app: &mut SketApp, ui: &mut egui::Ui, binding: &mut Binding) {
     let cpu = app.render_workspace.view.method == super::ImageMethod::CpuRaytrace;
     let path = app.render_workspace.view.raytrace.path.is_some();
     let enabled = ui_kit::checkbox(ui, app.tr("render.appearance_editor.glass_enable"), &mut binding.glass_enabled);
@@ -847,7 +847,7 @@ fn glass_controls(app: &mut SolveApp, ui: &mut egui::Ui, binding: &mut Binding) 
     note(app, ui, if cpu { "render.cpu_material_certification" } else { "render.material_certification" });
 }
 
-fn advanced_glass_controls(app: &SolveApp, ui: &mut egui::Ui, glass: &mut Glass) -> bool {
+fn advanced_glass_controls(app: &SketApp, ui: &mut egui::Ui, glass: &mut Glass) -> bool {
     use sketcraft_engine::render::glass_model::{Dispersion, GlassModel, ThinFilm};
     let before = glass.model;
     let mut enabled = before.is_some();
@@ -898,7 +898,7 @@ fn advanced_glass_controls(app: &SolveApp, ui: &mut egui::Ui, glass: &mut Glass)
     before != glass.model
 }
 
-fn coat_controls(app: &mut SolveApp, ui: &mut egui::Ui, binding: &mut Binding) -> bool {
+fn coat_controls(app: &mut SketApp, ui: &mut egui::Ui, binding: &mut Binding) -> bool {
     let enabled = ui_kit::checkbox(ui, app.tr("render.material_coat_enable"), &mut binding.coat_enabled);
     crate::scenario::publish_target("render:coat:enable", enabled.rect);
     let mut changed = enabled.changed();
@@ -953,7 +953,7 @@ impl MapSlot {
         }
     }
 }
-fn choose_map(app: &mut SolveApp, binding: &Binding, slot: MapSlot) {
+fn choose_map(app: &mut SketApp, binding: &Binding, slot: MapSlot) {
     let target = binding.target.clone();
     let origin = binding.document.clone();
     let revision = binding.revision;
@@ -977,14 +977,7 @@ fn choose_map(app: &mut SolveApp, binding: &Binding, slot: MapSlot) {
 
 /// Prepare through the engine, then install only a request-local binding. No
 /// authored material may silently remove a glass override or switch executor.
-pub(super) fn install_library_surface(
-    app: &mut SolveApp,
-    id: &str,
-    target: Target,
-    plane: &str,
-    scale: f64,
-    rotation_rad: f64,
-) -> Result<(), String> {
+pub(super) fn install_library_surface(app: &mut SketApp, id: &str, target: Target, plane: &str, scale: f64, rotation_rad: f64) -> Result<(), String> {
     if app.render_workspace.view.method != super::ImageMethod::GpuRaytrace {
         return Err(app.tr("render.material_gpu_required").into());
     }
@@ -1052,7 +1045,7 @@ pub(super) fn install_library_surface(
     Ok(())
 }
 
-fn map_controls(app: &mut SolveApp, ui: &mut egui::Ui, binding: &mut Binding) {
+fn map_controls(app: &mut SketApp, ui: &mut egui::Ui, binding: &mut Binding) {
     ui_kit::checkbox(ui, app.tr("render.material_maps_enable"), &mut binding.maps_enabled);
     ui.add_enabled_ui(binding.maps_enabled, |ui| {
         for slot in [MapSlot::Color, MapSlot::Normal, MapSlot::Metallic, MapSlot::Roughness] {
@@ -1083,7 +1076,7 @@ fn map_controls(app: &mut SolveApp, ui: &mut egui::Ui, binding: &mut Binding) {
     });
 }
 
-fn save_coat(app: &mut SolveApp, binding: &Binding) -> Result<(), String> {
+fn save_coat(app: &mut SketApp, binding: &Binding) -> Result<(), String> {
     if !binding.current(app) {
         return Err(app.tr("render.material_revalidate_needed").into());
     }
@@ -1145,7 +1138,7 @@ fn save_coat(app: &mut SolveApp, binding: &Binding) -> Result<(), String> {
     Ok(())
 }
 
-fn saved_coat_controls(app: &mut SolveApp, ui: &mut egui::Ui, binding: &mut Binding) -> bool {
+fn saved_coat_controls(app: &mut SketApp, ui: &mut egui::Ui, binding: &mut Binding) -> bool {
     let saved =
         binding.target.stable_target.as_ref().and_then(|target| app.render_workspace.view.draft.coats.iter().find(|saved| &saved.target == target));
     let target = saved.map(|saved| saved.target.clone());
@@ -1228,7 +1221,7 @@ fn saved_coat_controls(app: &mut SolveApp, ui: &mut egui::Ui, binding: &mut Bind
     discard
 }
 
-fn save_optics(app: &mut SolveApp, binding: &Binding) -> Result<(), String> {
+fn save_optics(app: &mut SketApp, binding: &Binding) -> Result<(), String> {
     if !binding.current(app) {
         return Err(app.tr("render.material_revalidate_needed").into());
     }
@@ -1256,13 +1249,13 @@ fn save_optics(app: &mut SolveApp, binding: &Binding) -> Result<(), String> {
     app.render_workspace.view.materials = local;
     Ok(())
 }
-fn note(app: &SolveApp, ui: &mut egui::Ui, key: &'static str) {
+fn note(app: &SketApp, ui: &mut egui::Ui, key: &'static str) {
     ui_kit::text(ui, app.tr(key), ui_kit::Text::Note(key));
 }
 
 /// The same body editor is used by the selection inspector and explicit-target page.
 /// An unsupported selection gets an inert draft so every design control is inspectable.
-fn editor_sections(app: &mut SolveApp, ui: &mut egui::Ui, binding: Option<&mut Binding>) -> bool {
+fn editor_sections(app: &mut SketApp, ui: &mut egui::Ui, binding: Option<&mut Binding>) -> bool {
     let supported = binding.is_some();
     let mut placeholder = Binding::new(Target { stable_target: None, ordinal: 0, name: String::new() }, app);
     let binding = binding.unwrap_or(&mut placeholder);
@@ -1315,7 +1308,7 @@ fn editor_sections(app: &mut SolveApp, ui: &mut egui::Ui, binding: Option<&mut B
 
 /// Resolve one selected whole body against the authoritative captured scene. Never
 /// broaden a face/component selection into a whole-body optics assignment.
-pub(super) fn selection_controls(app: &mut SolveApp, ui: &mut egui::Ui, body: Option<&str>) {
+pub(super) fn selection_controls(app: &mut SketApp, ui: &mut egui::Ui, body: Option<&str>) {
     let mut binding = body.and_then(|name| app.render_workspace.view.materials.bindings.iter().find(|b| b.target.name == name).cloned());
     if binding.is_none()
         && let Some(name) = body
@@ -1382,7 +1375,7 @@ pub(super) fn selection_controls(app: &mut SolveApp, ui: &mut egui::Ui, body: Op
     }
 }
 
-fn saved_controls(app: &mut SolveApp, ui: &mut egui::Ui, binding: &mut Binding) -> bool {
+fn saved_controls(app: &mut SketApp, ui: &mut egui::Ui, binding: &mut Binding) -> bool {
     let saved = app
         .render_workspace
         .view
@@ -1456,7 +1449,7 @@ fn saved_controls(app: &mut SolveApp, ui: &mut egui::Ui, binding: &mut Binding) 
     removed
 }
 
-fn reflection_section(app: &mut SolveApp, ui: &mut egui::Ui, body: Option<&str>) {
+fn reflection_section(app: &mut SketApp, ui: &mut egui::Ui, body: Option<&str>) {
     let reason = if body.is_none() {
         Some(app.tr("render.appearance_editor.body_reason").to_owned())
     } else if app.render_workspace.view.method != super::ImageMethod::CpuRaytrace {
@@ -1505,11 +1498,11 @@ fn reflection_section(app: &mut SolveApp, ui: &mut egui::Ui, body: Option<&str>)
     });
 }
 
-pub(super) fn confirmation_open(app: &SolveApp) -> bool {
+pub(super) fn confirmation_open(app: &SketApp) -> bool {
     app.render_workspace.view.materials.pending_remove.is_some()
 }
 
-pub(super) fn confirmation(app: &mut SolveApp, ctx: &egui::Context) {
+pub(super) fn confirmation(app: &mut SketApp, ctx: &egui::Context) {
     let Some(pending) = app.render_workspace.view.materials.pending_remove.clone() else { return };
     if pending.revision != app.session.revision
         || pending.name != app.render_workspace.view.name

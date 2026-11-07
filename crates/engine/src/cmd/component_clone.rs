@@ -11,7 +11,7 @@ use sketcraft_doc::{Document, Feature, FeatureKind, Mat, Occurrence};
 const CMD: &str = "component.paste_new";
 const MAX_WORK: usize = 10_000;
 
-fn mesh_distance(mesh: &sketcraft_geom::Mesh, point: solidcore_record::Vec3) -> f64 {
+fn mesh_distance(mesh: &sketcraft_geom::Mesh, point: sketcore_record::Vec3) -> f64 {
     mesh.triangles
         .iter()
         .filter_map(|triangle| mesh.tri(triangle))
@@ -34,7 +34,7 @@ fn mesh_distance(mesh: &sketcraft_geom::Mesh, point: solidcore_record::Vec3) -> 
         .fold(f64::INFINITY, f64::min)
 }
 
-fn material_probe_matches(a: &sketcraft_geom::Mesh, b: &sketcraft_geom::Mesh, point: solidcore_record::Vec3, tol_a: f64, tol_b: f64) -> bool {
+fn material_probe_matches(a: &sketcraft_geom::Mesh, b: &sketcraft_geom::Mesh, point: sketcore_record::Vec3, tol_a: f64, tol_b: f64) -> bool {
     if !point.is_finite() || !tol_a.is_finite() || !tol_b.is_finite() || tol_a <= 0. || tol_b <= 0. {
         return false;
     }
@@ -49,7 +49,7 @@ fn material_probe_matches(a: &sketcraft_geom::Mesh, b: &sketcraft_geom::Mesh, po
     let offset = 4. * tol_a.max(tol_b);
     let mut material = false;
     let mut void = false;
-    for axis in [solidcore_record::Vec3::X, solidcore_record::Vec3::Y, solidcore_record::Vec3::Z] {
+    for axis in [sketcore_record::Vec3::X, sketcore_record::Vec3::Y, sketcore_record::Vec3::Z] {
         for sign in [-1., 1.] {
             let q = point + axis * (sign * offset);
             if !q.is_finite() {
@@ -768,7 +768,7 @@ pub(super) fn build(
             for y in [0.2, 0.5, 0.8] {
                 for z in [0.2, 0.5, 0.8] {
                     let d = ma.bbox.max - ma.bbox.min;
-                    let p = ma.bbox.min + solidcore_record::Vec3::new(d.x * x, d.y * y, d.z * z);
+                    let p = ma.bbox.min + sketcore_record::Vec3::new(d.x * x, d.y * y, d.z * z);
                     let roundoff = 64. * f64::EPSILON * (1. + p.len());
                     material_matches &= material_probe_matches(&mesh_a, &mesh_b, p, tol_a + roundoff, tol_b + roundoff);
                 }

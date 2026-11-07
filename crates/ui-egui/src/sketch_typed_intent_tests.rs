@@ -227,8 +227,8 @@ fn edge_polygon_takes_a_typed_side_length_and_side_count() {
     assert!(sides.iter().all(|l| (l - 12.0).abs() < 1e-6), "{sides:?}");
     // The first side runs from the first click towards the cursor.
     let CurveKind::Line { a, b } = sketch.curves[0].kind else { panic!("expected the first side") };
-    assert!(sketch.points[a].pos.dist(solidcore_record::Vec2::new(0.0, 0.0)) < 1e-6);
-    assert!(sketch.points[b].pos.dist(solidcore_record::Vec2::new(12.0, 0.0)) < 1e-6);
+    assert!(sketch.points[a].pos.dist(sketcore_record::Vec2::new(0.0, 0.0)) < 1e-6);
+    assert!(sketch.points[b].pos.dist(sketcore_record::Vec2::new(12.0, 0.0)) < 1e-6);
 }
 
 #[test]
@@ -299,7 +299,7 @@ fn the_arc_end_pick_snaps_to_a_point_under_the_value_box() {
         h.app.run("sketch.construction", json!({"curves":["l1"]})).unwrap();
         h.call("ui.view", json!({"view":"top"}));
         h.app.cam.distance = 60.0;
-        h.app.cam.target = solidcore_record::Vec3::new(0.0, 5.0, 0.0);
+        h.app.cam.target = sketcore_record::Vec3::new(0.0, 5.0, 0.0);
         h.settle();
         h.step(&json!({"start":command})).unwrap();
         for p in picks {

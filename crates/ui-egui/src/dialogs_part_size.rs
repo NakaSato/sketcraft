@@ -5,14 +5,14 @@ use std::sync::Arc;
 use serde_json::{Value, json};
 use sketcraft_engine::{Sel, doc::Document};
 
-use crate::SolveApp;
+use crate::SketApp;
 use crate::dialogs::Kind;
 use crate::dialogs_parts::Family;
 use crate::selection::SelInput;
 use crate::ui_kit::{choice_row, row};
 
 /// The active catalogue configuration belongs to the shared part, not its placements.
-pub(crate) fn configuration(app: &SolveApp, component: u64) -> Option<String> {
+pub(crate) fn configuration(app: &SketApp, component: u64) -> Option<String> {
     let part = app.session.doc.parts.get(&component)?;
     let size = part.size.trim();
     if size.is_empty() {
@@ -32,7 +32,7 @@ fn configuration_name(family: &str, size: &str, length: Option<f64>) -> String {
     }
 }
 
-pub(crate) fn browser_label(app: &SolveApp, component: u64, name: &str) -> String {
+pub(crate) fn browser_label(app: &SketApp, component: u64, name: &str) -> String {
     match configuration(app, component) {
         Some(configuration) => format!("{name} [{configuration}]"),
         None => name.to_owned(),
@@ -61,7 +61,7 @@ impl std::fmt::Debug for Resize {
 }
 
 /// Resolve a whole definition, including bodies displayed through an occurrence path.
-pub fn component_for_bodies(app: &SolveApp, bodies: &[String]) -> Option<u64> {
+pub fn component_for_bodies(app: &SketApp, bodies: &[String]) -> Option<u64> {
     let state = crate::open_meshing::session_world(&app.session);
     let mut component = None;
     for name in bodies {
@@ -75,7 +75,7 @@ pub fn component_for_bodies(app: &SolveApp, bodies: &[String]) -> Option<u64> {
     component
 }
 
-pub fn selected_component(app: &SolveApp) -> Option<u64> {
+pub fn selected_component(app: &SketApp) -> Option<u64> {
     if app.session.selection.is_empty() {
         let [id] = app.tree.picked_components.as_slice() else { return None };
         return app.session.doc.parts.contains_key(id).then_some(*id);
@@ -107,7 +107,7 @@ pub fn selected_component(app: &SolveApp) -> Option<u64> {
 }
 
 impl Resize {
-    fn new(app: &SolveApp, component: u64) -> Option<Self> {
+    fn new(app: &SketApp, component: u64) -> Option<Self> {
         let part = app.session.doc.parts.get(&component)?;
         let response = app.session.scratch().execute("parts.library", &json!({})).ok()?;
         let mut family = crate::dialogs_parts::families(&response).into_iter().find(|f| f.id == part.family)?;
@@ -130,7 +130,7 @@ impl Resize {
         Some(Self { component, size, original_size: size, length: part.length, family, source: app.session.doc.clone() })
     }
 
-    fn current(&self, app: &SolveApp) -> Result<(), String> {
+    fn current(&self, app: &SketApp) -> Result<(), String> {
         if !Arc::ptr_eq(&self.source, &app.session.doc) || !app.session.doc.parts.contains_key(&self.component) {
             return Err("The design changed. Reopen Change Part Size for the component.".into());
         }
@@ -154,7 +154,7 @@ impl Resize {
     }
 }
 
-pub fn start(app: &SolveApp, id: &str) -> Option<(Kind, Vec<SelInput>)> {
+pub fn start(app: &SketApp, id: &str) -> Option<(Kind, Vec<SelInput>)> {
     if id != "parts.resize" {
         return None;
     }
@@ -163,13 +163,13 @@ pub fn start(app: &SolveApp, id: &str) -> Option<(Kind, Vec<SelInput>)> {
 
 /// Change Part Size has no standard part to work on: say what it takes, not the command's
 /// "`component` must be an id or a name" (#8735).
-pub(crate) fn needs_a_part(app: &mut SolveApp) {
+pub(crate) fn needs_a_part(app: &mut SketApp) {
     let hint = app.tr("ui.part_size_needs_a_part").to_owned();
     app.set_status(hint, true);
 }
 
 /// Select the context menu's exact target before using the normal command-start lifecycle.
-pub fn open(app: &mut SolveApp, component: u64) {
+pub fn open(app: &mut SketApp, component: u64) {
     if Resize::new(app, component).is_none() {
         needs_a_part(app);
         return;
@@ -179,7 +179,7 @@ pub fn open(app: &mut SolveApp, component: u64) {
     app.start("parts.resize");
 }
 
-pub fn rows(app: &SolveApp, ui: &mut egui::Ui, k: &mut Resize) -> bool {
+pub fn rows(app: &SketApp, ui: &mut egui::Ui, k: &mut Resize) -> bool {
     row(ui, "Type", |ui| {
         ui.add(egui::Label::new(format!("{} ({})", crate::dialogs_parts::family_name(&k.family), k.family.standard)).wrap());
     });
@@ -201,7 +201,7 @@ pub fn rows(app: &SolveApp, ui: &mut egui::Ui, k: &mut Resize) -> bool {
     false
 }
 
-pub fn commands(app: &SolveApp, k: &Resize) -> Result<Vec<(String, Value)>, String> {
+pub fn commands(app: &SketApp, k: &Resize) -> Result<Vec<(String, Value)>, String> {
     k.current(app)?;
     let (size, _) = k.family.sizes.get(k.size).ok_or("Pick a part size")?;
     let mut params = json!({"component":k.component,"size":size});
@@ -222,11 +222,11 @@ pub fn commands(app: &SolveApp, k: &Resize) -> Result<Vec<(String, Value)>, Stri
 mod tests {
     use super::*;
     use crate::context_menu::{self, Target};
-    use solidcore_record::Vec3;
+    use sketcore_record::Vec3;
     use sketcraft_engine::Session;
 
-    fn part(family: &str, size: &str, length: Option<f64>) -> (SolveApp, u64) {
-        let mut app = SolveApp::new(Session::default(), crate::Services::default());
+    fn part(family: &str, size: &str, length: Option<f64>) -> (SketApp, u64) {
+        let mut app = SketApp::new(Session::default(), crate::Services::default());
         let mut p = json!({"family":family,"size":size,"point":[10,20,30]});
         if let Some(length) = length {
             p["length"] = json!(length);
@@ -235,24 +235,24 @@ mod tests {
         (app, id)
     }
 
-    fn menu(app: &mut SolveApp, target: Target) {
+    fn menu(app: &mut SketApp, target: Target) {
         let items = context_menu::items(app, &target);
         let item = items.iter().find(|i| i.id == "parts.resize").expect("Change Part Size in context menu");
         context_menu::run_item(app, item, egui::Pos2::ZERO);
     }
 
-    fn editor(app: &SolveApp) -> &Resize {
+    fn editor(app: &SketApp) -> &Resize {
         let Kind::PartSize(k) = &app.dialog.as_ref().unwrap().kind else { panic!("not a part-size dialog") };
         k
     }
 
-    fn change(app: &mut SolveApp, size: &str, length: Option<f64>) {
+    fn change(app: &mut SketApp, size: &str, length: Option<f64>) {
         let Kind::PartSize(k) = &mut app.dialog.as_mut().unwrap().kind else { panic!("not a part-size dialog") };
         k.size = k.family.sizes.iter().position(|(s, _)| s == size).unwrap();
         k.length = length;
     }
 
-    fn apply(app: &mut SolveApp) {
+    fn apply(app: &mut SketApp) {
         let commands = crate::dialogs::apply_commands(app, app.dialog.as_ref().unwrap()).unwrap();
         for (id, params) in commands {
             app.run(&id, params).unwrap();
@@ -313,7 +313,7 @@ mod tests {
         h.app.run("file.save", json!({"path":file})).unwrap();
         let mut reopened = Session::default();
         reopened.execute("doc.open", &json!({"path":file})).unwrap();
-        let reopened = SolveApp::new(reopened, Default::default());
+        let reopened = SketApp::new(reopened, Default::default());
         assert_eq!(configuration(&reopened, component).as_deref(), Some("M8×25"));
         assert_eq!(reopened.session.doc.occurrences, occurrences);
         let _ = std::fs::remove_file(&file);
@@ -361,7 +361,7 @@ mod tests {
 
     #[test]
     fn part_size_keeps_the_joint_and_placement_of_a_seated_screw() {
-        let mut app = SolveApp::new(Session::default(), crate::Services::default());
+        let mut app = SketApp::new(Session::default(), crate::Services::default());
         app.run("solid.box", json!({"length":40,"width":30,"height":10,"body_name":"Plate"})).unwrap();
         app.run("solid.hole", json!({"position":[20,15,10],"diameter":6.4})).unwrap();
         let out = app.run("parts.insert", json!({"family":"socket_head_cap_screw","size":"M6","length":20,"at":[23.2,15,10]})).unwrap();
@@ -406,7 +406,7 @@ mod tests {
     /// of doing nothing (#8735).
     #[test]
     fn part_size_without_a_part_explains_itself_and_standard_parts_opens_the_library() {
-        let mut app = SolveApp::new(Session::default(), crate::Services::default());
+        let mut app = SketApp::new(Session::default(), crate::Services::default());
         app.run("solid.box", json!({"length": 10, "width": 10, "height": 10})).unwrap();
         let body = crate::open_meshing::session_world(&app.session).bodies.first().map(|b| b.name.clone()).unwrap();
         for selection in [vec![], vec![Sel::Body { name: body }]] {

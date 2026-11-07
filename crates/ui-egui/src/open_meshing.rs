@@ -21,7 +21,7 @@ use std::sync::{Arc, Mutex};
 
 use sketcraft_engine::doc::ModelState;
 
-use crate::SolveApp;
+use crate::SketApp;
 
 /// How often a growing picture is remade at most (s).
 const REFRESH: f64 = 0.25;
@@ -131,7 +131,7 @@ impl Drop for Meshing {
 
 /// Start meshing the session's world off the UI thread (an opened design), framing the view from
 /// the bodies' outlines; `remember`: then draw the Home picture of that file.
-pub(crate) fn start(app: &mut SolveApp, remember: Option<String>) {
+pub(crate) fn start(app: &mut SketApp, remember: Option<String>) {
     app.open_meshing_next = false;
     let plans = app.viewport.gpu.is_some_and(|g| g.tess);
     let mut meshing = Meshing::start(crate::open_meshing::session_world(&app.session), plans, app.viewport.gpu.is_some());
@@ -147,20 +147,20 @@ pub(crate) fn start(app: &mut SolveApp, remember: Option<String>) {
 /// framed again as the design goes in, once the layout is known): `tick` frames the meshes only
 /// while the camera is still the one it framed, which is how the user taking the view over keeps
 /// their own framing.
-pub(crate) fn note_framed(app: &mut SolveApp) {
+pub(crate) fn note_framed(app: &mut SketApp) {
     if let Some(m) = app.open_meshing.as_mut().filter(|m| !m.complete && m.framed.is_some()) {
         m.framed = Some(app.cam);
     }
 }
 
 /// How far the meshing is: bodies done, and of how many.
-pub(crate) fn progress(app: &SolveApp) -> Option<(usize, usize)> {
+pub(crate) fn progress(app: &SketApp) -> Option<(usize, usize)> {
     app.open_meshing.as_ref().filter(|m| !m.complete).map(|m| (m.done.load(Ordering::Acquire).min(m.world.bodies.len()), m.world.bodies.len()))
 }
 
 /// A small "Loading parts n/N" note at the foot of the viewport while bodies are being meshed:
 /// a part not drawn yet can't be picked yet either, and this says why.
-pub(crate) fn show(app: &SolveApp, ctx: &egui::Context) {
+pub(crate) fn show(app: &SketApp, ctx: &egui::Context) {
     let (Some((done, total)), Some(view)) = (progress(app), app.viewport.rect) else { return };
     let t = crate::theme::Tokens::get();
     let at = egui::pos2(view.left() + 12.0, view.bottom() - 12.0);
@@ -182,18 +182,18 @@ pub(crate) fn show(app: &SolveApp, ctx: &egui::Context) {
 }
 
 /// Whether bodies are still being meshed after an open.
-pub(crate) fn active(app: &SolveApp) -> bool {
+pub(crate) fn active(app: &SketApp) -> bool {
     app.open_meshing.as_ref().is_some_and(|m| !m.complete)
 }
 
 /// Whether the view is framed from outlines: bodies being meshed, or about to be.
-pub(crate) fn framing(app: &SolveApp) -> bool {
+pub(crate) fn framing(app: &SketApp) -> bool {
     active(app) || app.open_meshing_next
 }
 
 /// Per frame: follow the session's world, show more as it is meshed, and frame the finished
 /// picture.
-pub(crate) fn tick(app: &mut SolveApp, ctx: &egui::Context) {
+pub(crate) fn tick(app: &mut SketApp, ctx: &egui::Context) {
     let Some(m) = app.open_meshing.as_ref() else { return };
     let world = crate::open_meshing::session_world(&app.session);
     if !Arc::ptr_eq(&world, &m.world) {
@@ -248,7 +248,7 @@ pub(crate) fn placement_error(s: &sketcraft_engine::Session) -> Option<String> {
 /// The world the viewport draws: while an opened design is being meshed, the bodies meshed so
 /// far (the picture grows a few times a second), then all of them, in the order they came, until
 /// the design changes; otherwise the session's ([`session_world`]).
-pub(crate) fn shown_world(app: &SolveApp) -> Arc<ModelState> {
+pub(crate) fn shown_world(app: &SketApp) -> Arc<ModelState> {
     let world = session_world(&app.session);
     let Some(m) = app.open_meshing.as_ref() else { return world };
     if !Arc::ptr_eq(&world, &m.world) {
@@ -260,7 +260,7 @@ pub(crate) fn shown_world(app: &SolveApp) -> Arc<ModelState> {
 /// Remake the picture so far, at most every [`REFRESH`] seconds and no sooner than
 /// [`REFRESH_SHARE`] times the last scene build (the bodies shown before keep their place, so the
 /// viewport builds only the new ones).
-pub(crate) fn refresh(app: &mut SolveApp, now: f64) {
+pub(crate) fn refresh(app: &mut SketApp, now: f64) {
     let build_s = app.viewport.build_ms / 1000.0;
     let Some(m) = app.open_meshing.as_mut().filter(|m| !m.complete) else { return };
     let order: Vec<usize> = match m.ready.lock() {

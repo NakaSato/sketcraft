@@ -14,8 +14,8 @@
 //! order asked: the neighbour as a height over its tangent plane to that order
 //! (`sketcraft_geom::linkage`).
 
-use solidcore_record::Vec3;
-use solidcore_record::brep::{self as b, Curve2};
+use sketcore_record::Vec3;
+use sketcore_record::brep::{self as b, Curve2};
 use sketcraft_geom::brep::eval::CurveEval;
 use sketcraft_geom::brep::eval::SurfaceEval;
 use sketcraft_geom::bspline::{HPoint, SplineError};
@@ -1032,8 +1032,8 @@ pub(crate) fn face_tolerance(body: &Body) -> f64 {
 
 #[cfg(test)]
 mod tests {
-    use solidcore_record::brep::{self as b};
-    use solidcore_record::{Loop2, Plane, Region2, Vec2, Vec3};
+    use sketcore_record::brep::{self as b};
+    use sketcore_record::{Loop2, Plane, Region2, Vec2, Vec3};
     use sketcraft_geom::brep::{eval::CurveEval, eval::SurfaceEval};
     use sketcraft_geom::prelude::*;
 

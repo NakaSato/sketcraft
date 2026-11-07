@@ -1,6 +1,6 @@
 //! Bounded roots on exact curve pieces against an infinite line or complete circle.
 //! Rational pieces are intersected in homogeneous coordinates, without sampled chords.
-use solidcore_record::{Seg2, Vec2};
+use sketcore_record::{Seg2, Vec2};
 use sketcraft_geom::prelude::*;
 use sketcraft_sketch::{Shape, intersections};
 
@@ -206,7 +206,7 @@ mod tests {
             elevated.push(y[n - 1]);
             y = elevated;
         }
-        let mut points = [Vec2::ZERO; solidcore_record::MAX_BEZIER_CTRL];
+        let mut points = [Vec2::ZERO; sketcore_record::MAX_BEZIER_CTRL];
         for (i, p) in points.iter_mut().take(8).enumerate() {
             *p = Vec2::new(10.0 + i as f64 * 20.0 / 7.0, y[i]);
         }

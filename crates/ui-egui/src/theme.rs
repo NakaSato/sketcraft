@@ -20,7 +20,7 @@ thread_local! {
     /// must not change one another's palette while a frame or icon texture is being built.
     static DARK: Cell<bool> = const { Cell::new(true) };
     /// The colour vision mode, per thread. Each app
-    /// sets it from its own preferences at the start of every frame (`SolveApp::logic`), on the
+    /// sets it from its own preferences at the start of every frame (`SketApp::logic`), on the
     /// thread that draws it. Tests run many apps side by side on their own threads in one process:
     /// with one global, a test in a mode changed the colours under another one
     /// (`hover_stays_off_during_spin_and_animated_views` failed that way). No worker thread reads
@@ -687,7 +687,7 @@ impl TabAccent {
         ctx.data(|d| d.get_temp::<Option<&'static str>>(egui::Id::unique("sc_tab_icon_accent"))).flatten()
     }
 
-    pub fn publish(app: &crate::SolveApp, ctx: &egui::Context) {
+    pub fn publish(app: &crate::SketApp, ctx: &egui::Context) {
         let now = ctx.input(|i| i.time);
         let (published, accent, fading, style_surfaces) = ctx.data_mut(|data| {
             let state = data.get_temp_mut_or_default::<TabThemeState>(egui::Id::unique(TAB_STATE));
@@ -1851,7 +1851,7 @@ mod tests {
     #[test]
     fn tabs_publish_requests_repaints_only_during_fade_and_zero_is_instant() {
         use crate::theme_files::OptionValue;
-        let mut app = crate::SolveApp::new(sketcraft_engine::Session::default(), crate::Services::default());
+        let mut app = crate::SketApp::new(sketcraft_engine::Session::default(), crate::Services::default());
         let ctx = crate::fonts::test_context();
         let mut state = tabs_state("dark", BTreeMap::new());
         state.publish("MODEL", 0.0);
@@ -2125,7 +2125,7 @@ mod tests {
         use crate::theme_files::{OptionValue, ThemeFile};
         for base in ["dark", "light"] {
             let ctx = crate::fonts::test_context();
-            let mut app = crate::SolveApp::new(sketcraft_engine::Session::default(), crate::Services::default());
+            let mut app = crate::SketApp::new(sketcraft_engine::Session::default(), crate::Services::default());
             let file = crate::theme_files::tab_fixture(base);
             set_dark(file.base.is_dark());
             set_vision(ColorVision::Off);
@@ -2140,7 +2140,7 @@ mod tests {
                 });
                 set_custom(custom)
             };
-            let publish = |app: &crate::SolveApp, time| {
+            let publish = |app: &crate::SketApp, time| {
                 ctx.run_ui(egui::RawInput { time: Some(time), ..Default::default() }, |ui| TabAccent::publish(app, ui.ctx())).textures_delta.clear();
             };
             prepare(&file, Some(true));

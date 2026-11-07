@@ -4,7 +4,7 @@ use sketcraft_engine::render::job::{AreaLight, AreaLights, DirectionalLights, Pu
 use sketcraft_engine::render::lighting::environment::SkyGradient;
 
 use super::hdr;
-use crate::{SolveApp, ui_kit};
+use crate::{SketApp, ui_kit};
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub(super) enum Environment {
@@ -93,7 +93,7 @@ pub(super) fn cpu_output(view: &super::ViewState) -> Option<Box<sketcraft_engine
     if settings == Default::default() && view.raytrace.output.is_none() { None } else { Some(Box::new(settings)) }
 }
 
-pub(super) fn params(app: &SolveApp, params: &mut Value) -> Result<(), String> {
+pub(super) fn params(app: &SketApp, params: &mut Value) -> Result<(), String> {
     let view = &app.render_workspace.view.studio;
     params["tone_map"] = json!(view.tone_map);
     params["denoise"] = json!(view.denoise);
@@ -154,13 +154,13 @@ pub(super) fn vector(ui: &mut egui::Ui, label: &str, value: &mut [f64; 3], range
 }
 
 #[cfg(test)]
-pub(super) fn finishing_controls(app: &mut SolveApp, ui: &mut egui::Ui) {
+pub(super) fn finishing_controls(app: &mut SketApp, ui: &mut egui::Ui) {
     super::transport::sampling_controls(app, ui);
     post_controls(app, ui);
     tone_controls(app, ui);
 }
 #[cfg(test)]
-pub(super) fn tone_controls(app: &mut SolveApp, ui: &mut egui::Ui) {
+pub(super) fn tone_controls(app: &mut SketApp, ui: &mut egui::Ui) {
     ui_kit::text(ui, app.tr("render.studio_tone_map"), ui_kit::Text::Inline);
     let selected = app.render_workspace.view.studio.tone_map;
     let label = match selected {
@@ -186,7 +186,7 @@ pub(super) fn tone_controls(app: &mut SolveApp, ui: &mut egui::Ui) {
 }
 
 #[cfg(test)]
-pub(super) fn lens_controls(app: &mut SolveApp, ui: &mut egui::Ui) {
+pub(super) fn lens_controls(app: &mut SketApp, ui: &mut egui::Ui) {
     let lens = app.tr("render.studio_lens").to_string();
     ui_kit::checkbox(ui, &lens, &mut app.render_workspace.view.studio.lens_enabled);
     if app.render_workspace.view.studio.lens_enabled {
@@ -198,7 +198,7 @@ pub(super) fn lens_controls(app: &mut SolveApp, ui: &mut egui::Ui) {
 }
 
 #[cfg(test)]
-pub(super) fn controls(app: &mut SolveApp, ui: &mut egui::Ui) {
+pub(super) fn controls(app: &mut SketApp, ui: &mut egui::Ui) {
     finishing_controls(app, ui);
     lens_controls(app, ui);
     let title = app.tr("render.studio_environment").to_string();
@@ -209,7 +209,7 @@ pub(super) fn controls(app: &mut SolveApp, ui: &mut egui::Ui) {
 }
 
 #[cfg(test)]
-pub(super) fn environment_controls(app: &mut SolveApp, ui: &mut egui::Ui) {
+pub(super) fn environment_controls(app: &mut SketApp, ui: &mut egui::Ui) {
     super::environment::atmosphere(app, ui);
     let variants =
         [(Environment::None, "render.studio_environment_none"), (Environment::Sky, "render.studio_sky"), (Environment::Hdr, "render.studio_hdr")];
@@ -264,13 +264,13 @@ pub(super) fn environment_controls(app: &mut SolveApp, ui: &mut egui::Ui) {
 }
 
 #[cfg(test)]
-pub(super) fn lighting_controls(app: &mut SolveApp, ui: &mut egui::Ui) {
+pub(super) fn lighting_controls(app: &mut SketApp, ui: &mut egui::Ui) {
     super::light::lighting(app, ui);
 }
 
 /// Presentation is opt-in; raw radiance and engineering appearance stay untouched.
 #[cfg(test)]
-pub(super) fn post_controls(app: &mut SolveApp, ui: &mut egui::Ui) {
+pub(super) fn post_controls(app: &mut SketApp, ui: &mut egui::Ui) {
     let before = app.render_workspace.view.studio.finishing;
     bloom_controls(app, ui);
     grading_controls(app, ui);
@@ -279,7 +279,7 @@ pub(super) fn post_controls(app: &mut SolveApp, ui: &mut egui::Ui) {
 }
 
 #[cfg(test)]
-pub(super) fn bloom_controls(app: &mut SolveApp, ui: &mut egui::Ui) {
+pub(super) fn bloom_controls(app: &mut SketApp, ui: &mut egui::Ui) {
     let mut enabled = app.render_workspace.view.studio.finishing.bloom.is_some();
     let label = app.tr("render.bloom_enable").to_string();
     let toggle = ui_kit::checkbox(ui, &label, &mut enabled);
@@ -308,7 +308,7 @@ pub(super) fn bloom_controls(app: &mut SolveApp, ui: &mut egui::Ui) {
 }
 
 #[cfg(test)]
-pub(super) fn grading_controls(app: &mut SolveApp, ui: &mut egui::Ui) {
+pub(super) fn grading_controls(app: &mut SketApp, ui: &mut egui::Ui) {
     let title = app.tr("render.output_grading").to_string();
     ui_kit::section(ui, "render_post_filters", &title, false, |ui| {
         ui_kit::text(ui, app.tr("render.post_help"), ui_kit::Text::Note("render.post_help"));
@@ -340,11 +340,11 @@ pub(super) fn grading_controls(app: &mut SolveApp, ui: &mut egui::Ui) {
 }
 
 #[cfg(test)]
-pub(super) fn regrade_controls(app: &mut SolveApp, ui: &mut egui::Ui) {
+pub(super) fn regrade_controls(app: &mut SketApp, ui: &mut egui::Ui) {
     regrade_action(app, ui);
     retain_controls(app, ui);
 }
-pub(super) fn regrade_action(app: &mut SolveApp, ui: &mut egui::Ui) {
+pub(super) fn regrade_action(app: &mut SketApp, ui: &mut egui::Ui) {
     let regrade = ui_kit::button(
         ui,
         app.tr("render.regrade_action"),
@@ -360,7 +360,7 @@ pub(super) fn regrade_action(app: &mut SolveApp, ui: &mut egui::Ui) {
     ui_kit::text(ui, app.tr("render.regrade_help"), ui_kit::Text::Note("render.regrade_help"));
 }
 #[cfg(test)]
-fn retain_controls(app: &mut SolveApp, ui: &mut egui::Ui) {
+fn retain_controls(app: &mut SketApp, ui: &mut egui::Ui) {
     let label = app.tr("render.linear_retain").to_string();
     let r = ui_kit::checkbox(ui, &label, &mut app.render_workspace.view.studio.linear_exr);
     crate::scenario::publish_target("render:retain-exr", r.rect);
@@ -371,7 +371,7 @@ fn retain_controls(app: &mut SolveApp, ui: &mut egui::Ui) {
 }
 
 #[cfg(test)]
-pub(super) fn backdrop_controls(app: &mut SolveApp, ui: &mut egui::Ui) {
+pub(super) fn backdrop_controls(app: &mut SketApp, ui: &mut egui::Ui) {
     use sketcraft_engine::render::job::finishing::BackdropMode;
     let label = app.tr("render.backdrop_enable").to_string();
     let r = ui_kit::checkbox(ui, &label, &mut app.render_workspace.view.studio.backdrop_enabled);
@@ -426,16 +426,16 @@ pub(super) fn backdrop_controls(app: &mut SolveApp, ui: &mut egui::Ui) {
     }
 }
 
-pub(super) fn export_label(app: &SolveApp) -> &str {
+pub(super) fn export_label(app: &SketApp) -> &str {
     app.tr(if app.render_workspace.view.studio.export_exr { "render.export_linear" } else { "render.output_export" })
 }
 
-pub(super) fn export_controls(app: &mut SolveApp, ui: &mut egui::Ui) {
+pub(super) fn export_controls(app: &mut SketApp, ui: &mut egui::Ui) {
     let label = app.tr("render.output_format").to_string();
     let response = ui_kit::row(ui, &label, |ui| format_choices(app, ui));
     crate::scenario::publish_target("render:export-format", response.rect);
 }
-pub(super) fn format_choices(app: &mut SolveApp, ui: &mut egui::Ui) -> egui::Response {
+pub(super) fn format_choices(app: &mut SketApp, ui: &mut egui::Ui) -> egui::Response {
     let available = linear_export_available(app);
     ui.scope(|ui| {
         let reason = app.tr("render.output_master_unavailable");
@@ -459,7 +459,7 @@ pub(super) fn format_choices(app: &mut SolveApp, ui: &mut egui::Ui) -> egui::Res
     .response
 }
 
-pub(super) fn linear_export_available(app: &SolveApp) -> bool {
+pub(super) fn linear_export_available(app: &SketApp) -> bool {
     app.render_workspace
         .view
         .completed

@@ -9,7 +9,7 @@
 use std::collections::HashMap;
 use std::fmt::Write as _;
 
-use solidcore_record::brep::{Brep, Loop, Shell};
+use sketcore_record::brep::{Brep, Loop, Shell};
 use sketcraft_step::geom::{Curve, Placement, Surface};
 use sketcraft_step::write::topology;
 

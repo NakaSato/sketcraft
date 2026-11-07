@@ -575,8 +575,8 @@ fn folders_holding(s: &Session, world: &[String]) -> std::collections::BTreeSet<
             }
             keys.insert(format!("{scope}/bodies"));
             for g in s.doc.browser_groups.iter().filter(|g| g.component == component && g.folder == "bodies" && g.has_item(b)) {
-                for id in std::iter::successors(Some(g.id), |id| s.doc.browser_group(*id).and_then(|g| g.parent))
-                    .take(sketcraft_doc::MAX_GROUP_NESTING + 1)
+                for id in
+                    std::iter::successors(Some(g.id), |id| s.doc.browser_group(*id).and_then(|g| g.parent)).take(sketcraft_doc::MAX_GROUP_NESTING + 1)
                 {
                     keys.insert(format!("{scope}/g{id}"));
                 }
@@ -2338,7 +2338,7 @@ mod tests {
         assert!(s.camera.is_none());
         let r = run(&mut s, "view.apply", json!({"view": "Photo"}));
         let c = s.camera.expect("a camera for the view");
-        assert_eq!((c.target, c.yaw, c.pitch, c.distance), (solidcore_record::Vec3::new(1.0, 2.0, 3.0), 0.5, -0.6, 150.0));
+        assert_eq!((c.target, c.yaw, c.pitch, c.distance), (sketcore_record::Vec3::new(1.0, 2.0, 3.0), 0.5, -0.6, 150.0));
         assert_eq!(r["camera"]["yaw"], 0.5);
         // A standard view looks from its direction and frames the model.
         run(&mut s, "view.apply", json!({"view": "top"}));

@@ -14,7 +14,7 @@ use crate::{
     ProductScene,
     surface::{OpaqueSurface, srgb8_to_linear},
 };
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 use sketcraft_geom::prelude::*;
 use sketcraft_geom::srgb::encode8;
 

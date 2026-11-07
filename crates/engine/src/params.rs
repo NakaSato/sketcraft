@@ -1,7 +1,7 @@
 //! Helpers to read hostile JSON parameters.
 
 use serde_json::Value;
-use solidcore_record::{Vec2, Vec3};
+use sketcore_record::{Vec2, Vec3};
 use sketcraft_doc::Expr;
 
 use crate::{EngineError, Result, kernel};

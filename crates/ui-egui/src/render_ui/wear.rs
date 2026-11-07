@@ -4,10 +4,10 @@ use super::{
     effects::{failure, layer_actions, note, number},
     materials, studio,
 };
-use crate::{SolveApp, theme::Tokens, ui_kit};
+use crate::{SketApp, theme::Tokens, ui_kit};
 use sketcraft_engine::render::job::aging::{AgingKind, AgingLayer, SurfaceClass};
 
-pub(super) fn controls(app: &mut SolveApp, ui: &mut egui::Ui) {
+pub(super) fn controls(app: &mut SketApp, ui: &mut egui::Ui) {
     note(app, ui, "render.aging_raytrace_help");
     ui.add_space(Tokens::get().space_4);
     let enabled = matches!(app.render_workspace.view.method, ImageMethod::CpuRaytrace | ImageMethod::GpuRaytrace);
@@ -15,7 +15,7 @@ pub(super) fn controls(app: &mut SolveApp, ui: &mut egui::Ui) {
     crate::scenario::publish_rect("render:wear:controls", response.response.rect);
 }
 
-fn layer_controls(app: &mut SolveApp, ui: &mut egui::Ui) {
+fn layer_controls(app: &mut SketApp, ui: &mut egui::Ui) {
     note(app, ui, "render.aging_help");
     let mut editor = std::mem::take(&mut app.render_workspace.view.inspector.effects);
     let before = app.render_workspace.view.studio.aging.clone();

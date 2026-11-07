@@ -3,7 +3,7 @@
 use egui::{Id, Ui, vec2};
 
 use super::{Draft, MAX_ANSWER, MAX_BODY, draft_url};
-use crate::{SolveApp, i18n::tr_label, ui_kit};
+use crate::{SketApp, i18n::tr_label, ui_kit};
 
 const ALL_GUIDANCE: [&str; 4] = [
     "Report text copied. Paste it into GitHub and submit your report there.",
@@ -27,7 +27,7 @@ fn answer(ui: &mut Ui, label: &str, hint: &str, text: &mut String, id: &str, row
     response
 }
 
-fn screenshot_actions(app: &mut SolveApp, draft: &mut Draft, ui: &mut Ui) -> bool {
+fn screenshot_actions(app: &mut SketApp, draft: &mut Draft, ui: &mut Ui) -> bool {
     let mut retake = false;
     ui.horizontal_wrapped(|ui| {
         retake = ui_kit::button(ui, tr_label("Retake screenshot"), ui_kit::Button::Normal).clicked();
@@ -68,7 +68,7 @@ fn screenshot_actions(app: &mut SolveApp, draft: &mut Draft, ui: &mut Ui) -> boo
     retake
 }
 
-fn screenshot(app: &mut SolveApp, draft: &mut Draft, ui: &mut Ui) -> bool {
+fn screenshot(app: &mut SketApp, draft: &mut Draft, ui: &mut Ui) -> bool {
     ui_kit::text(ui, tr_label("Screenshot (optional)"), ui_kit::Text::Heading("Screenshot (optional)"));
     let preview = draft.image.as_ref().map(|image| {
         draft.texture.get_or_insert_with(|| ui.ctx().load_texture("issue-report-frame", image.clone(), egui::TextureOptions::LINEAR)).clone()
@@ -90,7 +90,7 @@ fn screenshot(app: &mut SolveApp, draft: &mut Draft, ui: &mut Ui) -> bool {
 }
 
 /// Returns whether to retake the screenshot and whether the user closed the form.
-pub(super) fn show(app: &mut SolveApp, draft: &mut Draft, ctx: &egui::Context) -> (bool, bool) {
+pub(super) fn show(app: &mut SketApp, draft: &mut Draft, ctx: &egui::Context) -> (bool, bool) {
     let mut retake = false;
     let t = crate::theme::Tokens::get();
     let screen = ctx.content_rect();

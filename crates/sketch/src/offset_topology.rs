@@ -4,7 +4,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::f64::consts::TAU;
 
 use serde::{Deserialize, Serialize};
-use solidcore_record::{Seg2, Vec2};
+use sketcore_record::{Seg2, Vec2};
 
 use crate::{Curve, CurveKind, OffsetChain, Sketch, SketchError};
 type Result<T> = std::result::Result<T, SketchError>;

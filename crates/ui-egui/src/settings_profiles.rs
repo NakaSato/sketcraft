@@ -3,8 +3,7 @@
 //! Navigation and Sketch preference keys and the language, keyboard shortcuts, toolbar (with its
 //! quick-access bar), S box favourites, imported theme it uses, and the custom view navigator's
 //! texture, arrows and Home, and its body (when one is chosen; a profile without one leaves the
-//! current body alone). Page moves preserve that stored key set; device-specific 3D mouse keys,
-//! graphics, recent files and Assistant settings stay out.
+//! current body alone). Page moves preserve that stored key set; graphics, recent files and Assistant settings stay out.
 //!
 //! A profile is kept, exported and imported as one `sketcraft-profile/1` document. Every
 //! document is checked by [`sanitize`] first: unknown keys are dropped, sizes are capped, and a
@@ -14,14 +13,14 @@
 //! Saved theme option maps are restored intact, retaining stale entries for fallback notices.
 //!
 //! The `settings.profile.*` commands reach the profiles; the engine only checks their
-//! parameters, and [`command`] does the rest after `SolveApp::run`.
+//! parameters, and [`command`] does the rest after `SketApp::run`.
 
 use serde_json::{Map, Value, json};
 use sketcraft_engine::io::vfs;
 use sketcraft_engine::{MAX_PROFILE_NAME, profile_name};
 
 use crate::ui_kit::BackingTooltipExt as _;
-use crate::{SolveApp, prefs, theme_files, ui_kit};
+use crate::{SketApp, prefs, theme_files, ui_kit};
 
 /// The format tag of a profile document.
 pub const FORMAT: &str = "sketcraft-profile/1";
@@ -39,8 +38,8 @@ const MAX_THEMES: usize = 4;
 const MAX_ID: usize = 200;
 
 /// The original 98 Interface, Navigation, Sketch and language keys, plus explicitly added
-/// settings. Device-specific space_mouse_* and orbit_cursor stay outside profiles. Page moves
-/// and title tags never remove stored keys such as the bridge, origin names and direct interaction.
+/// settings. Device-specific orbit_cursor stays outside profiles. Page moves
+/// and title tags never remove stored keys such as origin names and direct interaction.
 const PROFILE_KEYS: &[&str] = &[
     "browser_bodies_folders",
     "browser_collapsed",
@@ -75,8 +74,6 @@ const PROFILE_KEYS: &[&str] = &[
     "middle_double_click",
     "mouse_gestures",
     "nav",
-    "nav_bridge_enabled",
-    "nav_bridge_port",
     "navigation_bar",
     "navigator_fit",
     "navigator_style",
@@ -242,7 +239,7 @@ fn set_name(doc: &mut Value, name: &str) {
 }
 
 /// The current settings as a profile called `name`.
-pub fn capture(app: &SolveApp, name: &str) -> Value {
+pub fn capture(app: &SketApp, name: &str) -> Value {
     let all = serde_json::to_value(&app.preferences).unwrap_or_default();
     let preferences: Map<String, Value> = keys().filter_map(|key| Some((key.to_string(), all.get(key)?.clone()))).collect();
     let themes: Vec<Value> = app.preferences.custom_themes.iter().filter(|t| t.id == app.preferences.theme).map(theme_document).collect();
@@ -377,7 +374,7 @@ fn shortcut_keys(v: &Value) -> Option<Value> {
 
 /// Apply a checked profile: its themes, each preference (through [`prefs::set`], except saved option maps), the
 /// shortcuts, the favourites and the toolbar. Returns the preferences that were refused.
-fn apply(app: &mut SolveApp, doc: &Value) -> Vec<String> {
+fn apply(app: &mut SketApp, doc: &Value) -> Vec<String> {
     let mut theme_ids = std::collections::BTreeMap::new();
     for t in doc.get("themes").and_then(Value::as_array).into_iter().flatten() {
         let Ok(mut theme) = theme_files::from_value(t) else { continue };
@@ -468,7 +465,7 @@ fn read_file(path: &str) -> Result<Value, String> {
 }
 
 /// Add a checked profile under its name, or `name` when given, made unique; never switches to it.
-fn add(app: &mut SolveApp, doc: &Value, name: Option<&str>) -> Result<String, String> {
+fn add(app: &mut SketApp, doc: &Value, name: Option<&str>) -> Result<String, String> {
     let mut doc = sanitize(doc)?;
     if app.settings_profiles.list.len() >= MAX_PROFILES {
         return Err(format!("at most {MAX_PROFILES} settings profiles; delete one first"));
@@ -480,7 +477,7 @@ fn add(app: &mut SolveApp, doc: &Value, name: Option<&str>) -> Result<String, St
 }
 
 /// The rest of a `settings.profile.*` command, after the engine checked its parameters (`v`, its echo).
-pub fn command(app: &mut SolveApp, id: &str, v: &Value) -> Result<Value, String> {
+pub fn command(app: &mut SketApp, id: &str, v: &Value) -> Result<Value, String> {
     let name = v.get("name").and_then(Value::as_str).unwrap_or_default();
     match id {
         "settings.profile.list" => Ok(json!({ "profiles": app.settings_profiles.names(), "active": app.settings_profiles.active })),
@@ -552,7 +549,7 @@ pub fn command(app: &mut SolveApp, id: &str, v: &Value) -> Result<Value, String>
 }
 
 /// Run a profile command from Preferences and show its outcome there.
-fn act(app: &mut SolveApp, id: &str, params: Value, done: &'static str) {
+fn act(app: &mut SketApp, id: &str, params: Value, done: &'static str) {
     let result = app.run(id, params);
     app.settings_profiles.message = Some(match result {
         Ok(v) => match v.get("skipped").and_then(Value::as_array).map_or(0, Vec::len) {
@@ -564,7 +561,7 @@ fn act(app: &mut SolveApp, id: &str, params: Value, done: &'static str) {
 }
 
 /// General's saved profiles and row actions. All mutations still use settings.profile.*.
-pub(crate) fn section(app: &mut SolveApp, ui: &mut egui::Ui) {
+pub(crate) fn section(app: &mut SketApp, ui: &mut egui::Ui) {
     let t = crate::theme::Tokens::get();
     let count = crate::i18n::format("prefs.reports_saved", &[("n", &app.settings_profiles.list.len().to_string())]);
     ui_kit::settings_section_count(ui, "profiles", app.tr("ui.profiles"), Some(&count), |ui| {
@@ -689,11 +686,7 @@ pub(crate) fn section(app: &mut SolveApp, ui: &mut egui::Ui) {
                     ][..],
                     true,
                 ),
-                (
-                    app.tr("prefs.general.this_computer"),
-                    &[("prefs.structure.mouse3d", "lock"), ("ui.graphics", "lock"), ("prefs.assistant", "lock")][..],
-                    false,
-                ),
+                (app.tr("prefs.general.this_computer"), &[("ui.graphics", "lock"), ("prefs.assistant", "lock")][..], false),
             ] {
                 let key = if accent { "held" } else { "computer" };
                 let row = ui.horizontal_top(|ui| {
@@ -735,7 +728,7 @@ pub(crate) fn section(app: &mut SolveApp, ui: &mut egui::Ui) {
 
 /// Run before the Preferences window so Escape belongs to this editor, including in a scrolled
 /// page. A separate popup container keeps the shared rename menu accessible and unclipped.
-pub(crate) fn rename_popup(app: &mut SolveApp, ctx: &egui::Context) {
+pub(crate) fn rename_popup(app: &mut SketApp, ctx: &egui::Context) {
     if !app.prefs_window.open || app.prefs_window.section != prefs::PAGE_GENERAL || !app.prefs_window.filter.is_empty() {
         app.settings_profiles.rename = None;
         return;
@@ -776,7 +769,7 @@ pub(crate) fn rename_popup(app: &mut SolveApp, ctx: &egui::Context) {
 
 /// The pinned profile switcher on every Preferences page. Actions use the same commands as
 /// General > Profiles; saving a new name remains in that existing section.
-pub(crate) fn sidebar(ui: &mut egui::Ui, app: &mut SolveApp) {
+pub(crate) fn sidebar(ui: &mut egui::Ui, app: &mut SketApp) {
     let active = app.settings_profiles.active.clone();
     let edited = active.as_ref().is_some_and(|name| app.settings_profiles.get(name).is_ok_and(|doc| *doc != capture(app, name)));
     let current = active.clone().unwrap_or_else(|| app.tr_label("None").to_string());

@@ -35,7 +35,7 @@ name = "sketch_target_bench"
 required-features = ["solver-profiling"]
 
 [dependencies]
-solidcore-record = { workspace = true }
+sketcore-record = { workspace = true }
 sketcraft-geom = { workspace = true }
 sketcraft-sketch = { workspace = true }
 sketcraft-kernel = { workspace = true }

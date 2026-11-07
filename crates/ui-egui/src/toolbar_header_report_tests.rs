@@ -217,7 +217,7 @@ fn save_as_offers_the_open_files_own_name() {
         seen.borrow_mut().push(name.to_string());
         Box::pin(std::future::ready(Some(dir.join(name).to_string_lossy().into_owned())))
     }));
-    let ask = |h: &mut crate::scenario::Harness, how: fn(&mut SolveApp)| {
+    let ask = |h: &mut crate::scenario::Harness, how: fn(&mut SketApp)| {
         how(&mut h.app);
         h.frames(3);
         h.settle();
@@ -687,10 +687,7 @@ fn the_version_link_never_covers_the_report_button() {
 #[test]
 fn the_default_header_layout_is_the_desktop_one() {
     assert_eq!(HeaderLayout::default(), HeaderLayout::DESKTOP);
-    assert_eq!(
-        HeaderLayout::DESKTOP,
-        HeaderLayout { search: SearchPlace::Ribbon, report: ReportButton::Labelled, version: VersionPlace::Header }
-    );
+    assert_eq!(HeaderLayout::DESKTOP, HeaderLayout { search: SearchPlace::Ribbon, report: ReportButton::Labelled, version: VersionPlace::Header });
     let mut h = crate::scenario::Harness::new();
     assert_eq!(h.app.header, HeaderLayout::DESKTOP, "a new app has the desktop layout");
     h.app.home.open = false;
@@ -862,7 +859,7 @@ fn header_report_preserves_new_dimension_draft_and_single_commit() {
     h.app.run("sketch.line", json!({"points":[[0,0],[20,0]]})).unwrap();
     h.call("ui.view", json!({"view":"top"}));
     h.app.cam.distance = 80.0;
-    h.app.cam.target = solidcore_record::Vec3::new(10.0, 0.0, 0.0);
+    h.app.cam.target = sketcore_record::Vec3::new(10.0, 0.0, 0.0);
     h.settle();
     h.step(&json!({"start":"sketch.dimension"})).unwrap();
     for point in [[0, 0, 0], [20, 0, 0], [10, 5, 0]] {

@@ -4,7 +4,7 @@ use sketcraft_geom::prelude::*;
 use std::sync::Arc;
 
 use serde_json::json;
-use solidcore_record::Vec2;
+use sketcore_record::Vec2;
 use sketcraft_engine::Session;
 use sketcraft_sketch::{Analysis, ConstraintKind, Sketch, profiling::capture};
 

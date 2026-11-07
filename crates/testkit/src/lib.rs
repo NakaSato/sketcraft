@@ -10,7 +10,7 @@
 //! No fuzzing dependency, nothing nightly, nothing native: it runs in the normal test suite and
 //! builds for wasm. The readers' own hand-written cases stay; they cover particular lies (a
 //! length in a container header) that random changes rarely hit. STEP, IGES and FreeCAD/Rhino
-//! files are read by the kernel, which is moving to solidcore (#1597), and keep their own tests.
+//! files are read by the kernel, which is moving to sketcore (#1597), and keep their own tests.
 
 #![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic, clippy::unimplemented, clippy::todo, clippy::unreachable)]
 #![forbid(unsafe_code)]

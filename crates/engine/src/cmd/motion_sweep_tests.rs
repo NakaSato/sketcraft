@@ -5,7 +5,7 @@
 //! and the Hinge Assembly sample.
 
 use serde_json::{Value, json};
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 use sketcraft_geom::prelude::*;
 
 use super::{four_bar, meet, occ, part, pin, run};

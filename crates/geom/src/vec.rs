@@ -1,6 +1,6 @@
 //! The geometry of vectors and points ([`Vec2`], [`Vec3`], plain data in the record): dot and
 //! cross products, lengths, distances, directions and interpolation.
-use solidcore_record::{Vec2, Vec3};
+use sketcore_record::{Vec2, Vec3};
 
 use crate::UnitVec3;
 

@@ -33,7 +33,7 @@ use serde_json::{Value, json};
 use sketcraft_engine::Sel;
 use sketcraft_engine::geom::prelude::*;
 
-use crate::SolveApp;
+use crate::SketApp;
 
 /// What Cut marked: components (by placement path), timeline features (by id, sketches included)
 /// and bodies (by name). They stay where they are, shown faded, until Paste moves them.
@@ -51,17 +51,17 @@ impl CutSet {
 }
 
 /// Whether Cut has marked the body: named itself, or moving with a feature that is marked.
-pub fn body_is_cut(app: &SolveApp, name: &str) -> bool {
+pub fn body_is_cut(app: &SketApp, name: &str) -> bool {
     app.cut.bodies.iter().any(|b| b == name)
 }
 
 /// Leave text for the system clipboard: this app's next frame writes it ([`flush`]).
-pub(crate) fn leave_text(app: &mut SolveApp, text: String) {
+pub(crate) fn leave_text(app: &mut SketApp, text: String) {
     app.clipboard_text = Some(text);
 }
 
 /// The selected sketch geometry of the active sketch.
-fn sketch_selection(app: &SolveApp) -> Vec<String> {
+fn sketch_selection(app: &SketApp) -> Vec<String> {
     app.session
         .selection
         .iter()
@@ -73,18 +73,18 @@ fn sketch_selection(app: &SolveApp) -> Vec<String> {
 }
 
 /// The selected component placements (by path).
-fn placement_selection(app: &SolveApp) -> Vec<Vec<u64>> {
+fn placement_selection(app: &SketApp) -> Vec<Vec<u64>> {
     app.session.selection.iter().filter_map(|s| if let Sel::Occurrence { path } = s { Some(path.clone()) } else { None }).collect()
 }
 
 /// The selected bodies.
-fn body_selection(app: &SolveApp) -> Vec<String> {
+fn body_selection(app: &SketApp) -> Vec<String> {
     app.session.selection.iter().filter_map(|s| if let Sel::Body { name } = s { Some(name.clone()) } else { None }).collect()
 }
 
 /// Does Copy copy the whole design (its row picked in the browser)? Features, bodies or
 /// components selected since then are what was meant, so the design gives way to them.
-fn copying_design(app: &SolveApp) -> bool {
+fn copying_design(app: &SketApp) -> bool {
     app.session.active_sketch.is_none()
         && app.tree.picked_components == [0]
         && crate::timeline::selected_feature_ids(app).is_empty()
@@ -93,7 +93,7 @@ fn copying_design(app: &SolveApp) -> bool {
 }
 
 /// Is there something Copy would copy?
-pub fn something_to_copy(app: &SolveApp) -> bool {
+pub fn something_to_copy(app: &SketApp) -> bool {
     if app.session.active_sketch.is_some() {
         !sketch_selection(app).is_empty()
     } else {
@@ -106,29 +106,29 @@ pub fn something_to_copy(app: &SolveApp) -> bool {
 
 /// What another design copied or cut last, when that is what pastes here (this design's own
 /// clipboard is older).
-fn foreign(app: &SolveApp) -> Option<&std::sync::Arc<sketcraft_engine::ForeignCopy>> {
+fn foreign(app: &SketApp) -> Option<&std::sync::Arc<sketcraft_engine::ForeignCopy>> {
     app.foreign_copy.as_ref().filter(|_| app.own_clipboard_stamp != app.clipboard_stamp)
 }
 
 /// Sketch geometry another design copied or cut last, when that is what pastes here.
-fn foreign_sketch(app: &SolveApp) -> Option<&sketcraft_engine::cmd::sketch_clipboard::SketchClip> {
+fn foreign_sketch(app: &SketApp) -> Option<&sketcraft_engine::cmd::sketch_clipboard::SketchClip> {
     app.foreign_sketch_clip.as_ref().filter(|_| app.own_clipboard_stamp != app.clipboard_stamp)
 }
 
 /// Is there sketch geometry to paste into the active sketch: this design's, or another's copied
 /// last?
-pub fn can_paste_sketch(app: &SolveApp) -> bool {
+pub fn can_paste_sketch(app: &SketApp) -> bool {
     app.session.sketch_clipboard.is_some() || foreign_sketch(app).is_some()
 }
 
 /// Bodies another design copied or cut last: they paste here as imported bodies.
-fn foreign_bodies(app: &SolveApp) -> bool {
+fn foreign_bodies(app: &SketApp) -> bool {
     foreign(app).is_some_and(|c| !c.bodies.is_empty())
 }
 
 /// This design's clipboard, when another design has copied or cut since (switching to this
 /// design): it empties, so the last copy is what pastes.
-pub(crate) fn drop_stale(app: &mut SolveApp) {
+pub(crate) fn drop_stale(app: &mut SketApp) {
     if app.own_clipboard_stamp != app.clipboard_stamp {
         app.session.clipboard.clear();
         app.session.sketch_clipboard = None;
@@ -139,7 +139,7 @@ pub(crate) fn drop_stale(app: &mut SolveApp) {
 }
 
 /// Is there something Paste would paste here?
-pub fn can_paste(app: &SolveApp) -> bool {
+pub fn can_paste(app: &SketApp) -> bool {
     if app.session.active_sketch.is_some() {
         can_paste_sketch(app)
     } else if app.linked_design_clipboard.is_some() {
@@ -155,12 +155,12 @@ pub fn can_paste(app: &SolveApp) -> bool {
 }
 
 /// The design copied (to paste as a linked component) is the one open: it can't go into itself.
-fn design_copied_here(app: &SolveApp) -> bool {
+fn design_copied_here(app: &SketApp) -> bool {
     app.linked_design_clipboard.is_some() && app.linked_design_clipboard == app.session.path
 }
 
 /// Whether copied components are what Paste pastes now (not features, nor a design to link).
-pub fn pasting_components(app: &SolveApp) -> bool {
+pub fn pasting_components(app: &SketApp) -> bool {
     app.session.active_sketch.is_none()
         && app.session.clipboard.is_empty()
         && app.linked_design_clipboard.is_none()
@@ -169,14 +169,14 @@ pub fn pasting_components(app: &SolveApp) -> bool {
 
 /// Whether copied features (sketches, …) are what Paste pastes now (a Sketches folder's menu
 /// offers them).
-pub fn pasting_features(app: &SolveApp) -> bool {
+pub fn pasting_features(app: &SketApp) -> bool {
     app.session.active_sketch.is_none()
         && app.linked_design_clipboard.is_none()
         && (!app.session.clipboard.is_empty() || foreign(app).is_some_and(|c| !c.features.is_empty()))
 }
 
 /// The same engine paste serves the keyboard and the Sketches folder/group menus.
-fn paste_features(app: &mut SolveApp, component: u64, path: Vec<u64>) -> Result<Value, String> {
+fn paste_features(app: &mut SketApp, component: u64, path: Vec<u64>) -> Result<Value, String> {
     let copy = foreign(app).filter(|c| !c.features.is_empty()).cloned();
     let from_design = copy.is_some();
     if let Some(copy) = copy {
@@ -186,7 +186,7 @@ fn paste_features(app: &mut SolveApp, component: u64, path: Vec<u64>) -> Result<
 }
 
 /// Whether copied or cut bodies are what Paste pastes now (a Bodies folder's menu offers them).
-pub fn pasting_bodies(app: &SolveApp) -> bool {
+pub fn pasting_bodies(app: &SketApp) -> bool {
     app.session.active_sketch.is_none()
         && app.session.clipboard.is_empty()
         && app.linked_design_clipboard.is_none()
@@ -196,7 +196,7 @@ pub fn pasting_bodies(app: &SolveApp) -> bool {
 /// [`paste_into`], then what was pasted into `group` of the component's `folder`: a group's menu
 /// pastes into the group (the pasted bodies, which a body paste leaves selected, or the pasted
 /// sketches).
-pub fn paste_into_group(app: &mut SolveApp, at: Option<Pos2>, into: Option<(u64, Vec<u64>)>, group: Option<u64>, folder: &str) -> bool {
+pub fn paste_into_group(app: &mut SketApp, at: Option<Pos2>, into: Option<(u64, Vec<u64>)>, group: Option<u64>, folder: &str) -> bool {
     let (Some(group), Some((component, path))) = (group, into.clone()) else { return paste_into(app, at, false, into) };
     if folder == "sketches" && pasting_features(app) {
         let Ok(out) = paste_features(app, component, path) else { return false };
@@ -227,7 +227,7 @@ pub fn paste_into_group(app: &mut SolveApp, at: Option<Pos2>, into: Option<(u64,
 
 /// Is there something Paste would paste into `component` (a component's menu)? Copied components
 /// never go inside themselves or what they hold.
-pub fn can_paste_into(app: &SolveApp, component: u64) -> bool {
+pub fn can_paste_into(app: &SketApp, component: u64) -> bool {
     let placements = if pasting_components(app) {
         &app.copied_placements
     } else if app.session.clipboard.is_empty() && app.linked_design_clipboard.is_none() && !app.cut.placements.is_empty() {
@@ -243,7 +243,7 @@ pub fn can_paste_into(app: &SolveApp, component: u64) -> bool {
 
 /// Empty every clipboard (features, sketch geometry, bodies, components, a design): a copy that
 /// fails leaves nothing behind it, so Paste never pastes what was copied before.
-fn clear_clipboard(app: &mut SolveApp) {
+fn clear_clipboard(app: &mut SketApp) {
     app.session.clipboard.clear();
     app.session.sketch_clipboard = None;
     replace_clipboard(app);
@@ -252,7 +252,7 @@ fn clear_clipboard(app: &mut SolveApp) {
 /// A new copy or cut replaces the copied bodies, components, the cut and design (copied
 /// features and sketch geometry are replaced by the commands that copy them), in this design and
 /// for the others: it is the last one.
-fn replace_clipboard(app: &mut SolveApp) {
+fn replace_clipboard(app: &mut SketApp) {
     app.clipboard_stamp += 1;
     app.own_clipboard_stamp = app.clipboard_stamp;
     app.foreign_copy = None;
@@ -265,7 +265,7 @@ fn replace_clipboard(app: &mut SolveApp) {
 
 /// Leave what was cut where it is (Esc, or another copy): another design has nothing of it to paste
 /// either.
-pub fn drop_cut(app: &mut SolveApp) {
+pub fn drop_cut(app: &mut SketApp) {
     if !app.cut.is_empty() {
         app.foreign_copy = None;
     }
@@ -273,7 +273,7 @@ pub fn drop_cut(app: &mut SolveApp) {
 }
 
 /// A copy (or cut) that can't be done: it says why, and the clipboard is left empty.
-fn copy_failed(app: &mut SolveApp, why: Option<&str>) -> bool {
+fn copy_failed(app: &mut SketApp, why: Option<&str>) -> bool {
     clear_clipboard(app);
     if let Some(why) = why {
         app.set_status(why, true);
@@ -282,7 +282,7 @@ fn copy_failed(app: &mut SolveApp, why: Option<&str>) -> bool {
 }
 
 /// Copy the saved root design. The path stays in this app, outside per-document sessions.
-pub fn copy_design(app: &mut SolveApp) -> bool {
+pub fn copy_design(app: &mut SketApp) -> bool {
     let Some(path) = app.session.path.clone().filter(|_| !app.session.is_dirty()) else {
         clear_clipboard(app);
         app.set_status("Save this design before copying it as a linked component", false);
@@ -296,7 +296,7 @@ pub fn copy_design(app: &mut SolveApp) -> bool {
 }
 
 /// Copy the selection: sketch geometry in a sketch, otherwise timeline features.
-pub fn copy(app: &mut SolveApp) -> bool {
+pub fn copy(app: &mut SketApp) -> bool {
     if copying_design(app) {
         return copy_design(app);
     }
@@ -355,7 +355,7 @@ pub fn copy(app: &mut SolveApp) -> bool {
 
 /// Why the selected bodies can't be cut (`None`: they can): none selected, a locked one, or one
 /// that is a placed copy's (it is moved through its component).
-fn body_cut_refused(app: &SolveApp, bodies: &[String]) -> Option<String> {
+fn body_cut_refused(app: &SketApp, bodies: &[String]) -> Option<String> {
     if bodies.is_empty() {
         return Some("Select bodies (or, in a sketch, sketch geometry) to cut".into());
     }
@@ -368,7 +368,7 @@ fn body_cut_refused(app: &SolveApp, bodies: &[String]) -> Option<String> {
 
 /// Why the selected components can't be cut (`None`: they can): one placed more than once (an
 /// instance: cutting it would take every instance along), or held by a rigid group.
-fn placement_cut_refused(app: &SolveApp, placements: &[Vec<u64>]) -> Option<String> {
+fn placement_cut_refused(app: &SketApp, placements: &[Vec<u64>]) -> Option<String> {
     for path in placements {
         let Ok(p) = app.session.occurrence_placement(path) else { return Some("that component is gone".into()) };
         if app.session.doc.occurrences.iter().filter(|o| o.component == p.component).count() > 1 {
@@ -385,7 +385,7 @@ fn placement_cut_refused(app: &SolveApp, placements: &[Vec<u64>]) -> Option<Stri
 /// with it, and a selected feature takes the body it is the origin of, so those are left out of the
 /// set (and so are not marked, nor moved on their own): components, features and bodies chosen
 /// together are one move.
-fn cut_set(app: &SolveApp) -> Result<CutSet, String> {
+fn cut_set(app: &SketApp) -> Result<CutSet, String> {
     let mut set = CutSet { placements: placement_selection(app), features: crate::timeline::selected_feature_ids(app), bodies: body_selection(app) };
     if set.is_empty() {
         return Err("Select components, bodies, sketches or timeline features to cut".into());
@@ -435,7 +435,7 @@ fn cut_summary(set: &CutSet) -> String {
 }
 
 /// The names of what `set` marks, for the system clipboard text.
-fn cut_names(app: &SolveApp, set: &CutSet) -> Vec<String> {
+fn cut_names(app: &SketApp, set: &CutSet) -> Vec<String> {
     let placements = set.placements.iter().filter_map(|p| app.session.occurrence_placement(p).ok()).map(|p| p.name);
     let features = set.features.iter().filter_map(|id| app.session.doc.feature(*id)).map(|f| f.name.clone());
     placements.chain(features).chain(set.bodies.iter().cloned()).collect()
@@ -443,7 +443,7 @@ fn cut_names(app: &SolveApp, set: &CutSet) -> Vec<String> {
 
 /// Is there something Cut would cut: sketch geometry in a sketch, otherwise components, bodies or
 /// timeline features that may move.
-pub fn can_cut(app: &SolveApp) -> bool {
+pub fn can_cut(app: &SketApp) -> bool {
     if app.session.active_sketch.is_some() {
         return !sketch_selection(app).is_empty();
     }
@@ -452,7 +452,7 @@ pub fn can_cut(app: &SolveApp) -> bool {
 
 /// Cut: in a sketch, the selected sketch geometry (copied, then deleted: one undo step); otherwise
 /// the selected components, bodies and timeline features, which stay until Paste moves them.
-pub fn cut(app: &mut SolveApp) -> bool {
+pub fn cut(app: &mut SketApp) -> bool {
     if app.session.active_sketch.is_none() {
         let set = match cut_set(app) {
             Ok(set) => set,
@@ -487,7 +487,7 @@ pub fn cut(app: &mut SolveApp) -> bool {
 }
 
 /// The point of the active sketch under `at` (screen), when `at` is over the viewport.
-fn sketch_point(app: &SolveApp, at: Option<Pos2>) -> Option<[f64; 2]> {
+fn sketch_point(app: &SketApp, at: Option<Pos2>) -> Option<[f64; 2]> {
     let at = at?;
     let rect = app.viewport.rect?;
     // Under a card or panel floating over the viewport is not over the sketch.
@@ -503,18 +503,18 @@ fn sketch_point(app: &SolveApp, at: Option<Pos2>) -> Option<[f64; 2]> {
 /// when `at` is not over the sketch); otherwise the copied features at the history marker, or
 /// the copied bodies or components into the active component (components as new instances, or
 /// with `new_copy` as independent copies).
-pub fn paste(app: &mut SolveApp, at: Option<Pos2>) -> bool {
+pub fn paste(app: &mut SketApp, at: Option<Pos2>) -> bool {
     paste_as(app, at, false)
 }
 
 /// [`paste`]; `new_copy`: copied components paste as independent copies (Ctrl+Shift+V).
-pub fn paste_as(app: &mut SolveApp, at: Option<Pos2>, new_copy: bool) -> bool {
+pub fn paste_as(app: &mut SketApp, at: Option<Pos2>, new_copy: bool) -> bool {
     paste_into(app, at, new_copy, None)
 }
 
 /// [`paste_as`], copied bodies and components going into `into` (a component and the placement
 /// of it to place them by: a component's menu) instead of the active component.
-pub fn paste_into(app: &mut SolveApp, at: Option<Pos2>, new_copy: bool, into: Option<(u64, Vec<u64>)>) -> bool {
+pub fn paste_into(app: &mut SketApp, at: Option<Pos2>, new_copy: bool, into: Option<(u64, Vec<u64>)>) -> bool {
     let into = into.unwrap_or_else(|| {
         let active = app.session.active_component;
         (active, app.session.active_occurrence_path.clone().unwrap_or_else(|| app.session.doc.first_path(active)))
@@ -592,8 +592,8 @@ pub fn paste_into(app: &mut SolveApp, at: Option<Pos2>, new_copy: bool, into: Op
 
 /// Place the copied design's origin on the pointed solid surface, otherwise its parent's
 /// XY plane. With no viewport point or a parallel/behind-camera ray, use the parent origin.
-fn paste_placement(app: &SolveApp, at: Option<Pos2>) -> (Vec<u64>, [f64; 3]) {
-    use solidcore_record::Vec3;
+fn paste_placement(app: &SketApp, at: Option<Pos2>) -> (Vec<u64>, [f64; 3]) {
+    use sketcore_record::Vec3;
     use sketcraft_engine::doc;
     let path = app.session.active_occurrence_path.clone().unwrap_or_else(|| app.session.doc.first_path(app.session.active_component));
     let frame = app.session.occurrence_placement(&path).map(|p| p.world).unwrap_or(doc::IDENTITY);
@@ -626,7 +626,7 @@ fn paste_placement(app: &SolveApp, at: Option<Pos2>) -> (Vec<u64>, [f64; 3]) {
 /// The bodies another design copied or cut, into `into` (a component, placed by its placement)
 /// as imported bodies, or its components as independent copies, where they were in the world;
 /// they are selected.
-fn paste_from_design(app: &mut SolveApp, copy: std::sync::Arc<sketcraft_engine::ForeignCopy>, (component, path): (u64, Vec<u64>)) -> bool {
+fn paste_from_design(app: &mut SketApp, copy: std::sync::Arc<sketcraft_engine::ForeignCopy>, (component, path): (u64, Vec<u64>)) -> bool {
     if !copy.features.is_empty() {
         return paste_features(app, component, path).is_ok();
     }
@@ -651,7 +651,7 @@ fn paste_from_design(app: &mut SolveApp, copy: std::sync::Arc<sketcraft_engine::
 /// step (`browser.reparent`); what moved is selected and the cut is spent. What is gone, or
 /// already there, is skipped. A move that can't be done says why and keeps the cut, to paste
 /// somewhere else.
-fn paste_cut(app: &mut SolveApp, (component, path): (u64, Vec<u64>)) -> bool {
+fn paste_cut(app: &mut SketApp, (component, path): (u64, Vec<u64>)) -> bool {
     let cut = std::mem::take(&mut app.cut);
     let foreign = app.foreign_copy.take();
     let (placements, features, bodies) = {
@@ -706,7 +706,7 @@ fn paste_cut(app: &mut SolveApp, (component, path): (u64, Vec<u64>)) -> bool {
 /// New instances (or with `new_copy`, independent copies) of the copied components in `into` (a
 /// component, placed by its placement), where the components are; they are selected. A component
 /// never goes inside itself or what it holds: that is refused and says so.
-fn paste_placements(app: &mut SolveApp, new_copy: bool, (active, base): (u64, Vec<u64>)) -> bool {
+fn paste_placements(app: &mut SketApp, new_copy: bool, (active, base): (u64, Vec<u64>)) -> bool {
     let mut made = Vec::new();
     let mut names = Vec::new();
     for path in app.copied_placements.clone() {
@@ -743,7 +743,7 @@ fn paste_placements(app: &mut SolveApp, new_copy: bool, (active, base): (u64, Ve
 /// The frame's Copy, Cut and Paste events (and Ctrl+C / Ctrl+X / Ctrl+V sent as key presses), plus any
 /// clipboard text a menu's Copy left. Called by the global shortcuts when no text field has the
 /// keyboard.
-pub fn handle(app: &mut SolveApp, ctx: &egui::Context) {
+pub fn handle(app: &mut SketApp, ctx: &egui::Context) {
     let (copies, cuts, pastes, shift, pointer) = ctx.input(|i| {
         let mut copies = 0;
         let mut cuts = 0;
@@ -784,7 +784,7 @@ pub fn handle(app: &mut SolveApp, ctx: &egui::Context) {
 }
 
 /// Write clipboard text a copy left.
-pub fn flush(app: &mut SolveApp, ctx: &egui::Context) {
+pub fn flush(app: &mut SketApp, ctx: &egui::Context) {
     if let Some(text) = app.clipboard_text.take() {
         ctx.copy_text(text);
     }

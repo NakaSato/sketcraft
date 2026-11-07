@@ -3,7 +3,7 @@
 //! line that cuts it), drives it, follows its parameter, and survives undo and reopening.
 
 use serde_json::{Value, json};
-use solidcore_record::Vec2;
+use sketcore_record::Vec2;
 use sketcraft_geom::prelude::*;
 
 use crate::Session;

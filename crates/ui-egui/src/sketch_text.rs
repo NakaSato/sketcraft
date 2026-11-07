@@ -13,7 +13,7 @@ use sketcraft_engine::{
     sketch::{LinkKind, LinkSource, TextAlign, TextStyle},
 };
 
-use crate::SolveApp;
+use crate::SketApp;
 use crate::dialogs::{Dialog, Kind};
 use crate::selection::SelInput;
 use crate::ui_kit;
@@ -86,7 +86,7 @@ type Source = (String, String, [f64; FIELDS], TextStyle, [Option<String>; FIELDS
 const PLACEHOLDER: &str = "Text";
 
 /// Resolve an outline or filled letter only when all its boundaries belong to one text.
-pub(crate) fn entity_for_selection(app: &SolveApp, selection: &Sel) -> Option<String> {
+pub(crate) fn entity_for_selection(app: &SketApp, selection: &Sel) -> Option<String> {
     let sid = app.session.active_sketch?;
     let state = crate::open_meshing::session_world(&app.session);
     let ss = state.sketch(sid)?;
@@ -177,7 +177,7 @@ pub(crate) fn text_profiles(s: &sketcraft_engine::Session, sketch: u64, index: u
 }
 
 /// Only a complete selection belonging to one text source can seed the editor.
-pub(crate) fn selected_entity(app: &SolveApp) -> Option<String> {
+pub(crate) fn selected_entity(app: &SketApp) -> Option<String> {
     let sk = app.session.doc.sketch(app.session.active_sketch?).ok()?;
     let mut selected = None;
     let mut link = None;
@@ -195,14 +195,14 @@ pub(crate) fn selected_entity(app: &SolveApp) -> Option<String> {
 }
 
 /// The link of the one text the selection belongs to (see [`selected_entity`]).
-pub(crate) fn selected_link(app: &SolveApp) -> Option<String> {
+pub(crate) fn selected_link(app: &SketApp) -> Option<String> {
     let entity = selected_entity(app)?;
     let sk = app.session.doc.sketch(app.session.active_sketch?).ok()?;
     sk.curves.iter().find(|curve| curve.id == entity)?.link.clone()
 }
 
 /// Show every outline affected by the open editor without changing feature selections.
-pub(crate) fn highlighted(app: &SolveApp) -> Vec<Sel> {
+pub(crate) fn highlighted(app: &SketApp) -> Vec<Sel> {
     let Some(Kind::Text(tx)) = app.dialog.as_ref().map(|dialog| &dialog.kind) else { return Vec::new() };
     let Ok(sk) = app.session.doc.sketch(tx.sketch) else { return Vec::new() };
     sk.curves
@@ -222,7 +222,7 @@ fn shown(value: f64, unit: &str) -> String {
 
 /// The saved text source behind `link` in the active sketch: its text, its font (empty: the built-in
 /// font), and x, y, height and angle.
-fn source(app: &SolveApp, sketch: u64, link: &str) -> Option<Source> {
+fn source(app: &SketApp, sketch: u64, link: &str) -> Option<Source> {
     if app.session.active_sketch != Some(sketch) {
         return None;
     }
@@ -236,7 +236,7 @@ fn source(app: &SolveApp, sketch: u64, link: &str) -> Option<Source> {
 }
 
 /// Whether the saved words of `link` follow an expression.
-fn formula_saved(app: &SolveApp, sketch: u64, link: &str) -> bool {
+fn formula_saved(app: &SketApp, sketch: u64, link: &str) -> bool {
     let source = app.session.doc.sketch(sketch).ok().and_then(|sk| sk.link(link).map(|l| l.source.clone()));
     matches!(source, Some(LinkSource::Text { exprs, .. }) if exprs.text.is_some())
 }
@@ -288,7 +288,7 @@ pub(crate) fn sync_path(d: &mut Dialog) {
 }
 
 /// The dialog's kind for the text that `entity` (an outline curve) belongs to.
-fn kind_for(app: &SolveApp, entity: &str) -> Option<Kind> {
+fn kind_for(app: &SketApp, entity: &str) -> Option<Kind> {
     let sketch = app.session.active_sketch?;
     let sk = app.session.doc.sketch(sketch).ok()?;
     let link = sk.curves.iter().find(|curve| curve.id == entity).and_then(|curve| curve.link.clone())?;
@@ -324,7 +324,7 @@ fn kind_for(app: &SolveApp, entity: &str) -> Option<Kind> {
 }
 
 /// `Dialog::for_command`: Edit Text with one text's outlines selected.
-pub(crate) fn start(app: &SolveApp, id: &str) -> Option<(Kind, Vec<SelInput>)> {
+pub(crate) fn start(app: &SketApp, id: &str) -> Option<(Kind, Vec<SelInput>)> {
     if id != "sketch.edit_text" {
         return None;
     }
@@ -334,7 +334,7 @@ pub(crate) fn start(app: &SolveApp, id: &str) -> Option<(Kind, Vec<SelInput>)> {
 }
 
 /// Open the dialog for the text an outline (picked with the Edit Text tool) belongs to.
-pub(crate) fn open(app: &mut SolveApp, entity: &str) {
+pub(crate) fn open(app: &mut SketApp, entity: &str) {
     match kind_for(app, entity) {
         Some(Kind::Text(tx)) => {
             app.dialog = Some(dialog(tx));
@@ -347,7 +347,7 @@ pub(crate) fn open(app: &mut SolveApp, entity: &str) {
 /// The Text tool's click: put a placeholder text down at `at` (sketch coordinates) and open
 /// Edit Text on it, its text selected so that typing replaces it. Cancel takes it away again;
 /// OK keeps it as one undo step.
-pub(crate) fn place(app: &mut SolveApp, at: solidcore_record::Vec2, height: f64) {
+pub(crate) fn place(app: &mut SketApp, at: sketcore_record::Vec2, height: f64) {
     let Some(checkpoint) = app.session.execute("edit.checkpoint", &json!({})).ok().and_then(|r| r["checkpoint"].as_u64()) else { return };
     let placed = app.run("sketch.text", json!({"text": PLACEHOLDER, "at": [at.x, at.y], "height": height}));
     let curve = placed.as_ref().ok().and_then(|v| v["curves"].get(0)?.as_str().map(str::to_owned));
@@ -368,7 +368,7 @@ pub(crate) fn place(app: &mut SolveApp, at: solidcore_record::Vec2, height: f64)
 
 /// Run one of the dialog's changes: the undo history keeps one step for the whole dialog (the
 /// first change's, which goes back to the design from before it).
-fn folded<T>(app: &mut SolveApp, k: &mut Tx, run: impl FnOnce(&mut SolveApp) -> T) -> T {
+fn folded<T>(app: &mut SketApp, k: &mut Tx, run: impl FnOnce(&mut SketApp) -> T) -> T {
     let mut undo = std::mem::take(&mut app.session.undo);
     let out = run(app);
     let pushed = std::mem::take(&mut app.session.undo);
@@ -383,7 +383,7 @@ fn folded<T>(app: &mut SolveApp, k: &mut Tx, run: impl FnOnce(&mut SolveApp) -> 
 /// Each frame: show the fields on the canvas (a live edit) when they changed. Fields that make
 /// no text (an empty one, a half-typed value) leave the last good preview.
 /// A changed preview returns its result for the dialog's error row; unchanged fields keep it.
-pub(crate) fn preview(app: &mut SolveApp, k: &mut Tx) -> Option<Result<(), String>> {
+pub(crate) fn preview(app: &mut SketApp, k: &mut Tx) -> Option<Result<(), String>> {
     let Ok(params) = edit_params(app, k) else { return None };
     if k.tried.as_ref() == Some(&params) {
         return None;
@@ -430,7 +430,7 @@ fn value_of_definition(v: &mut Value) {
 
 /// OK: the fields' final edit (which also brings the features after the sketch up to date), in
 /// the dialog's one undo step.
-pub(crate) fn apply(app: &mut SolveApp, k: &mut Tx) -> Result<(), String> {
+pub(crate) fn apply(app: &mut SketApp, k: &mut Tx) -> Result<(), String> {
     let params = edit_params(app, k)?;
     folded(app, k, |app| app.run("sketch.edit_text", params))?;
     k.shown = source(app, k.sketch, &k.link);
@@ -439,21 +439,21 @@ pub(crate) fn apply(app: &mut SolveApp, k: &mut Tx) -> Result<(), String> {
 
 /// The dialog closed: applied, its changes stay; otherwise the design goes back to how it was
 /// before them (a placed text goes away).
-pub(crate) fn closed(app: &mut SolveApp, k: &mut Tx, applied: bool) {
+pub(crate) fn closed(app: &mut SketApp, k: &mut Tx, applied: bool) {
     if let Some(checkpoint) = k.start.take() {
         let _ = app.session.execute("edit.restore_checkpoint", &json!({"checkpoint": checkpoint, "forget": applied}));
     }
 }
 
 /// Is the Edit Text dialog open?
-pub(crate) fn editing(app: &SolveApp) -> bool {
+pub(crate) fn editing(app: &SketApp) -> bool {
     matches!(app.dialog.as_ref().map(|d| &d.kind), Some(Kind::Text(_)))
 }
 
 /// Keep the dialog in step with the design: false once its text is gone (sketch finished, the
 /// text deleted or undone). Other design changes leave it open; when the saved source itself
 /// changed (undo, a script), fields the user has not touched follow it.
-pub(crate) fn refresh(app: &SolveApp, k: &mut Tx) -> bool {
+pub(crate) fn refresh(app: &SketApp, k: &mut Tx) -> bool {
     let Some(current) = source(app, k.sketch, &k.link) else { return false };
     // What the live preview made is the dialog's own doing.
     if k.shown.as_ref() == Some(&current) {
@@ -661,14 +661,14 @@ fn font_row(ui: &mut egui::Ui, k: &mut Tx) {
 
 /// The command OK runs. Fields take expressions with units and parameters; a bare number is
 /// in the design's units (lengths) or degrees (angle).
-pub(crate) fn commands(app: &SolveApp, k: &Tx) -> Result<Vec<(String, Value)>, String> {
+pub(crate) fn commands(app: &SketApp, k: &Tx) -> Result<Vec<(String, Value)>, String> {
     Ok(vec![("sketch.edit_text".into(), edit_params(app, k)?)])
 }
 
 /// `sketch.edit_text`'s parameters for the fields as they are. X, Y, Height and Angle go as
 /// numbers, or as their expressions when these name parameters (the text then follows them): an
 /// untouched field that holds one keeps it.
-fn edit_params(app: &SolveApp, k: &Tx) -> Result<Value, String> {
+fn edit_params(app: &SketApp, k: &Tx) -> Result<Value, String> {
     let doc = &app.session.doc;
     let mut out = [0.0; FIELDS];
     let mut sent: [Value; FIELDS] = std::array::from_fn(|_| Value::Null);
@@ -690,8 +690,8 @@ fn edit_params(app: &SolveApp, k: &Tx) -> Result<Value, String> {
             v
         };
         // A field that names parameters, or names its value (`h = 10`, #4071), goes as typed.
-        let names_parameters = i < ANGLE_END
-            && (!sketcraft_engine::doc::expr::references(value).is_empty() || sketcraft_engine::doc::expr::definition(value).is_some());
+        let names_parameters =
+            i < ANGLE_END && (!sketcraft_engine::doc::expr::references(value).is_empty() || sketcraft_engine::doc::expr::definition(value).is_some());
         sent[i] = match given {
             Some(e) => json!(e),
             None if value != initial && names_parameters => json!(value.trim()),
@@ -741,7 +741,7 @@ mod tests {
         (h, link, curve)
     }
 
-    fn tx(app: &SolveApp) -> &Tx {
+    fn tx(app: &SketApp) -> &Tx {
         match app.dialog.as_ref().map(|d| &d.kind) {
             Some(Kind::Text(k)) => k,
             _ => panic!("Edit Text is not open"),
@@ -896,7 +896,7 @@ mod tests {
         let sk = h.app.session.doc.sketch(sid).unwrap();
         let expected = LinkSource::Text {
             text: "O".into(),
-            at: solidcore_record::Vec2::new(25.0, 12.0),
+            at: sketcore_record::Vec2::new(25.0, 12.0),
             height: 20.0,
             angle: std::f64::consts::FRAC_PI_2,
             font: None,
@@ -1316,7 +1316,7 @@ mod tests {
         // A placeholder is down at once, Edit Text is open on it with the text selected, and the tool has ended.
         assert!(editing(&h.app));
         assert!(h.app.tool.is_none());
-        let at = solidcore_record::Vec2::new(5.0, 5.0);
+        let at = sketcore_record::Vec2::new(5.0, 5.0);
         assert!(matches!(texts(&h).as_slice(), [LinkSource::Text { text, at: a, .. }] if text == PLACEHOLDER && a.dist(at) < 1e-9));
         // Typing replaces it, and the canvas follows every key.
         h.step(&json!({"text":"Hi"})).unwrap();
@@ -1447,7 +1447,7 @@ mod tests {
         };
         let whole = area(&h, &text_profiles(&h.app.session, sid, i).unwrap());
         // The I's stem, below where the rectangle's top will cross it.
-        let stem = solidcore_record::Vec2::new(h.app.session.world_state().unwrap().sketch(sid).unwrap().profiles[i].centroid.x, 2.0);
+        let stem = sketcore_record::Vec2::new(h.app.session.world_state().unwrap().sketch(sid).unwrap().profiles[i].centroid.x, 2.0);
         h.app.run("sketch.rectangle.two_point", json!({"p0":[-5,-5],"p1":[40,8]})).unwrap();
         let state = h.app.session.world_state().unwrap();
         let profiles = &state.sketch(sid).unwrap().profiles;
@@ -1456,7 +1456,7 @@ mod tests {
         assert_eq!(picked[0], below);
         assert!(picked.len() > 2, "the letters are cut in pieces: {picked:?}");
         assert!((area(&h, &picked) - whole).abs() < 1e-5 * whole, "{} {whole}", area(&h, &picked));
-        let round = sketcraft_engine::sketch::profile_at_point(profiles, solidcore_record::Vec2::new(-3.0, -3.0)).unwrap();
+        let round = sketcraft_engine::sketch::profile_at_point(profiles, sketcore_record::Vec2::new(-3.0, -3.0)).unwrap();
         assert!(text_profiles(&h.app.session, sid, round).is_none());
     }
 

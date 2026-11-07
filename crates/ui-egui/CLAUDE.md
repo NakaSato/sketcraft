@@ -1,9 +1,9 @@
 # CLAUDE.md — sketcraft-ui-egui
 
 The egui + wgpu front end (layer L5): a thin shell over `sketcraft_engine::Session`. Panels read
-engine state and act through commands (`SolveApp::run(id, params)` / `SolveApp::start(id)`).
+engine state and act through commands (`SketApp::run(id, params)` / `SketApp::start(id)`).
 Nothing here owns design data. Both apps (`apps/sketcraft`, `apps/sketcraft-web`) run the same
-`SolveApp`. See the root CLAUDE.md, and AGENTS.md: most of its rules (persisted state, modals,
+`SketApp`. See the root CLAUDE.md, and AGENTS.md: most of its rules (persisted state, modals,
 inspector tables, English UI text) apply to this crate.
 
 ## Commands
@@ -30,7 +30,7 @@ SKETCRAFT_SCENARIO_FILE=x.json cargo test -p sketcraft-ui-egui --test scenarios 
 ## Layout
 
 Entry points:
-- `src/lib.rs`: `SolveApp` (state, `new`, `run`, `start`, `ui`), `Services` (host hooks: file
+- `src/lib.rs`: `SketApp` (state, `new`, `run`, `start`, `ui`), `Services` (host hooks: file
   pickers, show-in-folder, graphics path…), and the sorted `mod` list.
 - `src/control.rs`: the control-channel methods (`engine.execute`, `ui.start`, `ui.click`,
   `ui.screenshot`, …). The apps provide the transport.
@@ -78,8 +78,7 @@ merges `assets/locales/*.json` with `assets/locales/pending/*.json`, compiles ic
 - Act through commands (`app.run` / `app.start`); never change the design directly. New behaviour
   is a `CommandSpec` in `crates/engine/src/cmd/` first: `skills/sketcraft-commands/SKILL.md`.
 - Depend on lower crates through `sketcraft_engine` re-exports (`sketcraft_engine::doc`, `geom`, …);
-  the only workspace crates in `[dependencies]` are `sketcraft-engine`, `sketcraft-gpu` and
-  `sketcraft-space-mouse`.
+  the only workspace crates in `[dependencies]` are `sketcraft-engine` and `sketcraft-gpu`.
   `unsafe` is forbidden; the crate root denies `unwrap`/`expect`/`panic!`.
 - UI containers: use `ui_kit::Container` / `Panel` / `Window` / `Confirm` / `Menu`. No raw
   `egui::Modal`/`egui::Window`/`CollapsingHeader`. `cargo xtask ui-containers` and

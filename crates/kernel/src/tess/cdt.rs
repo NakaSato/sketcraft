@@ -8,7 +8,7 @@
 use sketcraft_geom::prelude::*;
 use std::collections::HashMap;
 
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 
 use super::size::Turn;
 use spade::handles::FixedVertexHandle;

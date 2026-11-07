@@ -48,8 +48,8 @@ fn periodic_step_seam_survives_identity_rotation_and_translation() {
     // A face whose loop uses an edge twice (the seam).
     let seamed = body.record().faces.iter().any(|f| {
         f.loops.iter().any(|l| match l {
-            solidcore_record::brep::Loop::Edges { edges } => edges.iter().any(|u| edges.iter().filter(|w| w.edge == u.edge).count() > 1),
-            solidcore_record::brep::Loop::Vertex { .. } => false,
+            sketcore_record::brep::Loop::Edges { edges } => edges.iter().any(|u| edges.iter().filter(|w| w.edge == u.edge).count() > 1),
+            sketcore_record::brep::Loop::Vertex { .. } => false,
         })
     });
     assert!(seamed);

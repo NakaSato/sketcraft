@@ -3,7 +3,7 @@
 mod raster;
 use egui::{ColorImage, Event, PointerButton, Pos2, Rect, TextureId, vec2};
 use serde_json::json;
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 use sketcraft_engine::Sel;
 use sketcraft_engine::geom::prelude::*;
 use sketcraft_ui_egui::{

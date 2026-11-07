@@ -2,7 +2,7 @@
 //! 40 × 30 × 20 box at the origin, a cylinder, a sphere and a torus.
 
 use serde_json::{Value, json};
-use solidcore_record::{Plane, Vec3};
+use sketcore_record::{Plane, Vec3};
 use sketcraft_geom::prelude::*;
 
 use crate::Session;

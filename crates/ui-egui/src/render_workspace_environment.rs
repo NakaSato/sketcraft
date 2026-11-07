@@ -1,7 +1,7 @@
 //! Standalone Environment inspector body. Drawing and source browsing never save a setup.
 use super::{ImageMethod, Stage, cpu, hdr, setups, studio};
 use crate::ui_kit::BackingTooltipExt as _;
-use crate::{SolveApp, theme::Tokens, ui_kit};
+use crate::{SketApp, theme::Tokens, ui_kit};
 use serde_json::{Value, json};
 use sketcraft_engine::doc::render_settings::{RenderJob, RenderSetup};
 use std::sync::{Arc, Weak};
@@ -52,7 +52,7 @@ pub(super) fn drag_rotation(initial: f64, start: f64, angle: f64, snap: bool) ->
     Some((value + 180.0).rem_euclid(360.0) - 180.0)
 }
 
-fn ring_target(app: &SolveApp) -> bool {
+fn ring_target(app: &SketApp) -> bool {
     let view = &app.render_workspace.view;
     super::active(app)
         && !view.result
@@ -61,7 +61,7 @@ fn ring_target(app: &SolveApp) -> bool {
         && !app.session.model.is_stale()
 }
 
-fn ring_geometry(app: &SolveApp, viewport: egui::Rect) -> Option<Ring> {
+fn ring_geometry(app: &SketApp, viewport: egui::Rect) -> Option<Ring> {
     let free = crate::render_ui::canvas(app, viewport);
     if !viewport.is_finite() || !viewport.is_positive() || !free.is_finite() || !free.is_positive() {
         return None;
@@ -90,7 +90,7 @@ fn ring_geometry(app: &SolveApp, viewport: egui::Rect) -> Option<Ring> {
 }
 
 /// Own the complete primary gesture before shared camera navigation or product picking sees it.
-pub(super) fn ring_input(app: &mut SolveApp, ui: &mut egui::Ui, viewport: egui::Rect, response: &egui::Response) -> bool {
+pub(super) fn ring_input(app: &mut SketApp, ui: &mut egui::Ui, viewport: egui::Rect, response: &egui::Response) -> bool {
     if app.render_workspace.view.environment_ring.suppress_primary {
         app.render_workspace.view.environment_ring.suppress_primary = ui.input(|i| i.pointer.primary_down());
         return true;
@@ -153,7 +153,6 @@ pub(super) fn ring_input(app: &mut SolveApp, ui: &mut egui::Ui, viewport: egui::
         app.viewport.primary_nav = None;
         app.viewport.modifier_nav = None;
         app.viewport.key_hold = None;
-        app.viewport.device_motion = None;
         ui.ctx().set_cursor_icon(egui::CursorIcon::Grabbing);
         let angle = pointer.and_then(|p| pointer_angle(p, ring.center, ring.radius)).and_then(|angle| {
             drag.moved |= drag_rotation(0.0, drag.start, angle, false).is_some_and(|delta| delta.abs() > 1e-6);
@@ -185,7 +184,7 @@ pub(super) fn ring_input(app: &mut SolveApp, ui: &mut egui::Ui, viewport: egui::
     false
 }
 
-pub(super) fn ring_overlay(app: &mut SolveApp, ui: &mut egui::Ui, viewport: egui::Rect) {
+pub(super) fn ring_overlay(app: &mut SketApp, ui: &mut egui::Ui, viewport: egui::Rect) {
     if !ring_target(app) {
         return;
     }
@@ -212,7 +211,7 @@ pub(super) fn ring_overlay(app: &mut SolveApp, ui: &mut egui::Ui, viewport: egui
     crate::scenario::publish_target("render:environment:ring-degrees", chip.response.rect);
 }
 
-pub(super) fn editor(app: &mut SolveApp, ui: &mut egui::Ui) {
+pub(super) fn editor(app: &mut SketApp, ui: &mut egui::Ui) {
     ui_kit::scope(ui, |ui| {
         source(app, ui);
         let title = app.tr("render.environment.orientation").to_string();
@@ -267,18 +266,18 @@ pub(super) fn editor(app: &mut SolveApp, ui: &mut egui::Ui) {
     stage_confirmation(app, ui.ctx());
 }
 
-pub(super) fn open_sources(app: &mut SolveApp) {
+pub(super) fn open_sources(app: &mut SketApp) {
     super::library::open_category(app, "hdr");
     if let Err(error) = app.run("view.render_stage", json!({"stage":Stage::Light.key()})) {
         app.set_status(error, true);
     }
 }
 
-fn note(app: &SolveApp, ui: &mut egui::Ui, key: &str) {
+fn note(app: &SketApp, ui: &mut egui::Ui, key: &str) {
     ui_kit::text(ui, app.tr(key), ui_kit::Text::Note(key));
 }
 
-pub(super) fn persist(app: &mut SolveApp) {
+pub(super) fn persist(app: &mut SketApp) {
     let file = hdr::active(app).and_then(|target| match hdr::input(app, target) {
         input @ hdr::Input::FileCaptured { .. } => Some((target, input.clone())),
         _ => None,
@@ -296,7 +295,7 @@ pub(super) fn persist(app: &mut SolveApp) {
     }
 }
 
-fn source(app: &mut SolveApp, ui: &mut egui::Ui) {
+fn source(app: &mut SketApp, ui: &mut egui::Ui) {
     let title = app.tr("render.env_source").to_string();
     ui_kit::section(ui, "render_environment_source", &title, true, |ui| {
         let method = app.render_workspace.view.method;
@@ -476,7 +475,7 @@ fn source(app: &mut SolveApp, ui: &mut egui::Ui) {
     });
 }
 
-fn source_name(app: &mut SolveApp, ctx: &egui::Context) -> String {
+fn source_name(app: &mut SketApp, ctx: &egui::Context) -> String {
     let source = match app.render_workspace.view.method {
         ImageMethod::CpuRaytrace => {
             app.render_workspace.view.cpu.hdr.resource().filter(|_| app.render_workspace.view.cpu.environment == cpu::Environment::Hdr)
@@ -512,7 +511,7 @@ fn source_name(app: &mut SolveApp, ctx: &egui::Context) -> String {
     super::scene::environment(app).0
 }
 
-fn environment_values(app: &SolveApp) -> Option<(f64, f64, f64, bool)> {
+fn environment_values(app: &SketApp) -> Option<(f64, f64, f64, bool)> {
     let v = &app.render_workspace.view;
     match v.method {
         ImageMethod::GpuRaytrace if v.studio.environment != studio::Environment::None => {
@@ -533,7 +532,7 @@ fn wrapped_degrees(radians: f64) -> f64 {
     if degrees.is_finite() { (degrees + 180.0).rem_euclid(360.0) - 180.0 } else { 0.0 }
 }
 
-pub(super) fn commit_environment(app: &mut SolveApp, mut request: Value) -> Result<(), String> {
+pub(super) fn commit_environment(app: &mut SketApp, mut request: Value) -> Result<(), String> {
     let fields = request.as_object_mut().ok_or_else(|| app.tr("render.env_invalid_edit").to_string())?;
     fields.insert("name".into(), json!(app.render_workspace.view.name));
     let mut setup = serde_json::to_value(setups::snapshot(app)?).map_err(|error| error.to_string())?;
@@ -546,7 +545,7 @@ pub(super) fn commit_environment(app: &mut SolveApp, mut request: Value) -> Resu
     Ok(())
 }
 
-fn save(app: &mut SolveApp, setup: RenderSetup) -> Result<(), String> {
+fn save(app: &mut SketApp, setup: RenderSetup) -> Result<(), String> {
     // Numerical environment edits keep the shot's explicit Update camera policy.
     let mut patch = serde_json::to_value(setup).map_err(|error| error.to_string())?;
     if let Some(fields) = patch.as_object_mut() {
@@ -557,7 +556,7 @@ fn save(app: &mut SolveApp, setup: RenderSetup) -> Result<(), String> {
     Ok(())
 }
 
-pub(super) fn commit_backdrop(app: &mut SolveApp, color: [u8; 3], transparent: bool) -> Result<(), String> {
+pub(super) fn commit_backdrop(app: &mut SketApp, color: [u8; 3], transparent: bool) -> Result<(), String> {
     let mut setup = setups::snapshot(app)?;
     setup.background = color;
     match &mut setup.job {
@@ -580,7 +579,7 @@ pub(super) fn commit_backdrop(app: &mut SolveApp, color: [u8; 3], transparent: b
 // Keep an in-progress gesture outside the design. Release/Enter commits once;
 // external commands, undo and document switches invalidate its temporary identity.
 fn edit<T: Clone + PartialEq + Send + Sync + 'static>(
-    app: &SolveApp,
+    app: &SketApp,
     ui: &mut egui::Ui,
     key: &str,
     current: T,
@@ -610,7 +609,7 @@ fn edit<T: Clone + PartialEq + Send + Sync + 'static>(
     None
 }
 
-fn backdrop(app: &mut SolveApp, ui: &mut egui::Ui) {
+fn backdrop(app: &mut SketApp, ui: &mut egui::Ui) {
     use sketcraft_engine::render::job::finishing::BackdropMode;
     let title = app.tr("render.env_backdrop").to_string();
     ui_kit::section(ui, "render_environment_backdrop", &title, true, |ui| {
@@ -729,11 +728,7 @@ fn backdrop(app: &mut SolveApp, ui: &mut egui::Ui) {
     });
 }
 
-pub(super) fn commit_gradient(
-    app: &mut SolveApp,
-    enabled: bool,
-    gradient: sketcraft_engine::render::job::finishing::Backdrop,
-) -> Result<(), String> {
+pub(super) fn commit_gradient(app: &mut SketApp, enabled: bool, gradient: sketcraft_engine::render::job::finishing::Backdrop) -> Result<(), String> {
     let mut setup = setups::snapshot(app)?;
     match &mut setup.job {
         Some(RenderJob::GpuPath { options, .. }) => options.backdrop = enabled.then_some(gradient),
@@ -752,7 +747,7 @@ pub(super) struct Ground {
     pub color: [f64; 3],
 }
 
-fn ground_values(app: &SolveApp, setup: &RenderSetup) -> Ground {
+fn ground_values(app: &SketApp, setup: &RenderSetup) -> Ground {
     let mut value = Ground { margin: 0.25, gap: 0.1, color: [0.18; 3] };
     if let Some(panel) = setup.stage.iter().find(|panel| matches!(panel.id.as_str(), "ground" | "studio_ground")) {
         value.color = panel.reflectance_linear;
@@ -769,7 +764,7 @@ fn ground_values(app: &SolveApp, setup: &RenderSetup) -> Ground {
     value
 }
 
-pub(super) fn commit_ground(app: &mut SolveApp, enabled: bool, value: Ground) -> Result<(), String> {
+pub(super) fn commit_ground(app: &mut SketApp, enabled: bool, value: Ground) -> Result<(), String> {
     let set = setups::snapshot(app)?;
     let request = if enabled {
         json!({"name":app.render_workspace.view.name,"set":set,"margin_fraction":value.margin,"gap_mm":value.gap,"reflectance_linear":value.color,"replace_stage":true})
@@ -795,7 +790,7 @@ struct StageRemoval {
     set: RenderSetup,
 }
 
-pub(super) fn request_stage_removal(app: &SolveApp, ctx: &egui::Context) {
+pub(super) fn request_stage_removal(app: &SketApp, ctx: &egui::Context) {
     if let Ok(set) = setups::snapshot(app) {
         ctx.data_mut(|data| {
             data.insert_temp(
@@ -811,7 +806,7 @@ pub(super) fn request_stage_removal(app: &SolveApp, ctx: &egui::Context) {
     }
 }
 
-pub(super) fn stage_confirmation(app: &mut SolveApp, ctx: &egui::Context) {
+pub(super) fn stage_confirmation(app: &mut SketApp, ctx: &egui::Context) {
     let id = egui::Id::unique("render_remove_stage");
     let Some(pending) = ctx.data_mut(|data| data.get_temp::<StageRemoval>(id)) else { return };
     if pending.revision != app.session.revision
@@ -842,7 +837,7 @@ pub(super) fn stage_confirmation(app: &mut SolveApp, ctx: &egui::Context) {
     }
 }
 
-fn ground(app: &mut SolveApp, ui: &mut egui::Ui) {
+fn ground(app: &mut SketApp, ui: &mut egui::Ui) {
     let title = app.tr("render.environment.ground").to_string();
     ui_kit::section(ui, "render_environment_ground", &title, true, |ui| {
         let snapshot = setups::snapshot(app);
@@ -934,11 +929,11 @@ fn vector_row(ui: &mut egui::Ui, label: &str, value: &mut [f64; 3], range: std::
 }
 
 /// Full prospective validation, shared by visible controls and method adoption.
-pub(super) fn validate_atmosphere(app: &SolveApp) -> Result<(), String> {
+pub(super) fn validate_atmosphere(app: &SketApp) -> Result<(), String> {
     validate_volume_value(app, app.render_workspace.view.studio.volume)
 }
 
-fn validate_volume_value(app: &SolveApp, value: Option<sketcraft_engine::render::job::volume::HomogeneousVolume>) -> Result<(), String> {
+fn validate_volume_value(app: &SketApp, value: Option<sketcraft_engine::render::job::volume::HomogeneousVolume>) -> Result<(), String> {
     let view = &app.render_workspace.view;
     let Some(volume) = value else { return Ok(()) };
     volume.validate().map_err(|error| error.to_string())?;
@@ -974,7 +969,7 @@ fn validate_volume_value(app: &SolveApp, value: Option<sketcraft_engine::render:
 
 /// Change only the volume intent through one non-camera numerical transaction.
 /// Corrective removal never needs an invalid previous volume to validate.
-pub(super) fn commit_atmosphere(app: &mut SolveApp, volume: Option<sketcraft_engine::render::job::volume::HomogeneousVolume>) -> Result<(), String> {
+pub(super) fn commit_atmosphere(app: &mut SketApp, volume: Option<sketcraft_engine::render::job::volume::HomogeneousVolume>) -> Result<(), String> {
     if app.render_workspace.view.method == ImageMethod::Raster {
         return Err(app.tr("render.output_raytrace_only").into());
     }
@@ -997,7 +992,7 @@ pub(super) fn commit_atmosphere(app: &mut SolveApp, volume: Option<sketcraft_eng
 
 /// Explicit, camera-neutral adoption shared by constant environment and Atmosphere.
 /// Every authored field is retained unless this action names its transport change.
-pub(super) fn enable_indirect_lighting(app: &mut SolveApp) -> Result<(), String> {
+pub(super) fn enable_indirect_lighting(app: &mut SketApp) -> Result<(), String> {
     if app.render_workspace.view.method != ImageMethod::CpuRaytrace {
         return Err(app.tr("render.cpu_indirect_method_required").into());
     }
@@ -1030,7 +1025,7 @@ pub(super) fn enable_indirect_lighting(app: &mut SolveApp) -> Result<(), String>
 }
 
 fn volume_vector_row(
-    app: &SolveApp,
+    app: &SketApp,
     ui: &mut egui::Ui,
     key: &str,
     id: &str,
@@ -1062,7 +1057,7 @@ fn volume_vector_row(
 }
 
 /// One common authoring surface; CPU/GPU preserve the same world-mm box intent.
-pub(super) fn atmosphere(app: &mut SolveApp, ui: &mut egui::Ui) {
+pub(super) fn atmosphere(app: &mut SketApp, ui: &mut egui::Ui) {
     let title = app.tr("render.environment.atmosphere").to_string();
     ui_kit::section_method(ui, "render_environment_atmosphere", &title, true, "CPU / GPU", |ui| {
         let method = app.render_workspace.view.method;

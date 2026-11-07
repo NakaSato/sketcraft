@@ -1,5 +1,5 @@
 //! Freeze rule-manager commands, reload policy and published row/control identities.
-use crate::{SolveApp, dialogs::Kind, dialogs_plastic::Pl, dialogs_sheet::Sm, scenario, theme::Tokens};
+use crate::{SketApp, dialogs::Kind, dialogs_plastic::Pl, dialogs_sheet::Sm, scenario, theme::Tokens};
 use serde_json::{Value, json};
 
 const SHEET_ROWS: &[&str] = &[
@@ -32,7 +32,7 @@ const PLASTIC_ROWS: &[&str] = &[
     "Active rule",
 ];
 
-fn frame(app: &mut SolveApp, ctx: &egui::Context, kind: &mut Kind, labels: &[&str]) {
+fn frame(app: &mut SketApp, ctx: &egui::Context, kind: &mut Kind, labels: &[&str]) {
     scenario::clear_handles();
     let mut output = ctx.run_ui(egui::RawInput::default(), |ui| {
         crate::ui_kit::scope(ui, |ui| match kind {
@@ -51,7 +51,7 @@ fn frame(app: &mut SolveApp, ctx: &egui::Context, kind: &mut Kind, labels: &[&st
     assert_eq!(scenario::handles("dialog:").into_iter().map(|(name, _)| name).collect::<Vec<_>>(), expected);
 }
 
-fn commands(app: &SolveApp, kind: &Kind) -> Vec<(String, Value)> {
+fn commands(app: &SketApp, kind: &Kind) -> Vec<(String, Value)> {
     match kind {
         Kind::Sheet(k) => crate::dialogs_sheet::commands(app, k, &[], &Default::default()).unwrap(),
         Kind::Plastic(k) => crate::dialogs_plastic::commands(app, k, &[], &Default::default()).unwrap(),
@@ -61,7 +61,7 @@ fn commands(app: &SolveApp, kind: &Kind) -> Vec<(String, Value)> {
 
 #[test]
 fn sheet_rule_editor_contract() {
-    let mut app = SolveApp::new(Default::default(), Default::default());
+    let mut app = SketApp::new(Default::default(), Default::default());
     let ctx = crate::fonts::test_context();
     let (mut kind, _) = crate::dialogs_sheet::start(&app, "sheet.manage_rules").unwrap();
     frame(&mut app, &ctx, &mut kind, SHEET_ROWS);
@@ -99,7 +99,7 @@ fn sheet_rule_editor_contract() {
 
 #[test]
 fn plastic_rule_editor_contract() {
-    let mut app = SolveApp::new(Default::default(), Default::default());
+    let mut app = SketApp::new(Default::default(), Default::default());
     let ctx = crate::fonts::test_context();
     let (mut kind, _) = crate::dialogs_plastic::start(&app, "plastic.manage_rules").unwrap();
     frame(&mut app, &ctx, &mut kind, PLASTIC_ROWS);

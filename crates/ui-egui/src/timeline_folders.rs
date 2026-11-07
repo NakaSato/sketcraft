@@ -16,7 +16,7 @@ use std::collections::{HashMap, HashSet};
 use serde_json::json;
 use sketcraft_engine::doc::{Document, TimelineGroup};
 
-use crate::SolveApp;
+use crate::SketApp;
 use crate::timeline_fold::{Folder, History, Strip};
 use crate::ui_kit::HistoryGroupChip;
 
@@ -32,12 +32,12 @@ fn key(id: u64) -> String {
 
 /// Whether folder `id` shows what it holds: as last opened or folded in either History, else
 /// `unless_clicked` (the History beside the browser shows folders open, the History bar folded).
-pub(crate) fn is_open(app: &SolveApp, id: u64, unless_clicked: bool) -> bool {
+pub(crate) fn is_open(app: &SketApp, id: u64, unless_clicked: bool) -> bool {
     crate::history_folds::is_open(app, &key(id), unless_clicked)
 }
 
 /// Open or fold folder `id` in both Histories.
-pub(crate) fn set_open(app: &mut SolveApp, id: u64, open: bool) {
+pub(crate) fn set_open(app: &mut SketApp, id: u64, open: bool) {
     crate::history_folds::set_open(app, &key(id), open);
 }
 
@@ -220,7 +220,7 @@ pub(crate) fn group_parent(folders: &[TimelineGroup], features: &[u64]) -> Optio
 
 /// A new folder of `features` in `parent`, folded, with its name to type at `at` (Group Features
 /// in a feature's menu, `timeline::feature_items`).
-pub(crate) fn group(app: &mut SolveApp, features: &[u64], parent: Option<u64>, at: egui::Pos2) -> Option<u64> {
+pub(crate) fn group(app: &mut SketApp, features: &[u64], parent: Option<u64>, at: egui::Pos2) -> Option<u64> {
     let made = app.run("timeline.group", json!({ "features": features, "parent": parent })).ok()?;
     let folder = made.get("group").and_then(serde_json::Value::as_u64)?;
     set_open(app, folder, false);
@@ -231,7 +231,7 @@ pub(crate) fn group(app: &mut SolveApp, features: &[u64], parent: Option<u64>, a
 /// Draws a folder's chip with its top left at `at`; a click shows what it holds or folds it, and
 /// its menu also renames, ungroups or selects it, or rolls the marker after it. Returns its width.
 pub(crate) fn folder_chip(
-    app: &mut SolveApp,
+    app: &mut SketApp,
     ui: &mut egui::Ui,
     p: &egui::Painter,
     at: egui::Pos2,
@@ -285,7 +285,7 @@ fn counted(n: usize, thing: &str) -> String {
     if n == 1 { format!("1 {thing}") } else { format!("{n} {thing}s") }
 }
 
-fn folder_menu(app: &mut SolveApp, ui: &mut egui::Ui, folder: &Folder, view: &crate::timeline_fold::View, at: egui::Pos2) {
+fn folder_menu(app: &mut SketApp, ui: &mut egui::Ui, folder: &Folder, view: &crate::timeline_fold::View, at: egui::Pos2) {
     let fold = if folder.open { "Fold Features" } else { "Show Each Feature" };
     if crate::context_menu::button(ui, fold, "list").clicked() {
         set_open(app, folder.id, !folder.open);
@@ -327,7 +327,7 @@ fn folder_menu(app: &mut SolveApp, ui: &mut egui::Ui, folder: &Folder, view: &cr
 /// folders), so a feature dropped between an open folder's features joins it.
 /// `active`: the drop lands before the history marker, which sits at `marker_slot`; crossing it
 /// rolls the feature back or forward in the same step.
-pub(crate) fn drop_feature(app: &mut SolveApp, folders: &Folders, id: u64, slot: usize, active: bool, marker_slot: usize) {
+pub(crate) fn drop_feature(app: &mut SketApp, folders: &Folders, id: u64, slot: usize, active: bool, marker_slot: usize) {
     let target = folders.at_slot(slot);
     let from = app.session.doc.feature_index(id).unwrap_or(0);
     let home = app.session.doc.timeline_groups.iter().find(|g| g.features.contains(&id)).map(|g| g.id);

@@ -195,7 +195,7 @@ fn exporter_up(import: &sketcraft_kernel::StepImport) -> Option<(&'static str, &
 
 /// A quarter turn about X through the origin: a file's Y up becomes Z up.
 fn quarter_turn_x() -> sketcraft_doc::Mat {
-    sketcraft_doc::rigid(solidcore_record::Vec3::ZERO, solidcore_record::Vec3::ZERO, solidcore_record::Vec3::X, std::f64::consts::FRAC_PI_2)
+    sketcraft_doc::rigid(sketcore_record::Vec3::ZERO, sketcore_record::Vec3::ZERO, sketcore_record::Vec3::X, std::f64::consts::FRAC_PI_2)
 }
 
 /// Add an Import feature for a STEP file to the session's design, in a new component named
@@ -357,7 +357,10 @@ fn insert_mesh(s: &mut Session, p: &Value) -> Result<Value> {
     let cmd = "file.insert_mesh";
     let path = path_arg(p, cmd)?;
     if !sketcraft_io::is_mesh_path(path) && !sketcraft_io::is_ply_path(path) {
-        return Err(bad(cmd, "only 3MF, STL, OBJ, PLY, glTF and SketchUp files (.3mf, .stl, .obj, .ply, .glb, .gltf, .skp) can be inserted as meshes"));
+        return Err(bad(
+            cmd,
+            "only 3MF, STL, OBJ, PLY, glTF and SketchUp files (.3mf, .stl, .obj, .ply, .glb, .gltf, .skp) can be inserted as meshes",
+        ));
     }
     let up = mesh_up(p, path, cmd)?;
     let unit = mesh_units(p, path, cmd)?;
@@ -475,13 +478,7 @@ fn read_design(s: &mut Session, path: &str) -> Result<(Document, Option<sketcraf
 
 /// `doc.open` of a design: `opened`, the design read from `path` and evaluated, takes `s`'s
 /// place, and the reply says what it is.
-fn opened_design(
-    s: &mut Session,
-    opened: Session,
-    path: &str,
-    read_only: bool,
-    disk: Option<sketcraft_io::design_lock::FileStamp>,
-) -> Result<Value> {
+fn opened_design(s: &mut Session, opened: Session, path: &str, read_only: bool, disk: Option<sketcraft_io::design_lock::FileStamp>) -> Result<Value> {
     s.replace_design(opened);
     s.disk = disk;
     s.read_only = read_only;
@@ -632,14 +629,7 @@ fn write_file(s: &mut Session, path: &str, format: &str, compression: &str, prev
     write_bytes(s, path, format, compression, preview, cache)
 }
 
-fn write_bytes(
-    s: &mut Session,
-    path: &str,
-    format: &str,
-    compression: sketcraft_io::DesignCompression,
-    preview: bool,
-    cache: bool,
-) -> Result<Value> {
+fn write_bytes(s: &mut Session, path: &str, format: &str, compression: sketcraft_io::DesignCompression, preview: bool, cache: bool) -> Result<Value> {
     let bytes = match format {
         "container" => s.design_container_at(Some(path), compression, preview, cache)?,
         "json" => sketcraft_io::write_design(&s.design_at(Some(path))),
@@ -1250,7 +1240,7 @@ mod tests {
         let p = &out["profile"];
         let rows = p["rows"].as_array().unwrap();
         let has = |cat: &str| rows.iter().any(|r| r["category"] == cat);
-        assert!(has("import") && has("solidcore"), "{p}");
+        assert!(has("import") && has("sketcore"), "{p}");
         assert!(p["by_category"].as_array().is_some_and(|c| !c.is_empty()) && p["wall_ms"].as_f64().is_some_and(|w| w > 0.0), "{p}");
     }
 
@@ -1425,7 +1415,7 @@ mod tests {
             assert_eq!(s.doc.features.len(), 1);
             let id = s.active_sketch.unwrap();
             let sketch = s.doc.sketch(id).unwrap();
-            assert_eq!(s.model.state().sketch(id).unwrap().plane, solidcore_record::Plane::XY);
+            assert_eq!(s.model.state().sketch(id).unwrap().plane, sketcore_record::Plane::XY);
             assert_eq!(sketch.curves.len(), 3);
             assert_eq!(s.doc.name, "outline");
             assert!(s.path.is_none(), "Save must ask for a design path");
@@ -2488,7 +2478,7 @@ mod tests {
     /// A design opened a feature at a time is evaluated under the session's check mode, as
     /// `doc.open` is. Started under another mode than the session's (the mode changed meanwhile),
     /// nothing evaluated under it stands: every feature is evaluated again. The bar's last round
-    /// is one the check refuses on solidcore (kernel case
+    /// is one the check refuses on sketcore (kernel case
     /// fillets/1207-fillet-bar-top-edge-after-boss-arc-round-r0-5), so there the modes differ in
     /// their errors too.
     #[test]

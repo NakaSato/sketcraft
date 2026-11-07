@@ -3,7 +3,7 @@
 
 use serde_json::json;
 
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 use sketcraft_engine::render::Camera;
 
 use crate::scenario::Harness;

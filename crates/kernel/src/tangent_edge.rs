@@ -25,8 +25,8 @@
 //! of the pcurve, isolated by subdividing its Bernstein coefficients (no sign change: no root;
 //! one: exactly one) and found to rounding by bisection.
 
-use solidcore_record::Vec3;
-use solidcore_record::brep::{Brep, Curve2, Face, Surface};
+use sketcore_record::Vec3;
+use sketcore_record::brep::{Brep, Curve2, Face, Surface};
 use sketcraft_geom::brep::eval::SurfaceEval;
 use sketcraft_geom::bspline::{HPoint, segment};
 use sketcraft_geom::prelude::*;
@@ -275,10 +275,10 @@ fn bernstein_roots(c: &[f64], lo: f64, hi: f64, depth: u32, work: &mut usize, ou
 fn normal_pairs(rec: &Brep, sign: impl Fn(usize) -> Option<f64>, e: usize, mut visit: impl FnMut(Vec3, Vec3) -> bool) -> Result<Option<bool>> {
     let edge = rec.edges.get(e).ok_or_else(|| failed(format!("edge {e}")))?;
     let [ua, ub] = edge.uses.as_slice() else { return Ok(None) };
-    let use_of = |u: &solidcore_record::brep::EdgeUseRef| -> Result<Use<'_>> {
+    let use_of = |u: &sketcore_record::brep::EdgeUseRef| -> Result<Use<'_>> {
         let face = rec.faces.get(u.face as usize).ok_or_else(|| failed(format!("face {}", u.face)))?;
         let oriented = match face.loops.get(u.r#loop as usize) {
-            Some(solidcore_record::brep::Loop::Edges { edges }) => edges.get(u.position as usize),
+            Some(sketcore_record::brep::Loop::Edges { edges }) => edges.get(u.position as usize),
             _ => None,
         }
         .ok_or_else(|| failed(format!("a use of edge {e}")))?;

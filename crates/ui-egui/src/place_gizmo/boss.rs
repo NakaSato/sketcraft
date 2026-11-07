@@ -1,10 +1,10 @@
 //! Boss: the marker moves the boss across the model and snaps to sketch points, so a screw boss
 //! lands on the centre of a circle drawn for it. A boss is round: no ring.
 
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 
 use super::{Spec, circle, len};
-use crate::SolveApp;
+use crate::SketApp;
 use crate::dialogs::{Dialog, Kind};
 use crate::dialogs_plastic::Pl;
 
@@ -20,7 +20,7 @@ pub(super) static SPEC: Spec = Spec {
 };
 
 /// The boss's outer circle.
-fn footprint(app: &SolveApp, d: &Dialog, base: Vec3, n: Vec3) -> Vec<Vec3> {
+fn footprint(app: &SketApp, d: &Dialog, base: Vec3, n: Vec3) -> Vec<Vec3> {
     let Kind::Plastic(Pl::Boss { diameter, .. }) = &d.kind else { return Vec::new() };
     circle(base, n, len(app, diameter) * 0.5)
 }

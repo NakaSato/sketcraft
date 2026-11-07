@@ -607,17 +607,9 @@ mod tests {
 
     #[test]
     fn only_disk_paths_parse() {
-        for not in [
-            "/opfs/a.sketcraft",
-            "/downloads/a.step",
-            "/upload/a.step",
-            "/disk/",
-            "/disk/id",
-            "/disk/id/",
-            "/disk//a",
-            "/disk/id/x/y",
-            "a.sketcraft",
-        ] {
+        for not in
+            ["/opfs/a.sketcraft", "/downloads/a.step", "/upload/a.step", "/disk/", "/disk/id", "/disk/id/", "/disk//a", "/disk/id/x/y", "a.sketcraft"]
+        {
             assert_eq!(parse(not), None, "{not}");
         }
     }
@@ -626,8 +618,7 @@ mod tests {
     /// names, whether or not the browser can write to the disk.
     #[test]
     fn writes_to_opfs_paths_still_go_to_opfs() {
-        for p in
-            ["/opfs/Bracket.sketcraft", "/opfs/Bracket (2).sketcraft", "/opfs/recovery.sketcraft", "/opfs/recovery.json", "/opfs/old.solvecraft"]
+        for p in ["/opfs/Bracket.sketcraft", "/opfs/Bracket (2).sketcraft", "/opfs/recovery.sketcraft", "/opfs/recovery.json", "/opfs/old.solvecraft"]
         {
             assert_eq!(route(p), WriteTo::Opfs, "{p}");
         }

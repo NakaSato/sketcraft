@@ -1,7 +1,7 @@
 //! Bounded finite-disk Sun proposals. Shared material evaluation/PDFs stay unchanged.
 use super::{Result, TraceError};
 use crate::{job::Sun, surface::unit_direction};
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 use sketcraft_geom::prelude::*;
 use std::f64::consts::{PI, TAU};
 

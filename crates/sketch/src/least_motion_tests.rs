@@ -1,6 +1,6 @@
 //! A solve with geometry held moves the rest as little as it can.
 
-use solidcore_record::Vec2;
+use sketcore_record::Vec2;
 use sketcraft_geom::prelude::*;
 
 use crate::{Analysis, ConstraintKind, Hold, Sketch, solve_with};

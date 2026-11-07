@@ -8,7 +8,7 @@ use sketcraft_engine::doc::expr::Kind as ValueKind;
 use sketcraft_engine::doc::frame::{self, MemberProfile};
 use sketcraft_engine::doc::{FeatureKind, ProfileSel};
 
-use crate::SolveApp;
+use crate::SketApp;
 use crate::dialogs::{Kind, check, curves_sketch, form_row, profile_indices, put, shown_expr};
 use crate::selection::{PROFILES, SKETCH_LINES, SelInput, SelectionExt as _};
 use crate::ui_kit::{choice_row, expr_row, hint_row, text_row};
@@ -64,7 +64,7 @@ impl Member {
 }
 
 /// The dialog for Frame Member.
-pub fn start(_app: &SolveApp, id: &str) -> Option<(Kind, Vec<SelInput>)> {
+pub fn start(_app: &SketApp, id: &str) -> Option<(Kind, Vec<SelInput>)> {
     (id == "frame.member")
         .then(|| (Kind::Frame(Member::new()), vec![SelInput::new("Lines", SKETCH_LINES, true), SelInput::new("Section (optional)", PROFILES, true)]))
 }
@@ -74,7 +74,7 @@ fn tr(text: &str) -> &str {
 }
 
 /// The dialog's own rows (after the selection inputs); true when Enter was pressed in a value.
-pub fn rows(app: &SolveApp, ui: &mut egui::Ui, m: &mut Member, inputs: &[SelInput]) -> bool {
+pub fn rows(app: &SketApp, ui: &mut egui::Ui, m: &mut Member, inputs: &[SelInput]) -> bool {
     let mut enter = false;
     form_row(ui, "All Lines", |ui| check(ui, &mut m.all));
     let picked = !crate::selection::items(inputs, 1).is_empty();
@@ -105,7 +105,7 @@ pub fn rows(app: &SolveApp, ui: &mut egui::Ui, m: &mut Member, inputs: &[SelInpu
 }
 
 /// The command the dialog's OK runs (`extra`: parameters kept from the feature being edited).
-pub fn commands(app: &SolveApp, m: &Member, inputs: &[SelInput], extra: &Map<String, Value>) -> Result<Vec<(String, Value)>, String> {
+pub fn commands(app: &SketApp, m: &Member, inputs: &[SelInput], extra: &Map<String, Value>) -> Result<Vec<(String, Value)>, String> {
     let section = crate::selection::items(inputs, 1).profiles();
     let section_sketch = section.first().map(|x| x.0).or(m.whole);
     if section.iter().any(|x| Some(x.0) != section_sketch) {
@@ -172,7 +172,7 @@ pub fn commands(app: &SolveApp, m: &Member, inputs: &[SelInput], extra: &Map<Str
 }
 
 /// The dialog editing a frame member feature, filled from it.
-pub fn for_feature(app: &SolveApp, kind: &FeatureKind) -> Option<(Kind, Vec<SelInput>, Map<String, Value>)> {
+pub fn for_feature(app: &SketApp, kind: &FeatureKind) -> Option<(Kind, Vec<SelInput>, Map<String, Value>)> {
     let FeatureKind::FrameMember { path_sketch, lines, profile, anchor, angle, mirror, body_name, .. } = kind else { return None };
     let (_, mut inputs) = start(app, "frame.member")?;
     let st = app.session.model.state();

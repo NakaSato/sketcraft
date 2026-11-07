@@ -3,7 +3,7 @@
 //! placed on a coarse grid, so coincident faces and tangencies come up often.
 
 use serde::Serialize;
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 
 use crate::{Body, BoolOp, boolean, box_solid, cylinder, measure, sphere, torus};
 

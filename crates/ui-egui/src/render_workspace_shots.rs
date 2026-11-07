@@ -1,16 +1,16 @@
 //! Shot strip adapters. Commands own saved intent; the kit owns every control and layout.
 use crate::ui_kit::BackingTooltipExt as _;
-use crate::{SolveApp, ui_kit};
+use crate::{SketApp, ui_kit};
 use serde_json::json;
 use sketcraft_engine::{doc::render_settings::RenderSettings, render::job::Phase};
 
 pub(super) const SIZE_PRESETS: [(&str, u32, u32); 3] = [("HD", 1280, 720), ("Full HD", 1920, 1080), ("4K UHD", 3840, 2160)];
 
-pub(super) fn camera_modified(app: &SolveApp, name: &str) -> bool {
+pub(super) fn camera_modified(app: &SketApp, name: &str) -> bool {
     app.session.doc.render.setups.get(name).is_some_and(|setup| setup.camera != app.cam)
 }
 
-pub(crate) fn contents(app: &mut SolveApp, ui: &mut egui::Ui) {
+pub(crate) fn contents(app: &mut SketApp, ui: &mut egui::Ui) {
     super::thumbnails::refresh(app, ui.ctx());
     let status = app.render_workspace.view.job.and_then(|job| app.session.render_job_handle(job).ok()).and_then(|handle| handle.status().ok());
     let progress = status
@@ -124,7 +124,7 @@ pub(crate) fn contents(app: &mut SolveApp, ui: &mut egui::Ui) {
     }
 }
 
-pub(super) fn confirmation(app: &mut SolveApp, ctx: &egui::Context) {
+pub(super) fn confirmation(app: &mut SketApp, ctx: &egui::Context) {
     let Some(mut name) = app.render_workspace.view.save_shot_name.take() else { return };
     let valid = RenderSettings::validate_name(name.trim()).is_ok() && !app.session.doc.render.setups.contains_key(name.trim());
     let title = app.tr("render.shots_save").to_string();

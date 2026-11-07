@@ -1,5 +1,5 @@
 use crate::{Document, ModelBody, ModelState};
-use solidcore_record::{Plane, Vec2, Vec3};
+use sketcore_record::{Plane, Vec2, Vec3};
 use sketcraft_geom::prelude::*;
 use sketcraft_sketch::{LinkKind, LinkSource, Sketch};
 use std::collections::BTreeMap;

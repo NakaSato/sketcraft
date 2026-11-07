@@ -3,7 +3,7 @@ use std::{cell::RefCell, rc::Rc};
 
 use js_sys::{Reflect, Uint8Array};
 use sketcraft_engine::io::vfs;
-use sketcraft_ui_egui::{SolveApp, ui_kit};
+use sketcraft_ui_egui::{SketApp, ui_kit};
 use wasm_bindgen::{JsCast as _, JsValue};
 use wasm_bindgen_futures::{JsFuture, spawn_local};
 
@@ -35,7 +35,7 @@ impl Download {
         download
     }
 
-    pub fn tick(&mut self, app: &mut SolveApp, ctx: &egui::Context) {
+    pub fn tick(&mut self, app: &mut SketApp, ctx: &egui::Context) {
         self.opened(app);
         if let Some(reply) = self.reply.borrow_mut().take() {
             match reply {
@@ -86,7 +86,7 @@ impl Download {
     }
 
     /// The downloaded design is in: it is an unsaved copy under the link's name.
-    fn opened(&mut self, app: &mut SolveApp) {
+    fn opened(&mut self, app: &mut SketApp) {
         let Some((rx, _, _)) = &self.opening else { return };
         let (ok, cancelled) = match rx.try_recv() {
             Ok(reply) => (reply["ok"].as_bool() == Some(true), reply["error"].as_str().is_some_and(|e| e.contains("cancelled"))),

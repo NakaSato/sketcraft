@@ -38,7 +38,7 @@ use serde::{Deserialize, Serialize};
 use std::f64::consts::FRAC_PI_2;
 
 use crate::EPS;
-use solidcore_record::{Region2, Seg2, Vec2};
+use sketcore_record::{Region2, Seg2, Vec2};
 
 /// The widest line a scene may draw, in millimetres.
 pub const MAX_LINE_MM: f64 = 10.0;

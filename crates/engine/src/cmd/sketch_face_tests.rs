@@ -1,6 +1,6 @@
 use crate::Session;
 use serde_json::{Value, json};
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 use sketcraft_geom::prelude::*;
 
 fn run(s: &mut Session, command: &str, params: Value) -> Value {
@@ -529,7 +529,7 @@ fn rounded_enclosure_shell_side_and_floor_attach_through_width_wall_and_reopen()
         assert!(!mesh.contains(Vec3::new(49., 0., 12.)), "USB must remain open after resize/reopen");
         assert!(mesh.contains(Vec3::new(49., 15., 12.)), "adjacent right wall remains solid");
         assert!(mesh.contains(Vec3::new(-49., 0., 12.)), "opposite wall must stay solid");
-        let seed = state.sketch(floor).unwrap().plane.to_world(solidcore_record::Vec2::new(40., 20.)) + Vec3::Z * 6.;
+        let seed = state.sketch(floor).unwrap().plane.to_world(sketcore_record::Vec2::new(40., 20.)) + Vec3::Z * 6.;
         assert!(mesh.contains(seed), "seed boss starts on current floor");
         for shift in [Vec3::ZERO, Vec3::new(-80., 0., 0.), Vec3::new(0., -40., 0.), Vec3::new(-80., -40., 0.)] {
             assert!(mesh.contains(seed + shift), "each patterned boss must survive resize/reopen at {:?}", seed + shift);

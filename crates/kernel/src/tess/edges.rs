@@ -1,8 +1,8 @@
 //! Edge nodes: every edge of a body sampled once, so the faces on either side share the very
 //! same boundary points (watertight by construction).
 
-use solidcore_record::Vec3;
-use solidcore_record::brep::{self, Curve};
+use sketcore_record::Vec3;
+use sketcore_record::brep::{self, Curve};
 use sketcraft_geom::brep::eval::CurveEval;
 use sketcraft_geom::prelude::*;
 

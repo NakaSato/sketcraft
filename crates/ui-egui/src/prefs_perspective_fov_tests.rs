@@ -43,11 +43,7 @@ fn the_field_of_view_slider_drags_and_types_whole_degrees() {
     h.app.synthetic.push(Event::Text("40.4".into()));
     h.app.synthetic.push(Event::Key { key: Key::Enter, physical_key: None, pressed: true, repeat: false, modifiers: Modifiers::NONE });
     h.frames(3);
-    assert!(
-        (h.app.preferences.perspective_fov - 40f64.to_radians()).abs() < 1e-9,
-        "typed 40.4 keeps to 40°: {}",
-        h.app.preferences.perspective_fov
-    );
+    assert!((h.app.preferences.perspective_fov - 40f64.to_radians()).abs() < 1e-9, "typed 40.4 keeps to 40°: {}", h.app.preferences.perspective_fov);
     h.call("ui.prefs", json!({"button": "ok"}));
 }
 

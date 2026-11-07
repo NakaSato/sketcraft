@@ -908,7 +908,6 @@ const ELEMENTS: &[Element] = &[
         status_palette_sample(ui, crate::theme::ColorVision::Deutan);
         colour_vision_sample(ui, &Tokens::get());
         settings_autosave_timeline(ui, 5.0);
-        settings_axis_row(ui, "Push X", 0.6, [0.1, 0.2], |_| {}, |_| {}, |_| {});
         settings_mouse_mapping(ui, &[(vec!["Shift".into(), "Middle drag".into()], "Orbit".into())], |_| {});
     }),
     element!("assistant_entry", |ui, _| {
@@ -2745,7 +2744,7 @@ fn confirm_radial_and_history_rows_keep_multitone_artwork() {
         for (surface, icon, kind, tab, ramp, side) in cases {
             let ctx = crate::fonts::test_context();
             ctx.set_visuals(if dark { egui::Visuals::dark() } else { egui::Visuals::light() });
-            let mut app = crate::SolveApp::new(Default::default(), Default::default());
+            let mut app = crate::SketApp::new(Default::default(), Default::default());
             app.ui.tab = tab.into();
             crate::theme::TabAccent::publish(&app, &ctx);
             let bounds = egui::Rect::from_min_size(egui::Pos2::ZERO, vec2(600.0, 360.0));

@@ -112,7 +112,7 @@ fn stl_volume(bytes: &[u8]) -> Option<f64> {
         for (k, p) in t.iter().enumerate() {
             let n = mesh.positions.len() as u32;
             tri[k] = *index.entry(p.map(f32::to_bits)).or_insert_with(|| {
-                mesh.positions.push(solidcore_record::Vec3::new(p[0] as f64, p[1] as f64, p[2] as f64));
+                mesh.positions.push(sketcore_record::Vec3::new(p[0] as f64, p[1] as f64, p[2] as f64));
                 n
             });
         }
@@ -286,9 +286,7 @@ fn urdf_ignores_uncaptured_moves_of_jointed_occurrences() {
 fn urdf_keeps_uncaptured_moves_when_the_joint_is_broken() {
     let mut s = two_cubes();
     joint(&mut s, "revolute", "Turn", Value::Null);
-    let Some(f) = s.doc.features.iter().rev().find(|f| matches!(f.kind, sketcraft_doc::FeatureKind::Box { .. })).map(|f| f.id) else {
-        panic!("box")
-    };
+    let Some(f) = s.doc.features.iter().rev().find(|f| matches!(f.kind, sketcraft_doc::FeatureKind::Box { .. })).map(|f| f.id) else { panic!("box") };
     run(&mut s, "timeline.suppress", json!({"feature": f, "suppressed": true}));
     let d = temp("pending-broken");
     let path = d.join("k.urdf");
@@ -376,7 +374,7 @@ fn urdf_inertial_is_mass_weighted() {
     }
     assert!(i.inertia[0][1].abs() < 1e-15);
     // The centre of mass is the cube's centre, in the link frame.
-    assert!(i.com.dist(sketcraft_doc::apply_point(&l.mesh_origin, solidcore_record::Vec3::new(105.0, 5.0, 5.0))) < 1e-9, "{:?}", i.com);
+    assert!(i.com.dist(sketcraft_doc::apply_point(&l.mesh_origin, sketcore_record::Vec3::new(105.0, 5.0, 5.0))) < 1e-9, "{:?}", i.com);
 }
 
 #[test]
@@ -508,9 +506,7 @@ fn urdf_skips_a_joint_with_an_error() {
     let mut s = two_cubes();
     joint(&mut s, "revolute", "Turn", Value::Null);
     // Snap the joint to a face that then goes away.
-    let Some(f) = s.doc.features.iter().rev().find(|f| matches!(f.kind, sketcraft_doc::FeatureKind::Box { .. })).map(|f| f.id) else {
-        panic!("box")
-    };
+    let Some(f) = s.doc.features.iter().rev().find(|f| matches!(f.kind, sketcraft_doc::FeatureKind::Box { .. })).map(|f| f.id) else { panic!("box") };
     run(&mut s, "timeline.suppress", json!({"feature": f, "suppressed": true}));
     let p = package(&s);
     assert!(has_warning(&p, "joint `Turn` is skipped"), "{:?}", p.warnings);

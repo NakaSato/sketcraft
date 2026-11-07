@@ -2,7 +2,7 @@
 //! arc slots.
 
 use serde_json::{Value, json};
-use solidcore_record::Vec2;
+use sketcore_record::Vec2;
 use sketcraft_geom::prelude::*;
 use sketcraft_sketch::{ConstraintKind, CurveKind, LinkKind, LinkSource, Shape, Sketch, TextAlign, TextExprs, TextStyle};
 
@@ -1180,7 +1180,7 @@ pub(super) fn solve_new_only(sk: &mut Sketch, first_new: usize) {
 #[cfg(test)]
 mod blend_tests {
     use serde_json::{Value, json};
-    use solidcore_record::{Seg2, Vec2};
+    use sketcore_record::{Seg2, Vec2};
     use sketcraft_geom::prelude::*;
     use sketcraft_sketch::CurveKind;
 

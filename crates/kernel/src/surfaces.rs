@@ -18,8 +18,8 @@
 use sketcraft_geom::prelude::*;
 use std::collections::BTreeSet;
 
-use solidcore_record::brep::{self as b, Brep, Curve2};
-use solidcore_record::{Plane, Region2, Seg2, Vec2, Vec3};
+use sketcore_record::brep::{self as b, Brep, Curve2};
+use sketcore_record::{Plane, Region2, Seg2, Vec2, Vec3};
 use sketcraft_geom::brep::eval::CurveEval;
 use sketcraft_geom::bspline::{HPoint, NurbsSurface};
 
@@ -1191,7 +1191,7 @@ pub fn loft_sheet_with_rails(sections: &[(Plane, Vec<Seg2>)], rails: &[Vec<Vec3>
 /// Closed sections matched as the solid loft matches them ([`crate::build::loft_numbered_loops`]),
 /// in loft order.
 fn closed_sections(sections: &[(Plane, Vec<Seg2>)]) -> Result<Vec<crate::loft_rails::Section>> {
-    let loops: Vec<(Plane, solidcore_record::Loop2)> = sections.iter().map(|(p, c)| (*p, solidcore_record::Loop2 { segs: c.clone() })).collect();
+    let loops: Vec<(Plane, sketcore_record::Loop2)> = sections.iter().map(|(p, c)| (*p, sketcore_record::Loop2 { segs: c.clone() })).collect();
     let reversed = crate::build::loft_reversed(&loops)?;
     let numbered = loops.iter().map(|(p, _)| *p).zip(crate::numbered::number_loops(loops.iter().map(|(_, l)| l))).collect::<Vec<_>>();
     crate::build::loft_numbered_loops(&numbered, reversed)?
@@ -1614,7 +1614,7 @@ mod imp {
 mod tests {
     use super::*;
     use crate::{box_solid, cylinder, measure, trim};
-    use solidcore_record::Loop2;
+    use sketcore_record::Loop2;
 
     fn rel(a: f64, b: f64) -> f64 {
         (a - b).abs() / b.abs().max(1e-9)

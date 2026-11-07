@@ -21,7 +21,7 @@ thread_local! {
 /// Open the Features folder that lists this feature and scroll to its row, without changing the
 /// active component or history marker. The folder is the one of the placement `body` belongs to:
 /// without a body there is no telling which copy of a component was meant.
-pub(crate) fn reveal(app: &mut SolveApp, id: u64, body: &str) {
+pub(crate) fn reveal(app: &mut SketApp, id: u64, body: &str) {
     sync_reveals(app);
     let Some(feature) = app.session.doc.feature(id) else { return };
     if matches!(feature.kind, FeatureKind::Sketch { .. }) {
@@ -43,7 +43,7 @@ pub(crate) fn reveal(app: &mut SolveApp, id: u64, body: &str) {
 }
 
 /// With the history in the browser: open the feature's component and history, and scroll to it.
-pub(crate) fn reveal_in_history(app: &mut SolveApp, id: u64) {
+pub(crate) fn reveal_in_history(app: &mut SketApp, id: u64) {
     sync_reveals(app);
     let Some(component) = app.session.doc.feature(id).map(|feature| feature.component) else { return };
     let path = if component == 0 {
@@ -69,12 +69,12 @@ pub(crate) fn reveal_in_history(app: &mut SolveApp, id: u64) {
 }
 
 /// Feature folders hide later rows only while editing; history always lists every feature.
-fn shown_features(app: &SolveApp, compact: bool) -> usize {
+fn shown_features(app: &SketApp, compact: bool) -> usize {
     let n = app.session.doc.features.len();
     if !compact && app.dialog.as_ref().is_some_and(|d| d.editing.is_some()) { app.session.doc.marker.unwrap_or(n) } else { n }
 }
 
-pub(super) fn rows(app: &mut SolveApp, ui: &mut egui::Ui, component: u64, path: &[u64], depth: usize, acts: &mut Actions) {
+pub(super) fn rows(app: &mut SketApp, ui: &mut egui::Ui, component: u64, path: &[u64], depth: usize, acts: &mut Actions) {
     // Compact history: every feature of the component, sketches too, in history order with the
     // marker, in place of the timeline.
     let compact = app.preferences.history_in_browser;
@@ -142,7 +142,7 @@ pub(super) fn rows(app: &mut SolveApp, ui: &mut egui::Ui, component: u64, path: 
     // lights it, and in the history layout what a selected history row lights.
     let from_view = [crate::timeline::hovered_feature(app), crate::timeline::picked_feature(app)];
     let lit = if compact { lit_by_selection(app) } else { BTreeSet::new() };
-    let mark = |app: &SolveApp, index: usize| {
+    let mark = |app: &SketApp, index: usize| {
         let id = app.session.doc.features.get(index).map(|f| f.id);
         if id.is_some_and(|id| lit.contains(&id) || from_view.contains(&Some(id))) { Mark::Here } else { Mark::None }
     };
@@ -225,7 +225,7 @@ struct Here<'a> {
 /// The component's history rows, `indices` its features' timeline positions: with Sketches:
 /// Under their feature, each sketch listed under the feature built from it as the vertical
 /// History lists it (`history_rows`, without reference rows); otherwise in creation order.
-fn history_plan(app: &SolveApp, indices: &[usize], marker: usize) -> HistoryRows {
+fn history_plan(app: &SketApp, indices: &[usize], marker: usize) -> HistoryRows {
     let doc = &app.session.doc;
     let features: Vec<HistoryFeature> = indices.iter().filter_map(|index| doc.features.get(*index)).map(HistoryFeature::of).collect();
     if !crate::timeline_left::nests(app) {
@@ -237,7 +237,7 @@ fn history_plan(app: &SolveApp, indices: &[usize], marker: usize) -> HistoryRows
 
 /// What a selected history row lights up: a feature's sketches, and the features built from a
 /// selected sketch.
-fn lit_by_selection(app: &SolveApp) -> BTreeSet<u64> {
+fn lit_by_selection(app: &SketApp) -> BTreeSet<u64> {
     let mut lit = BTreeSet::new();
     let doc = &app.session.doc;
     for selection in &app.session.selection {
@@ -255,7 +255,7 @@ fn lit_by_selection(app: &SolveApp) -> BTreeSet<u64> {
 /// One feature or sketch row; returns whether its fold arrow was clicked.
 #[allow(clippy::too_many_arguments)]
 fn feature_row(
-    app: &mut SolveApp,
+    app: &mut SketApp,
     ui: &mut egui::Ui,
     acts: &mut Actions,
     here: &Here,
@@ -361,7 +361,7 @@ fn feature_row(
 }
 
 /// The history marker between the rows, as in the vertical timeline.
-fn marker_row(app: &SolveApp, ui: &mut egui::Ui, depth: usize) -> egui::Response {
+fn marker_row(app: &SketApp, ui: &mut egui::Ui, depth: usize) -> egui::Response {
     let t = Tokens::get();
     let (rect, response) = ui.allocate_exact_size(vec2(ui.available_width(), t.space_12), Sense::drag());
     crate::semantic_content::record_capture(ui, &response);
@@ -376,7 +376,7 @@ fn marker_row(app: &SolveApp, ui: &mut egui::Ui, depth: usize) -> egui::Response
 
 /// Dragging the marker shows where it lands; letting go rolls the history there, through the
 /// timeline's own command.
-fn drag_marker(app: &mut SolveApp, ui: &egui::Ui, resp: &egui::Response, slots: &[(f32, usize)], marker: usize) {
+fn drag_marker(app: &mut SketApp, ui: &egui::Ui, resp: &egui::Response, slots: &[(f32, usize)], marker: usize) {
     if !resp.dragged() && !resp.drag_stopped() {
         return;
     }
@@ -399,7 +399,7 @@ fn drag_marker(app: &mut SolveApp, ui: &egui::Ui, resp: &egui::Response, slots: 
 /// Dragging feature rows shows where they land with the History's drop bar; letting go moves them
 /// with the History's own move, before or behind the marker by the side of it they land on.
 fn drag_rows(
-    app: &mut SolveApp,
+    app: &mut SketApp,
     ui: &egui::Ui,
     plan: &HistoryRows,
     drag_id: egui::Id,
@@ -607,12 +607,12 @@ mod tests {
         assert_eq!(sorted(&h.app.session.selection), sorted(&all), "Shift+click below the anchor");
     }
 
-    fn find_in_timeline(app: &mut SolveApp, feature: u64, body: &str) {
+    fn find_in_timeline(app: &mut SketApp, feature: u64, body: &str) {
         let state = app.session.world_state().unwrap();
         let model_body = state.body(body).unwrap();
         let names = sketcraft_engine::doc::naming::face_names(model_body);
         let index = names.iter().position(|name| name.starts_with(&format!("F{feature}:"))).unwrap();
-        app.session.selection = vec![Sel::Face { body: body.into(), index, point: solidcore_record::Vec3::ZERO }];
+        app.session.selection = vec![Sel::Face { body: body.into(), index, point: sketcore_record::Vec3::ZERO }];
         let item = crate::context_menu::items(app, &Target::Viewport).into_iter().find(|item| item.id == "ui.findTimeline").unwrap();
         assert!(item.enabled);
         crate::context_menu::run_item(app, &item, pos2(0.0, 0.0));
@@ -703,7 +703,7 @@ mod tests {
     fn browser_find_from_a_body_or_its_face_reveals_the_body() {
         let mut h = Harness::new();
         h.app.run("solid.box", json!({"length":10,"width":10,"height":10,"body_name":"Plate"})).unwrap();
-        for pick in [Sel::Body { name: "Plate".into() }, Sel::Face { body: "Plate".into(), index: 0, point: solidcore_record::Vec3::ZERO }] {
+        for pick in [Sel::Body { name: "Plate".into() }, Sel::Face { body: "Plate".into(), index: 0, point: sketcore_record::Vec3::ZERO }] {
             h.app.tree.reveal = None;
             h.app.session.selection = vec![pick.clone()];
             let item = crate::context_menu::items(&h.app, &Target::Viewport).into_iter().find(|item| item.id == "ui.findBrowser").unwrap();
@@ -714,14 +714,14 @@ mod tests {
         }
     }
 
-    fn find_in_browser(app: &mut SolveApp, pick: Sel) {
+    fn find_in_browser(app: &mut SketApp, pick: Sel) {
         app.session.selection = vec![pick];
         let item = crate::context_menu::items(app, &Target::Viewport).into_iter().find(|item| item.id == "ui.findBrowser").unwrap();
         crate::context_menu::run_item(app, &item, pos2(0.0, 0.0));
     }
 
     fn face(body: &str) -> Sel {
-        Sel::Face { body: body.into(), index: 0, point: solidcore_record::Vec3::ZERO }
+        Sel::Face { body: body.into(), index: 0, point: sketcore_record::Vec3::ZERO }
     }
 
     #[test]
@@ -799,7 +799,7 @@ mod tests {
 
     /// Whether a row is open, read the way it starts (the design's row open, the others as the
     /// preference says).
-    fn row_open(app: &SolveApp, key: &str) -> bool {
+    fn row_open(app: &SketApp, key: &str) -> bool {
         is_open(app, key, key == "c0" || rows_start_open(app))
     }
 
@@ -939,7 +939,7 @@ mod tests {
         }
         let stamp = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos();
         let source = Source(std::env::temp_dir().join(format!("sketcraft-browser-import-{}-{stamp}.sketcraft", std::process::id())));
-        let mut saved = SolveApp::new(sketcraft_engine::Session::default(), crate::Services::default());
+        let mut saved = SketApp::new(sketcraft_engine::Session::default(), crate::Services::default());
         saved.run("solid.box", json!({"length":10,"width":10,"height":10,"body_name":"Imported"})).unwrap();
         saved.run("file.save", json!({"path":source.0.to_string_lossy()})).unwrap();
         let mut h = Harness::new();
@@ -950,7 +950,7 @@ mod tests {
         let state = h.app.session.world_state().unwrap();
         let owner = state.body(&name).unwrap().feature;
         assert_ne!(owner, base);
-        h.app.session.selection = vec![Sel::Face { body: name, index: 0, point: solidcore_record::Vec3::ZERO }];
+        h.app.session.selection = vec![Sel::Face { body: name, index: 0, point: sketcore_record::Vec3::ZERO }];
         for id in ["ui.findTimeline", "ui.editFeature"] {
             let item = crate::context_menu::items(&h.app, &Target::Viewport).into_iter().find(|item| item.id == id).unwrap();
             assert!(!item.enabled || item.params.as_ref().unwrap()["feature"] == json!(owner), "{id}: {item:?}");

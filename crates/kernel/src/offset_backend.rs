@@ -15,7 +15,7 @@
 use sketcraft_geom::prelude::*;
 use std::collections::{BTreeMap, BTreeSet};
 
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 use sketcraft_smlib::{Brep, CheckLevel, Error as SmError};
 
 use crate::body::Body;
@@ -40,7 +40,7 @@ fn refused(op: &str, wall: Option<f64>, e: SmError) -> KernelError {
                  use a thinner or thicker wall, or move the feature"
             ))
         }
-        // solidcore's one construction: a face curves tighter than the wall is thick.
+        // sketcore's one construction: a face curves tighter than the wall is thick.
         SmError::WallFolds { largest } => {
             let largest = largest.map(|w| format!("; the largest wall that works is {} mm", crate::blend::trimmed_mm(w))).unwrap_or_default();
             KernelError::Invalid(format!("{op}: the wall is thicker than a face curves, so the face's offset would fold{largest}"))
@@ -146,7 +146,7 @@ pub(crate) fn thicken(b: &Body, thickness: f64, symmetric: bool) -> Result<Body>
 /// tilted by `angle` about their lines on `neutral`, leaning in going along `pull`; the faces
 /// around them extended or trimmed to meet them. A tilted face is the face itself (Modified).
 /// A face SMLib can't draft (not flat, or not parallel to the pull) is "not supported yet".
-pub(crate) fn draft(b: &Body, at: &[Vec3], neutral: &solidcore_record::Plane, pull: Vec3, angle: f64) -> Result<Body> {
+pub(crate) fn draft(b: &Body, at: &[Vec3], neutral: &sketcore_record::Plane, pull: Vec3, angle: f64) -> Result<Body> {
     if !angle.is_finite() || angle.abs() >= std::f64::consts::FRAC_PI_2 - 1e-3 {
         return Err(KernelError::Invalid("draft angle must be between −90° and 90°".into()));
     }

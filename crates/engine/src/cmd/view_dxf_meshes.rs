@@ -7,7 +7,7 @@ use std::mem::size_of;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicUsize, Ordering};
 
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 use sketcraft_doc::{IDENTITY, Mat, ModelBody, mat_inverse, mat_mul};
 use sketcraft_geom::{Aabb3, Mesh};
 use sketcraft_kernel::{KernelError, map_with_local_pools};

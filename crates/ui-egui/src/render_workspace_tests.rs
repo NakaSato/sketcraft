@@ -1875,7 +1875,7 @@ fn product_gpu_buffers_preserve_opacity_and_never_contain_overlays() {
     assert!(gpu.glass.as_chunks::<{ crate::gpu::TRI_SIZE }>().0.iter().all(|v| color(v) == Some([51, 102, 153, 102])));
     assert!(gpu.lines.is_empty() && gpu.overlay.is_empty() && gpu.under.is_empty() && gpu.hidden.is_empty() && gpu.ghost.is_empty());
     s.selection = vec![sketcraft_engine::Sel::Body { name: "Glass".into() }];
-    s.section = Some((solidcore_record::Vec3::ZERO, solidcore_record::Vec3::X));
+    s.section = Some((sketcore_record::Vec3::ZERO, sketcore_record::Vec3::X));
     let after = sketcraft_engine::product_scene::extract(&s).unwrap();
     assert_eq!(gpu_scene(&after).unwrap().0, key);
     s.execute("appearance.assign", &json!({"bodies":["Glass"],"color":"#336699","opacity":0.0})).unwrap();
@@ -1895,7 +1895,7 @@ fn transmission_uses_legacy_preview_buffers_and_invalidates_the_opaque_cache() {
     let (opaque_key, opaque) = gpu_scene(&sketcraft_engine::product_scene::extract(&s).unwrap()).unwrap();
     assert!(!opaque.pbr.is_empty());
     let mut scene = sketcraft_engine::product_scene::extract(&s).unwrap();
-    scene.meshes[0].transmission = Some(sketcraft_engine::render::transmission::Transmission::new(solidcore_record::Vec3::ZERO, None).unwrap());
+    scene.meshes[0].transmission = Some(sketcraft_engine::render::transmission::Transmission::new(sketcore_record::Vec3::ZERO, None).unwrap());
     let (glass_key, glass) = gpu_scene(&scene).unwrap();
     assert_ne!(opaque_key, glass_key);
     assert!(glass.pbr.is_empty());
@@ -1956,7 +1956,7 @@ fn completed_preview(h: &mut Harness, background: [u8; 3]) -> sketcraft_engine::
     panic!("small cooperative image did not complete within the work budget");
 }
 
-fn image_panel_frame(app: &mut SolveApp, ctx: &egui::Context) -> egui::FullOutput {
+fn image_panel_frame(app: &mut SketApp, ctx: &egui::Context) -> egui::FullOutput {
     ctx.run_ui(
         egui::RawInput { screen_rect: Some(egui::Rect::from_min_size(egui::Pos2::ZERO, egui::vec2(285.0, 1200.0))), ..Default::default() },
         |ui| image_controls(app, ui),
@@ -2198,7 +2198,7 @@ fn result_canvas_paints_large_capture_reports_staleness_and_preserves_export() {
     let doc = h.app.session.doc.clone();
     let undo = h.app.session.undo.len();
     let frame = h.app.session.render_job_handle(job).unwrap().frame().unwrap().unwrap();
-    let draw = |app: &mut SolveApp| {
+    let draw = |app: &mut SketApp| {
         let mut out = ctx.run_ui(
             egui::RawInput { screen_rect: Some(egui::Rect::from_min_size(egui::Pos2::ZERO, egui::vec2(900.0, 700.0))), ..Default::default() },
             |ui| show(app, ui),
@@ -2951,7 +2951,7 @@ fn delayed_image_export_refuses_an_internally_replaced_document_even_with_overwr
 }
 
 /// One frame of either the modelling viewport or the Render preview, over the same rectangle.
-fn nav_frame(app: &mut crate::SolveApp, ctx: &egui::Context, render: bool, time: &mut f64, mods: egui::Modifiers, events: Vec<egui::Event>) {
+fn nav_frame(app: &mut crate::SketApp, ctx: &egui::Context, render: bool, time: &mut f64, mods: egui::Modifiers, events: Vec<egui::Event>) {
     *time += 1.0 / 60.0;
     let events = std::iter::once(egui::Event::ModifiersChanged(mods)).chain(events).collect();
     let raw = egui::RawInput {
@@ -2971,10 +2971,10 @@ fn nav_frame(app: &mut crate::SolveApp, ctx: &egui::Context, render: bool, time:
     out.textures_delta.clear();
 }
 
-fn nav_app(render: bool, preset: &str, around: crate::prefs::OrbitAround) -> crate::SolveApp {
+fn nav_app(render: bool, preset: &str, around: crate::prefs::OrbitAround) -> crate::SketApp {
     let mut s = Session::default();
     s.execute("solid.box", &json!({"length":40,"width":30,"height":20,"body_name":"Product"})).unwrap();
-    let mut app = crate::SolveApp::new(s, crate::Services::default());
+    let mut app = crate::SketApp::new(s, crate::Services::default());
     if render {
         enter(&mut app, true).unwrap();
         assert!(active(&app));
@@ -3004,7 +3004,7 @@ fn render_preview_navigates_like_the_modelling_viewport_in_every_preset() {
             let mut design = nav_app(false, preset, around);
             let mut render = nav_app(true, preset, around);
             let (mut design_time, mut render_time) = (0.0, 0.0);
-            let mut both = |events: Vec<Event>, mods: Modifiers, design: &mut crate::SolveApp, render: &mut crate::SolveApp| {
+            let mut both = |events: Vec<Event>, mods: Modifiers, design: &mut crate::SketApp, render: &mut crate::SketApp| {
                 nav_frame(design, &design_ctx, false, &mut design_time, mods, events.clone());
                 nav_frame(render, &render_ctx, true, &mut render_time, mods, events);
             };
@@ -3126,7 +3126,7 @@ fn render_workspace_view_keys_double_middle_click_and_navigators_work() {
         // A standard view from the navigator.
         h.step(&json!({"click":{"handle":"axis_view:z"}})).unwrap();
         h.settle();
-        assert!(h.app.cam.back().dot(solidcore_record::Vec3::Z) > 0.999, "{style:?}: view from +Z, got {:?}", h.app.cam.back());
+        assert!(h.app.cam.back().dot(sketcore_record::Vec3::Z) > 0.999, "{style:?}: view from +Z, got {:?}", h.app.cam.back());
         assert!(h.app.session.selection.is_empty());
     }
 }
@@ -3240,7 +3240,7 @@ fn gpu_material_recipes_use_exact_linear_absorption_without_changing_saved_appea
         assert_eq!(wire["body_name"], "Optics");
         assert_eq!(wire["ior"], recipe.dielectric_ior);
         let [r, g, b]: [f64; 3] = serde_json::from_value(wire["absorption_per_mm"].clone()).unwrap();
-        let medium = sketcraft_engine::render::transmission::Transmission::new(solidcore_record::Vec3::new(r, g, b), None).unwrap();
+        let medium = sketcraft_engine::render::transmission::Transmission::new(sketcore_record::Vec3::new(r, g, b), None).unwrap();
         let transmitted = medium.attenuation(recipe.reference_path_mm).unwrap();
         for (actual, expected) in [transmitted.x, transmitted.y, transmitted.z].into_iter().zip(recipe.transmission_linear_rgb) {
             assert!((actual - expected).abs() < 1e-12, "the actual optical consumer must reproduce the recipe's linear transmittance");
@@ -3387,7 +3387,7 @@ fn gpu_material_identity_requires_explicit_revalidation_and_never_retargets() {
     h.app.render_workspace.view.method = ImageMethod::GpuRaytrace;
     h.app.render_workspace.view.materials.enabled = true;
     h.app.render_workspace.view.materials.bindings = vec![binding.clone()];
-    let capture = |app: &SolveApp| materials::params(app, &mut json!({"settings":setups::draft(app).unwrap()}));
+    let capture = |app: &SketApp| materials::params(app, &mut json!({"settings":setups::draft(app).unwrap()}));
     capture(&h.app).unwrap();
     h.app.run("appearance.assign", json!({"bodies":["Optics"],"color":"#123456"})).unwrap();
     assert!(capture(&h.app).is_err());
@@ -4515,7 +4515,7 @@ fn product_preview_exact_payload_preserves_mixed_surfaces_and_refuses_overflow()
 #[cfg(all(not(target_arch = "wasm32"), target_pointer_width = "64"))]
 #[test]
 fn full_detail_preview_source_can_exceed_legacy_128_mib_without_mesh_reduction() {
-    use solidcore_record::Vec3;
+    use sketcore_record::Vec3;
     use sketcraft_engine::geom::Mesh;
     use sketcraft_engine::render::{ProductMesh, surface::OpaqueSurface};
     // One immutable original triangle repeated in the index list; this tests
@@ -5397,7 +5397,7 @@ fn render_workspace_scene_vocabulary_migrates_previous_shell_pins_once() {
     assert_eq!(custom.prefs(), saved);
 }
 
-fn assert_product_fits_canvas(app: &SolveApp) {
+fn assert_product_fits_canvas(app: &SketApp) {
     let layout = app.viewport.layout.as_ref().unwrap();
     let free = crate::shell::content_rect(app, layout.viewport);
     assert!(free.contains_rect(layout.drawable), "fit region {:?} outside canvas {free:?}", layout.drawable);
@@ -5408,7 +5408,7 @@ fn assert_product_fits_canvas(app: &SolveApp) {
                 let (sx, sy, _) = app
                     .cam
                     .to_screen(
-                        solidcore_record::Vec3::new(x, y, z),
+                        sketcore_record::Vec3::new(x, y, z),
                         f64::from(layout.viewport.width()),
                         f64::from(layout.viewport.height()),
                         bounds.diagonal().max(10.0),
@@ -5686,8 +5686,8 @@ fn render_workspace_click_modifiers_clear_and_browser_share_selection() {
     h.settle();
     h.app.run("select.filter", json!({"mode":"body"})).unwrap();
     let proj = crate::viewport::projection(&h.app, h.app.viewport.rect.unwrap());
-    let left = proj.to_screen(solidcore_record::Vec3::new(-20.0, 10.0, 20.0)).unwrap();
-    let right = proj.to_screen(solidcore_record::Vec3::new(40.0, 10.0, 20.0)).unwrap();
+    let left = proj.to_screen(sketcore_record::Vec3::new(-20.0, 10.0, 20.0)).unwrap();
+    let right = proj.to_screen(sketcore_record::Vec3::new(40.0, 10.0, 20.0)).unwrap();
     h.step(&json!({"click":[left.x,left.y]})).unwrap();
     assert_eq!(h.app.session.selection, [Sel::Body { name: "Left".into() }]);
     h.step(&json!({"click":[right.x,right.y],"shift":true})).unwrap();
@@ -5801,7 +5801,7 @@ fn render_workspace_product_pass_draws_only_requested_face_or_body_overlay() {
 #[test]
 fn render_workspace_pick_projection_matches_orthographic_and_custom_perspective_camera() {
     use egui::{Event, Modifiers, PointerButton};
-    use solidcore_record::Vec3;
+    use sketcore_record::Vec3;
     for fov in [0.0, 0.6, 1.1] {
         let mut app = nav_app(true, "fusion", crate::prefs::OrbitAround::ViewCentre);
         app.cam.fov = fov;
@@ -5832,7 +5832,7 @@ fn render_workspace_pick_projection_matches_orthographic_and_custom_perspective_
 #[test]
 fn render_workspace_component_filter_keeps_nested_repeated_occurrences_distinct() {
     use crate::viewport::{Hit, candidate};
-    use solidcore_record::Vec3;
+    use sketcore_record::Vec3;
     use sketcraft_engine::Sel;
     let mut h = Harness::new();
     let parent = h.app.run("component.create", json!({"name":"Parent"})).unwrap();
@@ -7721,7 +7721,7 @@ fn render_assign_gestures_geometry_and_theme_evidence() {
                 .app
                 .viewport
                 .rect
-                .and_then(|rect| crate::viewport::projection(&h.app, rect).to_screen(solidcore_record::Vec3::new(0.0, 0.0, 28.0)))
+                .and_then(|rect| crate::viewport::projection(&h.app, rect).to_screen(sketcore_record::Vec3::new(0.0, 0.0, 28.0)))
                 .filter(|_| frame == 1)
                 .map(|at| vec![egui::Event::PointerMoved(at)])
                 .unwrap_or_default();
@@ -7919,7 +7919,7 @@ fn render_results_compare_divider_drag_clamps_and_blocks_all_camera_input() {
 
 #[test]
 fn render_results_compare_live_projection_matches_image_fit_zoom_and_pan_without_an_oversized_gpu_viewport() {
-    use solidcore_record::Vec3;
+    use sketcore_record::Vec3;
     let canvas = egui::Rect::from_min_size(egui::pos2(100.0, 200.0), egui::vec2(800.0, 600.0));
     for fov in [0.0, 0.6] {
         let camera = Camera { fov, roll: 0.25, ..Default::default() };
@@ -8043,7 +8043,7 @@ fn geometry_refusal_reports_scene_size_limit_and_recovery() {
             mesh: Arc::new(Mesh { triangles: vec![[0; 3]; 1 << 20], ..Default::default() }),
             color: [128; 3],
             opacity: 1.0,
-            surface: Some(sketcraft_engine::render::surface::OpaqueSurface::new(solidcore_record::Vec3::new(0.5, 0.5, 0.5), 0.0, 0.5, 1.5).unwrap()),
+            surface: Some(sketcraft_engine::render::surface::OpaqueSurface::new(sketcore_record::Vec3::new(0.5, 0.5, 0.5), 0.0, 0.5, 1.5).unwrap()),
             transmission: None,
             faces: Vec::new(),
         }],
@@ -8113,7 +8113,7 @@ fn the_field_of_view_rescales_only_the_design_view() {
 /// taller than wide moves the camera back so the sides hold it too.
 #[test]
 fn fit_aspect_keeps_the_product_inside_a_tall_image() {
-    use solidcore_record::Vec3;
+    use sketcore_record::Vec3;
     use sketcraft_engine::geom::Aabb3;
     let bounds = Aabb3 { min: Vec3::new(-30.0, -30.0, -30.0), max: Vec3::new(30.0, 30.0, 30.0) };
     let radius = bounds.diagonal();
@@ -8139,12 +8139,12 @@ fn fit_aspect_keeps_the_product_inside_a_tall_image() {
     }
 }
 
-fn corners(b: &sketcraft_engine::geom::Aabb3) -> Vec<solidcore_record::Vec3> {
+fn corners(b: &sketcraft_engine::geom::Aabb3) -> Vec<sketcore_record::Vec3> {
     let mut out = Vec::new();
     for x in [b.min.x, b.max.x] {
         for y in [b.min.y, b.max.y] {
             for z in [b.min.z, b.max.z] {
-                out.push(solidcore_record::Vec3::new(x, y, z));
+                out.push(sketcore_record::Vec3::new(x, y, z));
             }
         }
     }
@@ -8712,7 +8712,7 @@ fn current_live_pixels_use_only_the_depth_correct_feedback_callback_and_stale_pi
 #[cfg(not(target_arch = "wasm32"))]
 #[test]
 fn live_image_target_outlines_keep_new_material_and_lighting_visible_without_clearing_selection() {
-    use solidcore_record::Vec3;
+    use sketcore_record::Vec3;
     use sketcraft_engine::Sel;
     let Some(mut h) = live_cpu_fixture() else { return };
     h.app.viewport.rect = Some(egui::Rect::from_min_size(egui::Pos2::ZERO, egui::vec2(64.0, 64.0)));
@@ -8728,7 +8728,7 @@ fn live_image_target_outlines_keep_new_material_and_lighting_visible_without_cle
     let selected = h.app.session.selection.clone();
     live::advance(&mut h.app, &h.ctx, 1.0);
     let before = wait_live_complete(&mut h, 1.3);
-    let outlines = |app: &SolveApp| {
+    let outlines = |app: &SketApp| {
         let feedback = crate::viewport::build_highlight(app).merged();
         assert!(
             feedback.tris.is_empty() && feedback.pbr.is_empty() && feedback.trans.is_empty(),
@@ -8773,7 +8773,7 @@ fn live_image_target_outlines_keep_new_material_and_lighting_visible_without_cle
 #[cfg(not(target_arch = "wasm32"))]
 #[test]
 fn live_image_imported_mesh_keeps_selected_and_hovered_face_and_body_feedback() {
-    use solidcore_record::Vec3;
+    use sketcore_record::Vec3;
     use sketcraft_engine::{
         Sel,
         doc::{Document, FeatureKind, MeshData},
@@ -8797,7 +8797,7 @@ fn live_image_imported_mesh_keeps_selected_and_hovered_face_and_body_feedback() 
     )
     .unwrap();
     let mut h = Harness::new();
-    h.app = SolveApp::new(Session::new(doc), crate::Services::default());
+    h.app = SketApp::new(Session::new(doc), crate::Services::default());
     // This context's texture deltas must reach the real GPU renderer, rather than
     // being discarded by the scenario harness's renderer-free frames.
     h.ctx = crate::fonts::test_context();
@@ -8848,7 +8848,7 @@ fn live_image_imported_mesh_keeps_selected_and_hovered_face_and_body_feedback() 
 
     // Expand actual highlighted placements too: an empty CPU triangle list alone
     // does not mean that a whole-body GPU highlight is missing.
-    let filled_vertices = |app: &SolveApp, expected_color: [u8; 4]| {
+    let filled_vertices = |app: &SketApp, expected_color: [u8; 4]| {
         let feedback = crate::viewport::build_highlight(app).merged();
         assert!(feedback.overlay.is_empty() && feedback.xray.is_empty(), "feedback must remain depth-tested");
         assert!(feedback.selected_planned.is_empty() && feedback.hover_planned.is_empty());
@@ -8864,7 +8864,7 @@ fn live_image_imported_mesh_keeps_selected_and_hovered_face_and_body_feedback() 
         }
         vertices.len()
     };
-    let target = |app: &mut SolveApp, body: &str, face: usize, case: usize| {
+    let target = |app: &mut SketApp, body: &str, face: usize, case: usize| {
         app.session.selection.clear();
         app.viewport.hover = None;
         app.viewport.hover_bodies.clear();
@@ -10032,7 +10032,7 @@ fn cpu_glass_ui_save_reopen_workflow(general: bool) {
     let physical = h.app.run("component.properties", json!({"component":"root"})).unwrap();
     assert!(physical["total"]["mass_g"].as_f64().unwrap() > 0.0);
     let camera = Camera {
-        target: solidcore_record::Vec3::new(if general { 0.0 } else { 5.0 }, if general { 0.0 } else { 5.0 }, 1.5),
+        target: sketcore_record::Vec3::new(if general { 0.0 } else { 5.0 }, if general { 0.0 } else { 5.0 }, 1.5),
         distance: 20.0,
         yaw: 0.3,
         pitch: 0.4,
@@ -10239,7 +10239,7 @@ fn cold_saved_cpu_lens_hydrates_its_camera_and_render_reentry_preserves_the_dirt
         return;
     }
     h.app.run("solid.box", json!({"length":10,"width":20,"height":5,"body_name":"Subject"})).unwrap();
-    let saved_camera = Camera { fov: 35f64.to_radians(), distance: 168.6, target: solidcore_record::Vec3::new(5.0, 10.0, 2.5), ..Default::default() };
+    let saved_camera = Camera { fov: 35f64.to_radians(), distance: 168.6, target: sketcore_record::Vec3::new(5.0, 10.0, 2.5), ..Default::default() };
     let lens = ThinLens { aperture_radius_mm: 1.0, focus_distance_mm: 168.6 };
     let progressive = CpuProgressiveOptions { samples_per_pixel: 3, seed: 81 };
     h.app
@@ -10256,7 +10256,7 @@ fn cold_saved_cpu_lens_hydrates_its_camera_and_render_reentry_preserves_the_dirt
     h.app.render_workspace.image_host = Some(host);
     h.app.render_workspace.view.name = "Lens".into();
     h.app.cancel_view_animation();
-    h.app.cam = Camera { distance: 211.0, target: solidcore_record::Vec3::new(-12.0, 7.0, 9.0), ..Default::default() };
+    h.app.cam = Camera { distance: 211.0, target: sketcore_record::Vec3::new(-12.0, 7.0, 9.0), ..Default::default() };
     h.app.ui.perspective = false;
     let original_design_camera = h.app.cam;
     let document = h.app.session.doc.clone();
@@ -10601,7 +10601,7 @@ fn inspector_focus_never_changes_the_saved_output_camera_live_aspect_or_normaliz
     h.app.render_workspace.view.live_paused = true;
     h.call("ui.resize", json!({"width":1100,"height":760}));
     h.frames(5);
-    let camera = Camera { fov: 35f64.to_radians(), distance: 168.6, target: solidcore_record::Vec3::new(5.0, 10.0, 2.5), ..h.app.cam };
+    let camera = Camera { fov: 35f64.to_radians(), distance: 168.6, target: sketcore_record::Vec3::new(5.0, 10.0, 2.5), ..h.app.cam };
     let lens = ThinLens { aperture_radius_mm: 1.0, focus_distance_mm: 168.6 };
     h.app
         .run(
@@ -11357,7 +11357,7 @@ fn cpu_general_glass_path_availability_uses_reviewed_unsaved_saved_optics_withou
 
 #[test]
 fn render_ui_at_world_points_hit_the_painted_surface_and_letterbox_does_not_select() {
-    use solidcore_record::Vec3;
+    use sketcore_record::Vec3;
     use sketcraft_engine::Sel;
     for layout in [crate::shell::LayoutMode::Docked, crate::shell::LayoutMode::Floating] {
         for side in ["left", "right"] {
@@ -11490,7 +11490,7 @@ fn rendered_camera_layout_cache_and_fit_share_the_exact_frame_without_moving_out
 
 #[test]
 fn gray_letterbox_gestures_use_the_real_camera_scale_and_never_select_or_assign_geometry() {
-    use solidcore_record::Vec3;
+    use sketcore_record::Vec3;
     use sketcraft_engine::Sel;
     for fov in [0.0, 0.6] {
         let mut h = Harness::new();
@@ -11538,7 +11538,7 @@ fn gray_letterbox_gestures_use_the_real_camera_scale_and_never_select_or_assign_
 
 #[test]
 fn gray_canvas_empty_space_orbit_ignores_cropped_geometry_and_its_hidden_surface_pivot() {
-    use solidcore_record::Vec3;
+    use sketcore_record::Vec3;
     use sketcraft_engine::Sel;
     for (preset, ctrl) in [("fusion", true), (crate::prefs::OPENSCAD_NAV, false)] {
         let mut h = Harness::new();
@@ -11698,7 +11698,7 @@ fn cpu_subsurface_real_glass_pointer_enable_render_save_undo_and_cold_hydration_
     h.app.run("solid.box", json!({"length":10,"width":10,"height":2,"body_name":"Scattering"})).unwrap();
     h.frames(3);
     let camera = Camera {
-        target: solidcore_record::Vec3::new(5.0, 5.0, 0.5),
+        target: sketcore_record::Vec3::new(5.0, 5.0, 0.5),
         distance: 0.5,
         yaw: 0.0,
         pitch: std::f64::consts::FRAC_PI_2,
@@ -12148,7 +12148,7 @@ fn volume_editor_number(h: &mut Harness, handle: &str, text: &str) {
 fn cpu_volume_editor_fixture(path: bool, extinction: Option<f64>) -> Harness {
     let mut h = Harness::new();
     h.app.run("solid.box", json!({"length":10,"width":10,"height":3,"body_name":"Volume subject"})).unwrap();
-    let camera = Camera { target: solidcore_record::Vec3::new(5.0, 5.0, 1.5), distance: 30.0, fov: 0.7, ..Default::default() };
+    let camera = Camera { target: sketcore_record::Vec3::new(5.0, 5.0, 1.5), distance: 30.0, fov: 0.7, ..Default::default() };
     let volume = extinction.map(|extinction| {
         json!({"min_mm":[-20,-20,-20],"max_mm":[20,20,20],"extinction_per_mm":extinction,
         "scattering_albedo":[0.2,0.4,0.6],"anisotropy":0.3})
@@ -12405,11 +12405,8 @@ fn atmosphere_numeric_pointer_edit_keeps_proven_light_mute_solo_selection_and_it
     let mut h = cpu_volume_editor_fixture(true, Some(0.001));
     let mut setup = h.app.session.doc.render.setups["Studio"].clone();
     if let Some(sketcraft_engine::doc::render_settings::RenderJob::CpuRaytrace { options, .. }) = &mut setup.job {
-        options.lights = Some(vec![sketcraft_engine::render::job::DirectionalLightOptions {
-            direction: [0.0, 0.0, 1.0],
-            color: [1.0, 1.0, 1.0],
-            intensity: 2.0,
-        }]);
+        options.lights =
+            Some(vec![sketcraft_engine::render::job::DirectionalLightOptions { direction: [0.0, 0.0, 1.0], color: [1.0, 1.0, 1.0], intensity: 2.0 }]);
     }
     h.app.run("render.settings.set", json!({"name":"Studio","set":setup})).unwrap();
     setups::load(&mut h.app);
@@ -13104,7 +13101,7 @@ fn native_batch_fixture(
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-fn native_batch_wait(h: &mut Harness, predicate: impl Fn(&SolveApp) -> bool) {
+fn native_batch_wait(h: &mut Harness, predicate: impl Fn(&SketApp) -> bool) {
     let deadline = std::time::Instant::now() + std::time::Duration::from_secs(30);
     loop {
         prepare::tick(&mut h.app, &h.ctx);
@@ -14741,7 +14738,7 @@ fn host_product_fit_uses_frame_and_selected_shot_projection_with_its_own_fov() {
     use crate::panel_runtime::{logical_rect, resolve_usable_region};
     use crate::viewport_layout::Layout;
     use egui::{Rect, pos2, vec2};
-    use solidcore_record::Vec3;
+    use sketcore_record::Vec3;
     use sketcraft_engine::geom::Aabb3;
     let mut h = Harness::new();
     enter(&mut h.app, true).unwrap();

@@ -21,7 +21,7 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 
 use serde_json::{Value, json};
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 use sketcraft_engine::Session;
 use sketcraft_engine::doc::{FaceAttachmentStatus, Feature, FeatureKind, ModelBody, ModelState, PlaneRef, naming};
 

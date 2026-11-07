@@ -207,7 +207,6 @@ prefs_design	false
 prefs_general	false
 prefs_graphics	false
 prefs_layout	false
-prefs_mouse3d	false
 prefs_navigation	false
 prefs_plugins	false
 prefs_shortcuts	false

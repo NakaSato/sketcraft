@@ -1,4 +1,4 @@
-//! Fillets and chamfers on solidcore: the C API's composition round SMLib's fillet executive,
+//! Fillets and chamfers on sketcore: the C API's composition round SMLib's fillet executive,
 //! ported from the fork's `capi/src/smlib_ops.cpp` (`blend_call`, `round_edges`,
 //! `chamfer_offsets`, `chamfer_edges`, `chamfer_radius`, `outer_faceuse`, `face_frame`,
 //! `sides_offsets`, `blend_failure`, `setbacks_fit`, `overflow_first`, `Picked`,
@@ -11,56 +11,56 @@
 //! corners by point, and drives the executive step by step (`SetFilletParameters`,
 //! `CreateFilletCorners`, the corners' bevels and setbacks, `DoFilleting`, `StitchAndOrient`).
 //!
-//! What the capi asks of fork-only SMLib code that solidcore does not have is
+//! What the capi asks of fork-only SMLib code that sketcore does not have is
 //! [`Error::Unsupported`], refused where the capi would first reach it, so every error before
 //! it is the C++ path's:
 //! - a variable radius whose law has a corner (`SplitFilletFacesAtRadiusCorners`, fork 6eecf04; solidcore#430, PR #1403).
 //!
-//! solidcore's own refusals of code it has not ported (`SolidError::Unported`) are
+//! sketcore's own refusals of code it has not ported (`SolidError::Unported`) are
 //! [`Error::Unsupported`] too.
 
 use std::collections::{HashMap, HashSet};
 use std::sync::PoisonError;
 
-use solidcore::EntityRef;
-use solidcore::SolidError;
-use solidcore::blend::blend_corner::BlendCornerEvent;
-use solidcore::blend::fillet_corner::p3::MIXED_CORNER_RAILS_CROSS;
-use solidcore::blend::fillet_executive::p1::{FilletLaw, FilletLawKind};
-use solidcore::blend::fillet_executive::p3::{ErrorInfo, FitKind, NoRoomReason};
-use solidcore::blend::fillet_executive::session::{FilletObject, FilletSession};
-use solidcore::blend::fillet_geom::p1::{FilletCornerType, FilletErrorType};
-use solidcore::blend::fillet_section::section::GN_THUMBWEIGHT_EQUAL_AREA;
-use solidcore::blend::fillet_solver::p1::FilletSurfaceGeneratorType;
-use solidcore::geom::attribute::{Attribute, AttributeHandlers, Behavior, ids as attribute_ids};
-use solidcore::geom::vector3d::{Point3, Vec3};
-use solidcore::kernel::Kernel;
-use solidcore::mass::integrator::properties::edge_length;
-use solidcore::nurbs::b_spline_curve::p1::{BSplineCurve, BSplineCurveForm, CanonicalData, KnotType};
-use solidcore::nurbs::b_spline_surface_n_lib::p2::OrientType;
-use solidcore::query::api_queries::edge_closest_point;
-use solidcore::query::brep::evaluate_surface_normal;
-use solidcore::topology::brep::p1 as brep_p1;
-use solidcore::topology::brep::p2 as brep_p2;
-use solidcore::topology::brep::p2::ArenaNotifyState;
-use solidcore::topology::brep::p3::{DeleteFaceOptions, delete_face};
-use solidcore::topology::brep::p5::{StitchAndOrientOptions, stitch_and_orient};
-use solidcore::topology::edgeuse::p1 as eu_p1;
-use solidcore::topology::edgeuse::p3::{BinormalOptions, evaluate_binormal};
-use solidcore::topology::face::p2 as face_p2;
-use solidcore::topology::face::p4 as face_p4;
-use solidcore::topology::topology_traverser::Marks;
-use solidcore::topology::{Brep, EdgeId, EdgeuseId, FaceId, FaceuseId, VertexId, edge, vertex};
+use sketcore::EntityRef;
+use sketcore::SolidError;
+use sketcore::blend::blend_corner::BlendCornerEvent;
+use sketcore::blend::fillet_corner::p3::MIXED_CORNER_RAILS_CROSS;
+use sketcore::blend::fillet_executive::p1::{FilletLaw, FilletLawKind};
+use sketcore::blend::fillet_executive::p3::{ErrorInfo, FitKind, NoRoomReason};
+use sketcore::blend::fillet_executive::session::{FilletObject, FilletSession};
+use sketcore::blend::fillet_geom::p1::{FilletCornerType, FilletErrorType};
+use sketcore::blend::fillet_section::section::GN_THUMBWEIGHT_EQUAL_AREA;
+use sketcore::blend::fillet_solver::p1::FilletSurfaceGeneratorType;
+use sketcore::geom::attribute::{Attribute, AttributeHandlers, Behavior, ids as attribute_ids};
+use sketcore::geom::vector3d::{Point3, Vec3};
+use sketcore::kernel::Kernel;
+use sketcore::mass::integrator::properties::edge_length;
+use sketcore::nurbs::b_spline_curve::p1::{BSplineCurve, BSplineCurveForm, CanonicalData, KnotType};
+use sketcore::nurbs::b_spline_surface_n_lib::p2::OrientType;
+use sketcore::query::api_queries::edge_closest_point;
+use sketcore::query::brep::evaluate_surface_normal;
+use sketcore::topology::brep::p1 as brep_p1;
+use sketcore::topology::brep::p2 as brep_p2;
+use sketcore::topology::brep::p2::ArenaNotifyState;
+use sketcore::topology::brep::p3::{DeleteFaceOptions, delete_face};
+use sketcore::topology::brep::p5::{StitchAndOrientOptions, stitch_and_orient};
+use sketcore::topology::edgeuse::p1 as eu_p1;
+use sketcore::topology::edgeuse::p3::{BinormalOptions, evaluate_binormal};
+use sketcore::topology::face::p2 as face_p2;
+use sketcore::topology::face::p4 as face_p4;
+use sketcore::topology::topology_traverser::Marks;
+use sketcore::topology::{Brep, EdgeId, EdgeuseId, FaceId, FaceuseId, VertexId, edge, vertex};
 
 use super::{Body, answer};
 use crate::{Blend, ChamferSecond, Error, Hole, HoleEdge, MAX_POINTS, Result, Turn};
 
-/// Why solidcore refuses the 3x2 mixed-convexity corner whose rails cross
+/// Why sketcore refuses the 3x2 mixed-convexity corner whose rails cross
 /// (`fixes.fillet_refuse_mixed_corner_crossing_rails`, [`MIXED_CORNER_RAILS_CROSS`]): it builds no
 /// corner for it yet.
 pub(crate) const MIXED_CORNER_UNSUPPORTED: &str = "a fillet corner where a convex and a concave round leave the vertex along one \
 tangent, so that their contact lines cross before the corner (https://github.com/tangency-labs/solidcore/issues/2256)";
-use solidcore::topology::brep::p3::brep_copy;
+use sketcore::topology::brep::p3::brep_copy;
 
 /// The capi's statuses as SketCraft errors: an operation's own result.
 type Out<T> = std::result::Result<T, Error>;
@@ -68,7 +68,7 @@ type Out<T> = std::result::Result<T, Error>;
 /// `SM_ERR_INVALID_INPUT`.
 const INVALID_INPUT: i32 = 1007;
 
-/// An SMLib status as the capi passes it on (`status`, smlib_shim.h): solidcore's upstream
+/// An SMLib status as the capi passes it on (`status`, smlib_shim.h): sketcore's upstream
 /// status codes as they are; its refusals of code it has not ported as not supported.
 pub(super) fn status(e: SolidError) -> Error {
     match e {
@@ -76,7 +76,7 @@ pub(super) fn status(e: SolidError) -> Error {
         SolidError::InvalidInput { .. } => Error::Status(INVALID_INPUT),
         SolidError::Unsupported { reason, .. } if reason == MIXED_CORNER_RAILS_CROSS => Error::Unported(MIXED_CORNER_UNSUPPORTED),
         e if e.is_unported() => Error::Unsupported,
-        e => Error::Solidcore(e.to_string()),
+        e => Error::Sketcore(e.to_string()),
     }
 }
 
@@ -110,14 +110,14 @@ pub(super) enum Miss {
 /// first picked it. A point picks none when the nearest is farther than `tol`, and is ambiguous
 /// when the second nearest is within `tol` too and nearer than the first by at most `model_tol`.
 /// An entity whose distance query returns a status other than success is skipped, as the capi
-/// skips it ([`answer`]); any other solidcore error fails the pick.
+/// skips it ([`answer`]); any other sketcore error fails the pick.
 pub(super) fn pick<T: Copy + PartialEq>(
     all: &[T],
     points: &[[f64; 3]],
     tol: f64,
     model_tol: f64,
-    mut dist: impl FnMut(T, Point3) -> solidcore::Result<Option<f64>>,
-) -> solidcore::Result<std::result::Result<(Vec<T>, Vec<usize>), Miss>> {
+    mut dist: impl FnMut(T, Point3) -> sketcore::Result<Option<f64>>,
+) -> sketcore::Result<std::result::Result<(Vec<T>, Vec<usize>), Miss>> {
     let (mut picked, mut first) = (Vec::new(), Vec::new());
     for (i, p) in points.iter().enumerate() {
         let p = p3(*p);
@@ -155,13 +155,13 @@ pub(super) fn pick_edges(
     b: &Brep,
     points: &[[f64; 3]],
     tol: f64,
-) -> solidcore::Result<std::result::Result<(Vec<EdgeId>, Vec<usize>), Miss>> {
+) -> sketcore::Result<std::result::Result<(Vec<EdgeId>, Vec<usize>), Miss>> {
     let all = brep_p1::edges(b, None)?;
     pick(&all, points, tol, b.tolerance(), |e, p| Ok(answer(edge_closest_point(k, b, e, p))?.map(|c| c.closest.distance)))
 }
 
 /// `pick_vertices` (`vertex_distance`).
-pub(super) fn pick_vertices(b: &Brep, points: &[[f64; 3]], tol: f64) -> solidcore::Result<std::result::Result<(Vec<VertexId>, Vec<usize>), Miss>> {
+pub(super) fn pick_vertices(b: &Brep, points: &[[f64; 3]], tol: f64) -> sketcore::Result<std::result::Result<(Vec<VertexId>, Vec<usize>), Miss>> {
     let all = brep_p1::vertices(b, None)?;
     pick(&all, points, tol, b.tolerance(), |v, p| Ok(Some((b.vertex(v)?.point - p).length())))
 }
@@ -196,7 +196,7 @@ struct SetBack {
 
 /// `setbacks_fit`: each setback shorter than every edge at its corner, and where an edge's
 /// other end is a setback corner too, the two together shorter than the edge.
-fn setbacks_fit(k: &Kernel, b: &Brep, setbacks: &[SetBack]) -> solidcore::Result<bool> {
+fn setbacks_fit(k: &Kernel, b: &Brep, setbacks: &[SetBack]) -> sketcore::Result<bool> {
     for sb in setbacks {
         for e in vertex::edges(b, sb.vertex, None)? {
             let Some(length) = answer(edge_length(k, b, e, 1e-6))? else {
@@ -218,7 +218,7 @@ fn setbacks_fit(k: &Kernel, b: &Brep, setbacks: &[SetBack]) -> solidcore::Result
 }
 
 /// The midpoint parameter of `e` (`GetInterval().Evaluate(0.5)`).
-fn mid(b: &Brep, e: EdgeId) -> solidcore::Result<f64> {
+fn mid(b: &Brep, e: EdgeId) -> sketcore::Result<f64> {
     Ok(b.edge(e)?.interval.evaluate(0.5))
 }
 
@@ -226,7 +226,7 @@ fn mid(b: &Brep, e: EdgeId) -> solidcore::Result<f64> {
 /// `distance` back from the edge at its midpoint, `distance * tan(a / 2)` with `a` the angle
 /// between the directions into the faces; at a cusp (a knife edge) `distance` itself, the ball
 /// whose contacts the chamfer joins. `None` where the capi's returns false.
-fn chamfer_radius(k: &Kernel, b: &mut Brep, e: EdgeId, distance: f64) -> solidcore::Result<Option<f64>> {
+fn chamfer_radius(k: &Kernel, b: &mut Brep, e: EdgeId, distance: f64) -> sketcore::Result<Option<f64>> {
     let Some(u0) = edge::blend_edgeuse(k, b, e)? else { return Ok(None) };
     let Some(u1) = eu_p1::radial(b, u0)? else { return Ok(None) };
     let t = mid(b, e)?;
@@ -265,29 +265,29 @@ enum Section<'a> {
 /// it. (The capi marks faces with an attribute SMLib copies through every split; here a face
 /// split by the operation counts as made, which only matters to a blend that made no blend
 /// face but split one, never seen.)
-fn face_set(b: &Brep) -> solidcore::Result<HashSet<FaceId>> {
+fn face_set(b: &Brep) -> sketcore::Result<HashSet<FaceId>> {
     Ok(brep_p1::faces(b, None)?.into_iter().collect())
 }
 
 /// `blend_failure`: a blend the executive found larger than its faces allow
 /// (`SM_FILERR_NO_ROOM`) is [`Error::NoRoom`]; a filleted vertex no corner type handles
-/// (`SM_FILERR_CORNER_UNSUPPORTED`, which solidcore notes under
+/// (`SM_FILERR_CORNER_UNSUPPORTED`, which sketcore notes under
 /// `fixes.fillet_vertex_error_diagnostics`) is [`Error::CornerUnsupported`]; any other failure
 /// its status. `corner` says `CreateFilletCorners` noted such a vertex: the corner it could not
 /// make is why a later step fails, so that note stands for it whatever the later step noted
-/// (as solidcore's own `FilletSession::do_fillet` keeps it).
+/// (as sketcore's own `FilletSession::do_fillet` keeps it).
 ///
 /// Except a blend whose rail leaves its face refused as [`NoRoomReason::RailLeavesFace`]: that
-/// is solidcore without `fixes.fillet_cliff_overflow`, refusing every such blend where the fork
+/// is sketcore without `fixes.fillet_cliff_overflow`, refusing every such blend where the fork
 /// decides between building it over the cliff (`SmFilletCliffOverflow.cpp`, fork 8ba4667) and
 /// refusing it. Its answer is the fork's only by chance, so it is [`Error::Unsupported`]. With
-/// the cliff overflow on, solidcore makes the fork's choice, and its refusals (each with its own
+/// the cliff overflow on, sketcore makes the fork's choice, and its refusals (each with its own
 /// reason) are [`Error::NoRoom`] like the fork's.
 ///
-/// A blend too large that solidcore sizes (the session's fit, as the fork's capi reads it with
+/// A blend too large that sketcore sizes (the session's fit, as the fork's capi reads it with
 /// `smlib_blend_fit_size`, or [`SolidError::FilletRefused`] carrying it; under
 /// `fixes.fillet_gn_section_generator`) is [`Error::TooLarge`] with that size, its edge's point
-/// filled in by the caller from the edge returned with it ([`sized_on`]); a corner solidcore
+/// filled in by the caller from the edge returned with it ([`sized_on`]); a corner sketcore
 /// refuses as not supported (the mixed corner whose rails cross, solidcore#2256) is
 /// [`Error::Unported`] naming it.
 fn blend_failure(s: &FilletSession<'_>, e: SolidError, corner: bool) -> (Error, Option<EdgeId>) {
@@ -316,7 +316,7 @@ fn blend_failure(s: &FilletSession<'_>, e: SolidError, corner: bool) -> (Error, 
     }
 }
 
-/// solidcore's reason for a blend too large, as SketCraft words it; `None` for the reasons it
+/// sketcore's reason for a blend too large, as SketCraft words it; `None` for the reasons it
 /// does not name (the cliff overflow's own refusals).
 fn room_reason(r: NoRoomReason) -> Option<crate::RoomReason> {
     use crate::RoomReason as R;
@@ -341,7 +341,7 @@ fn room_reason(r: NoRoomReason) -> Option<crate::RoomReason> {
 }
 
 /// The refusal of a swept turn `CreateFilletCorners` noted at its vertex (`SmBlendCorner::Classify`
-/// with `GetSweptTurns()`): [`Error::TurnRefused`] with solidcore's reason, without its "Fillet
+/// with `GetSweptTurns()`): [`Error::TurnRefused`] with sketcore's reason, without its "Fillet
 /// Error: " prefix, and where it is; `None` for a note of another kind.
 fn turn_refusal(info: &ErrorInfo<FilletObject>) -> Option<Error> {
     let room = match info.code {
@@ -357,7 +357,7 @@ fn turn_refusal(info: &ErrorInfo<FilletObject>) -> Option<Error> {
     Some(Error::TurnRefused { room, why, at: info.location.map(|p| [p.x, p.y, p.z]) })
 }
 
-/// [`blend_failure`] where solidcore gives no size.
+/// [`blend_failure`] where sketcore gives no size.
 fn blend_failure_unsized(info: &ErrorInfo<FilletObject>, e: SolidError, corner: bool) -> Error {
     if e.is_unported() {
         status(e)
@@ -376,7 +376,7 @@ fn blend_failure_unsized(info: &ErrorInfo<FilletObject>, e: SolidError, corner: 
 /// found for; an equal chamfer's size (its ball's radius, [`chamfer_radius`]) as its distance.
 /// Where the edge or its point can't be read the size stays as it is, with no point (a chamfer's
 /// size then is not a distance, so it is left a plain refusal).
-fn sized_on(k: &Kernel, b: &mut Brep, edge: Option<EdgeId>, section: Section<'_>, e: Error) -> solidcore::Result<Error> {
+fn sized_on(k: &Kernel, b: &mut Brep, edge: Option<EdgeId>, section: Section<'_>, e: Error) -> sketcore::Result<Error> {
     let Error::TooLarge { size, kind, why, .. } = e else { return Ok(e) };
     let Some(edge) = edge else {
         return Ok(if matches!(section, Section::Chamfer(_)) && kind == crate::FitKind::Radius { Error::NoRoom } else { e });
@@ -430,7 +430,7 @@ fn blend_edges(
     law: Option<FilletLaw>,
     setbacks: &[SetBack],
     patches: Option<&mut Vec<Vec<FaceId>>>,
-) -> solidcore::Result<std::result::Result<(), std::result::Result<usize, Error>>> {
+) -> sketcore::Result<std::result::Result<(), std::result::Result<usize, Error>>> {
     blend_edges_stopping(k, b, edges, sizes, section, law, setbacks, patches, None)
 }
 
@@ -446,7 +446,7 @@ fn blend_edges_stopping(
     setbacks: &[SetBack],
     patches: Option<&mut Vec<Vec<FaceId>>>,
     overflow_first: Option<OverflowFirst<'_>>,
-) -> solidcore::Result<std::result::Result<(), std::result::Result<usize, Error>>> {
+) -> sketcore::Result<std::result::Result<(), std::result::Result<usize, Error>>> {
     let before = face_set(b)?;
     // The edge a sized refusal names ([`blend_failure`]), read after the session lets `b` go.
     let mut fit_edge = None;
@@ -465,7 +465,7 @@ fn blend_edges_stopping(
                 Some(&size) => s.prepare_variable_radius_edges(k, edges, size, law, 1, 1),
                 None => return Ok(Err(Err(Error::Argument))),
             },
-            // The equal-area thumbweight by solidcore's name, never its value: solidcore#2274 moves
+            // The equal-area thumbweight by sketcore's name, never its value: solidcore#2274 moves
             // it from -2 to 2, after which -2 is an ordinary weight.
             (Section::Curvature, _) => {
                 s.prepare_per_edge_constant_radius(k, edges, sizes, &[FilletSurfaceGeneratorType::BlendCurve], 2, GN_THUMBWEIGHT_EQUAL_AREA)
@@ -483,7 +483,7 @@ fn blend_edges_stopping(
         }
         let prepared_ok = prepared.is_ok();
         let mut step = prepared.and_then(|()| s.create_corners(k, None)).map(|()| Ok(Vec::new()));
-        // A swept turn `CreateFilletCorners` refused, with solidcore's reason ([`turn_refusal`]).
+        // A swept turn `CreateFilletCorners` refused, with sketcore's reason ([`turn_refusal`]).
         let refused_turn = if swept && prepared_ok && step.is_err() { turn_refusal(s.error_info()) } else { None };
         // A vertex `CreateFilletCorners` made no corner for, noted before a later step notes its
         // own failure over it ([`blend_failure`]).
@@ -523,7 +523,7 @@ fn blend_edges_stopping(
             },
         }
     };
-    let done: solidcore::Result<std::result::Result<(Vec<usize>, Vec<(usize, FaceId)>), std::result::Result<usize, Error>>> = done;
+    let done: sketcore::Result<std::result::Result<(Vec<usize>, Vec<(usize, FaceId)>), std::result::Result<usize, Error>>> = done;
     let (set_back, marked) = match done? {
         Ok(d) => d,
         Err(refusal) => {
@@ -535,7 +535,7 @@ fn blend_edges_stopping(
         }
     };
     let stitched = stitch_and_orient(k, b, &StitchAndOrientOptions::default()).map_err(status);
-    // The port's cached topology, true again for what reads the body next (as solidcore's own
+    // The port's cached topology, true again for what reads the body next (as sketcore's own
     // fillet entry points do).
     b.refresh_cached_topology();
     if let Err(e) = stitched {
@@ -574,7 +574,7 @@ fn blend_edges_stopping(
 /// `chamfer_offsets`' `SetFilletParameters(b, es, kinds, solvers, first, NULL, -1, -1, -1, -1,
 /// 1, 1.0, &second)` with every kind `SM_FSG_LINEAR` and every solver `SM_FS_CONST_RADIUS`, as the
 /// fork's `SetFilletParameters` runs it (its `pOptSecondRadii`, fork f653ac9).
-fn chamfer_parameters(k: &mut Kernel, s: &mut FilletSession<'_>, edges: &[EdgeId], first: &[f64], second: &[f64]) -> solidcore::Result<()> {
+fn chamfer_parameters(k: &mut Kernel, s: &mut FilletSession<'_>, edges: &[EdgeId], first: &[f64], second: &[f64]) -> sketcore::Result<()> {
     if edges.is_empty() {
         return Ok(());
     }
@@ -590,7 +590,7 @@ fn corners(
     s: &mut FilletSession<'_>,
     section: Section<'_>,
     setbacks: &[SetBack],
-) -> solidcore::Result<std::result::Result<Vec<usize>, std::result::Result<usize, Error>>> {
+) -> sketcore::Result<std::result::Result<Vec<usize>, std::result::Result<usize, Error>>> {
     let ids = s.fillet_corners()?;
     if matches!(section, Section::Chamfer(_)) {
         for id in ids {
@@ -622,7 +622,7 @@ fn corners(
 }
 
 /// `finish`: the result must have faces, and a solid input must give a closed manifold solid.
-pub(super) fn finish(b: Brep, solid_in: bool) -> solidcore::Result<Out<Brep>> {
+pub(super) fn finish(b: Brep, solid_in: bool) -> sketcore::Result<Out<Brep>> {
     if b.face_list().is_empty() {
         return Ok(Err(Error::Empty));
     }
@@ -633,7 +633,7 @@ pub(super) fn finish(b: Brep, solid_in: bool) -> solidcore::Result<Out<Brep>> {
 }
 
 /// Runs `f` on a copy of `body` (`brep_copy`).
-pub(super) fn on_copy(call: &'static str, body: &Body, f: impl FnOnce(&mut Kernel, Brep) -> solidcore::Result<Out<Brep>>) -> Result<Body> {
+pub(super) fn on_copy(call: &'static str, body: &Body, f: impl FnOnce(&mut Kernel, Brep) -> sketcore::Result<Out<Brep>>) -> Result<Body> {
     if body.0.is_poisoned() {
         return Err(Error::Internal(format!("{call}: the body was left unfinished by an earlier panic")));
     }
@@ -666,7 +666,7 @@ struct Picked(usize);
 impl AttributeHandlers for Picked {}
 
 /// The attribute `Picked` on `e`, with its handle.
-fn picked_on(b: &Brep, e: EdgeId) -> Option<(solidcore::geom::attribute::AttributeHandle, usize)> {
+fn picked_on(b: &Brep, e: EdgeId) -> Option<(sketcore::geom::attribute::AttributeHandle, usize)> {
     let (h, a) = b.entity_attributes(EntityRef::Edge(e)).into_iter().find(|(_, a)| a.attribute_id() == PICKED_ID)?;
     a.application_value::<Picked>().map(|p| (h, p.0))
 }
@@ -700,7 +700,7 @@ fn overflow_first(
     each: &[f64],
     w: &mut Brep,
     dropped: &mut [bool],
-) -> solidcore::Result<Out<Brep>> {
+) -> sketcore::Result<Out<Brep>> {
     /// A failure of `round_edges` on the fresh copy, which has no setback corners.
     fn failed(e: std::result::Result<usize, Error>) -> Error {
         e.err().unwrap_or(Error::Unsupported)
@@ -809,7 +809,7 @@ fn untagged(mut b: Brep) -> Out<Brep> {
 /// thumbweight is resolved once per call, from the first blend's wedge, and every edge takes it
 /// (in the fork as in solidcore#2261): an edge of another wedge takes off another area than its
 /// own, and which one depends on the edges' order.
-pub(crate) const CURVATURE_MIXED_WEDGES: &str = "a curvature-continuous fillet on solidcore over edges whose faces meet at different \
+pub(crate) const CURVATURE_MIXED_WEDGES: &str = "a curvature-continuous fillet on sketcore over edges whose faces meet at different \
 angles: every edge takes the equal-area thumbweight of the first one's angle, so the others take off the wrong area \
 (https://github.com/tangency-labs/solidcore/issues/2250#issuecomment-6563419897)";
 
@@ -820,7 +820,7 @@ const WEDGE_TOLERANCE: f64 = 1e-6;
 /// Whether the faces of every edge in `edges` meet at the same angle at its midpoint (the wedge the
 /// equal-area thumbweight is resolved from), within [`WEDGE_TOLERANCE`]. An edge whose angle can't
 /// be read counts as another wedge.
-fn one_wedge(k: &Kernel, b: &mut Brep, edges: &[EdgeId]) -> solidcore::Result<bool> {
+fn one_wedge(k: &Kernel, b: &mut Brep, edges: &[EdgeId]) -> sketcore::Result<bool> {
     let mut first: Option<f64> = None;
     for &e in edges {
         let Some(u0) = edge::blend_edgeuse(k, b, e)? else { return Ok(false) };
@@ -953,7 +953,7 @@ fn blend_call(
             }
         };
         // The corners' places, read now: filleting deletes the vertices.
-        let at_points = at.iter().map(|&v| vertex::point(&w, v)).collect::<solidcore::Result<Vec<Point3>>>()?;
+        let at_points = at.iter().map(|&v| vertex::point(&w, v)).collect::<sketcore::Result<Vec<Point3>>>()?;
         let mut patches = Vec::new();
         // An overflow goes first (rounds without corner setbacks): when some of the rounds
         // overflow their faces across cliffs and others fit, the overflowing ones are built
@@ -1029,7 +1029,7 @@ struct RimEdge {
 /// where each face's outward side is known. Each edge round a hole must lie between a face of its
 /// patch and one other face, outside every patch, and the edges must close one loop (a patch that
 /// is a disc), else [`Error::Unsupported`].
-fn open_corners(k: &mut Kernel, b: &mut Brep, patches: &[Vec<FaceId>]) -> solidcore::Result<Out<Vec<Vec<RimEdge>>>> {
+fn open_corners(k: &mut Kernel, b: &mut Brep, patches: &[Vec<FaceId>]) -> sketcore::Result<Out<Vec<Vec<RimEdge>>>> {
     let any: HashSet<FaceId> = patches.iter().flatten().copied().collect();
     let mut holes = Vec::with_capacity(patches.len());
     for patch in patches {
@@ -1058,7 +1058,7 @@ fn open_corners(k: &mut Kernel, b: &mut Brep, patches: &[Vec<FaceId>]) -> solidc
                 rim.push(RimEdge { edge: e, face: other, forward: b.edgeuse(u)?.orientation == OrientType::Same });
             }
         }
-        let ends = |h: &RimEdge| -> solidcore::Result<(Option<VertexId>, Option<VertexId>)> {
+        let ends = |h: &RimEdge| -> sketcore::Result<(Option<VertexId>, Option<VertexId>)> {
             let (s, t) = edge::start_end_vertices(b, h.edge)?;
             Ok(if h.forward { (s, t) } else { (t, s) })
         };
@@ -1127,7 +1127,7 @@ fn open_corners(k: &mut Kernel, b: &mut Brep, patches: &[Vec<FaceId>]) -> solidc
 
 /// The faceuse of `f` on the outside of its body (`outer_faceuse`): the one bounding the
 /// infinite region (for a sheet, the upward one).
-fn outer_faceuse(b: &Brep, f: FaceId) -> solidcore::Result<Option<FaceuseId>> {
+fn outer_faceuse(b: &Brep, f: FaceId) -> sketcore::Result<Option<FaceuseId>> {
     let Some(fu) = face_p2::upward_faceuse(b, f)? else { return Ok(None) };
     let shell = b.faceuse(fu)?.shell;
     let region = match shell {
@@ -1139,7 +1139,7 @@ fn outer_faceuse(b: &Brep, f: FaceId) -> solidcore::Result<Option<FaceuseId>> {
 
 /// `face_frame`: the outward unit normal, at the edge's midpoint, of the face the edge use `u`
 /// bounds, and the unit direction into that face square to the edge.
-fn face_frame(k: &Kernel, b: &mut Brep, u: EdgeuseId) -> solidcore::Result<Option<(Vec3, Vec3)>> {
+fn face_frame(k: &Kernel, b: &mut Brep, u: EdgeuseId) -> sketcore::Result<Option<(Vec3, Vec3)>> {
     let Some(e) = b.edgeuse(u)?.edge else { return Ok(None) };
     let fu_of_lu = match eu_p1::loopuse(b, u)? {
         Some(lu) => b.loopuse(lu)?.faceuse,
@@ -1171,7 +1171,7 @@ fn face_frame(k: &Kernel, b: &mut Brep, u: EdgeuseId) -> solidcore::Result<Optio
 /// to the first face). With b0, b1 the directions into the faces and θ the angle between them,
 /// setbacks s0, s1 lie at offsets r0 = (s1 - s0 cos θ) / sin θ and r1 = (s0 - s1 cos θ) / sin θ;
 /// an angle φ to the first face gives s1 = s0 sin φ / sin(θ + φ).
-fn sides_offsets(k: &Kernel, b: &mut Brep, e: EdgeId, d1: f64, second: ChamferSecond, up: Vec3) -> solidcore::Result<Option<(f64, f64)>> {
+fn sides_offsets(k: &Kernel, b: &mut Brep, e: EdgeId, d1: f64, second: ChamferSecond, up: Vec3) -> sketcore::Result<Option<(f64, f64)>> {
     let Some(u0) = edge::blend_edgeuse(k, b, e)? else { return Ok(None) };
     let Some(u1) = eu_p1::radial(b, u0)? else { return Ok(None) };
     let (Some((n0, b0)), Some((n1, b1))) = (face_frame(k, b, u0)?, face_frame(k, b, u1)?) else { return Ok(None) };
@@ -1331,7 +1331,7 @@ fn law_has_corner(degree: usize, knots: &[f64], radii: &[f64]) -> bool {
 /// `law_along`: the radius law along `e`, the B-spline with the radius as its x and its own
 /// parameter as its y (control points at the Greville abscissae), reversed when `start` is
 /// nearer the end of the edge's interval than its start. `None` where the capi's is null.
-fn law_along(k: &Kernel, b: &Brep, e: EdgeId, start: [f64; 3], degree: usize, knots: &[f64], radii: &[f64]) -> solidcore::Result<Option<FilletLaw>> {
+fn law_along(k: &Kernel, b: &Brep, e: EdgeId, start: [f64; 3], degree: usize, knots: &[f64], radii: &[f64]) -> sketcore::Result<Option<FilletLaw>> {
     let edge = b.edge(e)?;
     let Some(curve) = edge.curve.as_ref() else { return Ok(None) };
     let ivl = edge.interval;
@@ -1401,7 +1401,7 @@ pub(crate) fn fillet_variable(
             return Ok(Err(Error::Status(INVALID_INPUT)));
         };
         // A law with a corner splits the round's face there (`SplitFilletFacesAtRadiusCorners`,
-        // fork 6eecf04), which solidcore does not have.
+        // fork 6eecf04), which sketcore does not have.
         if law_has_corner(degree, knots, radii) {
             return Ok(Err(Error::Unsupported));
         }

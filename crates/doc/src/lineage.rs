@@ -12,7 +12,7 @@
 use sketcraft_geom::prelude::*;
 use std::sync::{Arc, OnceLock};
 
-use solidcore_record::{Region2, Vec3};
+use sketcore_record::{Region2, Vec3};
 use sketcraft_kernel::Body;
 use sketcraft_kernel::history::{BodyHistory, Change, FaceOrigin, FaceProv, History};
 
@@ -233,7 +233,7 @@ impl<'a> ProfileRoles<'a> {
         if history.operands != 0 {
             return None;
         }
-        let segments: Vec<&solidcore_record::Seg2> =
+        let segments: Vec<&sketcore_record::Seg2> =
             self.region.map(|r| std::iter::once(&r.outer).chain(&r.holes).flat_map(|l| &l.segs).collect()).unwrap_or_default();
         let curves = self.sketch.map(crate::config::ExactSketchCurves::new);
         // Every curve the segment is drawn on (one, or several coincident or collinear ones).
@@ -298,7 +298,7 @@ impl<'a> ProfileRoles<'a> {
 /// numbered through the chains in order. It has no caps.
 pub(crate) struct ChainRoles<'a> {
     pub sketch: &'a SolvedSketch,
-    pub chains: &'a [Vec<solidcore_record::Seg2>],
+    pub chains: &'a [Vec<sketcore_record::Seg2>],
 }
 
 impl ChainRoles<'_> {
@@ -309,7 +309,7 @@ impl ChainRoles<'_> {
     }
 
     fn of(&self, history: &History) -> Vec<Vec<String>> {
-        let segments: Vec<&solidcore_record::Seg2> = self.chains.iter().flatten().collect();
+        let segments: Vec<&sketcore_record::Seg2> = self.chains.iter().flatten().collect();
         let curves = crate::config::ExactSketchCurves::new(self.sketch);
         history
             .faces
@@ -340,7 +340,7 @@ impl ChainRoles<'_> {
 /// answering to the others; its caps `start` and `end`.
 pub(crate) struct SectionRoles<'a> {
     /// Each section's sketch and loops (outer, then holes), in the order given.
-    pub sections: Vec<(&'a SolvedSketch, Vec<&'a solidcore_record::Loop2>)>,
+    pub sections: Vec<(&'a SolvedSketch, Vec<&'a sketcore_record::Loop2>)>,
 }
 
 impl SectionRoles<'_> {

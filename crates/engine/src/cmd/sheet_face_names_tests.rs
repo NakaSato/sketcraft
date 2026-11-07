@@ -1,5 +1,5 @@
 use serde_json::{Value, json};
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 use sketcraft_geom::prelude::*;
 
 use crate::Session;
@@ -110,7 +110,7 @@ fn a_trays_faces_have_readable_sheet_names_that_follow_its_size() {
 /// of the plane the face lies on, and inside the boundary its edges trace there (each a line,
 /// counted by crossings).
 fn on_planar_face(body: &sketcraft_kernel::Body, face: usize, p: Vec3) {
-    use solidcore_record::brep::{Curve, Loop};
+    use sketcore_record::brep::{Curve, Loop};
     let rounding = 1e-12 * body.size().max(1.0);
     let surface = sketcraft_kernel::face_surface(body, face).unwrap();
     let on = surface.nearest(p).unwrap();

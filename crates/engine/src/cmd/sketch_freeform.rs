@@ -3,7 +3,7 @@
 //! stays exact; the pieces replace the original curve.
 
 use serde_json::{Value, json};
-use solidcore_record::{Seg2, Vec2};
+use sketcore_record::{Seg2, Vec2};
 use sketcraft_geom::prelude::*;
 use sketcraft_sketch::{ConstraintKind, CurveKind, Sketch};
 
@@ -168,7 +168,7 @@ fn add_pieces(sk: &mut Sketch, segs: &[Seg2], start: Option<usize>, end: Option<
                 CurveKind::Conic { a: prev, b: to, apex: x, rho: w / (1.0 + w) }
             }
             Seg2::Bezier { n, p } => {
-                let k = (n as usize).clamp(1, solidcore_record::MAX_BEZIER_DEGREE);
+                let k = (n as usize).clamp(1, sketcore_record::MAX_BEZIER_DEGREE);
                 let mut pts = vec![prev];
                 for q in p.iter().take(k).skip(1) {
                     pts.push(sk.add_point(*q, None)?);

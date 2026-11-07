@@ -4,7 +4,7 @@
 use super::{ErrorCode, JobError, Result};
 use crate::lighting::environment::SkyGradient;
 use serde::{Deserialize, Serialize};
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(default, deny_unknown_fields)]

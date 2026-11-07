@@ -1,11 +1,11 @@
 //! Thin presentation adapter: persistent effects and activation order belong to the session.
 use crate::{
-    SolveApp,
+    SketApp,
     ui_kit::{self, StatusAction, StatusItem, StatusKind},
 };
 use sketcraft_engine::status_items::{StatusId, StatusItem as Effect, StatusSetting};
 
-fn allowed(app: &SolveApp) -> Vec<StatusId> {
+fn allowed(app: &SketApp) -> Vec<StatusId> {
     let mut ids = Vec::new();
     if app.preferences.viewport_analysis_status {
         ids.extend([StatusId::SurfaceAnalysis, StatusId::Continuity]);
@@ -16,11 +16,11 @@ fn allowed(app: &SolveApp) -> Vec<StatusId> {
     ids
 }
 
-fn eligible(app: &SolveApp) -> Vec<StatusId> {
+fn eligible(app: &SketApp) -> Vec<StatusId> {
     app.session.status_items().iter().filter(|effect| presentation(app, effect).is_some()).map(|effect| effect.id).collect()
 }
 
-pub(crate) fn enabled(app: &SolveApp) -> bool {
+pub(crate) fn enabled(app: &SketApp) -> bool {
     app.preferences.viewport_analysis_status || app.preferences.viewport_section_status
 }
 
@@ -46,7 +46,7 @@ pub(crate) fn section_coordinates(origin: [f64; 3], normal: [f64; 3]) -> Option<
     distance.is_finite().then_some((None, distance, n))
 }
 
-pub(crate) fn section_setting(app: &SolveApp, origin: [f64; 3], normal: [f64; 3], hatch: bool) -> Option<String> {
+pub(crate) fn section_setting(app: &SketApp, origin: [f64; 3], normal: [f64; 3], hatch: bool) -> Option<String> {
     let (axis, offset, _) = section_coordinates(origin, normal)?;
     let distance = crate::prefs::show_mm(app, offset, 1);
     let mut text = match axis {
@@ -76,7 +76,7 @@ pub(crate) fn direction(value: [f64; 3]) -> String {
     format!("({x:.2}, {y:.2}, {z:.2})")
 }
 
-pub(crate) fn presentation(app: &SolveApp, effect: &Effect) -> Option<StatusItem> {
+pub(crate) fn presentation(app: &SketApp, effect: &Effect) -> Option<StatusItem> {
     if !allowed(app).contains(&effect.id) {
         return None;
     }
@@ -100,18 +100,18 @@ pub(crate) fn presentation(app: &SolveApp, effect: &Effect) -> Option<StatusItem
     })
 }
 
-fn clear(app: &mut SolveApp, effect: &Effect) {
+fn clear(app: &mut SketApp, effect: &Effect) {
     if let Err(error) = app.run(&effect.clear.command, serde_json::json!({"clear": effect.clear.params.clear})) {
         app.set_status(error, true);
     }
 }
 
-pub(crate) fn has_effect(app: &SolveApp) -> bool {
+pub(crate) fn has_effect(app: &SketApp) -> bool {
     app.session.newest_status_item(&eligible(app)).is_some()
 }
 
 /// Called only after existing Escape owners have yielded. A repeat cannot cascade clears.
-pub(crate) fn escape(app: &mut SolveApp, repeat: bool) -> bool {
+pub(crate) fn escape(app: &mut SketApp, repeat: bool) -> bool {
     if repeat {
         return app.viewport_status.open_key.is_some() || has_effect(app);
     }
@@ -129,7 +129,7 @@ pub(crate) fn escape(app: &mut SolveApp, repeat: bool) -> bool {
 }
 
 /// Reconcile before shortcut routing so a vanished native popup cannot own Escape invisibly.
-pub(crate) fn reconcile(app: &mut SolveApp, ctx: &egui::Context) {
+pub(crate) fn reconcile(app: &mut SketApp, ctx: &egui::Context) {
     app.viewport_status.reconcile_session(ctx, app.session.uid);
     // A visible native field must retain focus through a completed input frame before
     // consuming the request; hidden Area measurement is not a focus acknowledgement.
@@ -175,7 +175,7 @@ pub(crate) fn reconcile(app: &mut SolveApp, ctx: &egui::Context) {
     app.viewport_status.suspend_summary(ctx, higher_owner);
 }
 
-pub(crate) fn show(app: &mut SolveApp, ctx: &egui::Context, viewport: egui::Rect) {
+pub(crate) fn show(app: &mut SketApp, ctx: &egui::Context, viewport: egui::Rect) {
     reconcile(app, ctx);
     if !enabled(app) {
         app.viewport_status.open_key = None;
@@ -248,7 +248,7 @@ pub(crate) fn show(app: &mut SolveApp, ctx: &egui::Context, viewport: egui::Rect
 }
 
 /// Resolve requests against current represented effects, never a menu-open snapshot.
-pub(crate) fn dispatch(app: &mut SolveApp, actions: Vec<StatusAction>) {
+pub(crate) fn dispatch(app: &mut SketApp, actions: Vec<StatusAction>) {
     for action in actions {
         let effects: Vec<_> = app.session.status_items().into_iter().filter(|effect| presentation(app, effect).is_some()).collect();
         match action {

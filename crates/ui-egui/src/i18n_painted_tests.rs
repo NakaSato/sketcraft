@@ -9,7 +9,7 @@ use sketcraft_engine::Session;
 
 use crate::context_menu::Target;
 use crate::scenario::Harness;
-use crate::{Services, SolveApp};
+use crate::{Services, SketApp};
 
 /// English text → the catalog ids that carry it.
 fn english_ids() -> BTreeMap<String, Vec<String>> {
@@ -54,7 +54,7 @@ fn painted(h: &mut Harness) -> BTreeSet<String> {
 /// Names the design holds (its own name, features, bodies, components, occurrences), and the
 /// keyboard shortcuts' key names. They are shown as typed or as printed on the key in every
 /// language, even when one matches a label ("Boss", "Holes", the Delete key).
-fn design_names(app: &SolveApp) -> BTreeSet<String> {
+fn design_names(app: &SketApp) -> BTreeSet<String> {
     let doc = &app.session.doc;
     let mut names: BTreeSet<String> = [doc.name.clone()].into();
     names.extend(doc.features.iter().map(|f| f.name.clone()));
@@ -92,7 +92,7 @@ fn sample() -> Harness {
     let mut h = Harness::new();
     let mut session = Session::default();
     session.run_script(&sketcraft_engine::sample::script()).unwrap();
-    h.app = SolveApp::new(session, Services::default());
+    h.app = SketApp::new(session, Services::default());
     h.app.home.open = false;
     h.frames(3);
     h

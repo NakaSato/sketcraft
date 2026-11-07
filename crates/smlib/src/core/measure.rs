@@ -1,25 +1,25 @@
-//! The Measure and Check families on solidcore: what `capi/src/smlib_measure.cpp`,
+//! The Measure and Check families on sketcore: what `capi/src/smlib_measure.cpp`,
 //! `smlib_brep_solid_count` (`smlib_ops.cpp`), `smlib_brep_is_manifold_solid`
 //! (`smlib_flat_api.cpp`) and `smlib_brep_check` (`smlib_check.cpp`) do on the C++ kernel, here
-//! composed from solidcore's ports of the same SMLib routines.
+//! composed from sketcore's ports of the same SMLib routines.
 //!
-//! [`check`] fails with "not supported yet" while a test it reaches is unported in solidcore.
+//! [`check`] fails with "not supported yet" while a test it reaches is unported in sketcore.
 
-use solidcore::error::EntityRef;
-use solidcore::geom::assert_array::{AssertArray, AssertReport, obj_type_string};
-use solidcore::geom::attribute::{AttributeStore, ObjectKey};
-use solidcore::geom::tol::{SmallTopoType, brep_zone_tol_3d, context_xsect_tol_3d};
-use solidcore::heal::gap::GapFunction;
-use solidcore::intersect::point_class::PointClassType;
-use solidcore::mass::integrator::properties::{MassPropertyBehavior, PropertyAttributes, brep_properties, face_properties};
-use solidcore::nurbs::b_spline_surface_n_lib::p2::OrientType;
-use solidcore::query::api_queries::{brep_bounding_box, brep_is_manifold_solid, brep_material_census, face_bounding_box};
-use solidcore::query::brep::BrepClassifier;
-use solidcore::topology::brep::p1 as bl;
-use solidcore::topology::brep::validation::{CheckLevel as SolidcoreCheckLevel, check_brep};
-use solidcore::topology::face::p2::{PPF_AREA, PPF_AREA_FIRST_MOMENTS};
-use solidcore::topology::{FaceId, FaceuseId, NamingScheme};
-use solidcore::{Kernel, Point3, SolidError, Vec3};
+use sketcore::error::EntityRef;
+use sketcore::geom::assert_array::{AssertArray, AssertReport, obj_type_string};
+use sketcore::geom::attribute::{AttributeStore, ObjectKey};
+use sketcore::geom::tol::{SmallTopoType, brep_zone_tol_3d, context_xsect_tol_3d};
+use sketcore::heal::gap::GapFunction;
+use sketcore::intersect::point_class::PointClassType;
+use sketcore::mass::integrator::properties::{MassPropertyBehavior, PropertyAttributes, brep_properties, face_properties};
+use sketcore::nurbs::b_spline_surface_n_lib::p2::OrientType;
+use sketcore::query::api_queries::{brep_bounding_box, brep_is_manifold_solid, brep_material_census, face_bounding_box};
+use sketcore::query::brep::BrepClassifier;
+use sketcore::topology::brep::p1 as bl;
+use sketcore::topology::brep::validation::{CheckLevel as SketcoreCheckLevel, check_brep};
+use sketcore::topology::face::p2::{PPF_AREA, PPF_AREA_FIRST_MOMENTS};
+use sketcore::topology::{FaceId, FaceuseId, NamingScheme};
+use sketcore::{Kernel, Point3, SolidError, Vec3};
 
 use super::blend::status;
 use super::{Body, with_body};
@@ -49,7 +49,7 @@ fn finite(v: &[f64]) -> bool {
 /// [1e-8, 1e-1] envelope instead of its [1e-4, 1e-1]), the total area and, when `first` is set,
 /// the area's first moments about `o`. With `only_sheets`, only [`sheet_face`]s (the capi's
 /// `counted`).
-fn faces_area(k: &Kernel, b: &mut solidcore::Brep, accuracy: f64, o: Point3, first: bool, only_sheets: bool) -> solidcore::Result<(f64, Vec3)> {
+fn faces_area(k: &Kernel, b: &mut sketcore::Brep, accuracy: f64, o: Point3, first: bool, only_sheets: bool) -> sketcore::Result<(f64, Vec3)> {
     let mut area = 0.0;
     let mut sum = Vec3::new(0.0, 0.0, 0.0);
     let flags = if first { PPF_AREA | PPF_AREA_FIRST_MOMENTS } else { PPF_AREA };
@@ -77,15 +77,15 @@ fn faces_area(k: &Kernel, b: &mut solidcore::Brep, accuracy: f64, o: Point3, fir
 /// `sheet_face`: a face with material on neither side, standing free or hung on a solid (a blend
 /// sheet stitched between two boxes). `SmBrep::ComputePreciseProperties` takes its area only from
 /// faces between a solid region and a void, so such a face is counted on its own.
-fn sheet_face(b: &solidcore::Brep, f: FaceId) -> solidcore::Result<bool> {
-    let void_side = |u: Option<FaceuseId>| -> solidcore::Result<bool> {
+fn sheet_face(b: &sketcore::Brep, f: FaceId) -> sketcore::Result<bool> {
+    let void_side = |u: Option<FaceuseId>| -> sketcore::Result<bool> {
         let Some(u) = u else { return Ok(true) };
         let Some(shell) = b.faceuse(u)?.shell else { return Ok(true) };
         let Some(region) = b.shell(shell)?.region else { return Ok(true) };
         // IsVoid's UNSURE (2) is true in C++: only FALSE is material.
         Ok(b.region(region)?.is_void() != 0)
     };
-    let (x, y) = solidcore::topology::face::p2::faceuses(b, f)?;
+    let (x, y) = sketcore::topology::face::p2::faceuses(b, f)?;
     Ok(void_side(x)? && void_side(y)?)
 }
 
@@ -274,7 +274,7 @@ fn collect(list: &AssertArray, out: &mut String, failures: &mut usize) {
 
 /// Why [`check`] could not run.
 enum Refusal {
-    /// A test solidcore has not ported (its [`SolidError::Unported`]).
+    /// A test sketcore has not ported (its [`SolidError::Unported`]).
     Unported(&'static str, &'static str),
     /// A body whose geometry owners' identities the check cannot know: a
     /// [`NamingScheme::Unknown`] body.
@@ -290,7 +290,7 @@ impl<T> super::dump::Answer for std::result::Result<T, Refusal> {
 /// `smlib_brep_check` (`smlib_check.cpp`): `SmBrep::ValidatePointers` at `level`, then, when it
 /// failed nothing, `SmBrep::AssertValid` at `level` over the whole topology graph, with every
 /// failed test as one line of the report and the capi's own lines for a failed status without a
-/// report. solidcore's [`check_brep`] runs the same two calls.
+/// report. sketcore's [`check_brep`] runs the same two calls.
 ///
 /// The geometry owners are named as the body's naming scheme names them: `check_brep` reads a
 /// [`NamingScheme::Caller`] body's keys from where its maker recorded them (solidcore#1585: an
@@ -299,14 +299,14 @@ impl<T> super::dump::Answer for std::result::Result<T, Refusal> {
 /// checked under arena identities no maker uses: every edge would fail `SmBrep` test 61 on the
 /// owner of its curve.
 ///
-/// A test solidcore has not ported yet (its [`SolidError::Unported`]), or a body whose geometry
+/// A test sketcore has not ported yet (its [`SolidError::Unported`]), or a body whose geometry
 /// owners' identities the check cannot know, fails the check with "not supported yet": the check
 /// never reports a body valid on fewer tests than the C++ kernel runs.
 pub(crate) fn check(body: &Body, level: CheckLevel) -> Result<CheckReport> {
     let lv = match level {
-        CheckLevel::Basic => SolidcoreCheckLevel::Level0,
-        CheckLevel::Geometry => SolidcoreCheckLevel::Level1,
-        CheckLevel::All => SolidcoreCheckLevel::Level2,
+        CheckLevel::Basic => SketcoreCheckLevel::Level0,
+        CheckLevel::Geometry => SketcoreCheckLevel::Level1,
+        CheckLevel::All => SketcoreCheckLevel::Level2,
     };
     let c = match with_body("check", body, |k, b| {
         let naming = b.naming();
@@ -320,10 +320,10 @@ pub(crate) fn check(body: &Body, level: CheckLevel) -> Result<CheckReport> {
     })? {
         Ok(c) => c,
         Err(Refusal::Unported(upstream, unit)) => {
-            return Err(Error::Solidcore(format!("smlib_brep_check: {upstream}: not supported yet: solidcore has not ported it (unit {unit})")));
+            return Err(Error::Sketcore(format!("smlib_brep_check: {upstream}: not supported yet: sketcore has not ported it (unit {unit})")));
         }
         Err(Refusal::Naming(n)) => {
-            return Err(Error::Solidcore(format!(
+            return Err(Error::Sketcore(format!(
                 "smlib_brep_check: not supported yet: the body names its geometry owners by its maker's keys (NamingScheme::{n:?}), which the check cannot know"
             )));
         }
@@ -342,7 +342,7 @@ pub(crate) fn check(body: &Body, level: CheckLevel) -> Result<CheckReport> {
         text.push_str("AssertValid skipped: ValidatePointers failed\n");
     } else {
         let Some(ok) = c.assert_valid else {
-            return Err(Error::Solidcore("smlib_brep_check: AssertValid did not run after a clean pointer check".into()));
+            return Err(Error::Sketcore("smlib_brep_check: AssertValid did not run after a clean pointer check".into()));
         };
         collect(&c.reports, &mut text, &mut failures);
         if !ok && failures == 0 {

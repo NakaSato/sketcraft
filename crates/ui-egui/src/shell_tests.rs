@@ -15,7 +15,7 @@ fn assert_panel_host_preserves_design(h: &mut Harness, exercise: impl FnOnce(&mu
     let recomputed = h.app.session.model.recomputed;
     let camera = h.app.cam;
     let render_domain = h.app.viewport.rect;
-    let sample_points = [solidcore_record::Vec3::ZERO, solidcore_record::Vec3::new(1.0, 2.0, 3.0)];
+    let sample_points = [sketcore_record::Vec3::ZERO, sketcore_record::Vec3::new(1.0, 2.0, 3.0)];
     let screen_points = render_domain.map(|domain| sample_points.map(|point| crate::viewport::projection(&h.app, domain).to_screen(point)));
     let preferences = serde_json::to_value(&h.app.preferences).unwrap();
     exercise(h);
@@ -782,7 +782,7 @@ fn host_full_canvas_and_same_pass_controls_follow_actual_sizing_footprints_witho
                     assert_eq!(frame.layout.render_domain, logical_rect(domain));
                     assert_eq!(frame.layout.viewport, Some(logical_rect(domain)));
                     assert_eq!(h.app.cam, camera);
-                    let model_points = [solidcore_record::Vec3::ZERO, solidcore_record::Vec3::new(40.0, 30.0, 20.0)]
+                    let model_points = [sketcore_record::Vec3::ZERO, sketcore_record::Vec3::new(40.0, 30.0, 20.0)]
                         .map(|point| crate::viewport::projection(&h.app, domain).to_screen(point));
                     if let Some(first) = first_projection {
                         assert_eq!(model_points, first, "the newly visible panel cannot shift model pixels or framing");
@@ -881,7 +881,7 @@ fn first_invisible_host_sizing_pass_allows_real_wheel_navigation_and_the_visible
 #[test]
 fn actual_host_fit_and_centring_respect_the_measured_sketch_palette_at_both_scales() {
     use crate::panel_runtime::{HostControlTarget, HostPointerTarget, egui_rect, enable_host_specimen, logical_rect};
-    use solidcore_record::Vec3;
+    use sketcore_record::Vec3;
     use sketcraft_engine::geom::{Aabb3, Vec3Geom as _};
     use sketcraft_engine::panels::{InstanceId, LayoutAction, Mutation};
     fn projected_extent(h: &Harness, bounds: Aabb3) -> egui::Rect {
@@ -1296,7 +1296,7 @@ fn both_modes_keep_their_geometry_and_fit_clear_of_covered_rects() {
             assert!(!layout.drawable.intersect(covered).is_positive(), "{layout:?} {covered:?}");
         }
         let projection = crate::viewport::projection(&h.app, viewport);
-        for point in [solidcore_record::Vec3::ZERO, solidcore_record::Vec3::new(40.0, 30.0, 20.0)] {
+        for point in [sketcore_record::Vec3::ZERO, sketcore_record::Vec3::new(40.0, 30.0, 20.0)] {
             assert!(layout.drawable.contains(projection.to_screen(point).unwrap()));
         }
         h.app.start("solid.extrude");
@@ -1349,7 +1349,7 @@ fn floating_sketch_palette_and_compass_share_measured_clearance() {
             assert!(layout.viewport.expand(1.0).contains_rect(palette), "{palette:?} {layout:?}");
             assert!(palette.contains(crate::scenario::handle_at("sketch_palette:look_at").unwrap()));
             let proj = crate::viewport::projection(&h.app, layout.viewport);
-            for point in [solidcore_record::Vec3::ZERO, solidcore_record::Vec3::new(20.0, 0.0, 0.0)] {
+            for point in [sketcore_record::Vec3::ZERO, sketcore_record::Vec3::new(20.0, 0.0, 0.0)] {
                 assert!(layout.drawable.contains(proj.to_screen(point).unwrap()), "{layout:?}");
             }
             if width > 1000.0 {
@@ -1848,7 +1848,7 @@ fn compact_layout_is_saved_and_survives_cancel_apply_defaults_and_bad_input() {
     assert_eq!(h.app.cam, camera, "programmatic layout changes never auto-fit");
     assert_eq!(h.app.session.doc.to_json(), design);
     assert_eq!(h.app.session.undo.len(), undo);
-    let mut restored = crate::SolveApp::new(Default::default(), Default::default());
+    let mut restored = crate::SketApp::new(Default::default(), Default::default());
     restored.load_prefs(&h.app.prefs());
     assert_eq!(restored.ui.layout, LayoutMode::Docked);
     assert_eq!(restored.preferences.layout, LayoutMode::Docked);
@@ -1953,7 +1953,7 @@ fn ribbon_labels_are_saved_independently_and_icon_only_commands_remain_reachable
         assert!(icons.contains_rect(command));
         h.step(&json!({"click":{"handle":"button:sketch.create"}})).unwrap();
         assert!(h.app.dialog.is_some(), "the icon still starts Create Sketch");
-        let mut restored = crate::SolveApp::new(Default::default(), Default::default());
+        let mut restored = crate::SketApp::new(Default::default(), Default::default());
         restored.load_prefs(&h.app.prefs());
         assert!(!restored.preferences.ribbon_labels);
         assert_eq!(restored.ui.layout, mode);
@@ -2271,7 +2271,7 @@ fn dialog_place_is_saved_and_survives_cancel_defaults_and_bad_input() {
     h.settle();
     let left = h.app.viewport.dialog_rect.unwrap();
     assert!(left.left() < right.left() && h.app.shell.browser.is_none(), "the open dialog moves to the column: {left:?}");
-    let mut restored = crate::SolveApp::new(Default::default(), Default::default());
+    let mut restored = crate::SketApp::new(Default::default(), Default::default());
     restored.load_prefs(&h.app.prefs());
     assert_eq!(restored.preferences.dialog_place, DialogPlace::LeftColumn);
     h.call("ui.prefs", json!({"open":"Layout","dialog_place":"edge"}));

@@ -31,7 +31,8 @@ fn evaluation() -> String {
 
 /// The geometry kernel that computed a cache. A cache another kernel wrote (the C++ SMLib, which
 /// earlier builds could run on) is not this build's result: the kernels differ in tolerances and in
-/// what they refuse, so a design opened from it evaluates again.
+/// what they refuse, so a design opened from it evaluates again. Saved caches name the kernel by
+/// its upstream package, `solidcore` (sketcore here): keep the tag so they stay valid.
 pub(super) const KERNEL: &str = "solidcore";
 
 /// A 4 x 4 matrix as its 16 numbers, in storage order.
@@ -175,11 +176,11 @@ fn decode_mesh_body(bytes: &[u8]) -> Option<sketcraft_kernel::Body> {
     let (coordinates, corners) = data.split_at_checked(split)?;
     let f64_at = |c: &[u8], at: usize| c.get(at..at + 8)?.try_into().ok().map(f64::from_le_bytes);
     let u32_at = |c: &[u8], at: usize| c.get(at..at + 4)?.try_into().ok().map(u32::from_le_bytes);
-    let positions: Vec<solidcore_record::Vec3> = coordinates
+    let positions: Vec<sketcore_record::Vec3> = coordinates
         .as_chunks::<24>()
         .0
         .iter()
-        .map(|c| Some(solidcore_record::Vec3::new(f64_at(c, 0)?, f64_at(c, 8)?, f64_at(c, 16)?)))
+        .map(|c| Some(sketcore_record::Vec3::new(f64_at(c, 0)?, f64_at(c, 8)?, f64_at(c, 16)?)))
         .collect::<Option<_>>()?;
     let triangles: Vec<[u32; 3]> =
         corners.as_chunks::<12>().0.iter().map(|c| Some([u32_at(c, 0)?, u32_at(c, 4)?, u32_at(c, 8)?])).collect::<Option<_>>()?;
@@ -195,7 +196,7 @@ fn decode_mesh_body(bytes: &[u8]) -> Option<sketcraft_kernel::Body> {
 /// colour and paint.
 fn same_mesh(a: &sketcraft_kernel::Body, b: &sketcraft_kernel::Body) -> bool {
     let (Some((pa, ta)), Some((pb, tb))) = (a.triangle_mesh(), b.triangle_mesh()) else { return false };
-    let bits = |p: &[solidcore_record::Vec3]| p.iter().map(|v| [v.x.to_bits(), v.y.to_bits(), v.z.to_bits()]).collect::<Vec<_>>();
+    let bits = |p: &[sketcore_record::Vec3]| p.iter().map(|v| [v.x.to_bits(), v.y.to_bits(), v.z.to_bits()]).collect::<Vec<_>>();
     ta == tb && bits(pa) == bits(pb) && a.color() == b.color() && a.paint() == b.paint()
 }
 

@@ -82,7 +82,7 @@ impl State {
     }
 }
 
-pub(super) fn entries(app: &SolveApp) -> Vec<Entry> {
+pub(super) fn entries(app: &SketApp) -> Vec<Entry> {
     theme_choices(app)
         .into_iter()
         .map(|(id, name)| {
@@ -96,7 +96,7 @@ pub(super) fn entries(app: &SolveApp) -> Vec<Entry> {
         .collect()
 }
 
-pub(super) fn switch_mode(app: &mut SolveApp, follow: bool, dark: bool) {
+pub(super) fn switch_mode(app: &mut SketApp, follow: bool, dark: bool) {
     if follow == (app.preferences.theme == "system") {
         return;
     }
@@ -120,7 +120,7 @@ pub(super) fn fill_slot(p: &mut Prefs, night: bool, id: &str) {
     }
 }
 
-pub(super) fn choose(app: &mut SolveApp, night: bool, id: &str) {
+pub(super) fn choose(app: &mut SketApp, night: bool, id: &str) {
     if app.preferences.theme == "system" {
         fill_slot(&mut app.preferences, night, id);
     } else {
@@ -129,7 +129,7 @@ pub(super) fn choose(app: &mut SolveApp, night: bool, id: &str) {
     }
 }
 
-pub(super) fn row(app: &mut SolveApp, ui: &mut egui::Ui) {
+pub(super) fn row(app: &mut SketApp, ui: &mut egui::Ui) {
     if crate::prefs_search::suppress_chrome(ui) {
         row_contents(app, ui);
         return;
@@ -149,7 +149,7 @@ pub(super) fn row(app: &mut SolveApp, ui: &mut egui::Ui) {
     ui.allocate_exact_size(egui::vec2(width, child.min_size().y), egui::Sense::hover());
 }
 
-fn row_contents(app: &mut SolveApp, ui: &mut egui::Ui) {
+fn row_contents(app: &mut SketApp, ui: &mut egui::Ui) {
     let key = ui.make_persistent_id("theme_picker_state");
     let mut state = ui.data(|d| d.get_temp::<State>(key)).unwrap_or_default();
     let search = crate::prefs_search::suppress_chrome(ui);

@@ -1,7 +1,7 @@
 //! Plastic (enclosure) features: Boss, Lip / Groove, Snap Fit and Rest, and plastic rules.
 
 use serde_json::Value;
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 use sketcraft_doc::BodyName;
 use sketcraft_doc::FeatureKind;
 use sketcraft_doc::expr::Kind;
@@ -301,7 +301,7 @@ fn snap_fit(s: &mut Session, p: &Value) -> Result<Value> {
 
 #[cfg(test)]
 mod tests {
-    use solidcore_record::Vec3;
+    use sketcore_record::Vec3;
     use sketcraft_geom::prelude::*;
     use std::f64::consts::PI;
 
@@ -399,9 +399,9 @@ mod tests {
                 for groove in [false, true] {
                     let mut s = Session::default();
                     let plane = if tilted {
-                        solidcore_record::Plane::new(Vec3::new(7., -3., 5.), Vec3::new(1., -1., 0.), Vec3::new(1., 1., -2.)).unwrap()
+                        sketcore_record::Plane::new(Vec3::new(7., -3., 5.), Vec3::new(1., -1., 0.), Vec3::new(1., 1., -2.)).unwrap()
                     } else {
-                        solidcore_record::Plane::XY
+                        sketcore_record::Plane::XY
                     };
                     if obround {
                         run(&mut s, "sketch.create", json!({"plane": plane, "name": "Rim"}));
@@ -559,8 +559,8 @@ mod tests {
         run(&mut s, "parameters.change", json!({"name":"board_d","expression":"50 mm"}));
         let before = s.model.state_before(feature.id);
         let name = feature.face_names.first().unwrap();
-        let point = sketcraft_doc::naming::point_on_face(&before, name, Vec3::new(0., -28., 20.))
-            .expect("the original wall identity survives merged pieces");
+        let point =
+            sketcraft_doc::naming::point_on_face(&before, name, Vec3::new(0., -28., 20.)).expect("the original wall identity survives merged pieces");
         assert!((point - Vec3::new(0., -33., 20.)).len() < 1e-8, "{point:?}");
         assert!(s.model.results.iter().all(|result| result.error.is_none()));
         let check = |session: &Session| {

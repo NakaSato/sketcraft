@@ -24,7 +24,7 @@ use serde_json::json;
 use sketcraft_engine::Sel;
 use sketcraft_engine::doc::Component;
 
-use crate::SolveApp;
+use crate::SketApp;
 use crate::theme::TabAccent;
 use crate::timeline_folders::Span;
 use crate::ui_kit::HistoryGroupChip;
@@ -315,23 +315,23 @@ impl Fold<'_> {
 
 /// The key that remembers a run's choice: its component and its first feature (`first`, by its
 /// index in the design), so two runs of one component apart in the history fold on their own.
-fn key(app: &SolveApp, component: u64, first: usize) -> String {
+fn key(app: &SketApp, component: u64, first: usize) -> String {
     let first = app.session.doc.features.get(first).map_or(0, |f| f.id);
     format!("{KEY}{component}:{first}")
 }
 
 /// Whether a run is shown one by one: as last clicked, else `unless_clicked`.
-fn is_open(app: &SolveApp, key: &str, unless_clicked: bool) -> bool {
+fn is_open(app: &SketApp, key: &str, unless_clicked: bool) -> bool {
     crate::history_folds::is_open(app, key, unless_clicked)
 }
 
-fn set_open(app: &mut SolveApp, key: &str, open: bool) {
+fn set_open(app: &mut SketApp, key: &str, open: bool) {
     crate::history_folds::set_open(app, key, open);
 }
 
 /// What the History bar shows of the design's features this frame: the whole history, or the
 /// features of one component and those inside it (`timeline_scope`).
-pub(crate) fn history(app: &SolveApp, strip: &Strip) -> History {
+pub(crate) fn history(app: &SketApp, strip: &Strip) -> History {
     let doc = &app.session.doc;
     let within = crate::timeline_scope::shown(app);
     let view = View::of(doc, within.map(|c| crate::timeline_scope::components_within(app, c)).as_ref(), app.tree.history_show_hidden);
@@ -381,7 +381,7 @@ fn folders_holding(spans: &[Span], at: usize, out: &mut HashSet<u64>) {
 /// run that holds the marker. A deep run elsewhere stays folded: a click on it shows only its
 /// component's features.
 struct Shown<'a> {
-    app: &'a SolveApp,
+    app: &'a SketApp,
     view: &'a View,
     /// The marker's slot among the shown features.
     marker: usize,
@@ -408,7 +408,7 @@ impl Opens for Shown<'_> {
 }
 
 /// Each feature's marks, reading the results and the selection once.
-fn marks(app: &SolveApp, strip: &Strip, view: &View) -> Vec<Marks> {
+fn marks(app: &SketApp, strip: &Strip, view: &View) -> Vec<Marks> {
     let flags: HashMap<u64, (bool, bool)> = app.session.model.results.iter().map(|r| (r.id, (r.error.is_some(), r.warning.is_some()))).collect();
     let in_dialog = app.dialog.as_ref().map(|d| d.items()).unwrap_or_default();
     let picked: HashSet<u64> = app
@@ -448,7 +448,7 @@ impl History {
 }
 
 /// The name a run's chip shows: its component's.
-pub(crate) fn name(app: &SolveApp, component: u64) -> String {
+pub(crate) fn name(app: &SketApp, component: u64) -> String {
     app.session.doc.components.iter().find(|c| c.id == component).map_or_else(|| format!("Component {component}"), |c| c.name.clone())
 }
 
@@ -456,7 +456,7 @@ pub(crate) fn name(app: &SolveApp, component: u64) -> String {
 /// them again (a deep run shows only its component's features), and its menu also selects them
 /// or rolls the marker after them. Returns its width.
 pub(crate) fn group_chip(
-    app: &mut SolveApp,
+    app: &mut SketApp,
     ui: &mut egui::Ui,
     p: &egui::Painter,
     at: egui::Pos2,
@@ -498,7 +498,7 @@ pub(crate) fn group_chip(
 }
 
 /// A click on a run's chip: opens or folds it; a deep one shows only its component's features.
-fn fold(app: &mut SolveApp, group: &Group, view: &View) {
+fn fold(app: &mut SketApp, group: &Group, view: &View) {
     if group.deep {
         crate::timeline_scope::enter(app, group.component);
     } else {
@@ -507,7 +507,7 @@ fn fold(app: &mut SolveApp, group: &Group, view: &View) {
     }
 }
 
-fn group_menu(app: &mut SolveApp, ui: &mut egui::Ui, group: &Group, view: &View) {
+fn group_menu(app: &mut SketApp, ui: &mut egui::Ui, group: &Group, view: &View) {
     let fold_label = if group.open { "Fold Features" } else { "Show Each Feature" };
     if crate::context_menu::button(ui, fold_label, "list").clicked() {
         fold(app, group, view);

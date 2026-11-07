@@ -8,12 +8,12 @@
 use crate::ui_kit::{Container, Surface};
 use egui::{Pos2, vec2};
 use serde_json::{Value, json};
-use solidcore_record::Vec2;
+use sketcore_record::Vec2;
 use sketcraft_engine::doc::Document;
 use sketcraft_engine::doc::expr::{Kind as ValueKind, definition};
 use sketcraft_engine::geom::prelude::*;
 
-use crate::SolveApp;
+use crate::SketApp;
 use crate::theme::Tokens;
 use crate::tools::Tool;
 use crate::viewport::Proj;
@@ -75,7 +75,7 @@ pub fn boxes_for(cmd: &str, n: usize) -> Vec<DimBox> {
 }
 
 /// A locked box's value (mm or radians).
-fn locked(app: &SolveApp, t: &Tool, label: &str) -> Option<f64> {
+fn locked(app: &SketApp, t: &Tool, label: &str) -> Option<f64> {
     let b = t.dims.iter().chain(&t.dim_history).find(|b| b.label == label && b.locked)?;
     eval(&app.session.doc, &b.value, b.kind).ok().filter(|v| v.is_finite())
 }
@@ -104,7 +104,7 @@ fn sign(x: f64) -> f64 {
 }
 
 /// The next point the tool would place for the cursor at `h`, honouring locked values.
-pub fn effective(app: &SolveApp, t: &Tool, h: Vec2) -> Vec2 {
+pub fn effective(app: &SketApp, t: &Tool, h: Vec2) -> Vec2 {
     let Some(a) = t.pts.last().map(|p| p.0) else { return h };
     let lk = |l: &str| locked(app, t, l);
     match (t.cmd, t.pts.len()) {
@@ -174,7 +174,7 @@ pub fn effective(app: &SolveApp, t: &Tool, h: Vec2) -> Vec2 {
 /// The point a click places for the hover `p` (the preview draws this one): typed values win
 /// over the cursor and drop its snap; a line's free end snaps to horizontal/vertical, one on
 /// sketch geometry stays there, and one on a curve slides along it to where the axis crosses.
-pub fn placed(app: &SolveApp, t: &Tool, p: &(Vec2, Option<String>)) -> (Vec2, Option<String>) {
+pub fn placed(app: &SketApp, t: &Tool, p: &(Vec2, Option<String>)) -> (Vec2, Option<String>) {
     let line = t.cmd == "sketch.line";
     // A typed length or angle wins over every snap. A construction line's length leaves its
     // start where it snapped: the length runs from there.
@@ -211,7 +211,7 @@ pub(crate) fn box_id(i: usize) -> egui::Id {
 
 /// Where the preview and the value boxes put the tool's next point for the hover `p`: for a
 /// line, exactly what a click places.
-pub fn shown(app: &SolveApp, t: &Tool, p: &(Vec2, Option<String>)) -> Vec2 {
+pub fn shown(app: &SketApp, t: &Tool, p: &(Vec2, Option<String>)) -> Vec2 {
     if t.cmd == "sketch.line" { placed(app, t, p).0 } else { effective(app, t, p.0) }
 }
 
@@ -219,7 +219,7 @@ pub fn shown(app: &SolveApp, t: &Tool, p: &(Vec2, Option<String>)) -> Vec2 {
 /// horizontal/vertical line from the start crosses that curve near the cursor (from a circle's
 /// centre, its quadrant point), still on the curve. None: no axis snap there, or the axis misses
 /// the curve close by (the curve snap wins as it is).
-fn on_curve_axis(app: &SolveApp, t: &Tool, p: &(Vec2, Option<String>)) -> Option<(Vec2, Option<String>)> {
+fn on_curve_axis(app: &SketApp, t: &Tool, p: &(Vec2, Option<String>)) -> Option<(Vec2, Option<String>)> {
     let a = t.pts.last()?.0;
     let (curve, _) = p.1.as_deref()?.strip_prefix("on:")?.rsplit_once(':')?;
     let v = p.0 - a;
@@ -278,7 +278,7 @@ fn line_boxes(a: Vec2, e: Vec2, px: f64, off: f64) -> Vec<(f64, Vec2)> {
 /// The value each box shows while it follows the cursor, and where it sits (sketch coordinates).
 /// `px` is the size of a screen pixel in sketch units: boxes sit a little off the segment they
 /// measure so they don't cover it.
-fn live(app: &SolveApp, t: &Tool, e: Vec2, px: f64) -> Vec<(f64, Vec2)> {
+fn live(app: &SketApp, t: &Tool, e: Vec2, px: f64) -> Vec<(f64, Vec2)> {
     let off = 20.0 * px;
     // A one-click construction line's Length box waits beside the pointer before any click.
     if t.pts.is_empty() && t.dims.first().is_some_and(|b| construction_length(t, b)) {
@@ -381,7 +381,7 @@ fn live(app: &SolveApp, t: &Tool, e: Vec2, px: f64) -> Vec<(f64, Vec2)> {
     }
 }
 
-fn fmt(app: &SolveApp, label: &str, kind: ValueKind, v: f64) -> String {
+fn fmt(app: &SketApp, label: &str, kind: ValueKind, v: f64) -> String {
     match kind {
         ValueKind::Angle => format!("{:.1} deg", v.to_degrees()),
         // A count rounds to a whole number; a ratio keeps its decimals (0.5, not 1).
@@ -469,7 +469,7 @@ pub fn dimensions(t: &Tool) -> Value {
 }
 
 /// Invalid values stay in the current field, so users can correct them before another stage.
-pub fn validate(app: &SolveApp, t: &Tool) -> Result<(), String> {
+pub fn validate(app: &SketApp, t: &Tool) -> Result<(), String> {
     for dimension in t.dim_history.iter().chain(&t.dims).filter(|dimension| dimension.locked) {
         if construction_length(t, dimension) && dimension.value.trim().is_empty() {
             continue;
@@ -515,13 +515,13 @@ pub fn validate(app: &SolveApp, t: &Tool) -> Result<(), String> {
 
 /// The corner radius a rounded rectangle from `a` to `b` gets: the typed Radius, or a fifth of
 /// the shorter side.
-pub fn rounded_radius(app: &SolveApp, t: &Tool, a: Vec2, b: Vec2) -> f64 {
+pub fn rounded_radius(app: &SketApp, t: &Tool, a: Vec2, b: Vec2) -> f64 {
     locked(app, t, "Radius").unwrap_or_else(|| 0.2 * (b.x - a.x).abs().min((b.y - a.y).abs()))
 }
 
 /// The radius to send with the rounded rectangle: the typed expression (it becomes the radius
 /// parameter as written, "d1 / 2" included), or the default as a number.
-pub fn rounded_radius_value(app: &SolveApp, t: &Tool, a: Vec2, b: Vec2) -> Value {
+pub fn rounded_radius_value(app: &SketApp, t: &Tool, a: Vec2, b: Vec2) -> Value {
     match t.dims.iter().chain(&t.dim_history).find(|d| d.label == "Radius" && d.locked) {
         Some(d) => json!(d.value),
         None => json!(rounded_radius(app, t, a, b)),
@@ -529,7 +529,7 @@ pub fn rounded_radius_value(app: &SolveApp, t: &Tool, a: Vec2, b: Vec2) -> Value
 }
 
 /// A locked box value by label (for the polygon side count).
-pub fn locked_value(app: &SolveApp, t: &Tool, label: &str) -> Option<f64> {
+pub fn locked_value(app: &SketApp, t: &Tool, label: &str) -> Option<f64> {
     locked(app, t, label)
 }
 
@@ -541,7 +541,7 @@ pub(crate) fn locked_expression<'a>(t: &'a Tool, label: &str) -> Option<&'a str>
 /// Give the keyboard back to the box it was in, after a click in another panel took it (#2927).
 /// The box that owned the keyboard is still the one that had it last frame; the active tool must
 /// still show its boxes, so a finished or restarted shape is left alone.
-pub fn restore_box_focus(app: &SolveApp, ctx: &egui::Context) {
+pub fn restore_box_focus(app: &SketApp, ctx: &egui::Context) {
     let Some(count) = app.tool.as_ref().map(|t| t.dims.len()) else { return };
     let holder = ctx.memory(|memory| (0..count).map(|i| egui::Id::unique(("sc_dim", i))).find(|id| memory.had_focus_last_frame(*id)));
     if let Some(id) = holder {
@@ -550,7 +550,7 @@ pub fn restore_box_focus(app: &SolveApp, ctx: &egui::Context) {
 }
 
 /// Draw the boxes of the active tool next to what they measure. Enter places the point.
-pub fn show(app: &mut SolveApp, ui: &mut egui::Ui, proj: &Proj) {
+pub fn show(app: &mut SketApp, ui: &mut egui::Ui, proj: &Proj) {
     // Esc in a box ends the shape (the box had the keyboard, so the shortcut didn't see it).
     let in_box =
         app.tool.as_ref().is_some_and(|t| (0..t.dims.len()).any(|i| ui.ctx().memory(|m| m.had_focus_last_frame(egui::Id::unique(("sc_dim", i))))));
@@ -569,7 +569,7 @@ pub fn show(app: &mut SolveApp, ui: &mut egui::Ui, proj: &Proj) {
     }
 }
 
-fn boxes(app: &SolveApp, ui: &mut egui::Ui, proj: &Proj, t: &mut Tool) -> Option<Vec2> {
+fn boxes(app: &SketApp, ui: &mut egui::Ui, proj: &Proj, t: &mut Tool) -> Option<Vec2> {
     let tk = Tokens::get();
     let sid = app.session.active_sketch?;
     let st = crate::open_meshing::session_world(&app.session);
@@ -751,7 +751,7 @@ pub(crate) const BOX: egui::Vec2 = egui::vec2(76.0, 24.0);
 /// Whether `p` is over the active tool's own floating boxes: a value box or the construction
 /// line's construction/normal switch. #10600: these must not swallow a click that lands on a
 /// sketch point, so the viewport asks before letting one take the click.
-pub(crate) fn over_tool_boxes(app: &SolveApp, ctx: &egui::Context, p: egui::Pos2) -> bool {
+pub(crate) fn over_tool_boxes(app: &SketApp, ctx: &egui::Context, p: egui::Pos2) -> bool {
     let Some(t) = app.tool.as_ref() else { return false };
     (0..t.dims.len()).any(|i| ctx.memory(|m| m.area_rect(egui::Id::unique(("sc_dim_area", i)))).is_some_and(|r| r.contains(p)))
         || ctx.memory(|m| m.area_rect(egui::Id::unique("sc_construction_switch"))).is_some_and(|r| r.contains(p))

@@ -1,8 +1,8 @@
-//! Untrim and extend on solidcore, against closed forms: areas and counts, and every result exports
+//! Untrim and extend on sketcore, against closed forms: areas and counts, and every result exports
 //! to a record that validates.
 //!
 //! An untrim's body is a 20 x 20 x 5 plate with a 3 mm through hole at (10, 10), made on
-//! solidcore; its top face is a square with a round hole. An extend's is a one-face sheet that is
+//! sketcore; its top face is a square with a round hole. An extend's is a one-face sheet that is
 //! its surface's whole parameter box: a 10 mm square, or a quarter of a cylinder of radius 10 and
 //! height 10.
 
@@ -122,14 +122,14 @@ fn judge(name: &str, who: &str, got: Got) -> Got {
     got
 }
 
-fn solidcore_case(name: &str) -> Got {
+fn sketcore_case(name: &str) -> Got {
     let (c, _) = case(name);
     let got = untrim_face(&c.input.core(), c.point, TOL, c.holes, c.outer, c.in_place).map(|b| {
         let (rec, _) = native(&to_arrays(&b).unwrap()).unwrap_or_else(|e| panic!("{name}: record: {e:?}"));
         sketcraft_geom::brep::check::validate(&rec).unwrap_or_else(|e| panic!("{name}: record: {e}"));
         Measured { area: area(&b, 1e-8).unwrap(), counts: counts(&b).unwrap() }
     });
-    judge(name, "solidcore", got)
+    judge(name, "sketcore", got)
 }
 
 macro_rules! cases {
@@ -137,8 +137,8 @@ macro_rules! cases {
         mod $m {
             #[test]
             $(#[$ign])?
-            fn solidcore_matches_the_closed_form() {
-                let _ = super::solidcore_case(stringify!($m));
+            fn sketcore_matches_the_closed_form() {
+                let _ = super::sketcore_case(stringify!($m));
             }
         }
     )*};
@@ -184,11 +184,11 @@ fn the_body_stays_as_it_was() {
 }
 
 /// A one-face sheet on `surface` over `domain`, the face its whole box.
-fn whole_face(surface: solidcore::surface::surface::Surface) -> Body {
-    use solidcore::topology::brep::p3::new_brep;
-    use solidcore::topology::brep::p8::create_face_from_surface;
+fn whole_face(surface: sketcore::surface::surface::Surface) -> Body {
+    use sketcore::topology::brep::p3::new_brep;
+    use sketcore::topology::brep::p8::create_face_from_surface;
     super::run("sheet", |k| {
-        let mut b = new_brep(k, solidcore::geom::tol::USE_DEFAULT, solidcore::geom::tol::USE_DEFAULT)?;
+        let mut b = new_brep(k, sketcore::geom::tol::USE_DEFAULT, sketcore::geom::tol::USE_DEFAULT)?;
         let domain = surface.natural_uv_domain_with_nurb(k)?;
         super::sweep::build_faces(&mut b, |b, fenv| create_face_from_surface(k, b, Some(surface), &domain, fenv))?;
         b.refresh_cached_topology();
@@ -208,12 +208,12 @@ enum Sheet {
 
 impl Sheet {
     fn core(self) -> Body {
-        use solidcore::geom::extent2d::Extent2d;
-        use solidcore::geom::vector2d::Vec2;
-        use solidcore::geom::vector3d::Vec3;
-        use solidcore::surface::cone::p1::Cone;
-        use solidcore::surface::plane::p1::Plane;
-        use solidcore::surface::surface::Surface;
+        use sketcore::geom::extent2d::Extent2d;
+        use sketcore::geom::vector2d::Vec2;
+        use sketcore::geom::vector3d::Vec3;
+        use sketcore::surface::cone::p1::Cone;
+        use sketcore::surface::plane::p1::Plane;
+        use sketcore::surface::surface::Surface;
         let (o, x, y) = (Vec3::new(0.0, 0.0, 0.0), Vec3::new(1.0, 0.0, 0.0), Vec3::new(0.0, 1.0, 0.0));
         match self {
             Sheet::Square => whole_face(Surface::from(Plane::new(o, x, y, Vec2::new(1.0, 1.0), &Extent2d::from_bounds(0.0, 0.0, 10.0, 10.0)))),
@@ -262,14 +262,14 @@ fn extend_judge(name: &str, who: &str, got: Got) -> Got {
     got
 }
 
-fn extend_solidcore(name: &str) -> Got {
+fn extend_sketcore(name: &str) -> Got {
     let (sheet, point, distance, how, _) = extend_case(name);
     let got = extend_sheet(&sheet.core(), point, TOL, distance, how).map(|b| {
         let (rec, _) = native(&to_arrays(&b).unwrap()).unwrap_or_else(|e| panic!("{name}: record: {e:?}"));
         sketcraft_geom::brep::check::validate(&rec).unwrap_or_else(|e| panic!("{name}: record: {e}"));
         Measured { area: area(&b, 1e-8).unwrap(), counts: counts(&b).unwrap() }
     });
-    extend_judge(name, "solidcore", got)
+    extend_judge(name, "sketcore", got)
 }
 
 macro_rules! extend_cases {
@@ -277,8 +277,8 @@ macro_rules! extend_cases {
         mod $m {
             #[test]
             $(#[$ign])?
-            fn solidcore_matches_the_closed_form() {
-                let _ = super::extend_solidcore(stringify!($m));
+            fn sketcore_matches_the_closed_form() {
+                let _ = super::extend_sketcore(stringify!($m));
             }
         }
     )*};

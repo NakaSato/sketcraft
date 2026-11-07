@@ -1,6 +1,6 @@
 //! Shared light inspection and numerical adapters; no document or view-state mutation.
 use crate::schema::render_lights::{Geometry, Light};
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 use sketcraft_doc::render_settings::{RenderJob, RenderSetup};
 use sketcraft_geom::prelude::*;
 use sketcraft_render::job::LightingPreset;
@@ -61,9 +61,7 @@ pub fn colour_temperature(colour: [f64; 3]) -> f64 {
 
 pub fn position(light: &Light, target: [f64; 3], default_distance: f64) -> (f64, f64, f64) {
     let delta = match light.geometry {
-        Geometry::Directional { direction, .. } => {
-            sketcraft_render::surface::unit_direction(vector(direction)).unwrap_or(Vec3::Z) * default_distance
-        }
+        Geometry::Directional { direction, .. } => sketcraft_render::surface::unit_direction(vector(direction)).unwrap_or(Vec3::Z) * default_distance,
         Geometry::Point { position_mm, .. } | Geometry::Spot { position_mm, .. } | Geometry::Area { position_mm, .. } => {
             vector(position_mm) - vector(target)
         }

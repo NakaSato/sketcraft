@@ -5,8 +5,8 @@
 //! that another sheet's vertex on one of its edges is a vertex of both (no T-junction).
 use super::eval::CurveEval;
 use crate::bspline::{HPoint, segment};
-use solidcore_record::brep::part::Part;
-use solidcore_record::brep::{Brep, Curve2, Edge, Invalid, Loop, OrientedEdge, Result, Shell, Vertex};
+use sketcore_record::brep::part::Part;
+use sketcore_record::brep::{Brep, Curve2, Edge, Invalid, Loop, OrientedEdge, Result, Shell, Vertex};
 
 /// The record with edge `e` split at each `t` of `at` (`(e, t)`, `t` strictly inside the edge's
 /// interval), in canonical order. The part's `edges` name, for each edge, the source edge it is

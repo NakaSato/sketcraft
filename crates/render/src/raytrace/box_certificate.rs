@@ -2,7 +2,7 @@
 //! raw-bit edge policy match the independent synchronous dielectric certifier.
 use super::{Bounds, Result, TraceError, Triangle, WorkBudget};
 use crate::job::CancelToken;
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 use sketcraft_geom::Mesh;
 use sketcraft_geom::prelude::*;
 use std::{cmp::Ordering, mem::size_of};

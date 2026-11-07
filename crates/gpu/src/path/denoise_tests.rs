@@ -1,6 +1,6 @@
 use super::super::{Executor, JobOptions, Task, open_headless};
 use super::*;
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 use sketcraft_geom::Mesh;
 use sketcraft_render::{
     Camera, ProductMesh, ProductScene, StandardView,

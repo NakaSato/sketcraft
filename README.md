@@ -62,22 +62,25 @@ executable.
 
 ## Run in a browser
 
-Install the WebAssembly target and Trunk once:
+Install the WebAssembly target and `wasm-bindgen` once. `wasm-bindgen` must be the version
+`Cargo.lock` lists (currently 0.2.129):
 
 ```sh
 rustup target add wasm32-unknown-unknown
-cargo install --locked trunk
+cargo install wasm-bindgen-cli --version 0.2.129 --locked
 ```
 
 Then, from the repository root:
 
 ```sh
-trunk serve
+python3 scripts/build_web.py --serve
 ```
 
 Open <http://127.0.0.1:8080>. Work is saved in the browser for that origin, so keep the same
-address and port to get it back. Trunk generates the JavaScript that loads the WebAssembly
-program; no Node.js or backend is needed.
+address and port to get it back. The script builds with cargo, generates the JavaScript that
+loads the WebAssembly program with `wasm-bindgen`, and lays out the page from
+`apps/sketcraft-web/index.html`; no Trunk, Node.js or backend is needed. `--debug` builds faster.
+With binaryen's `wasm-opt` installed, release builds are size-optimized too.
 
 ## Build for distribution
 
@@ -93,11 +96,11 @@ executable, not an installer or a signed bundle.
 Browser:
 
 ```sh
-trunk build --release --locked --public-url ./
+python3 scripts/build_web.py
 ```
 
-Serve `dist/` from any static web server, over HTTPS for WebGPU (localhost also works).
-`--public-url ./` lets it be served from a subdirectory.
+Serve `dist/web/` from any static web server, over HTTPS for WebGPU (localhost also works). All
+paths are relative, so it can be served from a subdirectory.
 
 ## Test and check
 
@@ -127,7 +130,7 @@ L0 geom → L1 sketch, kernel, render → L2 doc → L3 io → L4 engine → L5 
 ```
 
 - `crates/geom`, `crates/sketch`, `crates/kernel`, `crates/render`: geometry, the sketch
-  solver, the B-rep kernel wrapper (around the external `solidcore` kernel) and scene data.
+  solver, the B-rep kernel wrapper (around the external `sketcore` kernel) and scene data.
 - `crates/doc`: the design document. `crates/io`: file formats.
   `crates/skp`: the SketchUp reader (vendored OpenSKP C++ parser, desktop only).
 - `crates/engine`: `Session` and the command registry. Every user action is a `CommandSpec` in
@@ -135,7 +138,7 @@ L0 geom → L1 sketch, kernel, render → L2 doc → L3 io → L4 engine → L5 
 - `crates/ui-egui`: the egui front end: ribbon, viewport, dialogs, preferences. The SketchUp
   tab lives in `workspace.rs`, its drawing tools in `sketchup_draw.rs` and its model screen in
   `sketchup_screen.rs`. `crates/gpu`: the wgpu pipelines.
-- `apps/sketcraft` (desktop), `apps/sketcraft-web` (browser, built by Trunk from `index.html`),
+- `apps/sketcraft` (desktop), `apps/sketcraft-web` (browser, built by `scripts/build_web.py`),
   `apps/sketcraft-cli` (headless CLI and MCP server). `xtask`: repository tooling.
 - `vendor/`: patched `egui-wgpu` and `winit`, outside the workspace.
 - `skills/*/SKILL.md`: short contributor guides (commands, tests, UI, file formats,

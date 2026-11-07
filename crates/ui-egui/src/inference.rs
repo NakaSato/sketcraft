@@ -9,10 +9,10 @@ use std::cell::RefCell;
 
 use egui::Stroke;
 use serde_json::json;
-use solidcore_record::Vec2;
+use sketcore_record::Vec2;
 use sketcraft_engine::sketch::{CurveKind, Sketch};
 
-use crate::SolveApp;
+use crate::SketApp;
 use crate::theme::Tokens;
 use crate::viewport::Proj;
 
@@ -216,7 +216,7 @@ pub fn lines(sk: &Sketch, prev: Vec2, lp: Vec2, tol: f64) -> Option<Inference> {
 
 /// The Line tool placed a segment ending at `end` (the new line `line`): add the constraint of
 /// the inference it was snapped by.
-pub fn commit(app: &mut SolveApp, line: &str, end: Vec2) {
+pub fn commit(app: &mut SketApp, line: &str, end: Vec2) {
     let Some(i) = current().filter(|i| i.at.dist(end) < 1e-9) else { return };
     clear();
     // The endpoint is the circle's centre: the line already ends on that point.
@@ -237,7 +237,7 @@ pub fn commit(app: &mut SolveApp, line: &str, end: Vec2) {
 }
 
 /// The dashed guide of the current inference (its label is the snap hint) (while the Line tool is active).
-pub fn show(app: &SolveApp, painter: &egui::Painter, proj: &Proj) {
+pub fn show(app: &SketApp, painter: &egui::Painter, proj: &Proj) {
     if app.tool.as_ref().is_none_or(|t| t.cmd != "sketch.line") {
         return;
     }
@@ -333,7 +333,7 @@ impl Tracking {
 
     /// Where the horizontal through one reference meets the vertical through the other, when
     /// that point is within a few pixels of the cursor and is not either reference itself.
-    pub(crate) fn meeting(&self, sk: &Sketch, plane: &solidcore_record::Plane, proj: &Proj, cursor: egui::Pos2) -> Option<Vec2> {
+    pub(crate) fn meeting(&self, sk: &Sketch, plane: &sketcore_record::Plane, proj: &Proj, cursor: egui::Pos2) -> Option<Vec2> {
         let a = self.anchor.as_ref().and_then(|r| Self::point_of(sk, r))?;
         let b = self.previous.as_ref().and_then(|r| Self::point_of(sk, r))?;
         if a.dist(b) < 1e-6 {
@@ -372,7 +372,7 @@ impl Tracking {
     /// Follow the cursor: remember the reference under it and lay out the guides. With
     /// `points`, sketch points are references too (a drawing tool waits for a point);
     /// without, remembered points are let go.
-    fn update(&mut self, sk: &Sketch, plane: &solidcore_record::Plane, proj: &Proj, cursor: egui::Pos2, points: bool) {
+    fn update(&mut self, sk: &Sketch, plane: &sketcore_record::Plane, proj: &Proj, cursor: egui::Pos2, points: bool) {
         self.guide = None;
         self.remembered_guide = None;
         if !points {
@@ -456,7 +456,7 @@ impl Tracking {
 /// Existing snaps, picks and constraints retain their behaviour. While a drawing tool waits for
 /// a point, sketch points (ends, corners, free points) are references too, unless the Sketch
 /// preferences turn that off; idle hovering only wakes centres and midpoints (#9105).
-pub(crate) fn track_and_show(app: &mut SolveApp, painter: &egui::Painter, proj: &Proj, cursor: Option<egui::Pos2>) {
+pub(crate) fn track_and_show(app: &mut SketApp, painter: &egui::Painter, proj: &Proj, cursor: Option<egui::Pos2>) {
     crate::scenario::publish_count("sketch_tracking_guides", 0.0);
     let document = std::sync::Arc::downgrade(&app.session.doc);
     let active = app.session.active_sketch;
@@ -505,8 +505,8 @@ mod tests {
 
     #[test]
     fn tracking_has_pixel_tolerance_and_only_spans_reference_to_cursor() {
-        use solidcore_record::Plane;
-        let mut app = SolveApp::new(Default::default(), Default::default());
+        use sketcore_record::Plane;
+        let mut app = SketApp::new(Default::default(), Default::default());
         app.cam.yaw = 0.0;
         app.cam.pitch = std::f64::consts::FRAC_PI_2;
         let mut sk = Sketch::new();
@@ -543,8 +543,8 @@ mod tests {
 
     #[test]
     fn end_points_corners_and_free_points_start_guides_only_while_drawing() {
-        use solidcore_record::Plane;
-        let mut app = SolveApp::new(Default::default(), Default::default());
+        use sketcore_record::Plane;
+        let mut app = SketApp::new(Default::default(), Default::default());
         app.cam.yaw = 0.0;
         app.cam.pitch = std::f64::consts::FRAC_PI_2;
         app.cam.distance = 180.0;
@@ -599,8 +599,8 @@ mod tests {
 
     #[test]
     fn two_recent_references_meet_and_a_third_drops_the_oldest() {
-        use solidcore_record::Plane;
-        let mut app = SolveApp::new(Default::default(), Default::default());
+        use sketcore_record::Plane;
+        let mut app = SketApp::new(Default::default(), Default::default());
         app.cam.yaw = 0.0;
         app.cam.pitch = std::f64::consts::FRAC_PI_2;
         app.cam.distance = 180.0;

@@ -2,7 +2,7 @@
 //! and x meet as they are, whichever way their parts are turned.
 
 use serde_json::json;
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 use sketcraft_geom::prelude::*;
 
 use super::tests::{occ, place, run};

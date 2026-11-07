@@ -9,7 +9,7 @@ format and its migrations. Depends on `geom`, `sketch`, `kernel`, `render`, `pro
 ## Commands
 
 ```sh
-cargo test -p sketcraft-doc                       # all unit tests (builds the kernel: solidcore)
+cargo test -p sketcraft-doc                       # all unit tests (builds the kernel: sketcore)
 cargo test -p sketcraft-doc --lib format          # format/migration tests
 cargo test -p sketcraft-doc feature_walk          # golden walk records
 FEATURE_WALK_BLESS=1 cargo test -p sketcraft-doc feature_walk   # re-record an intended change

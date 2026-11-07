@@ -1,4 +1,4 @@
-//! Untrim and extend on solidcore: the C API's `smlib_untrim_face` and `smlib_extend_sheet`,
+//! Untrim and extend on sketcore: the C API's `smlib_untrim_face` and `smlib_extend_sheet`,
 //! ported from the fork's `capi/src/smlib_untrim.cpp` (`face_at`, `loop_distance`,
 //! `copy_attributes`, `analytic`, `span_of`, `pieces_of`, `is_disc`, `rebuild_hole`) and
 //! `capi/src/smlib_extend.cpp` (`on_side`, `eval`, `nearest_edge`, `is_boundary`, `side_edge`,
@@ -24,43 +24,43 @@
 
 use std::sync::PoisonError;
 
-use solidcore::EntityRef;
-use solidcore::curve::curve::Curve;
-use solidcore::geom::extent2d::Extent2d;
-use solidcore::geom::geom_utility::p2::ContinuityType;
-use solidcore::geom::object::Shape;
-use solidcore::geom::tol::USE_DEFAULT;
-use solidcore::geom::vector2d::Point2;
-use solidcore::geom::vector3d::{Point3, Vec3};
-use solidcore::kernel::Kernel;
-use solidcore::nurbs::b_spline_surface::p1::SurfParamType;
-use solidcore::nurbs::b_spline_surface_n_lib::p2::EvaluateFlags;
-use solidcore::nurbs::b_spline_surface_n_lib::p2::OrientType;
-use solidcore::query::api_queries::{edge_closest_point, face_closest_point_in_shape, face_internal_point};
-use solidcore::query::brep::{BrepQuery, LiveBrepObjects};
-use solidcore::surface::cone::p1::Cone;
-use solidcore::surface::surface::Surface;
-use solidcore::surface::surface::SurfaceKind;
-use solidcore::topology::brep::p1 as brep_p1;
-use solidcore::topology::brep::p2::{CopyNotifyState, copy_source_ref};
-use solidcore::topology::brep::p3::{DeleteFaceOptions, delete_face, new_brep, with_kernel_callbacks};
-use solidcore::topology::brep::p5::{EdgeInFace, make_edge_in_face};
-use solidcore::topology::brep::p7::copy_faces_from;
-use solidcore::topology::brep::p8::create_face_from_surface;
-use solidcore::topology::brep::p9::make_vertex_loop;
-use solidcore::topology::edgeuse::p1 as eu_p1;
-use solidcore::topology::edgeuse::p3::get_or_create_uv_trim_curve;
-use solidcore::topology::face::{p1 as face_p1, p2 as face_p2, p4 as face_p4};
-use solidcore::topology::loopuse::{loop_edges, loop_loopuses, notify_ref};
-use solidcore::topology::topology_traverser::Marks;
-use solidcore::topology::{Brep, BrepId, EdgeId, FaceId, LoopId, edge};
+use sketcore::EntityRef;
+use sketcore::curve::curve::Curve;
+use sketcore::geom::extent2d::Extent2d;
+use sketcore::geom::geom_utility::p2::ContinuityType;
+use sketcore::geom::object::Shape;
+use sketcore::geom::tol::USE_DEFAULT;
+use sketcore::geom::vector2d::Point2;
+use sketcore::geom::vector3d::{Point3, Vec3};
+use sketcore::kernel::Kernel;
+use sketcore::nurbs::b_spline_surface::p1::SurfParamType;
+use sketcore::nurbs::b_spline_surface_n_lib::p2::EvaluateFlags;
+use sketcore::nurbs::b_spline_surface_n_lib::p2::OrientType;
+use sketcore::query::api_queries::{edge_closest_point, face_closest_point_in_shape, face_internal_point};
+use sketcore::query::brep::{BrepQuery, LiveBrepObjects};
+use sketcore::surface::cone::p1::Cone;
+use sketcore::surface::surface::Surface;
+use sketcore::surface::surface::SurfaceKind;
+use sketcore::topology::brep::p1 as brep_p1;
+use sketcore::topology::brep::p2::{CopyNotifyState, copy_source_ref};
+use sketcore::topology::brep::p3::{DeleteFaceOptions, delete_face, new_brep, with_kernel_callbacks};
+use sketcore::topology::brep::p5::{EdgeInFace, make_edge_in_face};
+use sketcore::topology::brep::p7::copy_faces_from;
+use sketcore::topology::brep::p8::create_face_from_surface;
+use sketcore::topology::brep::p9::make_vertex_loop;
+use sketcore::topology::edgeuse::p1 as eu_p1;
+use sketcore::topology::edgeuse::p3::get_or_create_uv_trim_curve;
+use sketcore::topology::face::{p1 as face_p1, p2 as face_p2, p4 as face_p4};
+use sketcore::topology::loopuse::{loop_edges, loop_loopuses, notify_ref};
+use sketcore::topology::topology_traverser::Marks;
+use sketcore::topology::{Brep, BrepId, EdgeId, FaceId, LoopId, edge};
 
 use super::blend::{p3, status};
 use super::sweep::build_faces;
 use super::{Body, answer};
 use crate::trim::Continuation;
 use crate::{Error, Result};
-use solidcore::topology::brep::p3::brep_copy;
+use sketcore::topology::brep::p3::brep_copy;
 
 /// `MAX_HOLE_POINTS`.
 const MAX_HOLE_POINTS: usize = 10_000;
@@ -77,7 +77,7 @@ const ONE: BrepId = BrepId::from_index(0);
 
 /// `face_at`: the face of `b` nearest `p`, within `tol` (`SmApiFaceClosestPoint`; a face whose
 /// query fails is skipped).
-pub(super) fn face_at(k: &mut Kernel, b: &mut Brep, p: Point3, tol: f64) -> solidcore::Result<Option<FaceId>> {
+pub(super) fn face_at(k: &mut Kernel, b: &mut Brep, p: Point3, tol: f64) -> sketcore::Result<Option<FaceId>> {
     let all = brep_p1::faces(b, None)?;
     let mut shapes = Vec::with_capacity(all.len());
     for &f in &all {
@@ -101,7 +101,7 @@ pub(super) fn face_at(k: &mut Kernel, b: &mut Brep, p: Point3, tol: f64) -> soli
 }
 
 /// `loop_distance`: the distance from `p` to the nearest edge of loop `l`.
-fn loop_distance(k: &Kernel, b: &Brep, l: LoopId, p: Point3) -> solidcore::Result<f64> {
+fn loop_distance(k: &Kernel, b: &Brep, l: LoopId, p: Point3) -> sketcore::Result<f64> {
     let mut best = f64::INFINITY;
     for e in loop_edges(b, l)?.into_iter().flatten() {
         if let Some(c) = answer(edge_closest_point(k, b, e, p))?
@@ -114,7 +114,7 @@ fn loop_distance(k: &Kernel, b: &Brep, l: LoopId, p: Point3) -> solidcore::Resul
 }
 
 /// `copy_attributes`: `to` (in `into`) takes a copy of each attribute of `from` (in `src`).
-fn copy_attributes(src: &Brep, from: EntityRef, into: &mut Brep, to: EntityRef) -> solidcore::Result<()> {
+fn copy_attributes(src: &Brep, from: EntityRef, into: &mut Brep, to: EntityRef) -> sketcore::Result<()> {
     let copies: Vec<_> = src.entity_attributes(from).into_iter().map(|(_, a)| a.make_copy()).collect();
     for a in copies {
         into.add_attribute(to, a)?;
@@ -123,7 +123,7 @@ fn copy_attributes(src: &Brep, from: EntityRef, into: &mut Brep, to: EntityRef) 
 }
 
 /// [`copy_attributes`] within one body.
-fn copy_attributes_within(b: &mut Brep, from: EntityRef, to: EntityRef) -> solidcore::Result<()> {
+fn copy_attributes_within(b: &mut Brep, from: EntityRef, to: EntityRef) -> sketcore::Result<()> {
     let copies: Vec<_> = b.entity_attributes(from).into_iter().map(|(_, a)| a.make_copy()).collect();
     for a in copies {
         b.add_attribute(to, a)?;
@@ -133,7 +133,7 @@ fn copy_attributes_within(b: &mut Brep, from: EntityRef, to: EntityRef) -> solid
 
 /// `span_of`: the box of the face's outer loop in the surface's parameters, the union of the
 /// tight boxes of its edgeuses' UV trim curves (made where the face has none attached yet).
-fn span_of(k: &Kernel, b: &mut Brep, outer: LoopId) -> solidcore::Result<Option<Extent2d>> {
+fn span_of(k: &Kernel, b: &mut Brep, outer: LoopId) -> sketcore::Result<Option<Extent2d>> {
     let (lu, _) = loop_loopuses(b, outer)?;
     let eus = eu_p1::loopuse_edgeuses(b, lu)?;
     let (mut lo, mut hi) = ([f64::INFINITY; 2], [f64::NEG_INFINITY; 2]);
@@ -164,11 +164,11 @@ struct Piece {
     from: Point3,
     to: Point3,
     curve: Curve,
-    interval: solidcore::geom::extent1d::Extent1d,
+    interval: sketcore::geom::extent1d::Extent1d,
 }
 
 /// `pieces_of`; `None` where the capi gives up.
-fn pieces_of(b: &Brep, l: LoopId) -> solidcore::Result<Option<Vec<Piece>>> {
+fn pieces_of(b: &Brep, l: LoopId) -> sketcore::Result<Option<Vec<Piece>>> {
     let (lu, _) = loop_loopuses(b, l)?;
     let mut out = Vec::new();
     for eu in eu_p1::loopuse_edgeuses(b, lu)? {
@@ -185,7 +185,7 @@ fn pieces_of(b: &Brep, l: LoopId) -> solidcore::Result<Option<Vec<Piece>>> {
 }
 
 /// `is_disc`: whether `f` is bounded by one loop of exactly the edges `made`.
-fn is_disc(b: &Brep, f: FaceId, made: &[EdgeId]) -> solidcore::Result<bool> {
+fn is_disc(b: &Brep, f: FaceId, made: &[EdgeId]) -> sketcore::Result<bool> {
     let loops = face_p2::loops(b, f, false, None)?;
     let [l] = loops.as_slice() else { return Ok(false) };
     let edges: Vec<EdgeId> = loop_edges(b, *l)?.into_iter().flatten().collect();
@@ -195,7 +195,7 @@ fn is_disc(b: &Brep, f: FaceId, made: &[EdgeId]) -> solidcore::Result<bool> {
 /// `rebuild_hole`: the hole `pieces` (edges of `src`) rebuilt in `face` of `r`: vertices and
 /// edges made in the face, the face the closed loop splits off inside it deleted. `face` is the
 /// face that keeps the rest.
-fn rebuild_hole(k: &mut Kernel, src: Option<&Brep>, r: &mut Brep, face: &mut FaceId, pieces: &[Piece]) -> solidcore::Result<Out<()>> {
+fn rebuild_hole(k: &mut Kernel, src: Option<&Brep>, r: &mut Brep, face: &mut FaceId, pieces: &[Piece]) -> sketcore::Result<Out<()>> {
     let Some(first_piece) = pieces.first() else { return Ok(Err(hole_refused())) };
     let editing = r.editing_enabled();
     r.set_editing_enabled(true);
@@ -205,7 +205,7 @@ fn rebuild_hole(k: &mut Kernel, src: Option<&Brep>, r: &mut Brep, face: &mut Fac
     let vertex_loop = |k: &mut Kernel, r: &mut Brep, face: FaceId, at: Point3| {
         with_kernel_callbacks(k, r, |_, r, env| make_vertex_loop(r, face, at, OrientType::Opposite, env))
     };
-    let done = (|| -> solidcore::Result<Out<()>> {
+    let done = (|| -> sketcore::Result<Out<()>> {
         let (_, first) = match vertex_loop(k, r, *face, first_piece.from) {
             Ok(v) => v,
             Err(e) => return Ok(Err(status(e))),
@@ -269,7 +269,7 @@ fn rebuild_hole(k: &mut Kernel, src: Option<&Brep>, r: &mut Brep, face: &mut Fac
 }
 
 /// The orientation of `f`'s upward faceuse.
-fn upward(b: &Brep, f: FaceId) -> solidcore::Result<Option<OrientType>> {
+fn upward(b: &Brep, f: FaceId) -> sketcore::Result<Option<OrientType>> {
     Ok(match face_p2::upward_faceuse(b, f)? {
         Some(fu) => Some(b.faceuse(fu)?.orientation),
         None => None,

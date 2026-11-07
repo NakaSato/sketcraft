@@ -18,11 +18,11 @@ use std::collections::HashMap;
 use egui::{Pos2, Rect, pos2, vec2};
 use serde_json::{Value, json};
 
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 use sketcraft_engine::doc::{apply_point, is_identity};
 use sketcraft_engine::geom::Mesh;
 
-use crate::SolveApp;
+use crate::SketApp;
 
 /// At most this many pixels + rays per call: a batch of picks is one request, but it still
 /// runs on the window thread.
@@ -66,7 +66,7 @@ struct Placed {
 
 /// `view.pick` / `ui.pick`: `pixels` (screenshot pixels) and/or `rays` (world-space
 /// `{origin, dir}`) → one entry per input, in order; `null` where nothing is hit.
-pub fn pick_command(app: &mut SolveApp, p: &Value) -> Result<Value, String> {
+pub fn pick_command(app: &mut SketApp, p: &Value) -> Result<Value, String> {
     let f = |k: &str| p.get(k).and_then(Value::as_f64).filter(|x| x.is_finite());
     let frame = match p.get("frame").and_then(Value::as_str) {
         Some("window") => true,
@@ -211,7 +211,7 @@ pub fn pick_command(app: &mut SolveApp, p: &Value) -> Result<Value, String> {
 /// viewport hides, ghosts (unless asked for) or stands in for with a preview are skipped,
 /// exactly as the mouse picker skips them.
 fn face_candidates(
-    app: &SolveApp,
+    app: &SketApp,
     st: &sketcraft_engine::doc::ModelState,
     bounds: &[(String, sketcraft_engine::geom::Aabb3)],
     input: &Input,
@@ -303,7 +303,7 @@ fn barycentric(p: Vec3, a: Vec3, b: Vec3, c: Vec3) -> (f64, f64, f64) {
 /// The walk re-raycasts each body past every crossing it finds, bounded per body.
 #[allow(clippy::too_many_arguments)]
 fn section_cap(
-    app: &SolveApp,
+    app: &SketApp,
     st: &sketcraft_engine::doc::ModelState,
     bounds: &[(String, sketcraft_engine::geom::Aabb3)],
     input: &Input,
@@ -332,7 +332,7 @@ fn section_cap(
 /// behind it there too.
 #[allow(clippy::too_many_arguments)]
 pub(crate) fn body_cut_at(
-    app: &SolveApp,
+    app: &SketApp,
     st: &sketcraft_engine::doc::ModelState,
     bounds: &[(String, sketcraft_engine::geom::Aabb3)],
     o: Vec3,
@@ -384,7 +384,7 @@ pub(crate) fn body_cut_at(
 /// the mouse picker excludes it. Rays without a pixel get neither (they have no screen reach).
 #[allow(clippy::too_many_arguments)]
 fn near_edges(
-    app: &SolveApp,
+    app: &SketApp,
     st: &sketcraft_engine::doc::ModelState,
     bounds: &[(String, sketcraft_engine::geom::Aabb3)],
     proj: &crate::viewport::Proj,
@@ -480,7 +480,7 @@ fn seg_param(p: Pos2, a: Pos2, b: Pos2) -> f32 {
 
 /// Body world name → outermost placement, walked breadth-first so a shallower placement
 /// wins; bounded like the engine's own occurrence expansion.
-fn occurrence_map(app: &SolveApp) -> HashMap<String, Placed> {
+fn occurrence_map(app: &SketApp) -> HashMap<String, Placed> {
     let mut out: HashMap<String, Placed> = HashMap::new();
     let mut queue: std::collections::VecDeque<Vec<u64>> = std::collections::VecDeque::from([vec![]]);
     let mut budget = 10_000usize;
@@ -501,7 +501,7 @@ fn occurrence_map(app: &SolveApp) -> HashMap<String, Placed> {
 }
 
 /// Body name → the component that owns it, by name (the root component names nothing).
-fn component_names(app: &SolveApp) -> HashMap<String, String> {
+fn component_names(app: &SketApp) -> HashMap<String, String> {
     let doc = &app.session.doc;
     let names: HashMap<u64, String> = doc.components.iter().map(|c| (c.id, c.name.clone())).collect();
     doc.body_components.iter().filter_map(|(body, id)| names.get(id).map(|n| (body.clone(), n.clone()))).collect()

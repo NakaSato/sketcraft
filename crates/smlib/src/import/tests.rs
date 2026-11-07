@@ -1,5 +1,5 @@
 use super::*;
-use solidcore_record::brep::{
+use sketcore_record::brep::{
     Brep as Record, Curve, Curve2, Edge, EdgeUseRef, Face, Loop, OrientedEdge, OrientedFace, Region, Shell, Surface, Vertex,
 };
 use sketcraft_geom::prelude::*;
@@ -74,7 +74,7 @@ fn polyhedron(corners: &[[f64; 3]], cycles: &[&[usize]]) -> Record {
         })
         .collect();
     Record {
-        version: solidcore_record::brep::VERSION,
+        version: sketcore_record::brep::VERSION,
         tolerance: 1e-6,
         regions: vec![Region { shells: vec![0], void: false }, Region { shells: vec![0], void: false }],
         shells: vec![Shell::Faces { faces: (0..cycles.len() as u32).map(|face| OrientedFace { face, forward: true }).collect(), wires: vec![] }],
@@ -226,7 +226,7 @@ fn revolutions_become_the_same_surface_as_a_rational_spline() {
 #[test]
 fn arcs_past_a_turn_come_a_turn_back() {
     use std::f64::consts::{FRAC_PI_2, TAU};
-    let frame = solidcore_record::brep::Frame { origin: [0.0; 3], x_axis: [1.0, 0.0, 0.0], y_axis: [0.0, 1.0, 0.0] };
+    let frame = sketcore_record::brep::Frame { origin: [0.0; 3], x_axis: [1.0, 0.0, 0.0], y_axis: [0.0, 1.0, 0.0] };
     let circle = Curve::Circle { frame, radius: 2.0 };
     assert_eq!(turned(&circle, [TAU, TAU + FRAC_PI_2]), ([0.0, FRAC_PI_2], -TAU));
     assert_eq!(turned(&circle, [-TAU - FRAC_PI_2, -TAU]), ([-FRAC_PI_2, 0.0], TAU));
@@ -243,7 +243,7 @@ fn arcs_past_a_turn_come_a_turn_back() {
 #[test]
 fn only_a_tube_clear_of_its_axis_is_a_ring_torus() {
     let ring = |major: f64| {
-        let frame = solidcore_record::brep::Frame { origin: [major, 0.0, 0.0], x_axis: [1.0, 0.0, 0.0], y_axis: [0.0, 0.0, 1.0] };
+        let frame = sketcore_record::brep::Frame { origin: [major, 0.0, 0.0], x_axis: [1.0, 0.0, 0.0], y_axis: [0.0, 0.0, 1.0] };
         let (profile, _) = sketcraft_geom::brep::form::curve(&Curve::Circle { frame, radius: 1.0 }, [-1.0, 1.0]).unwrap();
         let identity = [[1.0, 0.0, 0.0, 0.0], [0.0, 1.0, 0.0, 0.0], [0.0, 0.0, 1.0, 0.0], [0.0, 0.0, 0.0, 1.0]];
         let surface =

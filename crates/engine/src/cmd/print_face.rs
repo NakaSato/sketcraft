@@ -6,7 +6,7 @@
 //! the slicer arranges them.
 
 use serde_json::Value;
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 use sketcraft_doc::{ModelState, PrintFace};
 use sketcraft_geom::prelude::*;
 

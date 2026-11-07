@@ -5,10 +5,10 @@
 //! Angle work about the window's Center point when one is picked (#11718), else the box middle.
 
 use egui::{Pos2, Sense, Stroke, Vec2 as Screen, vec2};
-use solidcore_record::{Plane, Vec2};
+use sketcore_record::{Plane, Vec2};
 use sketcraft_engine::geom::prelude::*;
 
-use crate::SolveApp;
+use crate::SketApp;
 use crate::dialogs::Kind;
 use crate::sketch_modify_ui::Mod;
 use crate::viewport::Proj;
@@ -84,7 +84,7 @@ fn pointer_on_sketch(plane: &Plane, proj: &Proj, at: Pos2) -> Option<Vec2> {
 
 /// The picked curves (as polylines on the sketch) and the box around them and the picked points:
 /// its middle and its size. None when nothing usable is picked or the box has no extent.
-fn picked_box(app: &SolveApp, d: &crate::dialogs::Dialog) -> Option<(Vec<Vec<Vec2>>, [f64; 2], [f64; 2])> {
+fn picked_box(app: &SketApp, d: &crate::dialogs::Dialog) -> Option<(Vec<Vec<Vec2>>, [f64; 2], [f64; 2])> {
     let state = crate::open_meshing::session_world(&app.session);
     let sk = &state.sketch(app.session.active_sketch?)?.sketch;
     let mut lines: Vec<Vec<Vec2>> = Vec::new();
@@ -114,7 +114,7 @@ fn picked_box(app: &SolveApp, d: &crate::dialogs::Dialog) -> Option<(Vec<Vec<Vec
 }
 
 /// Keep the Transform window's box up to date with what is picked.
-pub fn refresh(app: &mut SolveApp) {
+pub fn refresh(app: &mut SketApp) {
     let Some(d) = app.dialog.as_ref().filter(|d| matches!(d.kind, Kind::SketchModify(Mod::Transform { .. }))) else { return };
     let boxed = picked_box(app, d).map(|(_, middle, size)| (middle, size));
     if let Some(Kind::SketchModify(Mod::Transform { frame, .. })) = app.dialog.as_mut().map(|d| &mut d.kind) {
@@ -123,7 +123,7 @@ pub fn refresh(app: &mut SolveApp) {
 }
 
 /// The window's Center point on the sketch, when one is picked.
-fn picked_pivot(app: &SolveApp, d: &crate::dialogs::Dialog) -> Option<Vec2> {
+fn picked_pivot(app: &SketApp, d: &crate::dialogs::Dialog) -> Option<Vec2> {
     let state = crate::open_meshing::session_world(&app.session);
     let sk = &state.sketch(app.session.active_sketch?)?.sketch;
     let sel = d.inputs.get(1)?.items.first()?;
@@ -131,7 +131,7 @@ fn picked_pivot(app: &SolveApp, d: &crate::dialogs::Dialog) -> Option<Vec2> {
 }
 
 /// The placement the window's fields describe, as a frame.
-fn frame_of(app: &SolveApp, d: &crate::dialogs::Dialog) -> Option<Frame> {
+fn frame_of(app: &SketApp, d: &crate::dialogs::Dialog) -> Option<Frame> {
     let Kind::SketchModify(Mod::Transform { x, y, factor, angle, frame }) = &d.kind else { return None };
     let (middle, size) = (*frame)?;
     let middle = Vec2::new(middle[0], middle[1]);
@@ -199,7 +199,7 @@ fn moved(f: &Frame, q: Vec2) -> Vec2 {
 }
 
 /// The Transform window's picks with their handles; a drag on them edits the window's values.
-pub fn show(app: &mut SolveApp, ui: &mut egui::Ui, proj: &Proj) {
+pub fn show(app: &mut SketApp, ui: &mut egui::Ui, proj: &Proj) {
     let Some(d) = app.dialog.as_ref().filter(|d| matches!(d.kind, Kind::SketchModify(Mod::Transform { .. }))) else {
         app.viewport.transform_drag = None;
         return;

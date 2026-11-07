@@ -17,14 +17,14 @@ use std::sync::Arc;
 use std::sync::mpsc::{Receiver, TryRecvError};
 
 use serde_json::Value;
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 use sketcraft_engine::Session;
 use sketcraft_engine::doc::ModelState;
 use sketcraft_engine::doc::progress::Progress;
 use sketcraft_engine::geom::{Aabb3, Mesh, Ring};
 use sketcraft_engine::kernel::history::Change;
 
-use crate::SolveApp;
+use crate::SketApp;
 use crate::gpu::{GpuScene, SceneSlot};
 use crate::theme::Tokens;
 
@@ -371,7 +371,7 @@ fn stream_key(cmds: &[(String, Value)], revision: u64, colors: Colors) -> Option
 
 /// Keep the preview in step with the open dialog: start a computation when its inputs changed,
 /// take finished results. Called once per frame.
-pub fn update(app: &mut SolveApp, ctx: &egui::Context) {
+pub fn update(app: &mut SketApp, ctx: &egui::Context) {
     let cmds = match app.dialog.as_ref().filter(|d| d.previews() && d.preview_enabled).map(|d| crate::dialogs::preview_commands(app, d)) {
         Some(Ok(c)) if !c.is_empty() => c,
         _ if crate::sketch_attachment_ui::commands(app).is_some() => crate::sketch_attachment_ui::commands(app).unwrap_or_default(),
@@ -966,7 +966,7 @@ pub fn point_triangle_dist(p: Vec3, a: Vec3, b: Vec3, c: Vec3) -> f64 {
 }
 
 /// The same computed sketch preview is drawn over both native GPU and CPU viewports.
-pub fn paint_sketches(app: &SolveApp, painter: &egui::Painter, proj: &crate::viewport::Proj) {
+pub fn paint_sketches(app: &SketApp, painter: &egui::Painter, proj: &crate::viewport::Proj) {
     if app.preview.rolled_back {
         return;
     }

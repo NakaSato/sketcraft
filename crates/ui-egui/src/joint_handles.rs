@@ -1,6 +1,6 @@
 //! Explicit assembly Move: only the selected part's allowed joint axes are shown. Distances
 //! and angles are relative to the current drag, and each drag is one cancellable undo step.
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 use sketcraft_engine::geom::prelude::*;
 use std::{
     collections::{BTreeMap, BTreeSet},
@@ -15,7 +15,7 @@ use sketcraft_engine::{
 };
 
 use crate::{
-    SolveApp,
+    SketApp,
     theme::Tokens,
     ui_kit::{Container, Surface},
     viewport::Proj,
@@ -50,7 +50,7 @@ struct Drag {
     checkpoint: Option<u64>,
 }
 
-pub(crate) fn selected_occurrence(app: &SolveApp) -> Option<u64> {
+pub(crate) fn selected_occurrence(app: &SketApp) -> Option<u64> {
     let mut selected = None;
     for item in &app.session.selection {
         let occurrence = match item {
@@ -69,7 +69,7 @@ pub(crate) fn selected_occurrence(app: &SolveApp) -> Option<u64> {
     selected
 }
 
-pub(crate) fn selected_path(app: &SolveApp) -> Option<Vec<u64>> {
+pub(crate) fn selected_path(app: &SketApp) -> Option<Vec<u64>> {
     match app.session.selection.first()? {
         Sel::Occurrence { path } => Some(path.clone()),
         item => {
@@ -89,7 +89,7 @@ pub(crate) fn selected_path(app: &SolveApp) -> Option<Vec<u64>> {
 }
 
 /// Both Assemble > Move and the context menu enter here; picking a face alone never does.
-pub(crate) fn begin(app: &mut SolveApp, occurrence: u64) -> bool {
+pub(crate) fn begin(app: &mut SketApp, occurrence: u64) -> bool {
     close(app);
     if !app.preferences.assembly_move_handles || app.session.active_sketch.is_some() || app.applying.is_some() {
         return false;
@@ -128,7 +128,7 @@ pub(crate) fn begin(app: &mut SolveApp, occurrence: u64) -> bool {
 }
 
 impl Mode {
-    fn refresh(&mut self, app: &SolveApp) {
+    fn refresh(&mut self, app: &SketApp) {
         self.axes = joints::motion_axes(&app.session.doc, &app.session.model.state(), self.occurrence);
         let anchor = apply_point(&joints::occurrence_world(&app.session.doc, self.occurrence), self.local_anchor);
         // Keep the rotation ring on the selected face's depth, on the true joint axis.
@@ -166,7 +166,7 @@ impl Mode {
 }
 
 /// A new selection or changed constraints must not leave handles for a stale part or pose.
-pub(crate) fn sync(app: &mut SolveApp) {
+pub(crate) fn sync(app: &mut SketApp) {
     if !app.preferences.assembly_move_handles {
         close(app);
         return;
@@ -186,7 +186,7 @@ pub(crate) fn sync(app: &mut SolveApp) {
     app.viewport.joint_handles = Some(mode);
 }
 
-pub(crate) fn start(app: &mut SolveApp) {
+pub(crate) fn start(app: &mut SketApp) {
     let Some(occurrence) = selected_occurrence(app) else {
         app.set_status(app.tr("joint_move.select").to_string(), false);
         return;
@@ -222,7 +222,7 @@ impl Blocked {
     /// A conflicting joint also leaves no axis, but "no movable joint axis" would send the user
     /// to the joint types and limits instead of to the joint that disagrees (#10331). Only
     /// joints on this part count: a conflict elsewhere in the design is not why it is blocked.
-    fn of(app: &SolveApp, occurrence: u64) -> Self {
+    fn of(app: &SketApp, occurrence: u64) -> Self {
         let doc = &app.session.doc;
         let part = doc.occurrences.iter().find(|o| o.id == occurrence).map(|o| o.name.clone()).unwrap_or_default();
         let on_part: BTreeSet<u64> = doc
@@ -244,7 +244,7 @@ impl Blocked {
         Self { part, conflicts }
     }
 
-    fn reason(&self, app: &SolveApp) -> String {
+    fn reason(&self, app: &SketApp) -> String {
         if self.conflicts.is_empty() {
             app.tr("joint_move.fixed").to_string()
         } else {
@@ -255,7 +255,7 @@ impl Blocked {
 
 /// A blocked Move is a persistent warning, acknowledged with OK, Enter, Escape or Close.
 /// It never changes the joint type, grounding, limits or the selected geometry.
-pub(crate) fn show_warning(app: &mut SolveApp, ctx: &egui::Context) {
+pub(crate) fn show_warning(app: &mut SketApp, ctx: &egui::Context) {
     let Some(blocked) = app.menu.joint_move_warning.clone() else { return };
     let reason = blocked.reason(app);
     let hint = if blocked.conflicts.is_empty() { "joint_move.blocked_hint" } else { "joint_move.conflict_hint" };
@@ -280,7 +280,7 @@ pub(crate) fn show_warning(app: &mut SolveApp, ctx: &egui::Context) {
     }
 }
 
-pub(crate) fn visible(app: &SolveApp) -> bool {
+pub(crate) fn visible(app: &SketApp) -> bool {
     app.viewport.joint_handles.is_some()
         && app.dialog.is_none()
         && app.tool.is_none()
@@ -289,17 +289,17 @@ pub(crate) fn visible(app: &SolveApp) -> bool {
         && !app.home.open
 }
 
-pub(crate) fn active(app: &SolveApp) -> bool {
+pub(crate) fn active(app: &SketApp) -> bool {
     app.viewport.joint_handles.as_ref().is_some_and(|m| m.drag.is_some())
 }
 
-pub(crate) fn close(app: &mut SolveApp) {
+pub(crate) fn close(app: &mut SketApp) {
     end_drag(app);
     app.viewport.joint_handles = None;
     app.menu.joint_move_warning = None;
 }
 
-pub(crate) fn cancel(app: &mut SolveApp) -> bool {
+pub(crate) fn cancel(app: &mut SketApp) -> bool {
     if app.menu.joint_move_warning.take().is_some() {
         return true;
     }
@@ -328,7 +328,7 @@ fn mm_per_px(proj: &Proj, origin: Vec3) -> Option<f64> {
     (pixels.is_finite() && pixels > 1e-8).then_some(1.0 / pixels)
 }
 
-fn radius(app: &SolveApp, proj: &Proj, a: &joints::MotionAxis) -> Option<f64> {
+fn radius(app: &SketApp, proj: &Proj, a: &joints::MotionAxis) -> Option<f64> {
     let scale = mm_per_px(proj, a.origin)?;
     let extent = app.viewport.joint_handles.as_ref()?.radii.get(&(a.joint, a.index)).copied().unwrap_or(0.0);
     // Keep the arcs outside the part even when zoomed in.
@@ -414,7 +414,7 @@ fn segment_distance(p: Pos2, a: Pos2, b: Pos2) -> f32 {
     p.distance(a + d * t)
 }
 
-fn hit(app: &SolveApp, proj: &Proj, p: Pos2) -> Option<joints::MotionAxis> {
+fn hit(app: &SketApp, proj: &Proj, p: Pos2) -> Option<joints::MotionAxis> {
     if !visible(app) {
         return None;
     }
@@ -433,7 +433,7 @@ fn hit(app: &SolveApp, proj: &Proj, p: Pos2) -> Option<joints::MotionAxis> {
         .map(|(_, a)| a.clone())
 }
 
-pub(crate) fn owns_pointer(app: &SolveApp, proj: &Proj, p: Pos2) -> bool {
+pub(crate) fn owns_pointer(app: &SketApp, proj: &Proj, p: Pos2) -> bool {
     active(app) || hit(app, proj, p).is_some()
 }
 
@@ -460,7 +460,7 @@ fn polar(proj: &Proj, p: Pos2, a: &joints::MotionAxis) -> Option<(f64, f64)> {
     Some((q.dot(v).atan2(q.dot(u)), q.len()))
 }
 
-pub(crate) fn start_drag(app: &mut SolveApp, proj: &Proj, p: Pos2) -> bool {
+pub(crate) fn start_drag(app: &mut SketApp, proj: &Proj, p: Pos2) -> bool {
     let Some(axis) = hit(app, proj, p) else { return false };
     let initial = joints::joint_values(&app.session.doc.assembly).get(&axis.joint).and_then(|q| q.get(axis.index)).copied();
     let Some(initial) = initial else { return false };
@@ -512,7 +512,7 @@ impl Drag {
     }
 }
 
-pub(crate) fn to(app: &mut SolveApp, proj: &Proj, p: Pos2) {
+pub(crate) fn to(app: &mut SketApp, proj: &Proj, p: Pos2) {
     let Some(mut mode) = app.viewport.joint_handles.take() else { return };
     let Some(mut d) = mode.drag.take() else {
         app.viewport.joint_handles = Some(mode);
@@ -577,7 +577,7 @@ pub(crate) fn to(app: &mut SolveApp, proj: &Proj, p: Pos2) {
     app.viewport.joint_handles = Some(mode);
 }
 
-pub(crate) fn end_drag(app: &mut SolveApp) {
+pub(crate) fn end_drag(app: &mut SketApp) {
     let Some(mut mode) = app.viewport.joint_handles.take() else { return };
     if let Some(d) = mode.drag.take() {
         if let Some(checkpoint) = d.checkpoint {
@@ -588,7 +588,7 @@ pub(crate) fn end_drag(app: &mut SolveApp) {
     app.viewport.joint_handles = Some(mode);
 }
 
-pub(crate) fn show(app: &mut SolveApp, ui: &mut egui::Ui, painter: &egui::Painter, proj: &Proj) {
+pub(crate) fn show(app: &mut SketApp, ui: &mut egui::Ui, painter: &egui::Painter, proj: &Proj) {
     if !visible(app) {
         return;
     }
@@ -747,11 +747,7 @@ mod tests {
         let (mut h, _) = assembly("revolute", Vec3::Z, false);
         assert!(!visible(&h.app));
         assert!(
-            crate::workspace::layout("ASSEMBLE", "POSITION", &sketcraft_engine::command_specs())
-                .unwrap()
-                .0
-                .iter()
-                .any(|c| c.id == "occurrence.move")
+            crate::workspace::layout("ASSEMBLE", "POSITION", &sketcraft_engine::command_specs()).unwrap().0.iter().any(|c| c.id == "occurrence.move")
         );
         let selection = h.app.session.selection.clone();
         h.step(&json!({"click":{"handle":"tab:ASSEMBLE"}})).unwrap();
@@ -1036,7 +1032,7 @@ mod tests {
 
     #[test]
     fn precision_settings_persist_validate_and_read_old_preferences() {
-        let mut app = SolveApp::new(Default::default(), Default::default());
+        let mut app = SketApp::new(Default::default(), Default::default());
         for key in ["joint_rotation_coarse", "joint_rotation_fine"] {
             for bad in [json!(0), json!(-1), json!(181), json!("broken"), json!(null)] {
                 assert!(crate::prefs::set(&mut app, &json!({key:bad})).is_err());

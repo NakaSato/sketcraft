@@ -5,7 +5,7 @@
 //! and its sweep, every line its direction, every point its side of its lines.
 //! Deterministic (fixed LCG seeds), no timing.
 
-use solidcore_record::Vec2;
+use sketcore_record::Vec2;
 use sketcraft_geom::prelude::*;
 
 use crate::construct::{Placement, seed};

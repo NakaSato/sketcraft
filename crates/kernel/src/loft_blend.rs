@@ -40,7 +40,7 @@
 //! to 3 fuller, down to −0.9 flatter), exactly as a bridge's crown does. It shapes the middle of
 //! each end span and leaves every joint's conditions alone.
 
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 use sketcraft_geom::brep::eval::SurfaceEval;
 use sketcraft_geom::bspline::{CurveN, HPoint, MAX_SPLINE_DEGREE, NurbsSurface};
 use sketcraft_geom::prelude::*;

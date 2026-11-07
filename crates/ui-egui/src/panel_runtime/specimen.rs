@@ -1,4 +1,4 @@
-//! Bounded, explicitly enabled synthetic content in the real SolveApp host.
+//! Bounded, explicitly enabled synthetic content in the real SketApp host.
 //! This is an evidence seam, never a production registration or saved preference.
 use std::cell::{Cell, RefCell};
 use std::collections::BTreeMap;
@@ -22,7 +22,7 @@ fn preset(value: &str) -> PanelResult<()> {
 
 /// The caller explicitly opts into original synthetic content at the actual
 /// workspace composition point. An existing runtime is never replaced.
-pub fn enable_host_specimen(app: &mut crate::SolveApp, name: &str) -> PanelResult<()> {
+pub fn enable_host_specimen(app: &mut crate::SketApp, name: &str) -> PanelResult<()> {
     preset(name)?;
     if app.panel_runtime().is_some() {
         return Err(error(Rule::Lifecycle, "panel specimen cannot take over an existing runtime"));
@@ -471,7 +471,7 @@ impl AppPanelServices for SpecimenServices {
 /// Read-only observations from the current Session. Pointer strings are opaque
 /// process-local equality tokens, not stable IDs. No meshing/evaluation is called.
 /// The live-model counter excludes trial evaluations of cloned models.
-fn session_observation(app: &crate::SolveApp) -> Value {
+fn session_observation(app: &crate::SketApp) -> Value {
     let session = &app.session;
     let state = session.model.state();
     let meshes: Vec<_> = state.bodies.iter().take(128).map(|body| body.cached_mesh().map(|mesh| format!("{:p}", Arc::as_ptr(&mesh)))).collect();
@@ -489,7 +489,7 @@ fn session_observation(app: &crate::SolveApp) -> Value {
 
 /// Authenticated control transport and scenarios share this explicit opt-in.
 /// An empty object inspects without ticking services or dispatching layout/model actions.
-pub(crate) fn control_specimen(app: &mut crate::SolveApp, params: &Value) -> Result<Value, String> {
+pub(crate) fn control_specimen(app: &mut crate::SketApp, params: &Value) -> Result<Value, String> {
     let object = params.as_object().ok_or("panel_fixture params must be an object")?;
     if object.keys().any(|key| !matches!(key.as_str(), "enabled" | "preset")) {
         return Err("unknown panel_fixture parameter".into());
@@ -525,7 +525,7 @@ pub(crate) fn control_specimen(app: &mut crate::SolveApp, params: &Value) -> Res
 
 /// Observe the current host, synthetic probe and actual Session without a tick,
 /// action dispatch, geometry evaluation or cold mesh creation.
-pub fn inspect_host_specimen(app: &mut crate::SolveApp) -> PanelResult<Value> {
+pub fn inspect_host_specimen(app: &mut crate::SketApp) -> PanelResult<Value> {
     let owns_runtime = app.panel_runtime().is_some_and(|runtime| runtime.environment().workspace.0 == WORKSPACE);
     let mut reply = json!({"enabled":false,"session":session_observation(app),"host":host_observation(app),
         "effective_usable":app.viewport.layout.as_ref().and_then(|layout| layout.usable.as_ref()).map(|usable|
@@ -542,7 +542,7 @@ pub fn inspect_host_specimen(app: &mut crate::SolveApp) -> PanelResult<Value> {
     Ok(reply)
 }
 
-fn host_observation(app: &crate::SolveApp) -> Value {
+fn host_observation(app: &crate::SketApp) -> Value {
     let Some(frame) = app.universal_panel_frame() else {
         return Value::Null;
     };

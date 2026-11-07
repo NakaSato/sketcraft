@@ -162,10 +162,7 @@ fn record(v: &Value, out_dir: Option<&str>) {
     let d = &v["design"];
     let bug = matches!(d["outcome"]["kind"].as_str(), Some("failed" | "panic" | "invalid" | "volume"));
     if bug || v.get("timeout").is_some() || v.get("crash").is_some() {
-        sketcraft_engine::note!(
-            "seed {seed}: {}",
-            if bug { format!("{} {}", d["outcome"]["kind"], d["outcome"]["detail"]) } else { format!("{v}") }
-        );
+        sketcraft_engine::note!("seed {seed}: {}", if bug { format!("{} {}", d["outcome"]["kind"], d["outcome"]["detail"]) } else { format!("{v}") });
     }
     let bk = v["boolean"]["outcome"].as_str().unwrap_or("ok");
     if bk != "ok" {

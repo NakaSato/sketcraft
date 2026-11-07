@@ -26,7 +26,7 @@ use std::collections::BTreeMap;
 use egui::{Align2, Color32, FontId, Mesh, Painter, Pos2, Rect, Sense, Shape, Stroke, Vec2, pos2, vec2};
 use serde::{Deserialize, Serialize};
 
-use crate::SolveApp;
+use crate::SketApp;
 use crate::context_menu::{Item, act, cmd};
 use crate::theme::Tokens;
 
@@ -85,7 +85,7 @@ impl Studio {
         [Studio::Part, Studio::Sketch, Studio::Surface, Studio::SheetMetal, Studio::Plastic, Studio::Mesh, Studio::Render];
 
     /// The studio the application is in now.
-    pub(crate) fn of(app: &SolveApp) -> Studio {
+    pub(crate) fn of(app: &SketApp) -> Studio {
         if crate::render_workspace::active(app) {
             Studio::Render
         } else if app.session.active_sketch.is_some() {
@@ -168,7 +168,7 @@ pub(crate) fn label_of(id: &str) -> Option<String> {
 }
 
 /// The tool `id` as a menu item (its state follows the design), or none for an unknown id.
-pub(crate) fn item(app: &SolveApp, id: &str) -> Option<Item> {
+pub(crate) fn item(app: &SketApp, id: &str) -> Option<Item> {
     match id {
         "repeat" => Some(match &app.last_command {
             Some((_, label)) => act("ui.repeat", &format!("Repeat {label}"), "redo"),
@@ -251,12 +251,12 @@ impl Config {
 }
 
 /// Gestures are on and the mouse mode allows them.
-pub(crate) fn active(app: &SolveApp) -> bool {
+pub(crate) fn active(app: &SketApp) -> bool {
     app.preferences.mouse_gestures.enabled && app.preferences.nav == MOUSE_MODE
 }
 
 /// The ring's tools in `studio` as menu items, unknown ids dropped.
-pub(crate) fn items(app: &SolveApp, studio: Studio) -> Vec<Item> {
+pub(crate) fn items(app: &SketApp, studio: Studio) -> Vec<Item> {
     app.preferences.mouse_gestures.tools(studio).iter().filter_map(|id| item(app, id)).collect()
 }
 
@@ -437,24 +437,24 @@ struct Wheel {
 }
 
 /// One frame of gestures: opens, runs and closes the ring, draws it, and shows the editor.
-pub fn show(app: &mut SolveApp, ctx: &egui::Context) {
+pub fn show(app: &mut SketApp, ctx: &egui::Context) {
     track(app, ctx);
     paint_open(app, ctx);
     editor(app, ctx);
 }
 
 /// The right button last pressed opened the ring, so letting go of it is not a right-click.
-pub(crate) fn took_press(app: &SolveApp) -> bool {
+pub(crate) fn took_press(app: &SketApp) -> bool {
     app.gesture.used
 }
 
 /// Whether a ring is open.
 #[cfg(test)]
-pub(crate) fn is_open(app: &SolveApp) -> bool {
+pub(crate) fn is_open(app: &SketApp) -> bool {
     app.gesture.wheel.is_some()
 }
 
-fn track(app: &mut SolveApp, ctx: &egui::Context) {
+fn track(app: &mut SketApp, ctx: &egui::Context) {
     if !active(app) {
         app.gesture.wheel = None;
         app.gesture.press = None;
@@ -515,7 +515,7 @@ fn track(app: &mut SolveApp, ctx: &egui::Context) {
     }
 }
 
-fn paint_open(app: &SolveApp, ctx: &egui::Context) {
+fn paint_open(app: &SketApp, ctx: &egui::Context) {
     let Some(wheel) = &app.gesture.wheel else { return };
     let list = items(app, wheel.studio);
     let t = Tokens::get();
@@ -594,7 +594,7 @@ fn apply(list: &mut Vec<String>, op: Op) -> bool {
 
 /// The rows of Preferences › Navigation that belong to gestures: the switch, the button that
 /// opens the editor, and what the mouse mode has to be.
-pub(crate) fn nav_rows(app: &mut SolveApp, ui: &mut egui::Ui, t: &Tokens) {
+pub(crate) fn nav_rows(app: &mut SketApp, ui: &mut egui::Ui, t: &Tokens) {
     crate::ui_kit::settings_block(ui, crate::i18n::tr_label("Mouse gestures"), t.space_24 * 6.0 + t.space_6, |ui| {
         ui.horizontal_wrapped(|ui| {
             crate::ui_kit::checkbox(ui, crate::i18n::tr_label("Ring of tools on the right button"), &mut app.preferences.mouse_gestures.enabled);
@@ -628,7 +628,7 @@ pub(crate) fn nav_rows(app: &mut SolveApp, ui: &mut egui::Ui, t: &Tokens) {
 
 /// The customization window: pick a studio, then how many tools its ring holds, which, and in
 /// which place (clockwise from the top), with a preview of the ring.
-fn editor(app: &mut SolveApp, ctx: &egui::Context) {
+fn editor(app: &mut SketApp, ctx: &egui::Context) {
     if !app.gesture.editor.open {
         return;
     }
@@ -766,8 +766,8 @@ mod tests {
     use super::*;
     use egui::pos2;
 
-    fn app() -> SolveApp {
-        SolveApp::new(sketcraft_engine::Session::default(), Default::default())
+    fn app() -> SketApp {
+        SketApp::new(sketcraft_engine::Session::default(), Default::default())
     }
 
     fn on(n: usize) -> Vec<bool> {
@@ -1118,13 +1118,13 @@ mod tests {
 
     /// A right-button drag through `show`, one pointer position per frame (the first presses).
     /// The button stays down unless `release` is set.
-    fn drag(app: &mut SolveApp, path: &[Pos2], release: bool) {
+    fn drag(app: &mut SketApp, path: &[Pos2], release: bool) {
         let ctx = egui::Context::default();
         let screen = Rect::from_min_size(Pos2::ZERO, vec2(1600.0, 1000.0));
         app.viewport.mouse = path.first().copied();
         let secondary =
             |pos, pressed| egui::Event::PointerButton { pos, button: egui::PointerButton::Secondary, pressed, modifiers: egui::Modifiers::NONE };
-        let frame = |app: &mut SolveApp, k: usize, events: Vec<egui::Event>| {
+        let frame = |app: &mut SketApp, k: usize, events: Vec<egui::Event>| {
             let raw = egui::RawInput { time: Some(k as f64 * 0.02), screen_rect: Some(screen), events, ..Default::default() };
             let mut output = ctx.run_ui(raw, |ui| show(app, ui.ctx()));
             output.textures_delta.clear();
@@ -1142,7 +1142,7 @@ mod tests {
         }
     }
 
-    fn gesture_app() -> SolveApp {
+    fn gesture_app() -> SketApp {
         let mut app = app();
         app.preferences.nav = MOUSE_MODE.into();
         app.preferences.mouse_gestures.enabled = true;
@@ -1271,7 +1271,7 @@ mod tests {
 
     #[test]
     fn the_radial_menu_is_off_only_while_gestures_are_active() {
-        let held = |app: &mut SolveApp| {
+        let held = |app: &mut SketApp| {
             let ctx = egui::Context::default();
             let screen = Rect::from_min_size(Pos2::ZERO, vec2(1600.0, 1000.0));
             app.viewport.mouse = Some(PRESS);
@@ -1314,7 +1314,7 @@ mod tests {
     #[test]
     fn each_studio_opens_its_own_ring() {
         let mut app = gesture_app();
-        let ids = |app: &SolveApp| items(app, Studio::of(app)).into_iter().map(|i| i.id).collect::<Vec<_>>();
+        let ids = |app: &SketApp| items(app, Studio::of(app)).into_iter().map(|i| i.id).collect::<Vec<_>>();
         assert!(ids(&app).contains(&"solid.extrude".to_string()));
         app.ui.tab = "SHEET METAL".into();
         let sheet = ids(&app);
@@ -1341,7 +1341,7 @@ mod tests {
         );
     }
 
-    fn gesture_app_off() -> SolveApp {
+    fn gesture_app_off() -> SketApp {
         let mut app = app();
         app.preferences.nav = MOUSE_MODE.into();
         app

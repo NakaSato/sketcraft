@@ -11,7 +11,7 @@
 //! https://graphics.stanford.edu/papers/veach_thesis/thesis.pdf.
 use crate::{surface::unit_direction, transmission};
 use serde::{Deserialize, Serialize};
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 use sketcraft_geom::Vec3Geom;
 use std::f64::consts::{PI, TAU};
 

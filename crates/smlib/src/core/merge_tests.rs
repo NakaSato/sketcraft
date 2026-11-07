@@ -1,28 +1,28 @@
-//! Stitch and merge faces on solidcore, against closed forms: counts, volumes (or areas) and
+//! Stitch and merge faces on sketcore, against closed forms: counts, volumes (or areas) and
 //! whether the result closes, and every result exports to a record that validates.
 //!
 //! A stitch's input is six (or five) separate planar faces of a 10 mm cube, each its own face of
 //! one body with its own edges, none shared; a merge's is a cube with four faces cut across, or
-//! two boxes unioned, on solidcore.
+//! two boxes unioned, on sketcore.
 
 use std::collections::BTreeMap;
 
-use solidcore::curve::curve::Curve;
-use solidcore::curve::line::Line;
-use solidcore::geom::extent2d::Extent2d;
-use solidcore::geom::vector2d::Vec2;
-use solidcore::geom::vector3d::Vec3;
-use solidcore::kernel::Kernel;
-use solidcore::nurbs::b_spline_curve::p1::KnotType;
-use solidcore::nurbs::b_spline_surface::p1::{BSplineSurface, BSplineSurfaceForm, CanonicalSurfaceData};
-use solidcore::primitive::api_primitives::{create_box, create_plane};
-use solidcore::primitive::api_trim_ops::trim_surface_with_3d_curves;
-use solidcore::surface::plane::p1::Plane;
-use solidcore::surface::surface::Surface;
-use solidcore::topology::Brep;
-use solidcore::topology::brep::p2::ArenaNotifyState;
-use solidcore::topology::brep::p3::{merge_brep, new_brep};
-use solidcore::topology::brep::p8::create_face_from_surface;
+use sketcore::curve::curve::Curve;
+use sketcore::curve::line::Line;
+use sketcore::geom::extent2d::Extent2d;
+use sketcore::geom::vector2d::Vec2;
+use sketcore::geom::vector3d::Vec3;
+use sketcore::kernel::Kernel;
+use sketcore::nurbs::b_spline_curve::p1::KnotType;
+use sketcore::nurbs::b_spline_surface::p1::{BSplineSurface, BSplineSurfaceForm, CanonicalSurfaceData};
+use sketcore::primitive::api_primitives::{create_box, create_plane};
+use sketcore::primitive::api_trim_ops::trim_surface_with_3d_curves;
+use sketcore::surface::plane::p1::Plane;
+use sketcore::surface::surface::Surface;
+use sketcore::topology::Brep;
+use sketcore::topology::brep::p2::ArenaNotifyState;
+use sketcore::topology::brep::p3::{merge_brep, new_brep};
+use sketcore::topology::brep::p8::create_face_from_surface;
 
 use super::merge::{merge_faces, stitch};
 use super::sweep::build_faces;
@@ -49,7 +49,7 @@ fn v3(p: [f64; 3]) -> Vec3 {
 /// The sides `sides` of the cube as separate faces of one body, the top lifted by `lift`.
 fn loose_faces(sides: &[usize], lift: f64) -> Body {
     run("loose faces", |k| {
-        let mut b = new_brep(k, solidcore::geom::tol::USE_DEFAULT, solidcore::geom::tol::USE_DEFAULT)?;
+        let mut b = new_brep(k, sketcore::geom::tol::USE_DEFAULT, sketcore::geom::tol::USE_DEFAULT)?;
         for &i in sides {
             let Some(&(mut o, u, v)) = SIDES.get(i) else { continue };
             if i == 5 {
@@ -150,7 +150,7 @@ struct Measured {
 
 type Got = std::result::Result<Measured, Error>;
 
-fn kinds(rec: &solidcore_record::brep::Brep) -> BTreeMap<String, usize> {
+fn kinds(rec: &sketcore_record::brep::Brep) -> BTreeMap<String, usize> {
     let mut out = BTreeMap::new();
     for f in &rec.faces {
         let v = serde_json::to_value(&f.surface).unwrap();
@@ -184,7 +184,7 @@ fn is_sheet(name: &str) -> bool {
     matches!(case(name).1, Expect::Sheet(..))
 }
 
-fn solidcore_case(name: &str) -> Got {
+fn sketcore_case(name: &str) -> Got {
     let (op, _) = case(name);
     let r = match op {
         Op::Stitch(input, tol) => stitch(&input.core(), tol),
@@ -196,7 +196,7 @@ fn solidcore_case(name: &str) -> Got {
         let size = if is_sheet(name) { area(&b, 1e-8) } else { volume(&b, 1e-8) }.unwrap();
         Measured { size, counts: counts(&b).unwrap(), closed, bounds: bounds(&b).unwrap(), kinds: kinds(&rec) }
     });
-    judge(name, "solidcore", got)
+    judge(name, "sketcore", got)
 }
 
 macro_rules! cases {
@@ -204,8 +204,8 @@ macro_rules! cases {
         mod $m {
             #[test]
             $(#[$ign])?
-            fn solidcore_matches_the_closed_form() {
-                let _ = super::solidcore_case(stringify!($m));
+            fn sketcore_matches_the_closed_form() {
+                let _ = super::sketcore_case(stringify!($m));
             }
         }
     )*};
@@ -240,13 +240,13 @@ fn hostile_arguments_are_refused() {
 }
 
 /// A 10 mm cube and, unsewn in the same body (`MergeBrep`), a sheet made on the kernel.
-fn cube_and_sheet(sheet: impl FnOnce(&mut Kernel) -> solidcore::Result<Brep>) -> Body {
+fn cube_and_sheet(sheet: impl FnOnce(&mut Kernel) -> sketcore::Result<Brep>) -> Body {
     run("cube and sheet", |k| {
         let mut cube = create_box(k, Vec3::new(0.0, 0.0, 0.0), 10.0, 10.0, 10.0)?;
         let sheet = sheet(k)?;
         let mut state = ArenaNotifyState::new(&cube);
         let mut env = state.env(None);
-        merge_brep(k, &mut env, &mut cube, &sheet, &solidcore::topology::brep::p2::copy_source_ref, None, None, true)?;
+        merge_brep(k, &mut env, &mut cube, &sheet, &sketcore::topology::brep::p2::copy_source_ref, None, None, true)?;
         cube.refresh_cached_topology();
         Ok(cube)
     })

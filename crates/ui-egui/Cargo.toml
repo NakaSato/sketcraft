@@ -9,12 +9,11 @@ license.workspace = true
 workspace = true
 
 [dependencies]
-solidcore-record = { workspace = true }
+sketcore-record = { workspace = true }
 sketcraft-engine = { workspace = true }
 egui = { workspace = true }
 egui-wgpu = { workspace = true }
 sketcraft-gpu = { workspace = true }
-sketcraft-space-mouse = { workspace = true, features = ["serde"] }
 serde = { workspace = true }
 serde_json = { workspace = true }
 log = { workspace = true }

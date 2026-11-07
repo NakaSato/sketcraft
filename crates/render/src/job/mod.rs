@@ -1311,7 +1311,7 @@ impl RaytraceOptions {
         }
         if let Some(lights) = &self.area_lights {
             for light in lights {
-                use solidcore_record::Vec3;
+                use sketcore_record::Vec3;
                 let vec = |v: [f64; 3]| Vec3::new(v[0], v[1], v[2]);
                 let c = vec(light.center_mm);
                 let u = vec(light.edge_u_mm);

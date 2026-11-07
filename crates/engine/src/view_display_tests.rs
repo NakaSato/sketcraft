@@ -1,6 +1,6 @@
 use super::*;
 use serde_json::json;
-use solidcore_record::Vec2;
+use sketcore_record::Vec2;
 use sketcraft_sketch::{LinkGeom, LinkKind, LinkSource};
 
 fn line(sk: &mut Sketch, y: f64) -> usize {

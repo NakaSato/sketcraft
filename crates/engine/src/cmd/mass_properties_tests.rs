@@ -7,7 +7,7 @@ use serde_json::{Value, json};
 
 use super::MassBody;
 use crate::Session;
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 use sketcraft_geom::inertia::Tensor3 as Tensor;
 
 fn run(s: &mut Session, cmd: &str, params: Value) -> Value {

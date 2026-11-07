@@ -5,7 +5,7 @@ use sketcraft_geom::prelude::*;
 use std::f64::consts::{FRAC_PI_2, TAU};
 
 use serde_json::{Value, json};
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 use sketcraft_geom::Mesh;
 use sketcraft_kernel::{DISPLAY_ANGLE, FaceSurface, face_surface};
 

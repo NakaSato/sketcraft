@@ -127,7 +127,7 @@ fn limits<'a>(s: &'a EvalSurface, d: usize, across: (f64, f64), rules: &'a Rules
 #[cfg(test)]
 mod tests {
     use super::*;
-    use solidcore_record::Vec3;
+    use sketcore_record::Vec3;
     use sketcraft_geom::tess::EvalCurve;
 
     fn cylinder() -> EvalSurface {

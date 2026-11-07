@@ -10,7 +10,7 @@ use crate::dialogs::Dialog;
 fn move_dialog(mode: usize) -> Dialog {
     let mut s = Session::default();
     s.execute("solid.box", &json!({"length": 20, "width": 20, "height": 20})).unwrap();
-    let mut app = SolveApp::new(s, Services::default());
+    let mut app = SketApp::new(s, Services::default());
     app.start("solid.move");
     let mut d = app.dialog.clone().unwrap();
     d.kind = kind(mode, &app.session.doc);
@@ -188,7 +188,7 @@ fn rotate_handle_follows_an_offset_axis_and_preserves_full_turns() {
 fn every_move_type_has_somewhere_to_put_its_value_box() {
     let mut s = Session::default();
     s.execute("solid.box", &json!({"length": 20, "width": 20, "height": 20})).unwrap();
-    let app = SolveApp::new(s, Services::default());
+    let app = SketApp::new(s, Services::default());
     for mode in [FREE, TRANSLATE, ROTATE, POINT_TO_POINT, POINT_TO_POSITION] {
         let d = move_dialog(mode);
         let has_triad = triad(&app, &d).is_some();
@@ -234,7 +234,7 @@ fn point_to_point_takes_the_origin_point() {
 fn the_box_shows_the_dragged_axis() {
     let mut s = Session::default();
     s.execute("solid.box", &json!({"length": 20, "width": 20, "height": 20})).unwrap();
-    let app = SolveApp::new(s, Services::default());
+    let app = SketApp::new(s, Services::default());
     let mut d = move_dialog(FREE);
     let g = |handle, change| crate::gizmo::Drag { handle, change, started: true, done: true };
     drag(&app, &mut d, g(crate::gizmo::Handle::Axis(1), Change::Translate(Vec3::new(0.0, 5.0, 0.0))));
@@ -376,7 +376,7 @@ fn inch_move_lengths_agree_in_the_triad_and_every_numeric_move_route() {
         let mut s = Session::default();
         s.execute("solid.box", &json!({"length":20,"width":20,"height":20})).unwrap();
         s.execute("document.units", &json!({"units":"in"})).unwrap();
-        let mut app = SolveApp::new(s, Services::default());
+        let mut app = SketApp::new(s, Services::default());
         let mut d = move_dialog(mode);
         d.kind = kind(mode, &app.session.doc);
         if let Kind::Move { x, y, z, rz, .. } = &mut d.kind {

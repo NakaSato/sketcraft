@@ -3,7 +3,7 @@
 use sketcraft_geom::prelude::*;
 use std::f64::consts::PI;
 
-use solidcore_record::{Loop2, Plane, Region2, Seg2, Vec2, Vec3};
+use sketcore_record::{Loop2, Plane, Region2, Seg2, Vec2, Vec3};
 use sketcraft_kernel::history::FaceOrigin;
 use sketcraft_kernel::*;
 

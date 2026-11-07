@@ -5,7 +5,7 @@
 use sketcraft_geom::prelude::*;
 use std::sync::Arc;
 
-use solidcore_record::{Plane, Vec3};
+use sketcore_record::{Plane, Vec3};
 use sketcraft_geom::Aabb3;
 use sketcraft_render::{AnalysisColors, Camera, Rgb, Scene, SceneAnalysis, SceneLine, SceneMesh};
 use sketcraft_sketch::Sketch;
@@ -146,7 +146,7 @@ fn bounds_by(s: &Session, of: impl Fn(&sketcraft_doc::ModelBody) -> Aabb3) -> Re
     for ss in st.sketches.iter().filter(|x| sketch_shown(s, x.feature)) {
         // All four corners: on a tilted plane two opposite ones don't span the rectangle.
         if let Some((lo, hi)) = ss.sketch.bounds() {
-            for p in [lo, hi, solidcore_record::Vec2::new(lo.x, hi.y), solidcore_record::Vec2::new(hi.x, lo.y)] {
+            for p in [lo, hi, sketcore_record::Vec2::new(lo.x, hi.y), sketcore_record::Vec2::new(hi.x, lo.y)] {
                 b.add(ss.plane.to_world(p));
             }
         }

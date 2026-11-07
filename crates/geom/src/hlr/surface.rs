@@ -9,8 +9,8 @@ use crate::brep::eval::SurfaceEval;
 use crate::brep::{form, placement::Rigid};
 use crate::bspline::{HPoint, NurbsSurface};
 use crate::prelude::*;
-use solidcore_record::Vec3;
-use solidcore_record::brep::{Curve, Face, Frame, Surface};
+use sketcore_record::Vec3;
+use sketcore_record::brep::{Curve, Face, Frame, Surface};
 
 const TAU: f64 = std::f64::consts::TAU;
 

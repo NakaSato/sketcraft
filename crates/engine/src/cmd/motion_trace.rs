@@ -6,7 +6,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::sync::Arc;
 
 use serde_json::{Value, json};
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 use sketcraft_doc::joints::{self, JointOrigin, Snap};
 use sketcraft_doc::motion::{MotionTrace, TraceMotion};
 use sketcraft_doc::{IDENTITY, apply_point};

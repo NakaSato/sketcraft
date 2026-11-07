@@ -1,26 +1,26 @@
 //! Render shell composition; all hosting and chrome belong to the shared kit.
 use crate::ui_kit::BackingTooltipExt as _;
 use crate::{
-    SolveApp,
+    SketApp,
     theme::Tokens,
     ui_kit::{self, Container, Edge},
 };
 use egui::{Rect, vec2};
 
-pub(crate) fn reset_shell(app: &mut SolveApp) {
+pub(crate) fn reset_shell(app: &mut SketApp) {
     app.shell.workspace_panels.retain(|id, _| !id.starts_with("render:"));
     app.shell.browser = None;
 }
 
-pub(crate) fn focused(app: &SolveApp) -> bool {
+pub(crate) fn focused(app: &SketApp) -> bool {
     crate::render_workspace::active(app) && app.shell.render_focus
 }
 
-pub(crate) fn compact(app: &SolveApp, width: f32) -> bool {
+pub(crate) fn compact(app: &SketApp, width: f32) -> bool {
     width < 1100.0 || app.ui.layout == crate::shell::LayoutMode::Docked
 }
 
-pub(crate) fn focus_shortcut(app: &mut SolveApp, ui: &mut egui::Ui) {
+pub(crate) fn focus_shortcut(app: &mut SketApp, ui: &mut egui::Ui) {
     if crate::render_workspace::active(app) && !ui.ctx().text_edit_focused() && ui.input_mut(|i| i.consume_key(egui::Modifiers::NONE, egui::Key::Tab))
     {
         ui.ctx().memory_mut(|memory| memory.move_focus(egui::FocusDirection::None));
@@ -28,12 +28,12 @@ pub(crate) fn focus_shortcut(app: &mut SolveApp, ui: &mut egui::Ui) {
     }
 }
 
-pub(crate) fn canvas(app: &SolveApp, viewport: Rect) -> Rect {
+pub(crate) fn canvas(app: &SketApp, viewport: Rect) -> Rect {
     crate::shell::content_rect(app, viewport)
 }
 
 /// The toolbar's shared floating Chrome card hosts both rows; there is no Render ribbon.
-pub(crate) fn stage_bar(app: &mut SolveApp, ui: &mut egui::Ui, rect: Rect) {
+pub(crate) fn stage_bar(app: &mut SketApp, ui: &mut egui::Ui, rect: Rect) {
     use crate::render_workspace::Stage;
     crate::scenario::publish_rect("render:stage_bar", rect);
     ui.ctx().data_mut(|d| d.remove::<Rect>(egui::Id::unique("sc_ribbon_search")));
@@ -95,7 +95,7 @@ pub(crate) fn stage_bar(app: &mut SolveApp, ui: &mut egui::Ui, rect: Rect) {
     });
 }
 
-fn stage_tools(app: &mut SolveApp, ui: &mut egui::Ui) {
+fn stage_tools(app: &mut SketApp, ui: &mut egui::Ui) {
     use crate::render_workspace::Stage;
     match app.render_workspace.view.stage {
         Stage::Look => {
@@ -188,7 +188,7 @@ fn stage_tools(app: &mut SolveApp, ui: &mut egui::Ui) {
     }
 }
 
-pub(crate) fn overlays(app: &mut SolveApp, ui: &mut egui::Ui) {
+pub(crate) fn overlays(app: &mut SketApp, ui: &mut egui::Ui) {
     crate::shell::register_panel(app, "render:focus:exit", None, None);
     if focused(app) {
         dock_chip(app, ui, "render:focus:exit", "render.exit_focus", "view.render_focus", serde_json::json!({"on":false}));
@@ -233,7 +233,7 @@ pub(crate) fn overlays(app: &mut SolveApp, ui: &mut egui::Ui) {
 }
 
 /// Shared kit chip at the Browser's remembered side, below the stage bar.
-pub(crate) fn dock_chip(app: &mut SolveApp, ui: &mut egui::Ui, id: &'static str, label: &str, command: &str, params: serde_json::Value) {
+pub(crate) fn dock_chip(app: &mut SketApp, ui: &mut egui::Ui, id: &'static str, label: &str, command: &str, params: serde_json::Value) {
     let bounds = crate::shell::panel_bounds(app, ui.max_rect());
     let t = Tokens::get();
     if bounds.width() < t.control_height || bounds.height() < t.control_height {
@@ -253,7 +253,7 @@ pub(crate) fn dock_chip(app: &mut SolveApp, ui: &mut egui::Ui, id: &'static str,
     crate::shell::register_panel(app, id, Some(chip.response.rect), None);
 }
 
-fn shots_pill(app: &mut SolveApp, ui: &mut egui::Ui, free: Rect) {
+fn shots_pill(app: &mut SketApp, ui: &mut egui::Ui, free: Rect) {
     crate::shell::register_panel(app, "render:shots:show", None, None);
     if app.preferences.render_shots_strip {
         return;
@@ -277,7 +277,7 @@ fn shots_pill(app: &mut SolveApp, ui: &mut egui::Ui, free: Rect) {
 }
 
 /// Existing saved-shot and job actions inside the shared floating bottom-strip host.
-pub(crate) fn shots_strip(app: &mut SolveApp, ui: &mut egui::Ui) {
+pub(crate) fn shots_strip(app: &mut SketApp, ui: &mut egui::Ui) {
     crate::shell::register_panel(app, "render:shots_strip", None, None);
     if focused(app) || !app.preferences.render_shots_strip {
         return;

@@ -5,7 +5,7 @@ use sketcraft_geom::prelude::*;
 use std::f64::consts::PI;
 
 use serde_json::{Value, json};
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 
 use crate::Session;
 
@@ -156,7 +156,7 @@ fn tapped_thread_depth_rejects_invalid_or_excessive_values_atomically() {
 #[test]
 fn faceted_flange_thread_preserves_thin_crest_boundaries() {
     use crate::kernel;
-    use solidcore_record::{Plane, Vec2, Vec3};
+    use sketcore_record::{Plane, Vec2, Vec3};
 
     let mut s = Session::default();
     let sample = crate::sample::samples().into_iter().find(|s| s.name == "Bolted Flange").unwrap();
@@ -529,7 +529,7 @@ fn a_thread_runs_down_to_a_shoulder_and_leaves_it_whole() {
 fn volume_between(s: &Session, b: &str, (z0, z1): (f64, f64), quadrant: Option<(bool, bool)>) -> f64 {
     let st = s.model.state();
     let mut part = st.body(b).unwrap().body.clone();
-    let on = |origin: Vec3, normal: Vec3| solidcore_record::Plane::from_normal(origin, normal.normalized().unwrap()).unwrap();
+    let on = |origin: Vec3, normal: Vec3| sketcore_record::Plane::from_normal(origin, normal.normalized().unwrap()).unwrap();
     let z = Vec3::new(0.0, 0.0, 1.0);
     let mut cuts = vec![(on(Vec3::new(0.0, 0.0, z0), z), true), (on(Vec3::new(0.0, 0.0, z1), z), false)];
     if let Some((x, y)) = quadrant {
@@ -1146,7 +1146,7 @@ fn a_runout_fades_the_groove_out_before_the_shoulder() {
 /// independently (`seam_diagnostics`, projecting stations onto both surfaces).
 #[test]
 fn a_modelled_threads_flank_joins_are_not_drawn() {
-    use solidcore_record::brep::Surface;
+    use sketcore_record::brep::Surface;
     let mut s = Session::default();
     run(&mut s, "solid.cylinder", json!({"radius": 5.0, "height": 12, "body_name": "Shaft"}));
     run(&mut s, "solid.thread", json!({"face": [5.0, 0, 6.0], "designation": "M10x1.5", "modeled": true}));

@@ -2,11 +2,11 @@
 
 use egui::Stroke;
 use serde_json::{Value, json};
-use solidcore_record::Vec2;
+use sketcore_record::Vec2;
 use sketcraft_engine::cmd::{construction_line_choice, construction_line_mode, construction_line_solutions, construction_segment};
 use sketcraft_engine::geom::prelude::*;
 
-use crate::SolveApp;
+use crate::SketApp;
 use crate::tools::Tool;
 use crate::viewport::{Hit, Proj};
 
@@ -32,7 +32,7 @@ pub(crate) fn typed_length(t: &Tool) -> Option<&str> {
 /// A digit typed while a one-click tool's Length box waits gives that box the keyboard, so the
 /// digit is its first character. Anything else (a tool's shortcut letter) still reaches the
 /// shortcuts: the box only takes the keyboard once a number is being typed.
-pub fn claim_typed_length(app: &SolveApp, ctx: &egui::Context) {
+pub fn claim_typed_length(app: &SketApp, ctx: &egui::Context) {
     let Some(t) = app.tool.as_ref() else { return };
     if !construction_line_mode(t.cmd).is_some_and(length_box_at_start) || !t.pts.is_empty() || t.hover.is_none() {
         return;
@@ -113,7 +113,7 @@ fn arg(point: &(Vec2, Option<String>), preview: bool) -> Value {
 }
 
 /// Parameters for the line under the pointer, also used for the final click.
-fn params(app: &SolveApp, t: &Tool, pointer: &(Vec2, Option<String>), preview: bool) -> Option<Value> {
+fn params(app: &SketApp, t: &Tool, pointer: &(Vec2, Option<String>), preview: bool) -> Option<Value> {
     let mode = construction_line_mode(t.cmd)?;
     let refs = references(mode);
     if t.picks.len() < refs {
@@ -152,7 +152,7 @@ fn params(app: &SolveApp, t: &Tool, pointer: &(Vec2, Option<String>), preview: b
     Some(p)
 }
 
-pub fn on_click(app: &mut SolveApp, tool: &mut Tool, hits: &[Hit], at: Option<(Vec2, Option<String>)>) {
+pub fn on_click(app: &mut SketApp, tool: &mut Tool, hits: &[Hit], at: Option<(Vec2, Option<String>)>) {
     let Some(mode) = construction_line_mode(tool.cmd) else { return };
     let refs = references(mode);
     if tool.picks.len() < refs {
@@ -186,7 +186,7 @@ pub fn on_click(app: &mut SolveApp, tool: &mut Tool, hits: &[Hit], at: Option<(V
 }
 
 /// Enter in the angle box follows the same path as a click.
-pub fn place_point(app: &mut SolveApp, t: &mut Tool, at: (Vec2, Option<String>)) {
+pub fn place_point(app: &mut SketApp, t: &mut Tool, at: (Vec2, Option<String>)) {
     let Some(mode) = construction_line_mode(t.cmd) else { return };
     if t.picks.len() < references(mode) {
         return;
@@ -220,7 +220,7 @@ pub fn place_point(app: &mut SolveApp, t: &mut Tool, at: (Vec2, Option<String>))
 }
 
 /// Shared geometry, drawn far enough either way to cover the visible sketch plane.
-pub fn preview(app: &SolveApp, t: &Tool, painter: &egui::Painter, proj: &Proj) {
+pub fn preview(app: &SketApp, t: &Tool, painter: &egui::Painter, proj: &Proj) {
     let Some(pointer) = &t.hover else { return };
     let Some(mode) = construction_line_mode(t.cmd) else { return };
     let Some(p) = params(app, t, pointer, true) else { return };

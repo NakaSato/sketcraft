@@ -20,8 +20,8 @@
 use sketcraft_geom::prelude::*;
 use std::f64::consts::TAU;
 
-use solidcore_record::brep::{self, Frame, Surface};
-use solidcore_record::{Plane, Seg2, Vec2, Vec3};
+use sketcore_record::brep::{self, Frame, Surface};
+use sketcore_record::{Plane, Seg2, Vec2, Vec3};
 use sketcraft_geom::Aabb3;
 use sketcraft_geom::brep::eval::{CurveEval, SurfaceEval};
 use sketcraft_geom::tess::uv::Starts;

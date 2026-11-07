@@ -1,5 +1,5 @@
 use serde_json::json;
-use solidcore_record::Vec2;
+use sketcore_record::Vec2;
 use sketcraft_engine::geom::prelude::*;
 use sketcraft_engine::{Sel, sketch::ConstraintKind};
 use sketcraft_ui_egui::scenario::Harness;

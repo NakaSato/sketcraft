@@ -26,7 +26,7 @@ impl CpuPathOptions {
 /// by a single closest-emitter label with separate per-emitter NEE. Refuse before
 /// capture, rather than lose radiance or add an inconsistent MIS estimator.
 pub(crate) fn validate_emitters(lights: &[super::RectangleLightOptions]) -> Result<()> {
-    use solidcore_record::Vec3;
+    use sketcore_record::Vec3;
     use sketcraft_geom::prelude::*;
     let invalid = || {
         JobError::new(

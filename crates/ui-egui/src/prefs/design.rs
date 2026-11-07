@@ -1,7 +1,7 @@
 //! New-design defaults, with inline precision specimens.
 use super::*;
 
-pub(super) fn show(app: &mut SolveApp, ui: &mut egui::Ui) {
+pub(super) fn show(app: &mut SketApp, ui: &mut egui::Ui) {
     let t = Tokens::get();
     let label_width = [
         "ui.units_of_new_designs",
@@ -78,7 +78,7 @@ pub(super) fn show(app: &mut SolveApp, ui: &mut egui::Ui) {
             });
             for (setting, help, target, legacy) in [
                 (
-                    setting::step_values as fn(&mut SolveApp, &mut egui::Ui) -> egui::Response,
+                    setting::step_values as fn(&mut SketApp, &mut egui::Ui) -> egui::Response,
                     "ui.step_values_tip",
                     "step_values",
                     "Step values with the arrow keys and the wheel",
@@ -191,7 +191,7 @@ pub(super) fn show(app: &mut SolveApp, ui: &mut egui::Ui) {
 }
 
 /// These choices change only displayed names; the saved plane IDs remain XY, XZ and YZ.
-fn origin_plane_names(app: &mut SolveApp, ui: &mut egui::Ui, label_width: f32) {
+fn origin_plane_names(app: &mut SketApp, ui: &mut egui::Ui, label_width: f32) {
     ui_kit::settings_section(ui, "origin_plane_names", app.tr("ui.origin"), |ui| {
         let choices: Vec<String> =
             OriginPlaneNames::ALL.iter().map(|names| OriginPlaneNames::PLANES.map(|plane| names.label(plane)).join(" . ")).collect();

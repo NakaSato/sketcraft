@@ -1,7 +1,7 @@
 //! Navigation preferences, composed from indexed shared controls and canonical figures.
 use super::*;
 
-pub(super) fn show(app: &mut SolveApp, ui: &mut egui::Ui, t: &Tokens) {
+pub(super) fn show(app: &mut SketApp, ui: &mut egui::Ui, t: &Tokens) {
     ui_kit::settings_page(ui, |ui| {
         ui.style_mut().wrap_mode = Some(egui::TextWrapMode::Wrap);
         ui_kit::settings_heading_with_tag(
@@ -18,7 +18,7 @@ pub(super) fn show(app: &mut SolveApp, ui: &mut egui::Ui, t: &Tokens) {
 }
 
 /// The legend follows the runtime preset, ring ownership, wheel anchor and right-orbit switch.
-pub(super) fn mapping_rows(app: &SolveApp) -> Vec<(Vec<String>, String)> {
+pub(super) fn mapping_rows(app: &SketApp) -> Vec<(Vec<String>, String)> {
     let mut gestures: Vec<_> = nav_preset(&app.preferences.nav)
         .bindings
         .iter()
@@ -74,7 +74,7 @@ pub(super) fn mapping_rows(app: &SolveApp) -> Vec<(Vec<String>, String)> {
     gestures
 }
 
-fn mouse(app: &mut SolveApp, ui: &mut egui::Ui, t: &Tokens) {
+fn mouse(app: &mut SketApp, ui: &mut egui::Ui, t: &Tokens) {
     ui_kit::settings_section(ui, "mouse", app.tr("prefs.mouse_heading"), |ui| {
         let help = if app.preferences.nav == TOUCHPAD_NAV {
             app.tr("nav.touchpad.help").to_owned()
@@ -137,7 +137,7 @@ fn mouse(app: &mut SolveApp, ui: &mut egui::Ui, t: &Tokens) {
     });
 }
 
-fn orbit(app: &mut SolveApp, ui: &mut egui::Ui, t: &Tokens) {
+fn orbit(app: &mut SketApp, ui: &mut egui::Ui, t: &Tokens) {
     ui_kit::settings_section(ui, "orbit_pivot", app.tr("ui.orbit_around"), |ui| {
         let options = [
             ui_kit::PictureChoice { key: "Origin", label: app.tr("ui.origin"), figure: ui_kit::paint_orbit_origin },
@@ -207,7 +207,7 @@ fn orbit(app: &mut SolveApp, ui: &mut egui::Ui, t: &Tokens) {
     });
 }
 
-fn wheel(app: &mut SolveApp, ui: &mut egui::Ui, t: &Tokens) {
+fn wheel(app: &mut SketApp, ui: &mut egui::Ui, t: &Tokens) {
     ui_kit::settings_section(ui, "wheel_trackpad", app.tr("prefs.wheel_trackpad"), |ui| {
         let available = ui.available_width();
         let gap = t.space_24 + t.space_8;
@@ -274,7 +274,7 @@ fn wheel(app: &mut SolveApp, ui: &mut egui::Ui, t: &Tokens) {
     });
 }
 
-fn view(app: &mut SolveApp, ui: &mut egui::Ui, t: &Tokens) {
+fn view(app: &mut SketApp, ui: &mut egui::Ui, t: &Tokens) {
     ui_kit::settings_section(ui, "navigation_view", app.tr("ui.tab_view"), |ui| {
         let options = [
             ui_kit::PictureChoice { key: "Signed axes", label: app.tr("prefs.navigation.axes_signed"), figure: ui_kit::paint_navigation_axes },

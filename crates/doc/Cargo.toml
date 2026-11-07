@@ -9,7 +9,7 @@ license.workspace = true
 workspace = true
 
 [dependencies]
-solidcore-record = { workspace = true }
+sketcore-record = { workspace = true }
 sketcraft-geom = { workspace = true }
 sketcraft-sketch = { workspace = true }
 sketcraft-kernel = { workspace = true }

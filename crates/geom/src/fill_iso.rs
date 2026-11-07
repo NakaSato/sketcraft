@@ -115,7 +115,7 @@ use crate::fill_general::Across;
 use crate::linkage::MAX_CONTINUITY;
 use crate::prelude::*;
 use crate::spline_space::{Cond, Interpolant, Space};
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 
 /// Most spans of the fill's space.
 pub const MAX_ISO_SPANS: usize = 64;

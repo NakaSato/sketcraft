@@ -5,14 +5,14 @@
 use crate::dialogs::put;
 use crate::ui_kit::{choice_row, expr_row, hint_row};
 use serde_json::{Map, Value, json};
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 use sketcraft_engine::Sel;
 use sketcraft_engine::doc::expr::Kind as ValueKind;
 use sketcraft_engine::doc::{AxisRef, Direction, FaceAt, FeatureKind, Mat, PlaneRef, Position, ProfileSel, RuledCorners, RuledMode};
 use sketcraft_engine::geom::prelude::*;
 use sketcraft_engine::kernel::{Construction, Continuity};
 
-use crate::SolveApp;
+use crate::SketApp;
 use crate::dialogs::{Kind, OP_LABELS, OPS, combo, form_row, op_index};
 use crate::selection::{
     AXES, AXIS_PICKS, BODIES, CURVES, EDGES, FACES, PLANES, PROFILES, SelInput, SelectionExt as _, VERTICES, items, point_value as pt,
@@ -228,7 +228,7 @@ fn inputs(k: &Surf) -> Vec<SelInput> {
 }
 
 /// The dialog for a surface command.
-pub fn start(app: &SolveApp, id: &str) -> Option<(Kind, Vec<SelInput>)> {
+pub fn start(app: &SketApp, id: &str) -> Option<(Kind, Vec<SelInput>)> {
     let k = match id {
         "surface.extrude" => Surf::Extrude { distance: crate::dialogs::length_default(&app.session, "10"), direction: 0 },
         "surface.revolve" => Surf::Revolve { angle: "360 deg".into(), symmetric: false, axis: None },
@@ -378,7 +378,7 @@ fn body_and_edges(picks: &[Sel]) -> Result<(String, Vec<Value>), String> {
 }
 
 /// The sketch, profiles and curves of a surface builder's picks (all in one sketch).
-fn sheet_picks(app: &SolveApp, picks: &[Sel]) -> Result<Value, String> {
+fn sheet_picks(app: &SketApp, picks: &[Sel]) -> Result<Value, String> {
     let profiles: Vec<(u64, usize)> = picks.profiles();
     let curves: Vec<String> = picks.curve_ids();
     let sketch = match profiles.first() {
@@ -399,7 +399,7 @@ fn sheet_picks(app: &SolveApp, picks: &[Sel]) -> Result<Value, String> {
 }
 
 /// A surface builder's stored picks as selections again: its profiles, then its curves.
-fn sheet_sels(app: &SolveApp, sketch: u64, profiles: Option<&ProfileSel>, curves: &[String]) -> Vec<Sel> {
+fn sheet_sels(app: &SketApp, sketch: u64, profiles: Option<&ProfileSel>, curves: &[String]) -> Vec<Sel> {
     let st = crate::open_meshing::session_world(&app.session);
     let mut sels: Vec<Sel> = match (profiles, st.sketch(sketch)) {
         (Some(sel), Some(ss)) => crate::dialogs::profile_indices(ss, sel).into_iter().map(|index| Sel::Profile { sketch, index }).collect(),
@@ -411,7 +411,7 @@ fn sheet_sels(app: &SolveApp, sketch: u64, profiles: Option<&ProfileSel>, curves
 
 /// A splitting or trimming tool: a plane by name, a planar face as its plane, or any other
 /// face as {body, point} (its surface extended).
-fn tool(app: &SolveApp, sel: Option<&Sel>) -> Result<(&'static str, Value), String> {
+fn tool(app: &SketApp, sel: Option<&Sel>) -> Result<(&'static str, Value), String> {
     match sel {
         Some(Sel::Plane { name }) => Ok(("plane", json!(name))),
         Some(Sel::Face { body, index, point }) => match crate::dialogs::planar_face(&app.session, body, *index) {
@@ -432,7 +432,7 @@ enum Chain {
 
 /// The picks grouped into curves: picks of one sketch (or one body) whose ends meet run on into
 /// one chain, in the order they were first picked; anything else is a curve of its own.
-fn chains(app: &SolveApp, picks: &[Sel]) -> Result<Vec<Chain>, String> {
+fn chains(app: &SketApp, picks: &[Sel]) -> Result<Vec<Chain>, String> {
     let st = crate::open_meshing::session_world(&app.session);
     // Each pick: what it belongs to (a sketch or a body), its ends, and how it joins a chain.
     let mut parts: Vec<(Chain, [Vec3; 2])> = Vec::with_capacity(picks.len());
@@ -515,7 +515,7 @@ fn chains(app: &SolveApp, picks: &[Sel]) -> Result<Vec<Chain>, String> {
 }
 
 /// The command a surface dialog makes.
-pub fn commands(app: &SolveApp, k: &Surf, inputs: &[SelInput], extra: &Map<String, Value>) -> Result<Vec<(String, Value)>, String> {
+pub fn commands(app: &SketApp, k: &Surf, inputs: &[SelInput], extra: &Map<String, Value>) -> Result<Vec<(String, Value)>, String> {
     let need = |i: usize, what: &str| if items(inputs, i).is_empty() { Err(format!("select {what} first")) } else { Ok(()) };
     let (cmd, mut p) = match k {
         Surf::Extrude { distance, direction } => {
@@ -858,7 +858,7 @@ pub fn commands(app: &SolveApp, k: &Surf, inputs: &[SelInput], extra: &Map<Strin
 }
 
 /// A tool as a selection again: a plane, else the face at the stored point.
-fn tool_sel(app: &SolveApp, plane: &PlaneRef, tool: Option<&FaceAt>) -> Option<Sel> {
+fn tool_sel(app: &SketApp, plane: &PlaneRef, tool: Option<&FaceAt>) -> Option<Sel> {
     match tool {
         Some(t) => crate::dialogs::face_sel(&app.session, t.point.0),
         None => crate::dialogs::plane_sel(&app.session, plane),
@@ -867,7 +867,7 @@ fn tool_sel(app: &SolveApp, plane: &PlaneRef, tool: Option<&FaceAt>) -> Option<S
 
 /// The dialog for editing a surface feature.
 /// `frame` maps the feature's component frame to the world, for an axis stored as a line.
-pub fn for_feature(app: &SolveApp, kind: &FeatureKind, frame: &Mat) -> Option<(Kind, Vec<SelInput>, Map<String, Value>)> {
+pub fn for_feature(app: &SketApp, kind: &FeatureKind, frame: &Mat) -> Option<(Kind, Vec<SelInput>, Map<String, Value>)> {
     let s = &app.session;
     let edge = |p: &sketcraft_engine::doc::Position| crate::dialogs::edge_sel(s, p.0);
     let (k, fill): (Surf, Vec<Vec<Sel>>) = match kind {

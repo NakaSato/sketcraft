@@ -5,7 +5,7 @@ use sketcraft_geom::prelude::*;
 use std::f64::consts::{FRAC_1_SQRT_2, PI};
 
 use serde_json::{Value, json};
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 
 use crate::snap::{SnapKind, SnapPoint, SnapSource, snap_points, snap_points_from};
 use crate::{Sel, Session};

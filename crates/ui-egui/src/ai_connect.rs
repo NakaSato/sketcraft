@@ -4,7 +4,7 @@
 //! first time. The preference "Make SketCraft available to AI apps on this computer" turns it
 //! off, which takes the entries out again. Best effort: nothing here can fail the launch.
 
-use crate::SolveApp;
+use crate::SketApp;
 
 /// What the app keeps between frames.
 #[derive(Default)]
@@ -18,7 +18,7 @@ pub struct State {
 }
 
 /// Start managing the client files for this run (the desktop app's normal launch).
-pub fn begin(app: &mut SolveApp) {
+pub fn begin(app: &mut SketApp) {
     app.ai_connect.armed = !cfg!(target_arch = "wasm32");
 }
 
@@ -87,7 +87,7 @@ fn spawn(_remove: bool) -> Option<std::sync::mpsc::Receiver<Vec<&'static str>>> 
 
 /// Every frame: start the job when the preference differs from what was last done, and report
 /// what a finished one found.
-pub fn tick(app: &mut SolveApp) {
+pub fn tick(app: &mut SketApp) {
     if !app.ai_connect.armed {
         return;
     }
@@ -141,7 +141,7 @@ mod tests {
 
     #[test]
     fn nothing_runs_unless_the_host_asked() {
-        let mut app = SolveApp::new(Default::default(), Default::default());
+        let mut app = SketApp::new(Default::default(), Default::default());
         tick(&mut app);
         assert!(app.ai_connect.applied.is_none() && app.ai_connect.job.is_none());
     }
@@ -149,7 +149,7 @@ mod tests {
     #[test]
     fn it_is_on_by_default_and_saved_off_stays_off() {
         assert!(crate::prefs::Prefs::default().connect_ai_apps);
-        let mut app = SolveApp::new(Default::default(), Default::default());
+        let mut app = SketApp::new(Default::default(), Default::default());
         app.load_prefs(&serde_json::json!({ "preferences": { "connect_ai_apps": false } }).to_string());
         assert!(!app.preferences.connect_ai_apps);
     }

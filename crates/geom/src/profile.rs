@@ -4,7 +4,7 @@
 
 use std::f64::consts::TAU;
 
-use solidcore_record::{Loop2, MAX_BEZIER_CTRL, MAX_BEZIER_DEGREE, Region2, Seg2, Vec2};
+use sketcore_record::{Loop2, MAX_BEZIER_CTRL, MAX_BEZIER_DEGREE, Region2, Seg2, Vec2};
 
 use crate::prelude::*;
 use crate::{Aabb2, Ring};

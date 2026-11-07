@@ -16,7 +16,7 @@ use sketcraft_geom::prelude::*;
 use std::f64::consts::TAU;
 
 use serde::{Deserialize, Serialize};
-use solidcore_record::{Vec2, Vec3};
+use sketcore_record::{Vec2, Vec3};
 use sketcraft_geom::{Aabb2, Aabb3, Ring};
 
 use super::{JointKind, JointOrigin, MotionLink, Size, component_bodies, component_of, flip_of, occurrence_world, size_of};
@@ -488,7 +488,7 @@ pub fn sketch_profile<'a>(sk: &'a crate::SolvedSketch, curves: &[String]) -> Opt
 }
 
 /// A loop's polyline within `tol`, segment by segment: `None` past `MAX_PROFILE_POINTS` points.
-fn sampled(lp: &solidcore_record::Loop2, tol: f64) -> Option<Vec<Vec2>> {
+fn sampled(lp: &sketcore_record::Loop2, tol: f64) -> Option<Vec<Vec2>> {
     let mut out = Vec::new();
     for seg in &lp.segs {
         let p = seg.polyline(tol);

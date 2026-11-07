@@ -11,7 +11,7 @@ use sketcraft_engine::doc::point_cloud::{COORDINATES, ColorBy, Filter, Keep, MAX
 use sketcraft_engine::view::POINT_CLOUDS_FOLDER;
 
 use super::{Actions, Row, draw_row, is_open, panel_pos, rows_start_open, toggle, toggle_folder};
-use crate::SolveApp;
+use crate::SketApp;
 use crate::context_menu::{Item, Target};
 use crate::ui_kit;
 
@@ -98,7 +98,7 @@ impl Play {
 }
 
 impl CloudPanel {
-    pub fn new(app: &SolveApp, cloud: u64) -> Self {
+    pub fn new(app: &SketApp, cloud: u64) -> Self {
         CloudPanel { cloud, depth: app.session.undo.len(), auto: None, dots: None, tracks: Tracks::default(), play: None }
     }
     /// The cloud's automatic height range, worked out again only when its points or placement
@@ -204,7 +204,7 @@ fn legend(ui: &mut egui::Ui, c: &PointCloud, names: &Names) -> Option<i32> {
     clicked
 }
 
-pub(super) fn rows(app: &mut SolveApp, ui: &mut egui::Ui, depth: usize, acts: &mut Actions) {
+pub(super) fn rows(app: &mut SketApp, ui: &mut egui::Ui, depth: usize, acts: &mut Actions) {
     let clouds: Vec<(u64, String, bool)> = app.session.doc.point_clouds.iter().map(|c| (c.id, c.name.clone(), c.visible)).collect();
     if clouds.is_empty() {
         return;
@@ -248,7 +248,7 @@ pub(super) fn rows(app: &mut SolveApp, ui: &mut egui::Ui, depth: usize, acts: &m
 }
 
 /// The menu of a point cloud.
-pub fn items(app: &SolveApp, id: u64) -> Vec<Item> {
+pub fn items(app: &SketApp, id: u64) -> Vec<Item> {
     let visible = app.session.doc.point_clouds.iter().find(|c| c.id == id).is_some_and(|c| c.visible);
     vec![
         Item::action("ui.editPointCloud", "Edit Point Cloud", "edit").with(json!({ "cloud": id })),
@@ -259,7 +259,7 @@ pub fn items(app: &SolveApp, id: u64) -> Vec<Item> {
     ]
 }
 
-pub(crate) fn panel(app: &mut SolveApp, ctx: &egui::Context) {
+pub(crate) fn panel(app: &mut SketApp, ctx: &egui::Context) {
     let Some(mut m) = app.tree.cloud_panel.clone() else { return };
     let Some(c) = app.session.doc.point_clouds.iter().find(|c| c.id == m.cloud).cloned() else {
         app.tree.cloud_panel = None;

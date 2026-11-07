@@ -6,7 +6,7 @@ use sketcraft_geom::prelude::*;
 use std::f64::consts::PI;
 
 use serde_json::{Value, json};
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 
 use crate::Session;
 use crate::view::construction_planes;

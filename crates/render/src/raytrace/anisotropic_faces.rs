@@ -2,7 +2,7 @@
 //! Captured ordinal/name and mesh face tag must match. Strict plane equality is
 //! conservative: rotated or imported roundoff may refuse instead of guessing.
 
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 use sketcraft_geom::prelude::*;
 
 use crate::{

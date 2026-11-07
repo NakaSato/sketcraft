@@ -1,7 +1,7 @@
-//! Extrusions, revolutions, sweeps, lofts and planar faces on solidcore, against closed forms:
+//! Extrusions, revolutions, sweeps, lofts and planar faces on sketcore, against closed forms:
 //! every result exports to a record that validates.
 //!
-//! The profiles are built straight into solidcore curves from the curve lists.
+//! The profiles are built straight into sketcore curves from the curve lists.
 
 use std::collections::BTreeMap;
 use std::f64::consts::{FRAC_PI_2, PI, TAU};
@@ -281,7 +281,7 @@ struct Measured {
     kinds: BTreeMap<String, usize>,
 }
 
-fn kinds(rec: &solidcore_record::brep::Brep) -> BTreeMap<String, usize> {
+fn kinds(rec: &sketcore_record::brep::Brep) -> BTreeMap<String, usize> {
     let mut out = BTreeMap::new();
     for f in &rec.faces {
         let v = serde_json::to_value(&f.surface).unwrap();
@@ -316,7 +316,7 @@ fn timed<T: Send + 'static>(name: &str, f: impl FnOnce() -> T + Send + 'static) 
             Err(p) => std::panic::resume_unwind(p),
             Ok(()) => panic!("{name}: no result"),
         },
-        Err(mpsc::RecvTimeoutError::Timeout) => panic!("{name}: solidcore hung (no result after {TIMEOUT:?})"),
+        Err(mpsc::RecvTimeoutError::Timeout) => panic!("{name}: sketcore hung (no result after {TIMEOUT:?})"),
     }
 }
 
@@ -339,7 +339,7 @@ fn judge(name: &str, who: &str, expect: &Expect, got: Got) -> Got {
     got
 }
 
-fn solidcore_case(name: &'static str) -> Got {
+fn sketcore_case(name: &'static str) -> Got {
     timed(name, move || {
         let c = case(name);
         let sheet = matches!(c.expect, Expect::Sheet(_));
@@ -351,7 +351,7 @@ fn solidcore_case(name: &'static str) -> Got {
             bounds(&body).unwrap();
             Measured { size, counts: n, kinds: kinds(&rec) }
         });
-        judge(name, "solidcore", &c.expect, got)
+        judge(name, "sketcore", &c.expect, got)
     })
 }
 
@@ -360,14 +360,14 @@ macro_rules! cases {
         mod $m {
             #[test]
             $(#[$ign])?
-            fn solidcore_matches_the_closed_form() {
-                let _ = super::solidcore_case(stringify!($m));
+            fn sketcore_matches_the_closed_form() {
+                let _ = super::sketcore_case(stringify!($m));
             }
         }
     )*};
 }
 
-// `: ignore = …` cases fail on solidcore.
+// `: ignore = …` cases fail on sketcore.
 cases!(
     planar_faces_with_a_hole,
     extrude_rectangle,
@@ -404,7 +404,7 @@ fn arcs_on_one_circle_sweep_one_wall() {
     let cases = [
         ("extrude_circle_in_two_halves", [3, 3, 2], 50.0 * PI + 100.0 * PI, true),
         ("extrude_circle_in_two_frames", [3, 3, 2], 50.0 * PI + 100.0 * PI, true),
-        // solidcore sweeps a partial arc, merged or drawn whole, to a surface of extrusion (a
+        // sketcore sweeps a partial arc, merged or drawn whole, to a surface of extrusion (a
         // rational spline in the record) where SMLib made a cylinder: one wall still.
         ("extrude_half_disc_split_arc", [4, 6, 4], 25.0 * PI + 50.0 * PI + 100.0, false),
     ];
@@ -415,12 +415,12 @@ fn arcs_on_one_circle_sweep_one_wall() {
             let (rec, _) = native(&to_arrays(&body).unwrap()).unwrap();
             (counts(&body).unwrap(), kinds(&rec), area(&body, 1e-8).unwrap())
         });
-        assert_eq!(counts_got, want_counts, "{name}: solidcore faces, edges, vertices");
-        assert_eq!(walls(&kinds_got), 1, "{name}: solidcore curved walls {kinds_got:?}");
+        assert_eq!(counts_got, want_counts, "{name}: sketcore faces, edges, vertices");
+        assert_eq!(walls(&kinds_got), 1, "{name}: sketcore curved walls {kinds_got:?}");
         if cylinder_on_core {
-            assert_eq!(kinds_got.get("cylinder"), Some(&1), "{name}: solidcore walls {kinds_got:?}");
+            assert_eq!(kinds_got.get("cylinder"), Some(&1), "{name}: sketcore walls {kinds_got:?}");
         }
-        assert!(rel(area_got, want_area) < 1e-9, "{name}: solidcore area {area_got} vs analytic {want_area}");
+        assert!(rel(area_got, want_area) < 1e-9, "{name}: sketcore area {area_got} vs analytic {want_area}");
     }
 }
 

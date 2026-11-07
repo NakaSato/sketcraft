@@ -1,5 +1,5 @@
 //! Render-only gesture state. Preview changes the captured live scene, never the document.
-use crate::{SolveApp, ui_kit, viewport::Hit};
+use crate::{SketApp, ui_kit, viewport::Hit};
 use egui::Modifiers;
 use serde_json::{Value, json};
 use sketcraft_engine::{
@@ -38,7 +38,7 @@ pub(crate) struct Preview {
     bodies: Vec<String>,
 }
 
-fn component(app: &SolveApp, sel: &Sel) -> Option<u64> {
+fn component(app: &SketApp, sel: &Sel) -> Option<u64> {
     match sel {
         Sel::Occurrence { path } => app.session.placed_document().path_placement(path).map(|(id, _)| id).filter(|id| *id != 0),
         Sel::Body { name } | Sel::Face { body: name, .. } | Sel::Edge { body: name, .. } => {
@@ -50,7 +50,7 @@ fn component(app: &SolveApp, sel: &Sel) -> Option<u64> {
 }
 
 /// Build all targets first; the engine applies them atomically with one history entry.
-pub(crate) fn targets(app: &SolveApp, selected: &[Sel]) -> Result<Value, String> {
+pub(crate) fn targets(app: &SketApp, selected: &[Sel]) -> Result<Value, String> {
     let mut bodies = std::collections::BTreeSet::new();
     let mut components = std::collections::BTreeSet::new();
     let mut faces = Vec::new();
@@ -83,7 +83,7 @@ pub(crate) fn targets(app: &SolveApp, selected: &[Sel]) -> Result<Value, String>
     Ok(json!({"bodies":bodies,"components":components,"faces":faces}))
 }
 
-fn chain_target(app: &SolveApp, sel: &Sel) -> Result<Value, String> {
+fn chain_target(app: &SketApp, sel: &Sel) -> Result<Value, String> {
     match sel {
         Sel::Face { body, index, .. } => Ok(json!({"body":body,"face":index})),
         Sel::Body { name } | Sel::Edge { body: name, .. } => Ok(json!({"body":name})),
@@ -92,14 +92,14 @@ fn chain_target(app: &SolveApp, sel: &Sel) -> Result<Value, String> {
     }
 }
 
-fn remember(app: &mut SolveApp, look: Value) {
+fn remember(app: &mut SketApp, look: Value) {
     let recent = &mut app.render_workspace.view.assign.recent;
     recent.retain(|l| l != &look);
     recent.insert(0, look);
     recent.truncate(6);
 }
 
-fn apply(app: &mut SolveApp, look: &Value, targets: Value) -> Result<(), String> {
+fn apply(app: &mut SketApp, look: &Value, targets: Value) -> Result<(), String> {
     let mut params = look.clone();
     let object = params.as_object_mut().ok_or("invalid look")?;
     for (key, value) in targets.as_object().into_iter().flatten() {
@@ -109,7 +109,7 @@ fn apply(app: &mut SolveApp, look: &Value, targets: Value) -> Result<(), String>
     Ok(())
 }
 
-pub(crate) fn arm(app: &mut SolveApp, look: Value) -> Result<(), String> {
+pub(crate) fn arm(app: &mut SketApp, look: Value) -> Result<(), String> {
     let look = app.run("appearance.paint", look)?["look"].clone();
     app.tool = None;
     app.render_workspace.view.result = false;
@@ -119,7 +119,7 @@ pub(crate) fn arm(app: &mut SolveApp, look: Value) -> Result<(), String> {
     Ok(())
 }
 
-pub(crate) fn tile(app: &mut SolveApp, look: Value, drag: bool) -> Result<(), String> {
+pub(crate) fn tile(app: &mut SketApp, look: Value, drag: bool) -> Result<(), String> {
     let look = app.run("appearance.paint", look)?["look"].clone();
     app.render_workspace.view.assign.look = Some(look.clone());
     if drag {
@@ -135,7 +135,7 @@ pub(crate) fn tile(app: &mut SolveApp, look: Value, drag: bool) -> Result<(), St
     }
 }
 
-pub(crate) fn stop(app: &mut SolveApp) {
+pub(crate) fn stop(app: &mut SketApp) {
     let state = &mut app.render_workspace.view.assign;
     state.painting = false;
     state.sampling = false;
@@ -146,7 +146,7 @@ pub(crate) fn stop(app: &mut SolveApp) {
 }
 
 /// The tool owns the first Escape before the shell's ordinary selection clearing.
-pub(crate) fn cancel(app: &mut SolveApp) -> bool {
+pub(crate) fn cancel(app: &mut SketApp) -> bool {
     let state = &app.render_workspace.view.assign;
     if !super::active(app) || !(state.painting || state.sampling || state.drag.is_some()) {
         return false;
@@ -156,7 +156,7 @@ pub(crate) fn cancel(app: &mut SolveApp) -> bool {
     true
 }
 
-pub(crate) fn start(app: &mut SolveApp, id: &str) -> bool {
+pub(crate) fn start(app: &mut SketApp, id: &str) -> bool {
     if id == "appearance.library" && super::active(app) {
         super::library::focus_library(app);
         return true;
@@ -221,7 +221,7 @@ pub(crate) fn start(app: &mut SolveApp, id: &str) -> bool {
     true
 }
 
-pub(crate) fn candidate(app: &SolveApp, hits: &[Hit], mods: Modifiers) -> Option<(Hit, Sel)> {
+pub(crate) fn candidate(app: &SketApp, hits: &[Hit], mods: Modifiers) -> Option<(Hit, Sel)> {
     if app.render_workspace.view.assign.drag.is_some() {
         let hit = hits.iter().find(|h| matches!(h, Hit::Face { .. }))?;
         if let Hit::Face { body, index, point } = hit {
@@ -238,7 +238,7 @@ pub(crate) fn candidate(app: &SolveApp, hits: &[Hit], mods: Modifiers) -> Option
     crate::viewport::candidate(app, hits)
 }
 
-fn drop_preview(app: &SolveApp, look: Value, hit: &Hit, sel: &Sel, mods: Modifiers) -> Result<Preview, String> {
+fn drop_preview(app: &SketApp, look: Value, hit: &Hit, sel: &Sel, mods: Modifiers) -> Result<Preview, String> {
     let Hit::Face { body, index, point } = hit else {
         return Err("no face under cursor".into());
     };
@@ -267,7 +267,7 @@ fn drop_preview(app: &SolveApp, look: Value, hit: &Hit, sel: &Sel, mods: Modifie
     Ok(Preview { look, targets: json!({"bodies":[body]}), faces: Vec::new(), bodies: vec![body.clone()] })
 }
 
-fn click(app: &mut SolveApp, candidate: Option<&(Hit, Sel)>) -> Result<(), String> {
+fn click(app: &mut SketApp, candidate: Option<&(Hit, Sel)>) -> Result<(), String> {
     let Some((hit, sel)) = candidate else {
         return Ok(());
     };
@@ -289,7 +289,7 @@ fn click(app: &mut SolveApp, candidate: Option<&(Hit, Sel)>) -> Result<(), Strin
     Ok(())
 }
 
-pub(crate) fn input(app: &mut SolveApp, ui: &mut egui::Ui, response: &egui::Response, candidate: Option<&(Hit, Sel)>, inside: bool) -> bool {
+pub(crate) fn input(app: &mut SketApp, ui: &mut egui::Ui, response: &egui::Response, candidate: Option<&(Hit, Sel)>, inside: bool) -> bool {
     let active = {
         let s = &app.render_workspace.view.assign;
         s.painting || s.sampling || s.drag.is_some()
@@ -339,7 +339,7 @@ pub(crate) fn input(app: &mut SolveApp, ui: &mut egui::Ui, response: &egui::Resp
     true
 }
 
-pub(crate) fn banner(app: &mut SolveApp, ui: &mut egui::Ui) {
+pub(crate) fn banner(app: &mut SketApp, ui: &mut egui::Ui) {
     let s = &app.render_workspace.view.assign;
     if !s.painting && !s.sampling {
         return;
@@ -356,10 +356,10 @@ pub(crate) fn banner(app: &mut SolveApp, ui: &mut egui::Ui) {
     }
 }
 
-pub(crate) fn preview(app: &SolveApp) -> Option<Preview> {
+pub(crate) fn preview(app: &SketApp) -> Option<Preview> {
     app.render_workspace.view.assign.preview.clone()
 }
-pub(crate) fn preview_key(app: &SolveApp) -> u64 {
+pub(crate) fn preview_key(app: &SketApp) -> u64 {
     let mut hash = std::collections::hash_map::DefaultHasher::new();
     if let Some(p) = &app.render_workspace.view.assign.preview {
         p.look.to_string().hash(&mut hash);
@@ -395,7 +395,7 @@ pub(crate) fn preview_scene(scene: &mut ProductScene, preview: Option<&Preview>)
     Ok(())
 }
 
-pub(crate) fn menu(app: &SolveApp, body: &str) -> crate::context_menu::Item {
+pub(crate) fn menu(app: &SketApp, body: &str) -> crate::context_menu::Item {
     use crate::context_menu::{Item, cmd};
     let selected_face = app
         .render_workspace
@@ -434,18 +434,18 @@ pub(crate) fn menu(app: &SolveApp, body: &str) -> crate::context_menu::Item {
 }
 
 /// Reuse the viewport's shared hover drawing, including modifier-specific drop size.
-pub(crate) fn hover(app: &SolveApp) -> Option<&Sel> {
+pub(crate) fn hover(app: &SketApp) -> Option<&Sel> {
     app.render_workspace.view.assign.hover.as_ref()
 }
 
-pub(crate) fn context(app: &mut SolveApp, candidate: &(Hit, Sel)) {
+pub(crate) fn context(app: &mut SketApp, candidate: &(Hit, Sel)) {
     app.render_workspace.view.assign.context = Some(match &candidate.0 {
         Hit::Face { body, index, point } => Sel::Face { body: body.clone(), index: *index, point: *point },
         _ => candidate.1.clone(),
     });
 }
 
-pub(crate) fn assigned(app: &mut SolveApp, result: &Value) {
+pub(crate) fn assigned(app: &mut SketApp, result: &Value) {
     if let Some(look) = result.get("appearance").filter(|look| !look.is_null()) {
         remember(app, look.clone());
         app.set_status(crate::i18n::format("render.look_applied", &[("name", look["name"].as_str().unwrap_or(""))]), false);
@@ -456,10 +456,10 @@ pub(crate) fn assigned(app: &mut SolveApp, result: &Value) {
 fn favorite_key(look: &Value) -> (String, String) {
     ("appearances".into(), super::library::appearance_id(look))
 }
-fn is_favorite(app: &SolveApp, look: &Value) -> bool {
+fn is_favorite(app: &SketApp, look: &Value) -> bool {
     app.preferences.render_library_favorites.contains(&favorite_key(look))
 }
-pub(crate) fn favorite_applied(app: &mut SolveApp, reply: &Value) {
+pub(crate) fn favorite_applied(app: &mut SketApp, reply: &Value) {
     let key = favorite_key(&reply["look"]);
     if reply["favorite"] == true {
         if app.preferences.render_library_favorites.len() < 256 {
@@ -471,7 +471,7 @@ pub(crate) fn favorite_applied(app: &mut SolveApp, reply: &Value) {
     super::library::invalidate(app);
 }
 
-fn selection_name(app: &SolveApp, sel: &Sel) -> String {
+fn selection_name(app: &SketApp, sel: &Sel) -> String {
     match sel {
         Sel::Body { name } | Sel::Face { body: name, .. } | Sel::Edge { body: name, .. } => name.clone(),
         Sel::Occurrence { path } => {
@@ -481,7 +481,7 @@ fn selection_name(app: &SolveApp, sel: &Sel) -> String {
     }
 }
 
-pub(crate) fn hover_tooltip(app: &mut SolveApp, response: &egui::Response, candidate: Option<&(Hit, Sel)>) {
+pub(crate) fn hover_tooltip(app: &mut SketApp, response: &egui::Response, candidate: Option<&(Hit, Sel)>) {
     let Some((_, sel)) = candidate else { return };
     let Ok(target) = chain_target(app, sel) else { return };
     let Ok(reply) = app.session.execute("appearance.pick_up", &json!({"target":target})) else { return };
@@ -490,7 +490,7 @@ pub(crate) fn hover_tooltip(app: &mut SolveApp, response: &egui::Response, candi
     ui_kit::Container::tooltip(response, &tip);
 }
 
-pub(crate) fn selection_bar(app: &mut SolveApp, ui: &mut egui::Ui, free: egui::Rect) {
+pub(crate) fn selection_bar(app: &mut SketApp, ui: &mut egui::Ui, free: egui::Rect) {
     crate::shell::register_panel(app, "render:selection", None, None);
     if super::result_active(app) || app.render_workspace.view.stage != super::Stage::Look {
         return;
@@ -504,7 +504,7 @@ pub(crate) fn selection_bar(app: &mut SolveApp, ui: &mut egui::Ui, free: egui::R
     for x in [bounds.min.x, bounds.max.x] {
         for y in [bounds.min.y, bounds.max.y] {
             for z in [bounds.min.z, bounds.max.z] {
-                if let Some(p) = proj.to_screen(solidcore_record::Vec3::new(x, y, z)).filter(|p| p.is_finite()) {
+                if let Some(p) = proj.to_screen(sketcore_record::Vec3::new(x, y, z)).filter(|p| p.is_finite()) {
                     screen.extend_with(p);
                 }
             }
@@ -561,7 +561,7 @@ pub(crate) fn selection_bar(app: &mut SolveApp, ui: &mut egui::Ui, free: egui::R
 }
 
 /// Existing appearance commands exposed alongside the shared inheritance widget.
-pub(crate) fn replacement_dialog(app: &mut SolveApp, ctx: &egui::Context) {
+pub(crate) fn replacement_dialog(app: &mut SketApp, ctx: &egui::Context) {
     let Some(pending) = app.render_workspace.view.assign.replacement.clone() else { return };
     if pending.revision != app.session.revision || !pending.document.ptr_eq(&std::sync::Arc::downgrade(&app.session.doc)) {
         app.render_workspace.view.assign.replacement = None;
@@ -595,6 +595,6 @@ pub(crate) fn replacement_dialog(app: &mut SolveApp, ctx: &egui::Context) {
     }
 }
 
-pub(crate) fn replacement_open(app: &SolveApp) -> bool {
+pub(crate) fn replacement_open(app: &SketApp) -> bool {
     app.render_workspace.view.assign.replacement.is_some()
 }

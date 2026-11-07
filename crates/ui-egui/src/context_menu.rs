@@ -18,7 +18,7 @@ use serde_json::{Value, json};
 use sketcraft_engine::geom::prelude::*;
 use sketcraft_engine::{Sel, doc::FeatureKind};
 
-use crate::SolveApp;
+use crate::SketApp;
 
 /// What a menu is about.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, serde::Deserialize)]
@@ -203,7 +203,7 @@ impl Item {
 }
 
 /// A command entry: label, icon, shortcut and enablement come from the registry.
-pub(crate) fn cmd(app: &SolveApp, id: &str, label: &str) -> Item {
+pub(crate) fn cmd(app: &SketApp, id: &str, label: &str) -> Item {
     let info = sketcraft_engine::find_command(id).map(|c| c.info(&app.session));
     let shortcut = match id {
         "edit.undo" => "Ctrl+Z".to_string(),
@@ -321,7 +321,7 @@ const RY: f32 = crate::ui_kit::RADIAL_RADIUS;
 // What the menus offer
 // ---------------------------------------------------------------------------------------------
 
-fn sel_bodies(app: &SolveApp) -> Vec<String> {
+fn sel_bodies(app: &SketApp) -> Vec<String> {
     let mut v: Vec<String> = Vec::new();
     for s in &app.session.selection {
         if let Sel::Body { name } = s
@@ -338,7 +338,7 @@ fn sel_bodies(app: &SolveApp) -> Vec<String> {
 /// (`viewport::hit_candidate`). Those two carry the owning sketch's feature id. The entities of
 /// the sketch being edited are `SketchCurve` and `SketchPoint` instead. The sketch-editing menu
 /// already covers that case.
-fn sel_sketch(app: &SolveApp) -> Option<u64> {
+fn sel_sketch(app: &SketApp) -> Option<u64> {
     app.session.selection.iter().find_map(|s| match s {
         Sel::ExternalSketchCurve { sketch, .. } | Sel::ExternalSketchPoint { sketch, .. } => Some(*sketch),
         _ => None,
@@ -346,7 +346,7 @@ fn sel_sketch(app: &SolveApp) -> Option<u64> {
 }
 
 /// Bodies the selection touches (bodies, and the bodies of selected faces and edges).
-fn touched_bodies(app: &SolveApp) -> Vec<String> {
+fn touched_bodies(app: &SketApp) -> Vec<String> {
     let mut v: Vec<String> = Vec::new();
     for s in &app.session.selection {
         let b = match s {
@@ -361,18 +361,18 @@ fn touched_bodies(app: &SolveApp) -> Vec<String> {
     v
 }
 
-fn body_feature(app: &SolveApp, body: &str) -> Option<u64> {
+fn body_feature(app: &SketApp, body: &str) -> Option<u64> {
     crate::open_meshing::session_world(&app.session).body(body).map(|b| b.feature)
 }
 
 /// Bodies in a component and its subcomponents.
-pub fn component_bodies(app: &SolveApp, id: u64) -> Vec<String> {
+pub fn component_bodies(app: &SketApp, id: u64) -> Vec<String> {
     let doc = &app.session.doc;
     app.session.model.state().bodies.iter().filter(|b| doc.component_within(doc.model_body_component(b), id)).map(|b| b.name.clone()).collect()
 }
 
 /// The eight radial commands, clockwise from the top.
-pub fn radial_items(app: &SolveApp) -> Vec<Item> {
+pub fn radial_items(app: &SketApp) -> Vec<Item> {
     let key = crate::keymap::display_for(app, "edit.repeat").unwrap_or_default();
     let repeat = match &app.last_command {
         Some((_, label)) => act("ui.repeat", &format!("Repeat {label}"), "redo").key(&key),
@@ -404,7 +404,7 @@ pub fn radial_items(app: &SolveApp) -> Vec<Item> {
 }
 
 /// The list of a menu (under the ring for the viewport).
-pub fn items(app: &SolveApp, target: &Target) -> Vec<Item> {
+pub fn items(app: &SketApp, target: &Target) -> Vec<Item> {
     let mut v = match target {
         Target::Viewport => viewport_items(app),
         Target::Body { name } if crate::render_workspace::active(app) => vec![
@@ -604,7 +604,7 @@ pub fn items(app: &SolveApp, target: &Target) -> Vec<Item> {
 
 /// Resolve the picked face's creator, rather than the feature that first made its body.
 /// Persistent face names retain their creator through later trims and placements.
-fn picked_face_feature(app: &SolveApp) -> Option<u64> {
+fn picked_face_feature(app: &SketApp) -> Option<u64> {
     let (body, index) = app.session.selection.iter().find_map(|s| match s {
         Sel::Face { body, index, .. } => Some((body, *index)),
         _ => None,
@@ -613,7 +613,7 @@ fn picked_face_feature(app: &SolveApp) -> Option<u64> {
 }
 
 /// The feature that made face `index` of `body` (by its world name).
-pub(crate) fn face_feature(app: &SolveApp, body: &str, index: usize) -> Option<u64> {
+pub(crate) fn face_feature(app: &SketApp, body: &str, index: usize) -> Option<u64> {
     let state = crate::open_meshing::session_world(&app.session);
     let body = state.body(body)?;
     let names = sketcraft_engine::doc::naming::face_names(body);
@@ -629,7 +629,7 @@ pub(crate) fn face_feature(app: &SolveApp, body: &str, index: usize) -> Option<u
 }
 
 /// A feature and its profile sketch, if it has one.
-fn feature_and_sketch(app: &SolveApp, f: Option<u64>) -> (Option<u64>, Option<u64>) {
+fn feature_and_sketch(app: &SketApp, f: Option<u64>) -> (Option<u64>, Option<u64>) {
     let sketch = f
         .and_then(|f| app.session.doc.feature(f))
         .and_then(|f| serde_json::to_value(&f.kind).ok())
@@ -639,7 +639,7 @@ fn feature_and_sketch(app: &SolveApp, f: Option<u64>) -> (Option<u64>, Option<u6
 
 /// A browser feature row's menu: the timeline's feature actions, so the browser alone is enough
 /// to edit, suppress and roll back.
-fn feature_items(app: &SolveApp, id: u64) -> Vec<Item> {
+fn feature_items(app: &SketApp, id: u64) -> Vec<Item> {
     let feature = app.session.doc.feature(id);
     let exists = feature.is_some();
     let sketch = feature.and_then(|f| crate::timeline::TimelineKind::of(&f.kind).profile_sketch());
@@ -662,7 +662,7 @@ fn feature_items(app: &SolveApp, id: u64) -> Vec<Item> {
 
 /// The canvas menus put Repeat on
 /// top, then what fits the selection, our extras after a separator.
-fn viewport_items(app: &SolveApp) -> Vec<Item> {
+fn viewport_items(app: &SketApp) -> Vec<Item> {
     let sel = &app.session.selection;
     let has = |f: fn(&Sel) -> bool| sel.iter().any(f);
     let mut v = Vec::new();
@@ -802,7 +802,7 @@ fn viewport_items(app: &SolveApp) -> Vec<Item> {
     v
 }
 
-fn body_items(app: &SolveApp, bodies: &[String], browser: bool) -> Vec<Item> {
+fn body_items(app: &SketApp, bodies: &[String], browser: bool) -> Vec<Item> {
     let names = json!(bodies);
     let all_hidden = bodies.iter().all(|b| app.session.visibility.hidden_bodies.contains(b));
     let one = bodies.len() == 1;
@@ -851,7 +851,7 @@ fn body_items(app: &SolveApp, bodies: &[String], browser: bool) -> Vec<Item> {
     v
 }
 
-fn sketch_items(app: &SolveApp, id: u64) -> Vec<Item> {
+fn sketch_items(app: &SketApp, id: u64) -> Vec<Item> {
     let visible = crate::browser::sketch_visible(app, id);
     let profiles = !app.session.visibility.hidden_profiles.contains(&id);
     let dims = app.session.visibility.shown_dimensions.contains(&id);
@@ -899,7 +899,7 @@ fn sketch_items(app: &SolveApp, id: u64) -> Vec<Item> {
 }
 
 /// Construction geometry's row: edit, delete, rename, show or hide; sketch on planes.
-fn plane_items(app: &SolveApp, id: u64) -> Vec<Item> {
+fn plane_items(app: &SketApp, id: u64) -> Vec<Item> {
     let Some(f) = app.session.doc.feature(id) else { return Vec::new() };
     let visible = !app.session.visibility.hidden_origin.contains(&f.name);
     let mut items = Vec::new();
@@ -921,7 +921,7 @@ fn plane_items(app: &SolveApp, id: u64) -> Vec<Item> {
 }
 
 /// An origin plane's row in the browser: sketch on it, show or hide.
-fn origin_plane_items(app: &SolveApp, name: &str) -> Vec<Item> {
+fn origin_plane_items(app: &SketApp, name: &str) -> Vec<Item> {
     let visible = !app.session.visibility.hidden_origin.iter().any(|h| h == name);
     vec![
         cmd(app, "sketch.create", "Create Sketch").with(json!({ "plane": name })),
@@ -931,13 +931,13 @@ fn origin_plane_items(app: &SolveApp, name: &str) -> Vec<Item> {
 }
 
 /// An origin axis: Show/Hide, as on a plane (an axis takes no sketch) (#8382).
-fn origin_axis_items(app: &SolveApp, name: &str) -> Vec<Item> {
+fn origin_axis_items(app: &SketApp, name: &str) -> Vec<Item> {
     let visible = !app.session.visibility.hidden_origin.iter().any(|h| h == name);
     vec![act("ui.originPart", "Show/Hide", "eye").key("V").with(json!({ "keys": [name], "show": !visible }))]
 }
 
 /// An assembly joint: edit, drive, suppress, delete.
-fn joint_items(app: &SolveApp, id: u64) -> Vec<Item> {
+fn joint_items(app: &SketApp, id: u64) -> Vec<Item> {
     let Some(j) = app.session.doc.assembly.joints.iter().find(|j| j.id == id) else { return Vec::new() };
     let rigid = j.kind == sketcraft_engine::doc::joints::JointKind::Rigid;
     // Show/Hide acts on every joint picked in the browser (this one among them).
@@ -962,7 +962,7 @@ fn joint_items(app: &SolveApp, id: u64) -> Vec<Item> {
     ]
 }
 
-fn occurrence_items(app: &SolveApp, path: &[u64]) -> Vec<Item> {
+fn occurrence_items(app: &SketApp, path: &[u64]) -> Vec<Item> {
     let Ok(placement) = app.session.occurrence_placement(path) else { return Vec::new() };
     let mut entries = component_items(app, placement.component);
     if app.session.occurrence_scope_count(path).is_ok_and(|n| n > 1) {
@@ -1037,7 +1037,7 @@ fn turn_up_axis(occurrence: u64, enabled: bool) -> Item {
 
 /// Show All Bodies would bring a body back: one hidden itself, a hidden placement, or a hidden
 /// Bodies folder or group of bodies. The name of a body that is gone does not count.
-fn bodies_hidden(app: &SolveApp) -> bool {
+fn bodies_hidden(app: &SketApp) -> bool {
     let s = &app.session;
     let world = s.world_state().unwrap_or_default();
     let groups: Vec<String> = s.doc.browser_groups.iter().filter(|g| g.folder == "bodies").map(|g| format!("/g{}", g.id)).collect();
@@ -1055,7 +1055,7 @@ fn group(label: &str, icon: &str, children: Vec<Item>) -> Item {
 
 /// The everyday actions stay on the menu; the placement, what concerns the component itself,
 /// export and organising the browser tree open in category flyouts.
-fn component_items(app: &SolveApp, id: u64) -> Vec<Item> {
+fn component_items(app: &SketApp, id: u64) -> Vec<Item> {
     let doc = &app.session.doc;
     let occ = doc.occurrence_of(id);
     let active = app.session.active_component == id;
@@ -1188,7 +1188,7 @@ fn component_items(app: &SolveApp, id: u64) -> Vec<Item> {
 
 /// Explode Text (#1842): the selected text's outlines become normal sketch lines, arcs and
 /// curves, no longer tied to the text, so they can be picked, trimmed and edited one by one.
-fn explode_text(app: &SolveApp) -> Option<Item> {
+fn explode_text(app: &SketApp) -> Option<Item> {
     let link = crate::sketch_text::selected_link(app)?;
     Some(cmd(app, "sketch.break_link", "Explode Text").with(json!({ "link": link })))
 }
@@ -1196,10 +1196,9 @@ fn explode_text(app: &SolveApp) -> Option<Item> {
 /// Break Link (#10417): projected geometry among the selection (a model edge or vertex, another
 /// sketch's curve) becomes normal sketch geometry, which Trim, drags and dimensions change like
 /// any other. Messages already send people here ("use Break Link on it"); text has Explode Text.
-fn break_link(app: &SolveApp, sk: &sketcraft_engine::sketch::Sketch, ents: &[String]) -> Option<Item> {
-    let projected = |link: Option<&String>| {
-        link.and_then(|l| sk.link(l)).is_some_and(|l| !matches!(l.source, sketcraft_engine::sketch::LinkSource::Text { .. }))
-    };
+fn break_link(app: &SketApp, sk: &sketcraft_engine::sketch::Sketch, ents: &[String]) -> Option<Item> {
+    let projected =
+        |link: Option<&String>| link.and_then(|l| sk.link(l)).is_some_and(|l| !matches!(l.source, sketcraft_engine::sketch::LinkSource::Text { .. }));
     let linked: Vec<&str> = ents
         .iter()
         .filter_map(|id| match sk.curves.iter().find(|c| &c.id == id) {
@@ -1221,7 +1220,7 @@ fn alignment_items(selection: &[Sel]) -> Vec<Item> {
 
 /// Sketch entity items: construction, fix, delete, dimension and the constraints the selection
 /// can take.
-fn sketch_entity_items(app: &SolveApp) -> Vec<Item> {
+fn sketch_entity_items(app: &SketApp) -> Vec<Item> {
     use sketcraft_engine::sketch::{ConstraintKind, CurveKind};
     let Some(sid) = app.session.active_sketch else { return Vec::new() };
     let st = crate::open_meshing::session_world(&app.session);
@@ -1446,7 +1445,7 @@ fn sketch_entity_items(app: &SolveApp) -> Vec<Item> {
 }
 
 /// Where on the active sketch's plane the viewport menu was opened (sketch coordinates).
-fn menu_sketch_point(app: &SolveApp, plane: &solidcore_record::Plane) -> Option<solidcore_record::Vec2> {
+fn menu_sketch_point(app: &SketApp, plane: &sketcore_record::Plane) -> Option<sketcore_record::Vec2> {
     let (at, _) = app.menu.opened?;
     let proj = crate::viewport::projection(app, app.viewport.rect?);
     let (o, d) = proj.ray(at);
@@ -1456,7 +1455,7 @@ fn menu_sketch_point(app: &SolveApp, plane: &solidcore_record::Plane) -> Option<
 /// Insert Design's list (#8570): each design open in another tab, inserted with one click (its
 /// file name beside it; one not saved yet greyed out, as there is no file to link), then
 /// Browse… for a file, as the button did before.
-fn insert_design_items(app: &SolveApp) -> Vec<Item> {
+fn insert_design_items(app: &SketApp) -> Vec<Item> {
     let mut v = vec![Item::heading("Open designs")];
     for d in crate::documents::other_designs(app) {
         let file = d.path.as_deref().map(|p| std::path::Path::new(p).file_name().map_or(p.to_string(), |f| f.to_string_lossy().into_owned()));
@@ -1490,7 +1489,7 @@ fn id_of(p: &Value, k: &str) -> Option<u64> {
 }
 
 /// Run a menu item (what a click on it does). `at` places a rename box.
-pub fn run_item(app: &mut SolveApp, item: &Item, at: Pos2) {
+pub fn run_item(app: &mut SketApp, item: &Item, at: Pos2) {
     if !item.enabled || item.is_sep() || item.is_heading() {
         return;
     }
@@ -1937,7 +1936,7 @@ pub fn run_item(app: &mut SolveApp, item: &Item, at: Pos2) {
             if let Some(ss) = id_of(&p, "sketch").and_then(|id| st.sketch(id)) {
                 let to = crate::dialogs::onto_sketch(app.cam.looking_from(ss.plane.normal()), ss);
                 app.animate_to(to);
-            } else if let Some(plane) = p.get("plane").and_then(Value::as_str).and_then(solidcore_record::Plane::named) {
+            } else if let Some(plane) = p.get("plane").and_then(Value::as_str).and_then(sketcore_record::Plane::named) {
                 let mut to = app.cam.looking_from(crate::dialogs::facing(app, plane.normal(), true));
                 to.target = plane.origin;
                 app.animate_to(to);
@@ -1987,7 +1986,7 @@ pub fn run_item(app: &mut SolveApp, item: &Item, at: Pos2) {
 
 /// Move Sketches to the Part They're On, and say in the status bar how many moved and why the
 /// others stayed (#10218).
-fn sketches_to_parts(app: &mut SolveApp, p: Value) {
+fn sketches_to_parts(app: &mut SketApp, p: Value) {
     let out = match app.run("component.move_sketches.to_parts", p) {
         Ok(out) => out,
         Err(error) => return app.set_status(crate::friendly_error("component.move_sketches.to_parts", &error), true),
@@ -2010,7 +2009,7 @@ fn sketches_to_parts(app: &mut SolveApp, p: Value) {
 }
 
 /// Delete what is selected: sketch entities, features, and bodies (a Remove feature).
-pub fn delete(app: &mut SolveApp) {
+pub fn delete(app: &mut SketApp) {
     crate::delete::delete_selection(app);
 }
 
@@ -2020,7 +2019,7 @@ pub fn delete(app: &mut SolveApp) {
 /// menu, so the key's own action (V on the selection) would miss it. Returns whether the open
 /// menu has a row for the key; a disabled row takes the key and does nothing, as a click on it
 /// does.
-pub fn press_shortcut(app: &mut SolveApp, key: &str) -> bool {
+pub fn press_shortcut(app: &mut SketApp, key: &str) -> bool {
     let Some(at) = app.viewport.context_menu else { return false };
     let target = app.menu.target.clone();
     let Some(item) = entries(app, &target).into_iter().find(|i| i.shortcut == key && i.children.is_empty()) else { return false };
@@ -2035,7 +2034,7 @@ pub fn press_shortcut(app: &mut SolveApp, key: &str) -> bool {
 /// visibility (bodies, faces' and edges' bodies, sketches, construction and origin planes and
 /// axes, components' bodies, canvases, joints' glyphs). When some are shown and some hidden, all are hidden.
 /// A clicked folder takes precedence, and toggles its own visibility without changing its items.
-pub fn toggle_visibility(app: &mut SolveApp) {
+pub fn toggle_visibility(app: &mut SketApp) {
     use sketcraft_engine::doc::FeatureKind;
     if crate::browser::toggle_picked_folder(app) {
         return;
@@ -2092,7 +2091,7 @@ pub fn toggle_visibility(app: &mut SolveApp) {
 
 /// Rename what is selected (F2): one body, sketch or feature, construction plane, component
 /// picked in the browser, canvas, or a group whose Browser row was clicked.
-pub fn rename_selection(app: &mut SolveApp, at: Pos2) -> bool {
+pub fn rename_selection(app: &mut SketApp, at: Pos2) -> bool {
     // A clicked group row takes precedence, as it does for V: groups have no selection of their own.
     if let Some(g) = crate::browser::picked_group(app) {
         start_rename(app, RenameWhat::Group(g), at);
@@ -2118,7 +2117,7 @@ pub fn rename_selection(app: &mut SolveApp, at: Pos2) -> bool {
 }
 
 /// Add the edges that continue the selected edges smoothly to the selection.
-fn tangent_chain(app: &mut SolveApp) {
+fn tangent_chain(app: &mut SketApp) {
     let st = crate::open_meshing::session_world(&app.session);
     let mut out: Vec<Sel> = Vec::new();
     for s in &app.session.selection {
@@ -2139,7 +2138,7 @@ fn tangent_chain(app: &mut SolveApp) {
     }
 }
 
-pub fn start_rename(app: &mut SolveApp, what: RenameWhat, at: Pos2) {
+pub fn start_rename(app: &mut SketApp, what: RenameWhat, at: Pos2) {
     let doc = &app.session.doc;
     let text = match &what {
         RenameWhat::Body(b) => b.clone(),
@@ -2155,7 +2154,7 @@ pub fn start_rename(app: &mut SolveApp, what: RenameWhat, at: Pos2) {
     app.menu.rename = Some(Rename { what, text, at, focused: false, inline: false });
 }
 
-pub(crate) fn commit_rename(app: &mut SolveApp, r: &Rename) -> Result<(), String> {
+pub(crate) fn commit_rename(app: &mut SketApp, r: &Rename) -> Result<(), String> {
     let name = r.text.trim().to_string();
     if name.is_empty() {
         return Ok(());
@@ -2206,7 +2205,7 @@ fn pick_body(sel: &Sel) -> Option<&str> {
 /// above), a face, edge or vertex of a selected body counts, whether the body is selected on its
 /// own or through an occurrence: the menu is then about the bodies, and the right-click leaves
 /// the selection alone (#5849).
-fn in_selection(app: &SolveApp, sel: &Sel) -> bool {
+fn in_selection(app: &SketApp, sel: &Sel) -> bool {
     if context_target_selected(&app.session.selection, sel) {
         return true;
     }
@@ -2222,7 +2221,7 @@ fn in_selection(app: &SolveApp, sel: &Sel) -> bool {
 /// selects it first, so the menu is about what is under the cursor; a face or edge already in a
 /// multi-selection keeps the whole selection (#3733), as does one of a selected body (#5849). `held`: the keys held at that click.
 /// On the view gizmo it opens the gizmo's own menu and leaves the selection alone.
-pub fn open(app: &mut SolveApp, at: Pos2, held: crate::tool_modifiers::Held) {
+pub fn open(app: &mut SketApp, at: Pos2, held: crate::tool_modifiers::Held) {
     if crate::viewport::view_gizmo_at(app, at) {
         return open_for(app, at, Target::ViewGizmo);
     }
@@ -2263,7 +2262,7 @@ pub fn open(app: &mut SolveApp, at: Pos2, held: crate::tool_modifiers::Held) {
 }
 
 /// Open a menu for a target (the radial ring only for the viewport).
-pub fn open_for(app: &mut SolveApp, at: Pos2, target: Target) {
+pub fn open_for(app: &mut SketApp, at: Pos2, target: Target) {
     app.menu.key_row = None;
     app.menu.submenu.clear();
     app.menu.submenu_key = None;
@@ -2277,7 +2276,7 @@ pub fn open_for(app: &mut SolveApp, at: Pos2, target: Target) {
 }
 
 /// A button's menu: a click opens it, and a click on the same button while it is open closes it.
-pub fn toggle_for(app: &mut SolveApp, opener: Rect, at: Pos2, target: Target) {
+pub fn toggle_for(app: &mut SketApp, opener: Rect, at: Pos2, target: Target) {
     if open_from(app, opener, &target) {
         close(app);
     } else {
@@ -2287,11 +2286,11 @@ pub fn toggle_for(app: &mut SolveApp, opener: Rect, at: Pos2, target: Target) {
 }
 
 /// The button's menu is open, so the button can show it pressed.
-pub fn open_from(app: &SolveApp, opener: Rect, target: &Target) -> bool {
+pub fn open_from(app: &SketApp, opener: Rect, target: &Target) -> bool {
     app.viewport.context_menu.is_some() && app.menu.target == *target && app.menu.opener == Some(opener)
 }
 
-pub fn close(app: &mut SolveApp) {
+pub fn close(app: &mut SketApp) {
     app.viewport.context_menu = None;
     app.menu.flick = false;
     app.menu.opener = None;
@@ -2299,14 +2298,14 @@ pub fn close(app: &mut SolveApp) {
 
 /// Open the menu at a point for automation: the pointer moves there first so what is under it
 /// counts, then the menu opens on a later frame.
-pub fn request_open(app: &mut SolveApp, at: Pos2, target: Target) {
+pub fn request_open(app: &mut SketApp, at: Pos2, target: Target) {
     app.synthetic.push(egui::Event::PointerMoved(at));
     app.menu.pending = Some((at, target));
 }
 
 /// What a right-click can open a menu on is there (for `ui.menu`'s `target`): a body, feature,
 /// component, joint… that the design doesn't have has no menu.
-pub fn check_target(app: &SolveApp, target: &Target) -> Result<(), String> {
+pub fn check_target(app: &SketApp, target: &Target) -> Result<(), String> {
     let doc = &app.session.doc;
     let feature = |id: u64| doc.feature(id).is_some();
     let component = |id: u64| id == 0 || doc.components.iter().any(|c| c.id == id);
@@ -2378,7 +2377,7 @@ pub fn check_target(app: &SolveApp, target: &Target) -> Result<(), String> {
 }
 
 /// The open menu as JSON (for `ui.menu`).
-pub fn describe(app: &SolveApp) -> Value {
+pub fn describe(app: &SketApp) -> Value {
     let Some(at) = app.viewport.context_menu else {
         return json!({ "open": false, "pending": app.menu.pending.is_some() });
     };
@@ -2411,7 +2410,7 @@ pub fn describe(app: &SolveApp) -> Value {
 
 /// Every entry of a target's menu, its rows first and then what their flyouts hold, level by
 /// level.
-pub fn entries(app: &SolveApp, target: &Target) -> Vec<Item> {
+pub fn entries(app: &SketApp, target: &Target) -> Vec<Item> {
     let mut all = Vec::new();
     let mut level = items(app, target);
     while !level.is_empty() {
@@ -2423,7 +2422,7 @@ pub fn entries(app: &SolveApp, target: &Target) -> Vec<Item> {
 }
 
 /// Pick an item of the open menu by id or label (for `ui.menuPick`).
-pub fn pick(app: &mut SolveApp, key: &str) -> Result<Value, String> {
+pub fn pick(app: &mut SketApp, key: &str) -> Result<Value, String> {
     let Some(at) = app.viewport.context_menu else { return Err("no menu is open".into()) };
     let target = app.menu.target.clone();
     let mut all = if app.menu.radial { radial_items(app) } else { Vec::new() };
@@ -2514,7 +2513,7 @@ fn sector(d: Vec2) -> Option<usize> {
 
 /// Press-and-hold of the right button in the viewport opens the menu; releasing over a
 /// direction picks it.
-fn track_hold(app: &mut SolveApp, ctx: &egui::Context) {
+fn track_hold(app: &mut SketApp, ctx: &egui::Context) {
     if !app.preferences.radial_context_menu || crate::mouse_gesture::active(app) {
         app.menu.press = None;
         app.menu.flick = false;
@@ -2563,7 +2562,7 @@ fn track_hold(app: &mut SolveApp, ctx: &egui::Context) {
 }
 
 /// Show the open menu, the rename box and the Properties window.
-pub fn show(app: &mut SolveApp, ctx: &egui::Context) {
+pub fn show(app: &mut SketApp, ctx: &egui::Context) {
     if let Some((at, target)) = app.menu.pending.clone()
         && app.synthetic.is_empty()
     {
@@ -2838,7 +2837,7 @@ fn kit_item(item: &Item, lit: bool) -> crate::ui_kit::MenuItem<'_> {
     }
 }
 
-fn show_rename(app: &mut SolveApp, ctx: &egui::Context) {
+fn show_rename(app: &mut SketApp, ctx: &egui::Context) {
     // Feature-history folders own their editor inside the row. Keep the shared rename state so
     // automation and keyboard handling still use the same path, but do not draw the floating box.
     if app.preferences.timeline_left && matches!(app.menu.rename.as_ref().map(|rename| &rename.what), Some(RenameWhat::TimelineGroup(_))) {
@@ -2869,7 +2868,7 @@ fn show_rename(app: &mut SolveApp, ctx: &egui::Context) {
 }
 
 /// Finish a rename from automation: commit (true) or cancel.
-pub fn finish_rename(app: &mut SolveApp, text: Option<&str>, commit: bool) -> bool {
+pub fn finish_rename(app: &mut SketApp, text: Option<&str>, commit: bool) -> bool {
     let Some(mut r) = app.menu.rename.take() else { return false };
     if let Some(s) = text {
         r.text = s.to_string();
@@ -3125,7 +3124,7 @@ mod tests {
     /// Direct Trim undoes back to the association; the explicit Break menu still makes the offset editable.
     #[test]
     fn line_offset_context_menu_breaks_association_and_allows_trim() {
-        use solidcore_record::Vec2;
+        use sketcore_record::Vec2;
         use sketcraft_engine::sketch::Shape;
 
         let mut h = crate::scenario::Harness::new();
@@ -3174,7 +3173,7 @@ mod tests {
     /// sketch geometry that Trim then cuts. A line drawn in the sketch is offered no Break Link.
     #[test]
     fn projected_geometry_context_menu_breaks_its_link_and_allows_trim() {
-        use solidcore_record::Vec2;
+        use sketcore_record::Vec2;
 
         let mut h = crate::scenario::Harness::new();
         h.app.home.open = false;
@@ -3276,7 +3275,7 @@ mod tests {
         assert!(item.enabled);
         let p = item.params.clone().unwrap();
         assert_eq!(p["curve"], json!(fit));
-        let clicked = solidcore_record::Vec2::new(p["at"][0].as_f64().unwrap(), p["at"][1].as_f64().unwrap());
+        let clicked = sketcore_record::Vec2::new(p["at"][0].as_f64().unwrap(), p["at"][1].as_f64().unwrap());
         assert!(clicked.dist(at) < 0.5, "the item carries the clicked spot: {clicked:?} for {at:?}");
         h.step(&json!({"click":{"handle":"menu:sketch.spline.insert_point"}})).unwrap();
         assert_eq!(count(&h, &fit), 5);
@@ -3387,7 +3386,7 @@ mod tests {
 
     #[test]
     fn disabled_radial_menu_does_not_capture_right_button_hold() {
-        let mut app = SolveApp::new(sketcraft_engine::Session::default(), Default::default());
+        let mut app = SketApp::new(sketcraft_engine::Session::default(), Default::default());
         let ctx = crate::fonts::test_context();
         let point = pos2(600.0, 400.0);
         app.viewport.mouse = Some(point);
@@ -3468,7 +3467,7 @@ mod workspace_menu_tests {
     #[test]
     fn workspace_titles_use_one_semibold_text_run() {
         let ctx = crate::fonts::test_context();
-        let app = SolveApp::new(Default::default(), Default::default());
+        let app = SketApp::new(Default::default(), Default::default());
         let list = items(&app, &Target::Workspace);
         let mut output = ctx.run_ui(egui::RawInput::default(), |ui| {
             crate::ui_kit::workspace_menu(ui, &list, None, 1000.0);

@@ -655,11 +655,6 @@ fn keywords(text: &str) -> &'static [&'static str] {
         "reverse vertical pan" => &["reverse vertical pan direction"],
         "reverse trackpad orbit" => &["reverse trackpad orbit direction"],
         "two-finger zoom while holding" => &["zoom with two-finger scroll while holding"],
-        "show it in the 3d view" => &["show the 3d mouse in the 3d view"],
-        "picture position" => &["position"],
-        "turn the view while a sketch is edited" => &["turn sketches with the 3d mouse"],
-        "model" => &["traced"],
-        "view center" | "view centre" => &["classic"],
         "axes" | "axes (signed)" => &["axes", "signed axes", "axes (signed)"],
         "cube" | "cube (compact)" => &["cube", "cube (compact)"],
         "under cursor" => &["under the cursor"],
@@ -1386,7 +1381,7 @@ mod tests {
     /// The selected match is scrolled to when the arrows move it, not on every frame, so the
     /// wheel can scroll the results away from it.
     #[test]
-    fn navigation_and_mouse3d_search_hits_reveal_the_actual_cards_and_controls() {
+    fn navigation_search_hits_reveal_the_actual_cards_and_controls() {
         for theme in ["light", "dark"] {
             let mut h = crate::scenario::Harness::new();
             h.app.home.open = false;
@@ -1402,9 +1397,6 @@ mod tests {
                 ("Turntable", crate::prefs::PAGE_NAVIGATION, "prefs:turntable"),
                 ("Wheel zoom speed", crate::prefs::PAGE_NAVIGATION, "prefs:wheel_zoom_speed"),
                 ("Zoom with two-finger scroll while holding", crate::prefs::PAGE_NAVIGATION, "prefs:trackpad_zoom_modifier"),
-                ("Overall speed", crate::prefs::PAGE_MOUSE3D, "prefs:space_mouse_speed"),
-                ("Traced", crate::prefs::PAGE_MOUSE3D, "prefs:3d_mouse_orbit_traced"),
-                ("Position", crate::prefs::PAGE_MOUSE3D, "prefs:space_mouse_ghost_position"),
             ] {
                 h.call("ui.prefs", serde_json::json!({"open":"General"}));
                 h.app.prefs_window.filter = query.into();
@@ -1590,7 +1582,6 @@ mod tests {
     fn moved_preferences_search_paths_and_enter_follow_window_groups() {
         for (query, path, page) in [
             ("Direct interaction", "Work > Tools", crate::prefs::PAGE_TOOLS),
-            ("Navigate with the 3D mouse", "Input > 3D mouse", crate::prefs::PAGE_MOUSE3D),
             ("Origin plane names", "Work > Design", crate::prefs::PAGE_DESIGN),
             ("Status bar", "Look > Layout", crate::prefs::PAGE_LAYOUT),
         ] {

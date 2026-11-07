@@ -1,11 +1,11 @@
 //! Native Check/Start ownership. Preparation and retirement use one bounded
 //! worker; the window accepts only the already-proved real-session commit.
-use crate::SolveApp;
+use crate::SketApp;
 use egui::Context;
 use serde_json::{Value, json};
 use sketcraft_engine::render_preparation::Kind;
 
-pub(crate) fn enabled(app: &SolveApp) -> bool {
+pub(crate) fn enabled(app: &SketApp) -> bool {
     !cfg!(target_arch = "wasm32") && app.apply_off_thread.is_some()
 }
 
@@ -62,7 +62,7 @@ mod native {
         visual: Value,
         lights: sketcraft_engine::schema::render_lights::Visibility,
     }
-    fn camera(app: &SolveApp) -> (sketcraft_engine::render::UpAxis, [u64; 8]) {
+    fn camera(app: &SketApp) -> (sketcraft_engine::render::UpAxis, [u64; 8]) {
         let c = app.cam;
         (c.up, [c.target.x, c.target.y, c.target.z, c.yaw, c.pitch, c.roll, c.distance, c.fov].map(f64::to_bits))
     }
@@ -73,7 +73,7 @@ mod native {
                 .all(|((ka, a), (kb, b))| ka == kb && a.iter().flatten().zip(b.iter().flatten()).all(|(a, b)| a.to_bits() == b.to_bits()))
     }
     impl Guard {
-        fn new(app: &SolveApp) -> Self {
+        fn new(app: &SketApp) -> Self {
             Self {
                 uid: app.session.uid,
                 document: Arc::downgrade(&app.session.doc),
@@ -88,7 +88,7 @@ mod native {
                 lights: app.render_workspace.view.lights.visibility.clone(),
             }
         }
-        fn current(&self, app: &SolveApp) -> bool {
+        fn current(&self, app: &SketApp) -> bool {
             self.document.ptr_eq(&Arc::downgrade(&app.session.doc))
                 && self.model.ptr_eq(&Arc::downgrade(&app.session.model.state()))
                 && self.revision == app.session.revision
@@ -188,7 +188,7 @@ mod native {
         pending.cancel.cancel();
     }
     fn begin(
-        app: &mut SolveApp,
+        app: &mut SketApp,
         kind: Kind,
         request: Value,
         origin: Origin,
@@ -243,26 +243,26 @@ mod native {
         Ok(())
     }
     #[cfg(test)]
-    pub(crate) fn test_configure(app: &mut SolveApp, ready: SyncSender<bool>, retired: SyncSender<()>, disconnect: bool) {
+    pub(crate) fn test_configure(app: &mut SketApp, ready: SyncSender<bool>, retired: SyncSender<()>, disconnect: bool) {
         app.render_preparation.proof_ready = Some(ready);
         app.render_preparation.retired_probe = Some(retired);
         app.render_preparation.disconnect_retirement = disconnect;
     }
     #[cfg(test)]
-    pub(crate) fn test_disconnect_input(app: &mut SolveApp) {
+    pub(crate) fn test_disconnect_input(app: &mut SketApp) {
         app.render_preparation.disconnect_input = true;
     }
 
-    pub(crate) fn begin_ui(app: &mut SolveApp, kind: Kind, request: Value) -> Result<(), String> {
+    pub(crate) fn begin_ui(app: &mut SketApp, kind: Kind, request: Value) -> Result<(), String> {
         begin(app, kind, request, Origin::Ui, sketcraft_engine::io::vfs::current_scope(), app.session.param_check)
     }
-    pub(crate) fn begin_batch_ui(app: &mut SolveApp, request: Value) -> Result<(), String> {
+    pub(crate) fn begin_batch_ui(app: &mut SketApp, request: Value) -> Result<(), String> {
         batches::begin(app, request, Origin::Ui, sketcraft_engine::io::vfs::current_scope(), app.session.param_check)
     }
-    pub(crate) fn busy(app: &SolveApp) -> bool {
+    pub(crate) fn busy(app: &SketApp) -> bool {
         app.render_preparation.pending.is_some() || batches::busy(&app.render_preparation.batches, app.session.uid)
     }
-    pub(crate) fn cancel(app: &mut SolveApp) -> bool {
+    pub(crate) fn cancel(app: &mut SketApp) -> bool {
         let Some(pending) = &mut app.render_preparation.pending else {
             let mut state = std::mem::take(&mut app.render_preparation);
             let uid = app.session.uid;
@@ -276,7 +276,7 @@ mod native {
         cancel_pending(pending, crate::i18n::tr("render.preparation_cancelled").into());
         true
     }
-    pub(crate) fn document_closing(app: &mut SolveApp, uid: u64) {
+    pub(crate) fn document_closing(app: &mut SketApp, uid: u64) {
         let mut state = std::mem::take(&mut app.render_preparation);
         if let Some(pending) = &mut state.pending
             && pending.guard.uid == uid
@@ -288,7 +288,7 @@ mod native {
         app.render_preparation = state;
     }
 
-    fn spawn(app: &SolveApp, pending: &Pending) -> Result<Worker, String> {
+    fn spawn(app: &SketApp, pending: &Pending) -> Result<Worker, String> {
         let (input_tx, input_rx) = std::sync::mpsc::sync_channel::<PreparationInput>(1);
         let (ready_tx, ready) = std::sync::mpsc::sync_channel(1);
         let (returning, retired) = std::sync::mpsc::sync_channel(1);
@@ -397,7 +397,7 @@ mod native {
             let _ = request.reply.send(reply);
         }
     }
-    fn apply(app: &mut SolveApp, pending: &mut Pending) {
+    fn apply(app: &mut SketApp, pending: &mut Pending) {
         let kind = pending.kind;
         let level = pending.level;
         let scope = pending.scope.clone();
@@ -447,14 +447,14 @@ mod native {
         pending.applied = true;
     }
 
-    fn report_failure(app: &mut SolveApp, pending: &Pending, error: &str) {
+    fn report_failure(app: &mut SketApp, pending: &Pending, error: &str) {
         if pending.kind == Kind::Check {
             super::super::inspector::record_check(app, &pending.unfiltered, &json!({"error":error}));
         }
         app.set_status(error.to_string(), pending.cancelled.is_none());
     }
 
-    pub(crate) fn tick(app: &mut SolveApp, ctx: &Context) {
+    pub(crate) fn tick(app: &mut SketApp, ctx: &Context) {
         let mut state = std::mem::take(&mut app.render_preparation);
         // Always poll an existing batch worker, including while an individual
         // request waits. A waiting Single cannot deadlock batch retirement.
@@ -574,7 +574,7 @@ mod native {
         }
     }
 
-    pub(crate) fn progress(app: &mut SolveApp, ui: &mut egui::Ui) -> bool {
+    pub(crate) fn progress(app: &mut SketApp, ui: &mut egui::Ui) -> bool {
         let Some(pending) = &app.render_preparation.pending else { return batches::progress(app, ui) };
         let key = if pending.unavailable.is_some() {
             "render.preparation_unavailable"
@@ -603,7 +603,7 @@ mod native {
         }
         true
     }
-    pub(crate) fn inspect(app: &SolveApp) -> Value {
+    pub(crate) fn inspect(app: &SketApp) -> Value {
         app.render_preparation.pending.as_ref().map_or(Value::Null, |pending| {
             json!({
                 "kind":command(pending.kind),"waiting_for_live":pending.worker.is_none()&&!super::super::live::preparation_ready(app),
@@ -612,7 +612,7 @@ mod native {
             })
         })
     }
-    pub(crate) fn inspect_batches(app: &SolveApp) -> Value {
+    pub(crate) fn inspect_batches(app: &SketApp) -> Value {
         batches::inspect(&app.render_preparation.batches)
     }
 
@@ -761,7 +761,7 @@ mod native {
                 }
             }
         }
-        fn empty_worker(app: &SolveApp, slot: &Slot) -> Result<(Worker, SyncSender<Input>), String> {
+        fn empty_worker(app: &SketApp, slot: &Slot) -> Result<(Worker, SyncSender<Input>), String> {
             let (input_tx, input_rx) = mpsc::sync_channel::<Input>(1);
             let (ready_tx, ready) = mpsc::sync_channel(1);
             let (returning, returned) = mpsc::sync_channel(1);
@@ -857,7 +857,7 @@ mod native {
             state.slots.iter().flatten().any(|s| s.uid == uid && s.first.is_some())
         }
         pub(super) fn begin(
-            app: &mut SolveApp,
+            app: &mut SketApp,
             params: Value,
             origin: Origin,
             scope: Option<sketcraft_engine::io::vfs::PathScope>,
@@ -927,7 +927,7 @@ mod native {
                 let _ = request.reply.send(reply);
             }
         }
-        pub(super) fn cancel_owner(app: &mut SolveApp, state: &mut State, uid: u64) -> bool {
+        pub(super) fn cancel_owner(app: &mut SketApp, state: &mut State, uid: u64) -> bool {
             let mut found = false;
             for (i, slot) in state.slots.iter_mut().enumerate() {
                 if let Some(slot) = slot
@@ -948,7 +948,7 @@ mod native {
             }
             found
         }
-        fn commit(app: &mut SolveApp, uid: u64, prepared: &mut api::Prepared, first: Option<&First>) -> Result<Value, String> {
+        fn commit(app: &mut SketApp, uid: u64, prepared: &mut api::Prepared, first: Option<&First>) -> Result<Value, String> {
             let level = first.map(|f| f.level);
             let chat = first.and_then(|f| f.origin.as_ref()).and_then(|o| match o {
                 Origin::Control { request, .. } => request.chat_turn.clone(),
@@ -976,7 +976,7 @@ mod native {
                 .unwrap_or_else(|| Err(crate::i18n::tr("render.live.final_changed").into()))
             }
         }
-        pub(super) fn poll(app: &mut SolveApp, ctx: &Context, state: &mut State) {
+        pub(super) fn poll(app: &mut SketApp, ctx: &Context, state: &mut State) {
             let Some(mut active) = state.active.take() else { return };
             let Some(slot) = state.slots[active.slot].as_mut() else {
                 active.unavailable = Some(app.tr("render.preparation_retirement_failed").into());
@@ -1065,7 +1065,7 @@ mod native {
                 ctx.request_repaint_after(std::time::Duration::from_millis(20));
             }
         }
-        pub(super) fn schedule(app: &mut SolveApp, ctx: &Context, state: &mut State, only_first: Option<u64>) {
+        pub(super) fn schedule(app: &mut SketApp, ctx: &Context, state: &mut State, only_first: Option<u64>) {
             if state.active.is_some() {
                 return;
             }
@@ -1219,7 +1219,7 @@ mod native {
             json!({"owners":state.slots.iter().flatten().map(|s|json!({"uid":s.uid,"first":s.first.is_some(),"retained_plan_bytes":s.plan.as_ref().map(api::Plan::retained_bytes),"cancelled":s.cancelled})).collect::<Vec<_>>(),
                 "worker":state.active.as_ref().map(|a|json!({"uid":state.slots[a.slot].as_ref().map(|s|s.uid),"preparing":!a.applied&&!a.cleanup_only,"retiring":a.applied||a.cleanup_only,"unavailable":a.unavailable,"committed":a.committed}))})
         }
-        pub(super) fn progress(app: &mut SolveApp, ui: &mut egui::Ui) -> bool {
+        pub(super) fn progress(app: &mut SketApp, ui: &mut egui::Ui) -> bool {
             let state = &app.render_preparation.batches;
             if !busy(state, app.session.uid) {
                 return false;
@@ -1244,7 +1244,7 @@ mod native {
         }
     }
 
-    fn cancel_batch_control(app: &mut SolveApp, req: ControlRequest) -> Option<ControlRequest> {
+    fn cancel_batch_control(app: &mut SketApp, req: ControlRequest) -> Option<ControlRequest> {
         let params = req.params.get("params").cloned().filter(|p| !p.is_null()).unwrap_or_else(|| json!({}));
         if params.get("job").is_some_and(|job| !job.is_null()) {
             return Some(req);
@@ -1295,7 +1295,7 @@ mod native {
         None
     }
 
-    pub(crate) fn control(app: &mut SolveApp, req: ControlRequest) -> Option<ControlRequest> {
+    pub(crate) fn control(app: &mut SketApp, req: ControlRequest) -> Option<ControlRequest> {
         if !super::enabled(app) {
             return Some(req);
         }
@@ -1395,30 +1395,30 @@ mod web {
     use super::*;
     #[derive(Default)]
     pub(crate) struct State;
-    pub(crate) fn busy(_: &SolveApp) -> bool {
+    pub(crate) fn busy(_: &SketApp) -> bool {
         false
     }
-    pub(crate) fn cancel(_: &mut SolveApp) -> bool {
+    pub(crate) fn cancel(_: &mut SketApp) -> bool {
         false
     }
-    pub(crate) fn tick(_: &mut SolveApp, _: &Context) {}
-    pub(crate) fn inspect(_: &SolveApp) -> Value {
+    pub(crate) fn tick(_: &mut SketApp, _: &Context) {}
+    pub(crate) fn inspect(_: &SketApp) -> Value {
         Value::Null
     }
-    pub(crate) fn inspect_batches(_: &SolveApp) -> Value {
+    pub(crate) fn inspect_batches(_: &SketApp) -> Value {
         Value::Null
     }
-    pub(crate) fn document_closing(_: &mut SolveApp, _: u64) {}
-    pub(crate) fn progress(_: &mut SolveApp, _: &mut egui::Ui) -> bool {
+    pub(crate) fn document_closing(_: &mut SketApp, _: u64) {}
+    pub(crate) fn progress(_: &mut SketApp, _: &mut egui::Ui) -> bool {
         false
     }
-    pub(crate) fn begin_ui(_: &mut SolveApp, _: Kind, _: Value) -> Result<(), String> {
+    pub(crate) fn begin_ui(_: &mut SketApp, _: Kind, _: Value) -> Result<(), String> {
         Err("native preparation is unavailable".into())
     }
-    pub(crate) fn begin_batch_ui(_: &mut SolveApp, _: Value) -> Result<(), String> {
+    pub(crate) fn begin_batch_ui(_: &mut SketApp, _: Value) -> Result<(), String> {
         Err("native preparation is unavailable".into())
     }
-    pub(crate) fn control(_: &mut SolveApp, req: crate::control::ControlRequest) -> Option<crate::control::ControlRequest> {
+    pub(crate) fn control(_: &mut SketApp, req: crate::control::ControlRequest) -> Option<crate::control::ControlRequest> {
         Some(req)
     }
 }

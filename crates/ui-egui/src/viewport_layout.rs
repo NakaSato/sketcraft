@@ -1,6 +1,6 @@
 //! Floating controls reserve drawing space without changing rendering or picking projection.
 use egui::{Rect, pos2, vec2};
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 use sketcraft_engine::geom::Aabb3;
 use sketcraft_engine::geom::prelude::*;
 use sketcraft_engine::render::Camera;

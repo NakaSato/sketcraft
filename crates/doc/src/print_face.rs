@@ -3,7 +3,7 @@
 //! sketch on a face holds ([`Document::flat_face_target`]), so a rebuild that adds, removes or
 //! reorders faces finds the same face again, or says it is gone.
 
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 use sketcraft_geom::prelude::*;
 
 use crate::config::ConfigFaceTarget;

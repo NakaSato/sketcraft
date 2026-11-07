@@ -5,10 +5,10 @@
 //! (`view_gizmo::visible`) and the navigation bar (`navigation_bar::shown`).
 
 use egui::{Color32, Pos2, Rect};
+use sketcore_record::Vec3;
 use sketcraft_engine::geom::prelude::*;
-use solidcore_record::Vec3;
 
-use crate::SolveApp;
+use crate::SketApp;
 use crate::viewport::Proj;
 
 /// Sky at the top of the view, and where it meets the horizon.
@@ -29,13 +29,13 @@ pub(crate) const EDGE: Color32 = Color32::from_rgb(24, 24, 24);
 pub(crate) const FACE: Color32 = Color32::from_rgb(238, 236, 230);
 
 /// The edge colour on the SketchUp model screen; `None` for the theme's.
-pub(crate) fn edge(app: &SolveApp) -> Option<Color32> {
+pub(crate) fn edge(app: &SketApp) -> Option<Color32> {
     on(app).then_some(EDGE)
 }
 
 /// The colour of a face with no colour of its own on the SketchUp model screen; `None` for the
 /// theme's.
-pub(crate) fn face(app: &SolveApp) -> Option<Color32> {
+pub(crate) fn face(app: &SketApp) -> Option<Color32> {
     on(app).then_some(FACE)
 }
 
@@ -44,7 +44,7 @@ pub(crate) const BACK_FACE: Color32 = Color32::from_rgb(164, 178, 187);
 
 /// The viewport shader's back-face colour (`U.back_face`: straight sRGB 0..1, alpha 1 on): on
 /// the SketchUp model screen, else off (alpha 0), back sides in the body's colour.
-pub(crate) fn back_face_uniform(app: &SolveApp) -> [f32; 4] {
+pub(crate) fn back_face_uniform(app: &SketApp) -> [f32; 4] {
     if !on(app) {
         return [0.0; 4];
     }
@@ -56,7 +56,7 @@ pub(crate) fn back_face_uniform(app: &SolveApp) -> [f32; 4] {
 pub(crate) const AXIS_REACH: f64 = 60.0;
 
 /// The SketchUp model screen is on.
-pub(crate) fn on(app: &SolveApp) -> bool {
+pub(crate) fn on(app: &SketApp) -> bool {
     app.preferences.sketchup_screen && !crate::render_workspace::active(app)
 }
 
@@ -94,7 +94,7 @@ fn gradient(painter: &egui::Painter, rect: Rect, top: Color32, bottom: Color32) 
 }
 
 /// Paint the sky and the ground behind the model.
-pub(crate) fn paint_sky(app: &SolveApp, painter: &egui::Painter, rect: Rect, proj: &Proj) {
+pub(crate) fn paint_sky(app: &SketApp, painter: &egui::Painter, rect: Rect, proj: &Proj) {
     if !on(app) {
         return;
     }

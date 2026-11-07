@@ -1,7 +1,7 @@
 //! SketCraft native, versioned binary geometry. No STEP conversion or display meshes.
 //! Exact: a decoded body is the encoded one, number for number, for the same producer.
 use crate::{Body, KernelError, Result, guard};
-use solidcore_record::native::{self as file, Runtime, Saved};
+use sketcore_record::native::{self as file, Runtime, Saved};
 
 mod metadata;
 mod preview;
@@ -48,7 +48,7 @@ pub fn encode_native_body(body: &Body) -> Result<Vec<u8>> {
 
 /// The schema 4 record of a solid body, in canonical order with its pcurves: the body itself.
 /// Mesh bodies have none.
-pub fn brep_record(body: &Body) -> Result<solidcore_record::brep::Brep> {
+pub fn brep_record(body: &Body) -> Result<sketcore_record::brep::Brep> {
     let _span = sketcraft_profile::span("kernel", "brep_record");
     if body.mesh.is_some() {
         return Err(invalid("mesh bodies are source blobs, not B-rep"));
@@ -104,9 +104,7 @@ pub(crate) fn smlib_body_ordered(body: &Body) -> Result<(sketcraft_smlib::Brep, 
 
 /// `record` in SMLib, imported as given (SMLib's own form; a record it refuses is an error that
 /// names why), with where each of SMLib's faces and edges is in the record's order.
-pub(crate) fn smlib_record_ordered(
-    record: &solidcore_record::brep::Brep,
-) -> Result<(sketcraft_smlib::Brep, Option<sketcraft_smlib::history::Order>)> {
+pub(crate) fn smlib_record_ordered(record: &sketcore_record::brep::Brep) -> Result<(sketcraft_smlib::Brep, Option<sketcraft_smlib::history::Order>)> {
     let _span = sketcraft_profile::span("kernel", "smlib_record_ordered");
     let brep = sketcraft_smlib::Brep::from_record(record, true).map_err(|e| KernelError::smlib("SMLib", e))?;
     let order = numbering(record, &brep);
@@ -122,7 +120,7 @@ pub(crate) fn smlib_record_ordered(
 /// SMLib's faces and edges in the record's order, and canonical order can list them otherwise,
 /// a tube's seam edges among them): the export put back in SMLib's order then numbers them as
 /// `record` does, and SMLib's face and edge `i` are the record's `i`.
-fn numbering(record: &solidcore_record::brep::Brep, brep: &sketcraft_smlib::Brep) -> Option<sketcraft_smlib::history::Order> {
+fn numbering(record: &sketcore_record::brep::Brep, brep: &sketcraft_smlib::Brep) -> Option<sketcraft_smlib::history::Order> {
     match brep.to_native_ordered() {
         Ok((back, order)) => {
             if same_numbering(record, &back) {
@@ -142,8 +140,8 @@ fn numbering(record: &solidcore_record::brep::Brep, brep: &sketcraft_smlib::Brep
 /// SMLib's face and edge `i` are in `back`), each loop naming its edges by SMLib's numbers.
 /// `None` where `order` is not a renumbering of `back`'s faces and edges (an edge split into
 /// pieces where solids touch along it is more than one record edge).
-fn in_smlib_order(back: &solidcore_record::brep::Brep, order: &sketcraft_smlib::history::Order) -> Option<solidcore_record::brep::Brep> {
-    use solidcore_record::brep::Loop;
+fn in_smlib_order(back: &sketcore_record::brep::Brep, order: &sketcraft_smlib::history::Order) -> Option<sketcore_record::brep::Brep> {
+    use sketcore_record::brep::Loop;
     let permutation = |to: &[usize], n: usize| -> Option<Vec<usize>> {
         if to.is_empty() {
             return Some((0..n).collect());
@@ -184,8 +182,8 @@ fn in_smlib_order(back: &solidcore_record::brep::Brep, order: &sketcraft_smlib::
 
 /// Whether two records of one body number its faces, edges and vertices alike: the same loops of
 /// the same edges, the same edge ends, and each vertex where the other's is.
-fn same_numbering(a: &solidcore_record::brep::Brep, b: &solidcore_record::brep::Brep) -> bool {
-    use solidcore_record::brep::Loop;
+fn same_numbering(a: &sketcore_record::brep::Brep, b: &sketcore_record::brep::Brep) -> bool {
+    use sketcore_record::brep::Loop;
     if a.faces.len() != b.faces.len() || a.edges.len() != b.edges.len() || a.vertices.len() != b.vertices.len() {
         return false;
     }
@@ -209,7 +207,7 @@ fn same_numbering(a: &solidcore_record::brep::Brep, b: &solidcore_record::brep::
 /// opposite order with each edge the other way round. SMLib walks a face whose surface it turned
 /// (a hole's wall) the other way, starting where it likes; its faces and edges are numbered
 /// alike all the same.
-fn same_cycle(x: &[solidcore_record::brep::OrientedEdge], y: &[solidcore_record::brep::OrientedEdge]) -> bool {
+fn same_cycle(x: &[sketcore_record::brep::OrientedEdge], y: &[sketcore_record::brep::OrientedEdge]) -> bool {
     let n = x.len();
     if n != y.len() {
         return false;
@@ -246,7 +244,7 @@ mod smlib_import_tests;
 mod tests {
     use super::*;
     use serde_json::Value;
-    use solidcore_record::Vec3;
+    use sketcore_record::Vec3;
     use sketcraft_geom::prelude::*;
     use std::sync::Arc;
     fn equal(a: &Body, b: &Body) {
@@ -319,7 +317,7 @@ mod tests {
     /// along lines, round (spline forms), open, and placed far off.
     #[test]
     fn the_encoding_is_the_bytes_of_the_record_as_a_json_value() {
-        use solidcore_record::{Loop2, Plane, Region2, Vec2};
+        use sketcore_record::{Loop2, Plane, Region2, Vec2};
         let cube = crate::box_solid(Vec3::ZERO, Vec3::new(40., 30., 10.)).unwrap();
         let rounded = crate::fillet(&cube, &[Vec3::new(20., 0., 10.)], 2.).unwrap();
         let bore = crate::cylinder(Vec3::new(10., 10., -1.), Vec3::Z, 3., 12.).unwrap();
@@ -440,9 +438,9 @@ mod tests {
         let body = crate::box_solid(Vec3::ZERO, Vec3::new(10., 20., 30.)).unwrap();
         let mut record = body.record().clone();
         let [t0, t1] = record.edges[0].interval;
-        let n = solidcore_record::brep::MAX_ITEMS;
+        let n = sketcore_record::brep::MAX_ITEMS;
         let points = (0..n).map(|i| [i as f64 * 1e-6, 0., 0.]).collect();
-        record.edges[0].curve = solidcore_record::brep::Curve::Polyline { points };
+        record.edges[0].curve = sketcore_record::brep::Curve::Polyline { points };
         assert!(t0 >= 0.0 && t1 <= (n - 1) as f64);
         Body::from_record(record.clone()).unwrap();
         let saved = Saved { solid: record, metadata: metadata::encode(&body).unwrap(), runtime: Runtime { size: 0.0, coarse_missing: None } };

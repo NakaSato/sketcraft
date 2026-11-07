@@ -15,7 +15,7 @@ use egui::{Align2, FontId, Rect, Sense, pos2, vec2};
 use serde_json::json;
 use sketcraft_engine::render::{Camera, ViewAngles};
 
-use crate::SolveApp;
+use crate::SketApp;
 use crate::fonts::RichTextExt as _;
 use crate::theme::Tokens;
 use crate::ui_kit::{self, Container, Surface};
@@ -52,7 +52,7 @@ pub(crate) fn degrees(value: f64, decimals: u8) -> String {
 }
 
 /// The readout's two lines: the angles, then the projection the view is drawn with.
-pub(crate) fn lines(app: &SolveApp) -> (String, String) {
+pub(crate) fn lines(app: &SketApp) -> (String, String) {
     let a = app.cam.view_angles();
     let d = app.preferences.angle_decimals;
     let angles =
@@ -62,7 +62,7 @@ pub(crate) fn lines(app: &SolveApp) -> (String, String) {
 }
 
 /// Whether the angle of `axis` (`"yaw"`, `"pitch"` or `"roll"`) is locked in the card (#4581).
-pub(crate) fn locked_angle(app: &SolveApp, axis: &str) -> bool {
+pub(crate) fn locked_angle(app: &SketApp, axis: &str) -> bool {
     match axis {
         "yaw" => app.ui.view_angles_lock_yaw,
         "pitch" => app.ui.view_angles_lock_pitch,
@@ -70,7 +70,7 @@ pub(crate) fn locked_angle(app: &SolveApp, axis: &str) -> bool {
     }
 }
 
-fn set_lock(app: &mut SolveApp, axis: &str, locked: bool) {
+fn set_lock(app: &mut SketApp, axis: &str, locked: bool) {
     match axis {
         "yaw" => app.ui.view_angles_lock_yaw = locked,
         "pitch" => app.ui.view_angles_lock_pitch = locked,
@@ -79,8 +79,8 @@ fn set_lock(app: &mut SolveApp, axis: &str, locked: bool) {
 }
 
 /// A camera `to` that a mouse or key motion just produced, with every locked angle kept at its
-/// value on `from`: orbiting, arrow turns and 3D-mouse motion never move a locked axis (#4581).
-pub(crate) fn keep_locked(app: &SolveApp, from: Camera, to: Camera) -> Camera {
+/// value on `from`: orbiting and arrow turns never move a locked axis (#4581).
+pub(crate) fn keep_locked(app: &SketApp, from: Camera, to: Camera) -> Camera {
     if !(locked_angle(app, "yaw") || locked_angle(app, "pitch") || locked_angle(app, "roll")) {
         return to;
     }
@@ -100,7 +100,7 @@ pub(crate) fn keep_locked(app: &SolveApp, from: Camera, to: Camera) -> Camera {
 
 /// Turn the view to typed angles through `view.apply`, keeping its target, distance and projection.
 /// A locked axis keeps the angle the view has now, whatever the card holds for it.
-pub(crate) fn apply(app: &mut SolveApp, mut angles: ViewAngles) {
+pub(crate) fn apply(app: &mut SketApp, mut angles: ViewAngles) {
     let held = app.cam.view_angles();
     if locked_angle(app, "yaw") {
         angles.yaw = held.yaw;
@@ -119,7 +119,7 @@ pub(crate) fn apply(app: &mut SolveApp, mut angles: ViewAngles) {
 }
 
 /// Paint the readout under the gizmo of the viewport `rect`, and the card when it is open.
-pub(crate) fn show(app: &mut SolveApp, ui: &mut egui::Ui, rect: Rect) {
+pub(crate) fn show(app: &mut SketApp, ui: &mut egui::Ui, rect: Rect) {
     let axis = crate::viewport::axis_rect(app, rect);
     if !app.preferences.show_view_angles || !axis.is_positive() || !axis.is_finite() {
         ui.data_mut(|d| d.remove::<ViewAngles>(draft_id()));

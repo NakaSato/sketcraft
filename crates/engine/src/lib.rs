@@ -45,7 +45,7 @@ use std::sync::Arc;
 
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 use sketcraft_doc::{Document, Model, ModelState};
 
 pub use cmd::settings::{MAX_PROFILE_NAME, profile_name};
@@ -1214,7 +1214,7 @@ impl Session {
                 for sketch in w.sketches.iter_mut().filter(|sk| self.doc.feature(sk.feature).is_some_and(|f| f.component == self.active_component)) {
                     let sketch = Arc::make_mut(sketch);
                     let plane = sketch.plane;
-                    sketch.plane = solidcore_record::Plane::new(
+                    sketch.plane = sketcore_record::Plane::new(
                         sketcraft_doc::apply_point(&delta, plane.origin),
                         sketcraft_doc::apply_vector(&delta, plane.x),
                         sketcraft_doc::apply_vector(&delta, plane.y),

@@ -1,7 +1,7 @@
 //! Definition-local visual coordinates, independent of geometry and engineering axes.
 //! This numerical foundation installs no texture sampler, shader or persistent record.
 
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 use sketcraft_geom::Aabb3;
 use sketcraft_geom::prelude::*;
 

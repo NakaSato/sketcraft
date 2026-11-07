@@ -22,7 +22,7 @@ use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use crate::paper::MAX_SIDE_MM;
 use crate::section::{CurveAccuracy, MAX_NUMBER, validate_plane};
 use crate::{Aabb2, Similarity2};
-use solidcore_record::{Plane, Seg2, Vec2, Vec3};
+use sketcore_record::{Plane, Seg2, Vec2, Vec3};
 
 /// The smallest scale: one paper millimetre for 100 m of model.
 pub const MIN_SCALE: f64 = 1e-5;

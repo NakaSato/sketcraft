@@ -4,7 +4,7 @@
 use std::f64::consts::PI;
 
 use serde_json::Value;
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 use sketcraft_engine::{Session, io, kernel};
 
 fn assert_two_through_holes(session: &Session, stage: &str) {

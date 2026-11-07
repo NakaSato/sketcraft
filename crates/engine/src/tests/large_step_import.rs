@@ -11,8 +11,8 @@ use crate::*;
 fn step_file(name: &str, count: usize) -> String {
     let bodies: Vec<_> = (0..count)
         .map(|i| {
-            let at = solidcore_record::Vec3::new((i % 32) as f64 * 12.0, (i / 32) as f64 * 12.0, 0.0);
-            sketcraft_kernel::box_solid(at, at + solidcore_record::Vec3::new(10.0, 10.0, 10.0)).unwrap()
+            let at = sketcore_record::Vec3::new((i % 32) as f64 * 12.0, (i / 32) as f64 * 12.0, 0.0);
+            sketcraft_kernel::box_solid(at, at + sketcore_record::Vec3::new(10.0, 10.0, 10.0)).unwrap()
         })
         .collect();
     let text = sketcraft_kernel::step_export(&bodies.iter().collect::<Vec<_>>(), name).unwrap();

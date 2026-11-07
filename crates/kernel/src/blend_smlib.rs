@@ -13,7 +13,7 @@
 //! The history is SMLib's tags, renumbered into the body's orders; a blend face, which SMLib
 //! leaves untagged, comes from the edge it replaces ([`sketcraft_smlib::history::blends`]).
 
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 
 use crate::blend_variable::RadiusSpline;
 use crate::body::Body;
@@ -117,7 +117,7 @@ mod imp {
     use sketcraft_geom::prelude::*;
     use std::collections::BTreeSet;
 
-    use solidcore_record::Vec3;
+    use sketcore_record::Vec3;
     use sketcraft_smlib::{Blend, Brep, ChamferSecond, CheckLevel, Error as SmError, Turn};
 
     use super::Kind;
@@ -459,7 +459,7 @@ mod imp {
                      run on tangentially into each other, or meet in a way no blend corner builds)"
                 )),
                 SmError::NoRoom => KernelError::TooLarge(format!("the {what} is larger than the faces beside its edges allow")),
-                // Not a size a smaller radius fixes: solidcore builds no swept turn there.
+                // Not a size a smaller radius fixes: sketcore builds no swept turn there.
                 SmError::TurnRefused { why, at, .. } => {
                     let at = at.map(|[x, y, z]| format!(" at ({x:.3}, {y:.3}, {z:.3})")).unwrap_or_default();
                     KernelError::Invalid(format!("the {what}'s swept corner{at} is not built: {why}"))
@@ -581,7 +581,7 @@ mod imp {
 #[cfg(test)]
 #[allow(clippy::unwrap_used, clippy::expect_used)]
 mod tests {
-    use solidcore_record::Vec3;
+    use sketcore_record::Vec3;
 
     use super::*;
     use crate::history::{Change, FaceOrigin};

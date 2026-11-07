@@ -4,7 +4,7 @@
 //! points than asked for is thinned evenly (every n-th point). The points are kept relative to
 //! the first one, in single precision.
 
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 use sketcraft_doc::point_cloud::{MAX_COORD, MAX_POINTS};
 
 use crate::{IoError, Result};

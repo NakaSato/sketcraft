@@ -21,7 +21,7 @@
 
 use serde_json::Value;
 
-use crate::SolveApp;
+use crate::SketApp;
 
 /// A command computing off the window thread.
 pub struct Deferred {
@@ -108,7 +108,7 @@ pub(crate) enum AfterCheck {
 
 impl AfterCheck {
     /// Check again, for the design as it is now.
-    fn restart(self, app: &mut SolveApp) {
+    fn restart(self, app: &mut SketApp) {
         match self {
             AfterCheck::Timeline { features, groups } => {
                 let ids: Vec<u64> = features.into_iter().filter(|id| app.session.doc.feature(*id).is_some()).collect();
@@ -124,7 +124,7 @@ impl AfterCheck {
     }
 
     /// Carry on with the check's replies, and what it `kept` (when it ran ahead) for the delete.
-    fn finish(self, app: &mut SolveApp, replies: Vec<Result<Value, String>>, kept: Option<std::sync::Arc<sketcraft_engine::doc::KeptResults>>) {
+    fn finish(self, app: &mut SketApp, replies: Vec<Result<Value, String>>, kept: Option<std::sync::Arc<sketcraft_engine::doc::KeptResults>>) {
         match self {
             AfterCheck::Timeline { features, groups } => {
                 let reports: Vec<Value> = replies.into_iter().map(Result::unwrap_or_default).collect();
@@ -144,7 +144,7 @@ fn replaced_by_a_later_one(id: &str) -> bool {
     id == "timeline.roll_to"
 }
 
-impl SolveApp {
+impl SketApp {
     /// Swap the active design's [`DocJobs`] for `incoming`, the jobs of the design taking its
     /// place, and hand back the outgoing ones.
     pub(crate) fn swap_jobs(&mut self, incoming: DocJobs) -> DocJobs {
@@ -350,7 +350,7 @@ impl SolveApp {
     }
 
     /// Start evaluating a command ahead. `None` when it should just run: not asked for
-    /// ([`SolveApp::apply_off_thread`]), a file operation in progress, no threads (the web), or
+    /// ([`SketApp::apply_off_thread`]), a file operation in progress, no threads (the web), or
     /// done within the wait.
     #[cfg(not(target_arch = "wasm32"))]
     fn begin_deferred(&self, id: &str, params: &Value) -> Start {

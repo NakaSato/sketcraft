@@ -12,10 +12,10 @@ use std::cell::{Cell, RefCell};
 
 use egui::{Pos2, Stroke};
 use serde_json::{Value, json};
-use solidcore_record::{Plane, Vec2, Vec3};
+use sketcore_record::{Plane, Vec2, Vec3};
 use sketcraft_engine::kernel::Continuity;
 
-use crate::SolveApp;
+use crate::SketApp;
 use crate::tool_modifiers::{Audit, Binding, Match, ModAction, ModifierCombo, Scope, ToolModifiers, Trigger};
 use crate::tools::{Kind, Tool};
 use crate::viewport::{Hit, Proj, pick_for_tool as pick, sketch_point_at};
@@ -122,7 +122,7 @@ thread_local! {
 const TRIM_STEP_PX: f32 = 4.0;
 
 /// The sketch-plane position under screen position `pos`.
-fn on_sketch_plane(app: &SolveApp, proj: &Proj, pos: Pos2) -> Option<Vec2> {
+fn on_sketch_plane(app: &SketApp, proj: &Proj, pos: Pos2) -> Option<Vec2> {
     let st = crate::open_meshing::session_world(&app.session);
     let ss = st.sketch(active_sketch(app)?)?;
     let (o, d) = proj.ray(pos);
@@ -131,7 +131,7 @@ fn on_sketch_plane(app: &SolveApp, proj: &Proj, pos: Pos2) -> Option<Vec2> {
 
 /// A press and drag with Trim draws a path from `press`; true when it started one. Each piece
 /// the path crosses is trimmed when it is let go (`sketch.trim.path`).
-pub fn trim_drag_start(app: &mut SolveApp, proj: &Proj, press: Pos2) -> bool {
+pub fn trim_drag_start(app: &mut SketApp, proj: &Proj, press: Pos2) -> bool {
     let Some(q) = on_sketch_plane(app, proj, press) else { return false };
     let Some(tool) = app.tool.as_mut().filter(|t| t.cmd == "sketch.trim") else { return false };
     tool.pts = vec![(q, None)];
@@ -142,7 +142,7 @@ pub fn trim_drag_start(app: &mut SolveApp, proj: &Proj, press: Pos2) -> bool {
 
 /// The Trim drag's path reaches `pos`: the pieces it would remove light up (a dry run of the
 /// command the release runs).
-pub fn trim_drag_to(app: &mut SolveApp, proj: &Proj, pos: Pos2) {
+pub fn trim_drag_to(app: &mut SketApp, proj: &Proj, pos: Pos2) {
     if TRIM_LAST.with(Cell::get).is_some_and(|last| last.distance(pos) < TRIM_STEP_PX) {
         return;
     }
@@ -174,7 +174,7 @@ const TRIM_PATH_MAX: usize = 2_000;
 
 /// The Trim drag is let go: trim every piece its path crossed, in one undo step. False when the
 /// path crossed nothing (the caller takes the release as a click).
-pub fn trim_drag_end(app: &mut SolveApp) -> bool {
+pub fn trim_drag_end(app: &mut SketApp) -> bool {
     TRIM_LAST.with(|c| c.set(None));
     let crossed = TRIM_REMOVED.with(|r| !std::mem::take(&mut *r.borrow_mut()).is_empty());
     let Some(tool) = app.tool.as_mut().filter(|t| t.cmd == "sketch.trim") else { return false };
@@ -187,7 +187,7 @@ pub fn trim_drag_end(app: &mut SolveApp) -> bool {
 }
 
 /// Run an analysis and keep its result as a marker.
-fn analysis(app: &mut SolveApp, cmd: &str, p: Value) {
+fn analysis(app: &mut SketApp, cmd: &str, p: Value) {
     let Ok(v) = app.run(cmd, p) else { return };
     let mark = match cmd {
         "inspect.center_of_mass" => v3(&v["center"]).map(|c| (c, "Center of mass".to_string())),
@@ -223,7 +223,7 @@ fn next_measure(order: Continuity) -> Option<(&'static str, &'static str, &'stat
 /// A seam from an `inspect.continuity` reply as a marker label: its class in words and the
 /// measure that keeps it from the next order (the gap, the angle between the faces' normals, or
 /// the jump of the curvature, of its change, or of that change's rate).
-fn continuity_label(app: &SolveApp, seam: &Value) -> String {
+fn continuity_label(app: &SketApp, seam: &Value) -> String {
     let deg = |key: &str| seam[key]["value"].as_f64().map(|x| format!("{x:.3}\u{b0}")).unwrap_or_default();
     let order = seam["order"].as_str().and_then(Continuity::parse);
     let class = crate::i18n::tr(order_class(order));
@@ -239,7 +239,7 @@ fn continuity_label(app: &SolveApp, seam: &Value) -> String {
 }
 
 /// Analysis markers: a target with its label.
-fn marks(app: &SolveApp, painter: &egui::Painter, proj: &Proj) {
+fn marks(app: &SketApp, painter: &egui::Painter, proj: &Proj) {
     if !app.tool.as_ref().is_some_and(|t| matches!(t.cmd, "inspect.minimum_radius" | "inspect.center_of_mass" | "inspect.continuity")) {
         MARKS.with(|m| m.borrow_mut().clear());
         return;
@@ -272,7 +272,7 @@ fn marks(app: &SolveApp, painter: &egui::Painter, proj: &Proj) {
 
 /// Commands that start with a step of their own: Canvas and Decal ask for the image first,
 /// Edit Canvas opens the canvas panel. False when the command should not go on.
-pub fn start_hook(app: &mut SolveApp, id: &str) -> bool {
+pub fn start_hook(app: &mut SketApp, id: &str) -> bool {
     if id == "inspect.section" && app.preferences.viewport_section_status && app.session.section.is_some() {
         let _ = app.run(id, json!({"clear":true}));
         return false;
@@ -407,14 +407,14 @@ pub(crate) fn comb_options() -> CombOptions {
 
 /// The combs shown, each as its teeth (foot, tip).
 #[cfg(test)]
-pub(crate) fn shown_combs(app: &SolveApp) -> Vec<Vec<[Vec3; 2]>> {
+pub(crate) fn shown_combs(app: &SketApp) -> Vec<Vec<[Vec3; 2]>> {
     app.session.comb.as_ref().map(|v| v.teeth.clone()).unwrap_or_default()
 }
 
 /// Comb `picks` (the comb command's parameters for curves or edges; none: draw those shown
 /// again) beside the combs already shown, every comb at one scale with the tool's options. A
 /// failure leaves those shown as they were (the status line says why).
-fn comb(app: &mut SolveApp, picks: Value) {
+fn comb(app: &mut SketApp, picks: Value) {
     let options = comb_options();
     let mut params = picks;
     params["add"] = json!(true);
@@ -424,7 +424,7 @@ fn comb(app: &mut SolveApp, picks: Value) {
 }
 
 /// Change the comb tool's options and draw the combs shown again with them.
-pub(crate) fn set_comb_options(app: &mut SolveApp, options: CombOptions) {
+pub(crate) fn set_comb_options(app: &mut SketApp, options: CombOptions) {
     let options = CombOptions {
         length: options.length.clamp(*CombOptions::LENGTH.start(), *CombOptions::LENGTH.end()),
         teeth: options.teeth.clamp(*CombOptions::TEETH.start(), *CombOptions::TEETH.end()),
@@ -440,7 +440,7 @@ pub(crate) fn set_comb_options(app: &mut SolveApp, options: CombOptions) {
 /// The comb tool's options at the top left of the free viewport while it runs (the analysis and
 /// continuity legends keep the lower left): Comb length and Teeth. Changing either draws the
 /// combs shown again.
-fn comb_options_card(app: &mut SolveApp, ctx: &egui::Context, proj: &Proj) {
+fn comb_options_card(app: &mut SketApp, ctx: &egui::Context, proj: &Proj) {
     if app.tool.as_ref().map(|t| t.cmd) != Some("inspect.curvature_comb") {
         return;
     }
@@ -484,7 +484,7 @@ fn comb_options_card(app: &mut SolveApp, ctx: &egui::Context, proj: &Proj) {
 }
 
 /// Curvature combs (`Session::comb`): teeth and the envelope through their tips.
-fn combs(app: &SolveApp, painter: &egui::Painter, proj: &Proj) {
+fn combs(app: &SketApp, painter: &egui::Painter, proj: &Proj) {
     let Some(shown) = &app.session.comb else { return };
     // The teeth are the design's: not while a value is typed and the sketch is drawn at it.
     if crate::dim_view::preview_world(app).is_some() {
@@ -514,7 +514,7 @@ pub struct Lined {
 
 /// The points the cursor can line up with: the sketch's visible points on screen (line ends,
 /// centres, standalone points, the origin) and the shape's own points so far.
-fn align_targets(proj: &Proj, sk: &sketcraft_engine::sketch::Sketch, plane: &solidcore_record::Plane, own: &[Vec2]) -> Vec<(Option<String>, Vec2)> {
+fn align_targets(proj: &Proj, sk: &sketcraft_engine::sketch::Sketch, plane: &sketcore_record::Plane, own: &[Vec2]) -> Vec<(Option<String>, Vec2)> {
     let visible = sketcraft_engine::view::SketchPointVisibility::new(sk);
     let on_screen = |p: Vec2| proj.to_screen(plane.to_world(p)).is_some_and(|q| proj.rect.contains(q));
     let mut out: Vec<(Option<String>, Vec2)> =
@@ -545,7 +545,7 @@ pub(crate) fn lined_at(at: Vec2) -> Vec<Lined> {
 }
 
 /// The active sketch's point ids, to tell the points a command makes from those it had.
-pub(crate) fn point_ids(app: &SolveApp) -> Vec<String> {
+pub(crate) fn point_ids(app: &SketApp) -> Vec<String> {
     let st = crate::open_meshing::session_world(&app.session);
     app.session.active_sketch.and_then(|id| st.sketch(id)).map(|ss| ss.sketch.points.iter().map(|p| p.id.clone()).collect()).unwrap_or_default()
 }
@@ -553,7 +553,7 @@ pub(crate) fn point_ids(app: &SolveApp) -> Vec<String> {
 /// Once a shape is made (#7828): each new point that was placed lined up with a sketch point
 /// (`placed`, the shape's points) stays level or plumb with it. Only what the sketch doesn't
 /// already have is added, in the shape's undo step.
-pub(crate) fn constrain_lined(app: &mut SolveApp, tool: &mut Tool, placed: &[Vec2], before: &[String]) {
+pub(crate) fn constrain_lined(app: &mut SketApp, tool: &mut Tool, placed: &[Vec2], before: &[String]) {
     let lined = std::mem::take(&mut tool.lined);
     let new: Vec<(String, Vec2)> = {
         let st = crate::open_meshing::session_world(&app.session);
@@ -589,10 +589,10 @@ fn nearest_on_polyline(poly: &[Vec2], p: Vec2) -> Option<Vec2> {
 /// two curves, a line's midpoint, or alignment (horizontal/vertical) with the previous point
 /// of the tool. None: nothing near, use the grid.
 pub fn refine_snap(
-    app: &SolveApp,
+    app: &SketApp,
     proj: &Proj,
     sk: &sketcraft_engine::sketch::Sketch,
-    plane: &solidcore_record::Plane,
+    plane: &sketcore_record::Plane,
     lp: Vec2,
 ) -> Option<(Vec2, Option<String>)> {
     crate::inference::clear();
@@ -797,7 +797,7 @@ pub fn glyph_deletion(sk: &sketcraft_engine::sketch::Sketch, id: &str) -> Vec<sk
 }
 
 /// [`glyph_deletion`] in the active sketch.
-pub fn active_glyph_deletion(app: &SolveApp, id: &str) -> Vec<sketcraft_engine::Sel> {
+pub fn active_glyph_deletion(app: &SketApp, id: &str) -> Vec<sketcraft_engine::Sel> {
     let st = crate::open_meshing::session_world(&app.session);
     match active_sketch(app).and_then(|s| st.sketch(s)) {
         Some(ss) => glyph_deletion(&ss.sketch, id),
@@ -816,7 +816,7 @@ pub fn glyph_positions() -> Vec<(String, Pos2)> {
 }
 
 /// Delete the selected constraint glyph (true when one was selected).
-pub fn delete_glyph(app: &mut SolveApp) -> bool {
+pub fn delete_glyph(app: &mut SketApp) -> bool {
     let Some(id) = PICKED.with(|p| p.borrow_mut().take()) else { return false };
     let entities: Vec<String> = active_glyph_deletion(app, &id)
         .into_iter()
@@ -956,12 +956,12 @@ pub fn hint(id: &str) -> Option<String> {
     )
 }
 
-fn active_sketch(app: &SolveApp) -> Option<u64> {
+fn active_sketch(app: &SketApp) -> Option<u64> {
     app.session.active_sketch
 }
 
 /// A model reference for a hit (for Project and friends).
-pub(crate) fn model_ref(app: &SolveApp, h: &Hit) -> Option<Value> {
+pub(crate) fn model_ref(app: &SketApp, h: &Hit) -> Option<Value> {
     let active = active_sketch(app);
     Some(match h {
         Hit::Vertex { body, point } => json!({"vertex": [point.x, point.y, point.z], "body": body}),
@@ -976,7 +976,7 @@ pub(crate) fn model_ref(app: &SolveApp, h: &Hit) -> Option<Value> {
 }
 
 /// The active sketch's curve or point under the cursor.
-fn sketch_entity(app: &SolveApp, hits: &[Hit]) -> Option<(String, bool)> {
+fn sketch_entity(app: &SketApp, hits: &[Hit]) -> Option<(String, bool)> {
     let active = active_sketch(app)?;
     hits.iter().find_map(|h| match h {
         Hit::SketchPoint { sketch, id, .. } if *sketch == active => Some((id.clone(), true)),
@@ -1014,7 +1014,7 @@ pub(crate) fn corner_curves(sk: &sketcraft_engine::sketch::Sketch, pi: usize, ar
 
 /// Corner tools accept endpoints shared by two editable curves. Pick among those endpoints
 /// directly so the origin, a circle centre or an overlapping loose point cannot hide a corner.
-pub(crate) fn corner_point(app: &SolveApp, proj: &Proj, pos: Pos2, arcs_ok: bool) -> Option<(Vec2, String)> {
+pub(crate) fn corner_point(app: &SketApp, proj: &Proj, pos: Pos2, arcs_ok: bool) -> Option<(Vec2, String)> {
     let st = crate::open_meshing::session_world(&app.session);
     let ss = st.sketch(active_sketch(app)?)?;
     let sk = &ss.sketch;
@@ -1045,7 +1045,7 @@ fn arg(p: &(Vec2, Option<String>)) -> Value {
 }
 
 /// Length of a curve (for default sizes).
-fn curve_len(app: &SolveApp, id: &str) -> f64 {
+fn curve_len(app: &SketApp, id: &str) -> f64 {
     let st = crate::open_meshing::session_world(&app.session);
     let Some(ss) = active_sketch(app).and_then(|s| st.sketch(s)) else { return 10.0 };
     ss.sketch.curve_index(id).map(|c| ss.sketch.polyline(c).windows(2).map(|w| w[0].dist(w[1])).sum::<f64>()).unwrap_or(10.0)
@@ -1070,7 +1070,7 @@ fn round_nice(x: f64) -> f64 {
 }
 
 /// The radius offered after the two curves of a tangent circle have been picked.
-pub(crate) fn two_tangent_default_radius(app: &SolveApp, tool: &Tool) -> f64 {
+pub(crate) fn two_tangent_default_radius(app: &SketApp, tool: &Tool) -> f64 {
     match tool.picks.as_slice() {
         [a, b] => round_nice(curve_len(app, a).min(curve_len(app, b)) * 0.1),
         _ => 1.0,
@@ -1078,7 +1078,7 @@ pub(crate) fn two_tangent_default_radius(app: &SolveApp, tool: &Tool) -> f64 {
 }
 
 /// A click with an extra tool.
-pub fn periodic_start_snap(app: &SolveApp, tool: &Tool, proj: &Proj, pos: Pos2) -> Option<Vec2> {
+pub fn periodic_start_snap(app: &SketApp, tool: &Tool, proj: &Proj, pos: Pos2) -> Option<Vec2> {
     if tool.cmd != "sketch.spline.fit_point" || tool.pts.len() < 3 || crate::drag_snap::suppressed() {
         return None;
     }
@@ -1101,7 +1101,7 @@ pub fn periodic_start_snap(app: &SolveApp, tool: &Tool, proj: &Proj, pos: Pos2) 
     (screen.distance(pos) <= 8.0).then_some(first)
 }
 
-pub fn on_click(app: &mut SolveApp, tool: &mut Tool, proj: &Proj, pos: Pos2) {
+pub fn on_click(app: &mut SketApp, tool: &mut Tool, proj: &Proj, pos: Pos2) {
     let Some(m) = mode(tool.cmd) else { return };
     let hits = pick(app, proj, pos);
     let at = sketch_point_at(app, proj, pos);
@@ -1354,7 +1354,7 @@ pub fn on_click(app: &mut SolveApp, tool: &mut Tool, proj: &Proj, pos: Pos2) {
 /// Put down the next point of a point tool, or confirm an extra tool's value box with Enter.
 /// Typed values are checked first, so a rejected one stays in its box to be corrected rather
 /// than reaching the command.
-pub(crate) fn place_point(app: &mut SolveApp, tool: &mut Tool, p: (Vec2, Option<String>)) {
+pub(crate) fn place_point(app: &mut SketApp, tool: &mut Tool, p: (Vec2, Option<String>)) {
     if sketcraft_engine::cmd::construction_line_mode(tool.cmd).is_some() {
         crate::sketch_construction::place_point(app, tool, p);
         return;
@@ -1400,13 +1400,13 @@ pub(crate) fn place_point(app: &mut SolveApp, tool: &mut Tool, p: (Vec2, Option<
 }
 
 /// Whether a click picked a sketch point a tangent arc can start at.
-fn tangent_start(app: &SolveApp, p: &(Vec2, Option<String>)) -> bool {
+fn tangent_start(app: &SketApp, p: &(Vec2, Option<String>)) -> bool {
     let Some(id) = &p.1 else { return false };
     let state = crate::open_meshing::session_world(&app.session);
     app.session.active_sketch.and_then(|sid| state.sketch(sid)).is_some_and(|ss| sketcraft_engine::cmd::tangent_arc_starts_at(&ss.sketch, id))
 }
 
-fn run_points(app: &mut SolveApp, t: &Tool) -> bool {
+fn run_points(app: &mut SketApp, t: &Tool) -> bool {
     let p = &t.pts;
     let width = |a: Vec2, b: Vec2, c: Vec2| -> f64 { 2.0 * (b - a).normalized().map(|d| d.cross(c - a).abs()).unwrap_or(1.0) };
     let slot_width = |fallback: f64| crate::sketch_dims::locked_value(app, t, "Width").unwrap_or_else(|| fallback.max(1e-3));
@@ -1443,7 +1443,7 @@ fn run_points(app: &mut SolveApp, t: &Tool) -> bool {
     crate::tools::draw(app, t, params).is_ok()
 }
 
-fn run_entities(app: &mut SolveApp, t: &Tool) -> bool {
+fn run_entities(app: &mut SketApp, t: &Tool) -> bool {
     let k = &t.picks;
     let params = match t.cmd {
         "sketch.constraint.curvature" => json!({"a": k[0], "b": k[1]}),
@@ -1469,7 +1469,7 @@ fn run_entities(app: &mut SolveApp, t: &Tool) -> bool {
 
 /// Right-click with an extra tool: finish a chain or move to the next stage. Returns false
 /// when the tool should be dropped.
-pub fn finish(app: &mut SolveApp, tool: &mut Tool) -> bool {
+pub fn finish(app: &mut SketApp, tool: &mut Tool) -> bool {
     // Esc or a right click ends the comb tool and turns its analysis off.
     if tool.cmd == "inspect.curvature_comb" {
         let _ = app.run(tool.cmd, json!({"clear": true}));
@@ -1510,7 +1510,7 @@ pub fn finish(app: &mut SolveApp, tool: &mut Tool) -> bool {
 type SolvedSketchRef = std::sync::Arc<sketcraft_engine::doc::SolvedSketch>;
 
 /// The shown state's solve of `sketch`, shared.
-fn solved_sketch(app: &SolveApp, sketch: u64) -> Option<SolvedSketchRef> {
+fn solved_sketch(app: &SketApp, sketch: u64) -> Option<SolvedSketchRef> {
     crate::open_meshing::session_world(&app.session).sketches.iter().find(|s| s.feature == sketch).cloned()
 }
 
@@ -1524,10 +1524,10 @@ struct SketchStateKey {
 }
 
 impl SketchStateKey {
-    fn new(app: &SolveApp, solve: &SolvedSketchRef, curve: &str) -> SketchStateKey {
+    fn new(app: &SketApp, solve: &SolvedSketchRef, curve: &str) -> SketchStateKey {
         SketchStateKey { revision: app.session.revision, solve: std::sync::Arc::downgrade(solve), curve: curve.to_string() }
     }
-    fn matches(&self, app: &SolveApp, solve: &SolvedSketchRef, curve: &str) -> bool {
+    fn matches(&self, app: &SketApp, solve: &SolvedSketchRef, curve: &str) -> bool {
         self.revision == app.session.revision && std::ptr::eq(self.solve.as_ptr(), std::sync::Arc::as_ptr(solve)) && self.curve == curve
     }
 }
@@ -1557,7 +1557,7 @@ thread_local! {
 /// With Trim active and the cursor over curve `id` of `sketch` (the active sketch): the piece a
 /// click takes away (#3052), which the hover shows in place of the whole curve. `None` with
 /// another tool, or for a curve trim cuts otherwise (`sketcraft_engine::cmd::trim_piece`).
-pub(crate) fn trim_hover_piece(app: &SolveApp, sketch: u64, id: &str) -> Option<Vec<Vec2>> {
+pub(crate) fn trim_hover_piece(app: &SketApp, sketch: u64, id: &str) -> Option<Vec<Vec2>> {
     let tool = app.tool.as_ref().filter(|t| t.cmd == "sketch.trim")?;
     let (at, _) = tool.hover.as_ref()?;
     if active_sketch(app) != Some(sketch) {
@@ -1589,7 +1589,7 @@ pub(crate) fn trim_hover_piece(app: &SolveApp, sketch: u64, id: &str) -> Option<
 /// Extend preview: the geometry that would be added, based on the hover position over curve `id`
 /// of `sketch`. Returns None when extend is not active or the geometry does not support a
 /// preview. An arc grows along its own circle, in either direction, as a new arc.
-fn extend_preview_piece(app: &SolveApp, sketch: u64, id: &str) -> Option<Vec<Vec2>> {
+fn extend_preview_piece(app: &SketApp, sketch: u64, id: &str) -> Option<Vec<Vec2>> {
     // A pending pair pick (the first curve of the two-curve form) hides the single-curve preview.
     let tool = app.tool.as_ref().filter(|t| t.cmd == "sketch.extend" && t.picks.is_empty())?;
     let hover = tool.hover.as_ref()?;
@@ -1631,7 +1631,7 @@ fn extend_preview_uncached(sk: &sketcraft_engine::sketch::Sketch, ci: usize, hov
 }
 
 /// Rubber band for point tools and pick markers.
-pub fn preview(app: &SolveApp, t: &Tool, painter: &egui::Painter, proj: &Proj) {
+pub fn preview(app: &SketApp, t: &Tool, painter: &egui::Painter, proj: &Proj) {
     if sketcraft_engine::cmd::construction_line_mode(t.cmd).is_some() {
         crate::sketch_construction::preview(app, t, painter, proj);
         return;
@@ -1788,7 +1788,7 @@ fn sketch_px_per_mm(plane: &Plane, proj: &Proj) -> Option<f32> {
     Some(a.distance(b))
 }
 
-fn glyphs(app: &SolveApp, painter: &egui::Painter, proj: &Proj, hover: Option<Pos2>) {
+fn glyphs(app: &SketApp, painter: &egui::Painter, proj: &Proj, hover: Option<Pos2>) {
     let Some(sid) = active_sketch(app) else { return };
     // While a dimension's value is typed, the glyphs sit where that value puts their geometry.
     let st = crate::dim_view::preview_world(app).unwrap_or_else(|| crate::open_meshing::session_world(&app.session));
@@ -1901,11 +1901,7 @@ fn glyphs(app: &SolveApp, painter: &egui::Painter, proj: &Proj, hover: Option<Po
             egui::StrokeKind::Inside,
         );
         let pattern_icon = ss.sketch.patterns.iter().find(|p| p.instances.first().and_then(|i| i.constraints.first()) == Some(id)).map(|p| {
-            if matches!(p.kind, sketcraft_engine::sketch::SketchPatternKind::Circular { .. }) {
-                "sketch_circ_pattern"
-            } else {
-                "sketch_rect_pattern"
-            }
+            if matches!(p.kind, sketcraft_engine::sketch::SketchPatternKind::Circular { .. }) { "sketch_circ_pattern" } else { "sketch_rect_pattern" }
         });
         match pattern_icon.or_else(|| glyph_icon(c.kind.name())) {
             Some(icon) => crate::icons::paint_icon(painter, r.shrink(2.0), icon, f32::from(col.a()) / 255.0),
@@ -2007,7 +2003,7 @@ pub(crate) fn set_snap_hint(label: &'static str, at: Vec2) {
 }
 
 /// The inference label next to the snapped cursor (while a tool is active).
-fn snap_hint(app: &SolveApp, painter: &egui::Painter, proj: &Proj) {
+fn snap_hint(app: &SketApp, painter: &egui::Painter, proj: &Proj) {
     if app.tool.is_none() {
         return;
     }
@@ -2055,7 +2051,7 @@ fn snap_hint(app: &SolveApp, painter: &egui::Painter, proj: &Proj) {
 }
 
 /// Per frame, after the viewport is drawn: constraint glyphs, snap hints and analysis marks.
-pub fn show(app: &mut SolveApp, ui: &egui::Ui, painter: &egui::Painter, proj: &Proj) {
+pub fn show(app: &mut SketApp, ui: &egui::Ui, painter: &egui::Painter, proj: &Proj) {
     // IsoCurveAlternate (Shift default) for sketch.isoparametric_curve - via resolve, not raw shift.
     let held = crate::tool_modifiers::Held::from_modifiers(ui.input(|i| i.modifiers));
     let iso = crate::tool_modifiers::resolve(&[], crate::tool_modifiers::descriptor("sketch.isoparametric_curve"), held, Trigger::Press);

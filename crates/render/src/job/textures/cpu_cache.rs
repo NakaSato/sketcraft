@@ -48,7 +48,7 @@ struct Hit {
     point: MapPoint,
     current: ShadingSurface,
     role: usize,
-    footprint: Option<[solidcore_record::Vec3; 2]>,
+    footprint: Option<[sketcore_record::Vec3; 2]>,
 }
 pub(crate) struct CpuTextureCache {
     resources: Arc<RuntimeTextures>,
@@ -216,7 +216,7 @@ impl CpuTextureCache {
         input: ShadingSurface,
         body: Option<usize>,
         point: MapPoint,
-        footprint: Option<[solidcore_record::Vec3; 2]>,
+        footprint: Option<[sketcore_record::Vec3; 2]>,
     ) -> Result<()> {
         if !self.ready {
             return Err(invalid("CPU surface maps are not completely prepared"));
@@ -238,10 +238,10 @@ impl CpuTextureCache {
             let lod = match hit.footprint {
                 None => map.level_count().saturating_sub(1) as f64,
                 Some([dx, dy]) => {
-                    let u = solidcore_record::Vec3::new(binding.frame.u[0], binding.frame.u[1], binding.frame.u[2]);
-                    let v = solidcore_record::Vec3::new(binding.frame.v[0], binding.frame.v[1], binding.frame.v[2]);
+                    let u = sketcore_record::Vec3::new(binding.frame.u[0], binding.frame.u[1], binding.frame.u[2]);
+                    let v = sketcore_record::Vec3::new(binding.frame.v[0], binding.frame.v[1], binding.frame.v[2]);
                     let gradient =
-                        |delta: solidcore_record::Vec3| [delta.dot(u) / u.len2(), delta.dot(v) / v.len2() * if binding.flip_v { -1.0 } else { 1.0 }];
+                        |delta: sketcore_record::Vec3| [delta.dot(u) / u.len2(), delta.dot(v) / v.len2() * if binding.flip_v { -1.0 } else { 1.0 }];
                     let (dx, dy) = (gradient(dx), gradient(dy));
                     if dx.iter().chain(&dy).any(|value| !value.is_finite() || value.abs() > crate::texture_lod::MAX_UV_GRADIENT) {
                         map.level_count().saturating_sub(1) as f64

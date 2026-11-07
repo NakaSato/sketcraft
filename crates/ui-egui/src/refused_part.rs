@@ -7,7 +7,7 @@ use sketcraft_engine::Sel;
 use sketcraft_engine::doc::kernel::SurfaceKind;
 use sketcraft_engine::doc::{FeatureKind, ModelState, PlaneRef};
 
-use crate::SolveApp;
+use crate::SketApp;
 
 /// The command that repairs a part (Repair Part).
 pub(crate) const REPAIR: &str = "body.repair";
@@ -31,7 +31,7 @@ pub(crate) fn refused_among<'a>(st: &ModelState, bodies: impl IntoIterator<Item 
 
 /// The bodies a dialog's commands use: the ones their parameters name (targets, participants,
 /// a body), the ones its picks are on, and the body its sketch lies on.
-pub(crate) fn operands(app: &SolveApp, commands: &[(String, Value)], picks: &[Sel]) -> Vec<String> {
+pub(crate) fn operands(app: &SketApp, commands: &[(String, Value)], picks: &[Sel]) -> Vec<String> {
     let mut out: Vec<String> = Vec::new();
     let mut add = |name: &str| {
         if !out.iter().any(|n| n == name) {
@@ -87,14 +87,14 @@ fn why_key(part: &RefusedPart) -> &'static str {
 }
 
 /// Ring `body`'s refused `face` in the viewport while this is called each frame.
-pub(crate) fn ring(app: &mut SolveApp, body: &str, face: usize) {
+pub(crate) fn ring(app: &mut SketApp, body: &str, face: usize) {
     if !app.viewport.refused_ring_next.iter().any(|(b, f)| b == body && *f == face) {
         app.viewport.refused_ring_next.push((body.to_string(), face));
     }
 }
 
 /// The faces asked for last frame are the ones ringed now; a change is drawn at once.
-pub(crate) fn next_frame(app: &mut SolveApp, ctx: &egui::Context) {
+pub(crate) fn next_frame(app: &mut SketApp, ctx: &egui::Context) {
     let next = std::mem::take(&mut app.viewport.refused_ring_next);
     if next != app.viewport.refused_ring {
         app.viewport.refused_ring = next;
@@ -103,7 +103,7 @@ pub(crate) fn next_frame(app: &mut SolveApp, ctx: &egui::Context) {
 }
 
 /// Repair the part with the command's defaults (it says why when nothing applies).
-pub(crate) fn repair(app: &mut SolveApp, body: &str) {
+pub(crate) fn repair(app: &mut SketApp, body: &str) {
     if let Err(e) = app.run(REPAIR, json!({ "body": body })) {
         app.set_status(e, true);
     }
@@ -111,7 +111,7 @@ pub(crate) fn repair(app: &mut SolveApp, body: &str) {
 
 /// Frame the face the kernel refuses (ringed while the message shows). The selection is left
 /// as it is: in a dialog it would become the dialog's pick.
-pub(crate) fn show_face(app: &mut SolveApp, part: &RefusedPart) {
+pub(crate) fn show_face(app: &mut SketApp, part: &RefusedPart) {
     let Some(face) = part.face else { return };
     let world = crate::open_meshing::session_world(&app.session);
     let Some(b) = world.body(&part.body) else { return };

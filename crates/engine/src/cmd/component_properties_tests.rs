@@ -1,6 +1,6 @@
 use crate::Session;
 use serde_json::{Value, json};
-use solidcore_record::Vec2;
+use sketcore_record::Vec2;
 use sketcraft_geom::prelude::*;
 
 fn run(s: &mut Session, cmd: &str, params: Value) -> Value {
@@ -704,7 +704,7 @@ fn repeated_placements_reuse_one_measurement_of_their_body() {
 /// the meshes it is taken from) also when the placement turns it off the axes.
 #[test]
 fn a_placed_body_measures_as_its_placed_copy() {
-    use solidcore_record::Vec3;
+    use sketcore_record::Vec3;
     let mut s = Session::default();
     run(&mut s, "solid.cylinder", json!({"diameter": 4, "height": 30}));
     run(&mut s, "solid.box", json!({"length": 10, "width": 20, "height": 5}));

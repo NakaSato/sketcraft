@@ -8,7 +8,7 @@ use std::marker::PhantomData;
 use std::ops::Deref;
 
 use crate::Aabb2;
-use solidcore_record::{Vec2, Vec3};
+use sketcore_record::{Vec2, Vec3};
 
 /// Whether a chain's last item joins its first.
 pub trait Ends: sealed::Sealed {
@@ -144,7 +144,7 @@ impl Ring<Vec3> {
 }
 
 /// [`Ring::edges`] of items held elsewhere, for a type that keeps a closed ring in a field of its
-/// own ([`solidcore_record::Loop2::joints`]).
+/// own ([`sketcore_record::Loop2::joints`]).
 pub(crate) fn around<T>(items: &[T]) -> impl Iterator<Item = (&T, &T)> + Clone {
     items.iter().zip(items.iter().cycle().skip(1))
 }

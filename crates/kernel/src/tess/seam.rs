@@ -7,7 +7,7 @@
 //! the two lines inside the face join the pieces into closed loops. Both lines are one curve
 //! on the surface, so their nodes are made once and shared: the face stays closed across it.
 
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 use sketcraft_geom::tess::EvalSurface;
 
 use super::size::Rules;

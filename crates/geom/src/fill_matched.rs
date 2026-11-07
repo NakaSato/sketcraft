@@ -50,7 +50,7 @@ use crate::bspline::{SplineError, SplineResult, invalid};
 use crate::fill::{Band, Grid, LoopFill, LoopFrame, MAX_LOOP_POINTS, SMOOTHNESS, check_projectable, loop_frame};
 use crate::fill_general::Station;
 use crate::prelude::*;
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 
 /// Most spans of the height field across the box's longer side.
 pub const MAX_MATCHED_SPANS: usize = 128;

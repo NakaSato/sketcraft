@@ -1,5 +1,5 @@
 //! One read-only storage buffer: body lookup, planar records and linear RGBA mip chains.
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 use sketcraft_geom::prelude::*;
 use sketcraft_render::job::{
     CancelToken, ErrorCode, JobError, Result,

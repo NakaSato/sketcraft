@@ -4,12 +4,12 @@
 
 use serde_json::json;
 
-use crate::SolveApp;
+use crate::SketApp;
 use crate::browser::{answer_capture, apply_occurrence_move, occurrence_origin, panel_pos, revert_occurrence_dialog};
 use crate::ui_kit;
 
 /// Move/Copy of an occurrence: offsets and a rotation about Z, pending until Capture Position.
-pub(crate) fn occurrence_panel(app: &mut SolveApp, ui: &mut egui::Ui) {
+pub(crate) fn occurrence_panel(app: &mut SketApp, ui: &mut egui::Ui) {
     let Some(mut m) = app.tree.occurrence_move.clone() else { return };
     if !m.path.is_empty()
         && let Err(error) = app.session.occurrence_placement(&m.path)
@@ -32,7 +32,7 @@ pub(crate) fn occurrence_panel(app: &mut SolveApp, ui: &mut egui::Ui) {
         m.pivot = if m.path.is_empty() {
             occurrence_origin(app, m.occurrence)
         } else {
-            app.session.occurrence_placement(&m.path).ok().map(|p| sketcraft_engine::doc::apply_point(&p.world, solidcore_record::Vec3::ZERO))
+            app.session.occurrence_placement(&m.path).ok().map(|p| sketcraft_engine::doc::apply_point(&p.world, sketcore_record::Vec3::ZERO))
         };
     }
     let name = app.session.doc.occurrences.iter().find(|o| o.id == m.occurrence).map(|o| o.name.clone()).unwrap_or_default();
@@ -92,7 +92,7 @@ pub(crate) fn occurrence_panel(app: &mut SolveApp, ui: &mut egui::Ui) {
 }
 
 /// The Capture Position question: capture, revert or cancel the waiting command (or save).
-pub(crate) fn capture_prompt(app: &mut SolveApp, ctx: &egui::Context) {
+pub(crate) fn capture_prompt(app: &mut SketApp, ctx: &egui::Context) {
     if app.tree.capture_prompt.is_none() {
         return;
     }

@@ -105,10 +105,10 @@ mod native_tests {
             assert_eq!((order.faces.len(), order.edges.len()), (record.faces.len(), record.edges.len()), "{name}");
             let h = t.history().unwrap().history(std::slice::from_ref(&order), &order).unwrap();
             for (i, f) in h.faces.iter().enumerate() {
-                assert_eq!(f.origins, vec![solidcore_record::brep::history::FaceOrigin::Face { operand: 0, face: i }], "{name}: face {i}");
+                assert_eq!(f.origins, vec![sketcore_record::brep::history::FaceOrigin::Face { operand: 0, face: i }], "{name}: face {i}");
             }
             for (i, e) in h.edges.iter().enumerate() {
-                assert_eq!(e.origins, vec![solidcore_record::brep::history::EdgeOrigin::Edge { operand: 0, edge: i }], "{name}: edge {i}");
+                assert_eq!(e.origins, vec![sketcore_record::brep::history::EdgeOrigin::Edge { operand: 0, edge: i }], "{name}: edge {i}");
                 // The faces it bounds, as the record's uses say.
                 let mut faces: Vec<usize> = record.edges[i].uses.iter().map(|u| u.face as usize).collect();
                 faces.sort();

@@ -100,7 +100,7 @@ pub(super) struct Cache {
 }
 
 impl Cache {
-    pub fn prepare(&mut self, app: &SolveApp) {
+    pub fn prepare(&mut self, app: &SketApp) {
         let state = app.session.model.state();
         let t = Tokens::get();
         let colors = [t.error, t.sketch_accent];
@@ -136,7 +136,7 @@ impl Cache {
         self.colors = colors;
     }
 
-    fn children(&self, app: &SolveApp, component: u64, path: &[u64], remaining: usize) -> Vec<Vec<u64>> {
+    fn children(&self, app: &SketApp, component: u64, path: &[u64], remaining: usize) -> Vec<Vec<u64>> {
         let Some(children) = app.tree.model.as_ref().and_then(|model| model.children.get(&component)) else { return Vec::new() };
         if path.len() >= 64 {
             return Vec::new();
@@ -154,7 +154,7 @@ impl Cache {
             .collect()
     }
 
-    pub fn take_occurrence(&mut self, app: &mut SolveApp, path: &[u64]) -> Option<(Vec<u64>, Node)> {
+    pub fn take_occurrence(&mut self, app: &mut SketApp, path: &[u64]) -> Option<(Vec<u64>, Node)> {
         if let Some(cached) = self.occurrences.remove_entry(path) {
             return Some(cached);
         }
@@ -195,7 +195,7 @@ impl Cache {
         ))
     }
 
-    pub fn folder(&self, app: &SolveApp, component: u64, path: Option<&[u64]>, folder: &str) -> Folder {
+    pub fn folder(&self, app: &SketApp, component: u64, path: Option<&[u64]>, folder: &str) -> Folder {
         let Some(model) = &app.tree.model else { return Folder::default() };
         let Some(state) = self.model.upgrade() else { return Folder::default() };
         let Some(doc) = self.doc.upgrade() else { return Folder::default() };

@@ -11,7 +11,7 @@ use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 
 use egui::{Pos2, vec2};
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 use sketcraft_engine::geom::{Mesh, MeshIndex};
 
 use crate::viewport::Proj;

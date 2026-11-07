@@ -9,7 +9,7 @@ use std::collections::BTreeMap;
 use serde_json::{Value, json};
 use sketcraft_engine::{CommandSpec, command_specs};
 
-use crate::SolveApp;
+use crate::SketApp;
 use crate::ui_kit;
 
 pub(crate) const DRAG_ZOOM: &str = "view.tool.zoom";
@@ -333,12 +333,12 @@ impl Modifier {
 }
 
 /// The key a command runs from now, the one menus and tooltips show: its first.
-pub fn effective(app: &SolveApp, id: &str) -> Option<String> {
+pub fn effective(app: &SketApp, id: &str) -> Option<String> {
     keys(app, id).into_iter().next()
 }
 
 /// Every key a command runs from now.
-pub fn keys(app: &SolveApp, id: &str) -> Vec<String> {
+pub fn keys(app: &SketApp, id: &str) -> Vec<String> {
     match app.keymap.custom.get(id) {
         Some(keys) => keys.clone(),
         None => sketcraft_engine::find_command(id).and_then(|c| c.shortcut).filter(|k| !k.is_empty()).map(str::to_string).into_iter().collect(),
@@ -347,16 +347,16 @@ pub fn keys(app: &SolveApp, id: &str) -> Vec<String> {
 
 /// Drag to Zoom has no default binding. Compare the keys and current modifiers using the
 /// same chord names as the shortcut recorder.
-pub(crate) fn drag_zoom_key(app: &SolveApp, key: egui::Key, modifiers: egui::Modifiers) -> bool {
+pub(crate) fn drag_zoom_key(app: &SketApp, key: egui::Key, modifiers: egui::Modifiers) -> bool {
     app.keymap.custom.get(DRAG_ZOOM).is_some_and(|keys| !keys.is_empty() && keys.contains(&key_name(key, modifiers)))
 }
 
-pub(crate) fn drag_zoom_held(app: &SolveApp, input: &egui::InputState) -> bool {
+pub(crate) fn drag_zoom_held(app: &SketApp, input: &egui::InputState) -> bool {
     input.focused && input.keys_down.iter().any(|key| drag_zoom_key(app, *key, input.modifiers))
 }
 
 /// Use the spec already available when walking the command list.
-fn keys_for_spec<'a>(app: &'a SolveApp, command: &CommandSpec) -> Vec<&'a str> {
+fn keys_for_spec<'a>(app: &'a SketApp, command: &CommandSpec) -> Vec<&'a str> {
     match app.keymap.custom.get(command.id) {
         Some(keys) => keys.iter().map(String::as_str).collect(),
         None => command.shortcut.filter(|k| !k.is_empty()).into_iter().collect(),
@@ -381,12 +381,12 @@ fn display_for_platform(key: &str, mac: bool) -> String {
         .join("+")
 }
 
-pub fn display_for(app: &SolveApp, id: &str) -> Option<String> {
+pub fn display_for(app: &SketApp, id: &str) -> Option<String> {
     effective(app, id).map(|key| display(&key))
 }
 
 /// Commands bound to `key` now.
-pub fn commands_for(app: &SolveApp, key: &str) -> Vec<&'static str> {
+pub fn commands_for(app: &SketApp, key: &str) -> Vec<&'static str> {
     command_specs().into_iter().filter(|c| keys_for_spec(app, c).contains(&key)).map(|c| c.id).collect()
 }
 
@@ -430,7 +430,7 @@ fn runs_everywhere(id: &str) -> bool {
 /// Shortcuts › Keep model keys out of sketches on, only one of that mode or one that works
 /// everywhere: a model command's key pressed in a sketch (E, F) runs nothing, nor a sketch
 /// tool's in the model.
-pub fn command_for(app: &SolveApp, key: &str) -> Option<&'static str> {
+pub fn command_for(app: &SketApp, key: &str) -> Option<&'static str> {
     let here = if crate::render_workspace::active(app) {
         Scope::Render
     } else if app.session.active_sketch.is_some() {
@@ -457,7 +457,7 @@ pub fn command_for(app: &SolveApp, key: &str) -> Option<&'static str> {
 /// Run a shortcut key: its enabled command; outside a sketch, a sketch tool's key opens Create
 /// Sketch (on the selected plane or planar face, else on the plane picked next) and the tool
 /// starts in the new sketch.
-pub fn press(app: &mut SolveApp, key: &str, repeat: bool) {
+pub fn press(app: &mut SketApp, key: &str, repeat: bool) {
     if let Some(id) = command_for(app, key) {
         if id == DRAG_ZOOM {
             // The viewport reads the held chord. A key press must not latch Zoom.
@@ -496,14 +496,14 @@ pub fn press(app: &mut SolveApp, key: &str, repeat: bool) {
 /// What a family's key starts: the variant used last (#4308), unless that variant has a key of
 /// its own; then the family's key starts the command it is bound to, and the other key the
 /// variant.
-fn variant_for_key(app: &SolveApp, id: &'static str) -> &'static str {
+fn variant_for_key(app: &SketApp, id: &'static str) -> &'static str {
     let chosen = app.preferences.sketch_variants.resolve(id);
     if chosen != id && effective(app, chosen).is_some() { id } else { chosen }
 }
 
 /// Outside a sketch: the SKETCH-tab command bound to `key` that a new sketch would start. Not
 /// Normal/Construction (a mode of the drawing in progress) nor the Finish Sketch panel.
-fn sketch_tool_for(app: &SolveApp, key: &str) -> Option<&'static str> {
+fn sketch_tool_for(app: &SketApp, key: &str) -> Option<&'static str> {
     if app.session.active_sketch.is_some() || crate::render_workspace::active(app) {
         return None;
     }
@@ -513,7 +513,7 @@ fn sketch_tool_for(app: &SolveApp, key: &str) -> Option<&'static str> {
 }
 
 /// Make `key` a command's only key (`""` clears its keys). See [`bind_at`].
-pub fn bind(app: &mut SolveApp, id: &str, key: &str, replace: bool) -> Result<(), String> {
+pub fn bind(app: &mut SketApp, id: &str, key: &str, replace: bool) -> Result<(), String> {
     bind_at(app, id, None, key, replace)
 }
 
@@ -521,7 +521,7 @@ pub fn bind(app: &mut SolveApp, id: &str, key: &str, replace: bool) -> Result<()
 /// past the last adds a key; `""` there removes that key). Refused for reserved keys, and when
 /// other commands use the key unless `replace` (they lose that key and keep their others). A
 /// sketch tool and a model command may share a key: each runs in its own mode.
-pub fn bind_at(app: &mut SolveApp, id: &str, slot: Option<usize>, key: &str, replace: bool) -> Result<(), String> {
+pub fn bind_at(app: &mut SketApp, id: &str, slot: Option<usize>, key: &str, replace: bool) -> Result<(), String> {
     let spec = sketcraft_engine::find_command(id).ok_or_else(|| format!("no command `{id}`"))?;
     let canonical = if key.is_empty() { String::new() } else { canonical_key(key).ok_or("unknown shortcut key")? };
     let key = canonical.as_str();
@@ -563,7 +563,7 @@ pub fn bind_at(app: &mut SolveApp, id: &str, slot: Option<usize>, key: &str, rep
 }
 
 /// Keep a command's keys, as a change only when they aren't its default.
-fn set_keys(app: &mut SolveApp, id: &str, keys: Vec<String>) {
+fn set_keys(app: &mut SketApp, id: &str, keys: Vec<String>) {
     let default = sketcraft_engine::find_command(id).and_then(|c| c.shortcut).filter(|k| !k.is_empty());
     if keys.iter().map(String::as_str).eq(default) {
         app.keymap.custom.remove(id);
@@ -572,7 +572,7 @@ fn set_keys(app: &mut SolveApp, id: &str, keys: Vec<String>) {
     }
 }
 
-pub fn reset(app: &mut SolveApp, id: Option<&str>) {
+pub fn reset(app: &mut SketApp, id: Option<&str>) {
     match id {
         Some(id) => drop(app.keymap.custom.remove(id)),
         None => app.keymap.custom.clear(),
@@ -598,7 +598,7 @@ pub const SKETCHUP_KEYS: &[(&str, &str)] = &[
 /// Use SketchUp's keys: each tool gets its SketchUp key first, and every other command lets that
 /// key go, a sketch tool's included (SketchUp's A is Arc in the model too, starting a sketch).
 /// Reset puts the default keys back.
-pub fn use_sketchup_keys(app: &mut SolveApp) {
+pub fn use_sketchup_keys(app: &mut SketApp) {
     for (id, key) in SKETCHUP_KEYS {
         if sketcraft_engine::find_command(id).is_none() {
             continue;
@@ -617,7 +617,7 @@ pub fn use_sketchup_keys(app: &mut SolveApp) {
 
 /// The Keyboard Shortcuts page of Preferences: search, rebind (click, then press the key), clear,
 /// reset; a key another command uses is reported and taken over only on request.
-pub fn page(app: &mut SolveApp, ui: &mut egui::Ui) {
+pub fn page(app: &mut SketApp, ui: &mut egui::Ui) {
     let ctx = ui.ctx().clone();
     let filtering = crate::prefs_search::querying(ui);
     // A Preferences search lists the matching shortcuts too, and one recorded from there takes
@@ -725,8 +725,9 @@ pub fn page(app: &mut SolveApp, ui: &mut egui::Ui) {
                     if import.clicked() {
                         action = Some((String::new(), "import"));
                     }
-                    let sketchup = ui_kit::button(ui, app.tr_label("Use SketchUp Keys"), ui_kit::Button::Normal)
-                        .backing_on_hover_text(app.tr_label("A Arc, E Eraser, F Offset, P Push/Pull, M Move, O Orbit, H Pan, Z Zoom, Shift+Z Zoom Extents"));
+                    let sketchup = ui_kit::button(ui, app.tr_label("Use SketchUp Keys"), ui_kit::Button::Normal).backing_on_hover_text(
+                        app.tr_label("A Arc, E Eraser, F Offset, P Push/Pull, M Move, O Orbit, H Pan, Z Zoom, Shift+Z Zoom Extents"),
+                    );
                     crate::scenario::publish_target("keymap:sketchup", sketchup.rect);
                     if sketchup.clicked() {
                         action = Some((String::new(), "sketchup"));
@@ -891,7 +892,7 @@ pub fn page(app: &mut SolveApp, ui: &mut egui::Ui) {
 }
 
 /// A global search result must be visible even after the page's own filter was used.
-pub(crate) fn reveal(app: &mut SolveApp) {
+pub(crate) fn reveal(app: &mut SketApp) {
     app.keymap.filter.clear();
 }
 
@@ -907,7 +908,7 @@ fn shortcut_search_label(command: &CommandSpec, label: &str, keys: &[&str]) -> S
 
 /// Keep every binding and recorder slot, while skipping the construction of off-screen rows.
 fn shortcut_row(
-    app: &SolveApp,
+    app: &SketApp,
     ui: &mut egui::Ui,
     command: &CommandSpec,
     keys: &[&str],
@@ -1060,7 +1061,7 @@ fn shortcut_row(
 
 /// A recording's outcome: its message, and for a key another command uses, Replace and Cancel
 /// (the one chosen).
-fn outcome(app: &SolveApp, ui: &mut egui::Ui) -> Option<&'static str> {
+fn outcome(app: &SketApp, ui: &mut egui::Ui) -> Option<&'static str> {
     let mut chosen = None;
     if let Some(m) = &app.keymap.message {
         ui_kit::text(ui, m, ui_kit::Text::Report("keymap_message", true));
@@ -1081,7 +1082,7 @@ fn outcome(app: &SolveApp, ui: &mut egui::Ui) -> Option<&'static str> {
 }
 
 /// Stop waiting for a key (the dialog closed).
-pub fn stop_capture(app: &mut SolveApp) {
+pub fn stop_capture(app: &mut SketApp) {
     app.keymap.capturing = None;
     app.keymap.recorder = Recorder::default();
     app.keymap.conflict = None;
@@ -1091,7 +1092,7 @@ pub fn stop_capture(app: &mut SolveApp) {
 /// Is the page waiting for a key (so the key must not also run a command)? On the Shortcuts page,
 /// or in a Preferences search, which shows the matching shortcuts on the page it started from
 /// (#10043).
-pub fn capturing(app: &SolveApp) -> bool {
+pub fn capturing(app: &SketApp) -> bool {
     app.prefs_window.open
         && app.keymap.capturing.is_some()
         && (app.prefs_window.section == crate::prefs::PAGE_SHORTCUTS || !app.prefs_window.filter.trim().is_empty())
@@ -1217,8 +1218,8 @@ mod tests {
         assert!(!crate::agent_chat::assistant_tip(&h.app, crate::agent_chat::AssistantMark::Ready).contains("(J)"));
     }
 
-    fn app() -> SolveApp {
-        SolveApp::new(sketcraft_engine::Session::default(), Default::default())
+    fn app() -> SketApp {
+        SketApp::new(sketcraft_engine::Session::default(), Default::default())
     }
 
     #[test]
@@ -1320,7 +1321,7 @@ mod tests {
         }
     }
 
-    fn recorder_frame(a: &mut SolveApp, ctx: &egui::Context, time: f64, events: Vec<egui::Event>) {
+    fn recorder_frame(a: &mut SketApp, ctx: &egui::Context, time: f64, events: Vec<egui::Event>) {
         let raw = egui::RawInput { time: Some(time), events, ..Default::default() };
         let mut out = ctx.run_ui(raw, |ui| page(a, ui));
         out.textures_delta.clear();

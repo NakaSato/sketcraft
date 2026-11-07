@@ -1,7 +1,7 @@
 //! Persistable opaque optical parameters, independent of engineering material data.
 
 use serde::{Deserialize, Serialize};
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 use sketcraft_render::surface::{OpaqueSurface, SurfaceError, srgb8_to_linear};
 
 /// Explicitly selected opaque response. Existing scalar looks have no such record.

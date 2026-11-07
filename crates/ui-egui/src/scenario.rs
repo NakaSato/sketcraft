@@ -1,4 +1,4 @@
-//! User scenarios run headless: the real app (`SolveApp`) drawn frame by frame into an egui
+//! User scenarios run headless: the real app (`SketApp`) drawn frame by frame into an egui
 //! context without a window, driven by the same requests as the control channel (clicks, keys,
 //! drags, toolbar starts) the way a person would use it, with checks on the result.
 //!
@@ -51,7 +51,7 @@ use serde_json::{Value, json};
 use sketcraft_engine::Session;
 
 use crate::control::{ControlRequest, Outcome, handle};
-use crate::{Services, SolveApp};
+use crate::{Services, SketApp};
 
 thread_local! {
     /// Drag handles drawn this frame (name, screen point): manipulators publish theirs so
@@ -145,7 +145,7 @@ fn scratch_dir() -> PathBuf {
 
 /// The app in a headless egui context.
 pub struct Harness {
-    pub app: SolveApp,
+    pub app: SketApp,
     pub ctx: egui::Context,
     /// The last frame's platform output (with its accessibility tree: dialog widgets are found
     /// by their text there).
@@ -182,7 +182,7 @@ impl Drop for Harness {
 /// The classic view scenarios were written for: Browser, timeline and grid shown, orthographic,
 /// the ground shadow on, no tool icon beside the pointer and no SketchUp sky. The app itself
 /// opens on SketchUp's model screen.
-pub(crate) fn classic_view(app: &mut SolveApp) {
+pub(crate) fn classic_view(app: &mut SketApp) {
     app.ui.show_browser = true;
     app.ui.show_timeline = true;
     app.ui.show_grid = true;
@@ -194,7 +194,7 @@ pub(crate) fn classic_view(app: &mut SolveApp) {
 
 /// [`classic_view`] in a window that opens on the Model tab with every toolbar tab shown, as the
 /// scenarios were written for; the app opens on SketchUp's tool set with the CAD tabs hidden.
-pub(crate) fn classic_look(app: &mut SolveApp) {
+pub(crate) fn classic_look(app: &mut SketApp) {
     app.ui.tab = "MODEL".into();
     app.ui.home_tab = "MODEL";
     classic_view(app);
@@ -205,7 +205,7 @@ impl Harness {
     pub fn new() -> Harness {
         crate::i18n::pin_system_language();
         let mut h = Harness {
-            app: SolveApp::new(Session::default(), Services::default()),
+            app: SketApp::new(Session::default(), Services::default()),
             ctx: {
                 let ctx = egui::Context::default();
                 crate::fonts::setup_bundled_fonts(&ctx);
@@ -467,7 +467,7 @@ impl Harness {
         for i in 0..240 {
             self.frame();
             let now = basis(&self.app.cam);
-            let ang = |a: solidcore_record::Vec3, b: solidcore_record::Vec3| a.dot(b).clamp(-1.0, 1.0).acos().to_degrees();
+            let ang = |a: sketcore_record::Vec3, b: sketcore_record::Vec3| a.dot(b).clamp(-1.0, 1.0).acos().to_degrees();
             let d = ang(prev.0, now.0).max(ang(prev.2, now.2));
             if d > worst.0 {
                 worst = (d, i);
@@ -644,7 +644,7 @@ impl Harness {
                         self.frames(1);
                     }
                 }
-                let mut old = std::mem::replace(&mut self.app, SolveApp::new(Session::default(), Services::default()));
+                let mut old = std::mem::replace(&mut self.app, SketApp::new(Session::default(), Services::default()));
                 // The new window is the classic one too; what the old one saved wins below.
                 classic_look(&mut self.app);
                 if how == "close" {

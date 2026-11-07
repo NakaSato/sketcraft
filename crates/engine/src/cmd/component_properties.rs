@@ -3,7 +3,7 @@ use sketcraft_geom::prelude::*;
 use std::collections::{BTreeMap, BTreeSet};
 
 use serde_json::{Value, json};
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 use sketcraft_doc::{Document, Mat};
 use sketcraft_geom::Aabb3;
 use sketcraft_geom::inertia::{self, Tensor3};

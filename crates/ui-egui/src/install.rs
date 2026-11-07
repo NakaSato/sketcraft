@@ -7,7 +7,7 @@
 //! Safari installs web apps too (Add to Home Screen on iPhone and iPad, Add to Dock on a Mac) but
 //! offers no prompt a page can show. There the item opens a window with the steps.
 
-use crate::SolveApp;
+use crate::SketApp;
 use crate::ui_kit;
 
 /// How the browser installs the app.
@@ -67,13 +67,13 @@ pub fn safari_steps(user_agent: &str, vendor: &str, touch_points: i32) -> Option
 }
 
 /// What the browser offers now (None: nothing, so File has no Install app… item).
-pub fn offered(app: &SolveApp) -> Option<Offer> {
+pub fn offered(app: &SketApp) -> Option<Offer> {
     app.services.install_app.as_ref().and_then(|i| (i.offer)())
 }
 
 /// File ▸ Install app…: the browser's own prompt (browsers only show it right after a click), or
 /// Safari's steps.
-pub fn start(app: &mut SolveApp, offer: Offer) {
+pub fn start(app: &mut SketApp, offer: Offer) {
     match offer {
         Offer::Prompt => {
             if let Some(install) = &app.services.install_app {
@@ -85,7 +85,7 @@ pub fn start(app: &mut SolveApp, offer: Offer) {
 }
 
 /// The card with Safari's steps, while open.
-pub fn show(app: &mut SolveApp, ctx: &egui::Context) {
+pub fn show(app: &mut SketApp, ctx: &egui::Context) {
     let Some(steps) = app.install_steps else { return };
     let (lines, after) = steps.messages();
     let (closed, action) = ui_kit::Window::new(egui::Id::unique("sc_install_steps"), "web", crate::i18n::tr("install.title"))

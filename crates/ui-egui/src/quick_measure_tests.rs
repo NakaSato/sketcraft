@@ -2,7 +2,7 @@
 //! window thread, shown above History, copied on a click.
 
 use serde_json::json;
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 use sketcraft_engine::Sel;
 use sketcraft_engine::geom::prelude::*;
 

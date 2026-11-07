@@ -3,7 +3,7 @@
 //! selection. The pure parts are unit tested; the viewport uses them.
 
 use egui::{Pos2, Rect};
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 use sketcraft_engine::Sel;
 use sketcraft_engine::geom::prelude::*;
 
@@ -44,7 +44,7 @@ pub(crate) fn coincident_operands(selection: &[Sel]) -> Option<serde_json::Value
 }
 
 /// The current middle of a finite straight sketch edge.
-pub(crate) fn line_midpoint(sk: &sketcraft_engine::sketch::Sketch, line: usize) -> Option<solidcore_record::Vec2> {
+pub(crate) fn line_midpoint(sk: &sketcraft_engine::sketch::Sketch, line: usize) -> Option<sketcore_record::Vec2> {
     let curve = sk.curves.get(line)?;
     if curve.infinite {
         return None;

@@ -5,7 +5,7 @@
 use std::f64::consts::TAU;
 
 use serde_json::{Value, json};
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 
 use crate::Session;
 

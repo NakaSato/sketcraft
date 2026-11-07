@@ -20,7 +20,7 @@
 
 use super::{Curve, Frame, Surface};
 use crate::prelude::*;
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 use std::f64::consts::{FRAC_1_SQRT_2, FRAC_PI_2, FRAC_PI_8, TAU};
 
 /// Rounding room on an angle at a quarter's end.

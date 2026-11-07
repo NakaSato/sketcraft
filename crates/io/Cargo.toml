@@ -13,7 +13,7 @@ workspace = true
 trust-unknown-source = []
 
 [dependencies]
-solidcore-record = { workspace = true }
+sketcore-record = { workspace = true }
 sketcraft-geom = { workspace = true }
 sketcraft-kernel = { workspace = true }
 sketcraft-doc = { workspace = true }

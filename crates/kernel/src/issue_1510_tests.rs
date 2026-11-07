@@ -1,7 +1,7 @@
 //! #1510: a body split by a plane that a face of the body lies in: the parts meet in the plane
 //! and together are the body.
 
-use solidcore_record::{Plane, Vec3};
+use sketcore_record::{Plane, Vec3};
 use sketcraft_geom::prelude::*;
 
 use crate::{Body, BoolOp, build::box_solid, build::cylinder, ops::boolean, ops::split_by_plane};
@@ -53,13 +53,13 @@ fn a_split_in_the_plane_of_a_face_keeps_all_of_the_body() {
 fn a_face_only_nearly_in_the_plane_is_not_moved() {
     let x = Vec3::new(700.0, 0.0, 0.03).normalized().unwrap();
     let bottom = Plane::new(Vec3::ZERO, x, Vec3::Y).unwrap();
-    let outer = solidcore_record::Loop2::polygon(&[
-        solidcore_record::Vec2::new(0.0, 0.0),
-        solidcore_record::Vec2::new(Vec3::new(700.0, 0.0, 0.03).len(), 0.0),
-        solidcore_record::Vec2::new(Vec3::new(700.0, 0.0, 0.03).len(), 100.0),
-        solidcore_record::Vec2::new(0.0, 100.0),
+    let outer = sketcore_record::Loop2::polygon(&[
+        sketcore_record::Vec2::new(0.0, 0.0),
+        sketcore_record::Vec2::new(Vec3::new(700.0, 0.0, 0.03).len(), 0.0),
+        sketcore_record::Vec2::new(Vec3::new(700.0, 0.0, 0.03).len(), 100.0),
+        sketcore_record::Vec2::new(0.0, 100.0),
     ]);
-    let b = crate::extrude(&bottom, &[solidcore_record::Region2 { outer, holes: vec![] }], 0.0, 10.0).unwrap().pop().unwrap();
+    let b = crate::extrude(&bottom, &[sketcore_record::Region2 { outer, holes: vec![] }], 0.0, 10.0).unwrap().pop().unwrap();
     let plane = Plane::from_normal(Vec3::ZERO, Vec3::Z).unwrap();
     let v0 = b.volume_at(1e-2).unwrap();
     let up = crate::ops::half_space(&b, &plane, true).unwrap().0.unwrap();

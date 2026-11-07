@@ -2,7 +2,7 @@
 //! that does not move with the points, whatever rigid motion carries them.
 
 use crate::prelude::*;
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 
 /// A ball: every point within `radius` of `center`.
 #[derive(Clone, Copy, Debug, PartialEq)]

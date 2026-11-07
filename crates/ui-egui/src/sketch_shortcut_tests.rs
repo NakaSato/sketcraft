@@ -8,7 +8,7 @@ fn tool(h: &Harness) -> Option<&str> {
     h.app.tool.as_ref().map(|t| t.cmd)
 }
 
-fn normal(h: &Harness) -> solidcore_record::Vec3 {
+fn normal(h: &Harness) -> sketcore_record::Vec3 {
     let active = h.app.session.active_sketch;
     h.app.session.world_state().unwrap().sketches.iter().find(|s| Some(s.feature) == active).map(|s| s.plane.normal()).unwrap_or_default()
 }

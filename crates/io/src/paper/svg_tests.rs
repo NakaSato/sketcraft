@@ -1,6 +1,6 @@
 use std::f64::consts::{FRAC_PI_2, PI, TAU};
 
-use solidcore_record::{Loop2, Region2};
+use sketcore_record::{Loop2, Region2};
 use sketcraft_geom::paper::{Group, ObjectKind, Scene};
 
 use super::*;

@@ -9,7 +9,7 @@ license.workspace = true
 workspace = true
 
 [dependencies]
-solidcore-record = { workspace = true }
+sketcore-record = { workspace = true }
 robust = "1.2"
 sketcraft-geom = { workspace = true }
 sketcraft-render = { workspace = true }
@@ -27,7 +27,7 @@ wgpu = { workspace = true, features = ["metal", "vulkan", "dx12", "gles"] }
 [dev-dependencies]
 image = { workspace = true }
 sketcraft-kernel = { workspace = true }
-# Headless pictures of real designs (capture tests), built by the real kernel, solidcore, as in the
+# Headless pictures of real designs (capture tests), built by the real kernel, sketcore, as in the
 # apps.
 sketcraft-engine = { workspace = true, features = ["bundled-render-library"] }
 sketcraft-io = { workspace = true }

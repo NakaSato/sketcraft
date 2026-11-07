@@ -12,7 +12,7 @@ use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::{Mutex, PoisonError};
 
 use serde_json::{Value, json};
-use solidcore_record::brep as b;
+use sketcore_record::brep as b;
 
 use crate::sweeps::{Affine, Curve};
 use crate::{Brep, Result};
@@ -45,7 +45,7 @@ pub fn finish() -> Vec<Event> {
     std::mem::take(&mut *LOG.lock().unwrap_or_else(PoisonError::into_inner))
 }
 
-/// The names of solidcore's upstream fixes this crate turns on: the fix set every traced
+/// The names of sketcore's upstream fixes this crate turns on: the fix set every traced
 /// operation ran with.
 pub fn fixes() -> Vec<&'static str> {
     crate::core::fixes().flags().filter(|&(_, on)| on).map(|(name, _)| name).collect()

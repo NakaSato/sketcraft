@@ -26,9 +26,9 @@ use std::sync::mpsc::Sender;
 use egui::{Pos2, Stroke, pos2, vec2};
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
-use solidcore_record::{Vec2, Vec3};
+use sketcore_record::{Vec2, Vec3};
 
-use crate::SolveApp;
+use crate::SketApp;
 use crate::control::ControlResponse;
 
 /// How fast the pointer moves: 1× to 5×, or Instant (no animation: the command runs at once
@@ -243,7 +243,7 @@ fn button(command: &str) -> Option<Pos2> {
 
 /// Where the pointer goes for a command: its toolbar button (or its panel), then its picks on
 /// screen, at most [`MAX_PICK_STOPS`] of them.
-pub fn stops(app: &SolveApp, command: &str, params: &Value) -> Vec<Pos2> {
+pub fn stops(app: &SketApp, command: &str, params: &Value) -> Vec<Pos2> {
     let mut out: Vec<Pos2> = button(command).into_iter().collect();
     let Some(rect) = app.viewport.rect else { return out };
     let proj = crate::viewport::projection(app, rect);
@@ -271,7 +271,7 @@ fn batch_targets(steps: &[Value]) -> Vec<(Pos2, &'static str)> {
 
 /// The places a command's parameters pick, in the world: [x, y, z] points (faces, edges,
 /// vertices, positions), active-sketch [x, y] points, and a new sketch's plane.
-pub fn picks(app: &SolveApp, command: &str, params: &Value) -> Vec<Vec3> {
+pub fn picks(app: &SketApp, command: &str, params: &Value) -> Vec<Vec3> {
     if sketcraft_engine::panels::commands::is_command(command) {
         return Vec::new();
     }
@@ -334,7 +334,7 @@ fn walk<'a>(v: &'a Value, key: Option<&'a str>, f: &mut dyn FnMut(Option<&'a str
 
 /// Take over a control request when the pointer should act it out first: returns the request
 /// back when it should simply run.
-pub fn intercept(app: &mut SolveApp, req: &crate::control::ControlRequest) -> bool {
+pub fn intercept(app: &mut SketApp, req: &crate::control::ControlRequest) -> bool {
     let (method, params, reply) = (req.method.as_str(), &req.params, &req.reply);
     let s = app.ui.agent_cursor;
     if !s.show || params.get("animate").and_then(Value::as_bool) == Some(false) {
@@ -385,7 +385,7 @@ pub fn intercept(app: &mut SolveApp, req: &crate::control::ControlRequest) -> bo
     true
 }
 
-impl SolveApp {
+impl SketApp {
     /// Where the agent pointer starts: where it was, else the middle of the viewport.
     fn cursor_start(&self) -> Pos2 {
         self.agent.pos.or_else(|| self.viewport.rect.map(|r| r.center())).unwrap_or(pos2(600.0, 400.0))
@@ -398,7 +398,7 @@ fn ease(t: f64) -> f64 {
 }
 
 /// Move the pointer along; when the last stop is clicked, run the held request and reply.
-pub fn step(app: &mut SolveApp, ctx: &egui::Context) {
+pub fn step(app: &mut SketApp, ctx: &egui::Context) {
     let now = app.now;
     app.agent.ripples.retain(|(_, t)| now - t < 0.6);
     if !app.agent.ripples.is_empty() {
@@ -442,7 +442,7 @@ pub fn step(app: &mut SolveApp, ctx: &egui::Context) {
 }
 
 /// Run the held request now (as a call without animation) and send its reply.
-fn finish(app: &mut SolveApp, ctx: &egui::Context) {
+fn finish(app: &mut SketApp, ctx: &egui::Context) {
     let Some(job) = app.agent.job.take() else { return };
     if crate::control::chat_turn_cancelled(job.chat_turn.as_deref()) {
         let _ = job.reply.send(crate::control::cancelled_chat_response());
@@ -480,7 +480,7 @@ fn finish(app: &mut SolveApp, ctx: &egui::Context) {
 use crate::icons::pointer::agent;
 
 /// Draw the pointer, its "Agent" tag and the click ripples over everything.
-pub fn paint(app: &SolveApp, ctx: &egui::Context) {
+pub fn paint(app: &SketApp, ctx: &egui::Context) {
     if !app.ui.agent_cursor.show {
         return;
     }
@@ -516,10 +516,10 @@ mod tests {
     use crate::Services;
     use sketcraft_engine::Session;
 
-    fn app() -> SolveApp {
+    fn app() -> SketApp {
         let mut s = Session::default();
         s.execute("solid.box", &json!({"length": 40, "width": 30, "height": 20})).unwrap();
-        let mut a = SolveApp::new(s, Services::default());
+        let mut a = SketApp::new(s, Services::default());
         a.viewport.rect = Some(egui::Rect::from_min_size(pos2(250.0, 120.0), vec2(1100.0, 760.0)));
         a.fit_view();
         a

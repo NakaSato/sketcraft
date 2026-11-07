@@ -5,7 +5,7 @@ use serde_json::{Value, json};
 use std::borrow::Cow;
 
 use super::check::whole;
-use solidcore_record::{Vec2, Vec3};
+use sketcore_record::{Vec2, Vec3};
 use sketcraft_geom::Vec3Geom;
 
 use super::types::{CameraParam, present};

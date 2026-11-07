@@ -1,4 +1,4 @@
-//! `cargo xtask kernel-cases [--ladder] --export DIR`: the kernel rig as a corpus for solidcore's
+//! `cargo xtask kernel-cases [--ladder] --export DIR`: the kernel rig as a corpus for sketcore's
 //! own rig. Each case's process writes its entry (`sketcraft-cli kernel-cases --export`,
 //! `DIR/<area>/<case>.json`: the kernel operations that made its result, their operand records,
 //! the fix set, its expected values and the rig's result). This writes what that leaves out:
@@ -75,11 +75,11 @@ fn git(args: &[&str]) -> String {
         .unwrap_or_default()
 }
 
-/// The solidcore rev SketCraft is pinned to (the workspace `Cargo.toml`).
-fn solidcore_pin() -> String {
+/// The sketcore rev SketCraft is pinned to (the workspace `Cargo.toml`).
+fn sketcore_pin() -> String {
     let text = std::fs::read_to_string(root().join("Cargo.toml")).unwrap_or_default();
     text.lines()
-        .find(|l| l.starts_with("solidcore ="))
+        .find(|l| l.starts_with("sketcore ="))
         .and_then(|l| l.split("rev = \"").nth(1))
         .and_then(|r| r.split('"').next())
         .unwrap_or_default()
@@ -170,7 +170,8 @@ pub(crate) fn manifest(dir: &Path, results: &[Value], golden: Option<&Value>) ->
     let m = json!({
         // A copy without git (synced to a build machine) names no commit: say so, never "".
         "sketcraft": Some(git(&["rev-parse", "HEAD"])).filter(|c| !c.is_empty()),
-        "solidcore": solidcore_pin(),
+        // Read by the upstream rig, which names its own package `solidcore`.
+        "solidcore": sketcore_pin(),
         "fixes": "fixes.json",
         "areas": areas,
         "not_expressible": not,

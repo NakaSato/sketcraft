@@ -5,7 +5,7 @@ use std::ops::{Add, Deref, Mul, Neg, Sub};
 
 use serde::{Deserialize, Serialize};
 
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 
 /// A unit vector: length 1 up to rounding. Made only from a vector with a length
 /// ([`UnitVec3::new`], [`Vec3Geom::unit`]), so a function taking one need not normalise it or

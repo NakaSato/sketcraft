@@ -1,5 +1,5 @@
 use serde_json::json;
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 use sketcraft_engine::Session;
 
 use super::*;
@@ -15,12 +15,12 @@ fn missing_joint_messages_are_drawn_in_full() {
             ("joint.gear", "needs two joints that turn"),
             ("joint.rack_pinion", "needs a joint that turns and one that slides"),
         ] {
-            let mut app = SolveApp::new(Session::default(), Services::default());
+            let mut app = SketApp::new(Session::default(), Services::default());
             app.preferences.language = language.to_owned();
             app.start(command);
             let ctx = crate::fonts::test_context();
             let mut textures = std::collections::HashMap::new();
-            let mut draw = |app: &mut SolveApp| {
+            let mut draw = |app: &mut SketApp| {
                 let input =
                     egui::RawInput { screen_rect: Some(egui::Rect::from_min_size(egui::Pos2::ZERO, egui::vec2(800.0, 600.0))), ..Default::default() };
                 let mut output = ctx.run_ui(input, |ui| crate::dialogs::show(app, ui.ctx()));
@@ -57,7 +57,7 @@ fn missing_joint_messages_are_drawn_in_full() {
 
 /// A grounded base with discs G1 (radius 10 at x = 0) and G2 (radius 20 at x = 30) turning on
 /// revolute joints about +Z, and a nut on a cylindrical joint.
-fn discs() -> SolveApp {
+fn discs() -> SketApp {
     let mut s = Session::default();
     let mut run = |id: &str, p: Value| s.execute(id, &p).unwrap_or_else(|e| panic!("{id}: {e}"));
     for (name, base, r) in [("Base", [0, -60, -20], 2), ("G1", [0, 0, 0], 10), ("G2", [30, 0, 0], 20), ("Nut", [0, 60, 0], 3)] {
@@ -71,12 +71,12 @@ fn discs() -> SolveApp {
         let at = |o: &str| json!({"occurrence": o, "point": [x, y, 0], "z": [0, 0, 1]});
         run("joint.create", json!({"type": kind, "a": at("Base"), "b": at(name), "flip": true, "name": name}));
     }
-    SolveApp::new(s, Services::default())
+    SketApp::new(s, Services::default())
 }
 
 /// A pick of the round wall a point of the exact geometry lies on (the facets of the wall's mesh
 /// cut inside it, so the nearest face of any body).
-fn wall(app: &SolveApp, p: Vec3) -> Sel {
+fn wall(app: &SketApp, p: Vec3) -> Sel {
     let st = app.session.world_state().unwrap();
     let mut best: Option<(f64, Sel)> = None;
     for b in &st.bodies {
@@ -92,7 +92,7 @@ fn wall(app: &SolveApp, p: Vec3) -> Sel {
     best.map(|x| x.1).unwrap()
 }
 
-fn joint(app: &SolveApp, name: &str) -> u64 {
+fn joint(app: &SketApp, name: &str) -> u64 {
     app.session.doc.assembly.joints.iter().find(|j| j.name == name).map(|j| j.id).unwrap_or(0)
 }
 
@@ -113,7 +113,7 @@ fn picked_gear_faces_choose_their_joints_and_radii() {
     app.dialog = Some(d);
     let ctx = crate::fonts::test_context();
     let screen = egui::Rect::from_min_size(egui::Pos2::ZERO, egui::vec2(1600.0, 1000.0));
-    let frame = |app: &mut SolveApp| {
+    let frame = |app: &mut SketApp| {
         let input = egui::RawInput { screen_rect: Some(screen), ..Default::default() };
         crate::test_support::frame(&ctx, input, |ui| crate::dialogs::show(app, ui.ctx()))
     };
@@ -160,8 +160,8 @@ fn instances_of_one_gear_are_coupled_as_two() {
         let at = |o: &str| json!({"occurrence": o, "point": [x, 0, 0], "z": [0, 0, 1]});
         run("joint.create", json!({"type": "revolute", "a": at("Base:1"), "b": at(name), "flip": true, "name": name}));
     }
-    let mut app = SolveApp::new(s, Services::default());
-    let occ = |app: &SolveApp, name: &str| app.session.doc.occurrences.iter().find(|o| o.name == name).map(|o| o.id).unwrap_or(0);
+    let mut app = SketApp::new(s, Services::default());
+    let occ = |app: &SketApp, name: &str| app.session.doc.occurrences.iter().find(|o| o.name == name).map(|o| o.id).unwrap_or(0);
     app.start("joint.gear");
     let mut d = app.dialog.take().unwrap();
     for (i, p) in [Vec3::new(-15.0, 0.0, 2.5), Vec3::new(45.0, 0.0, 2.5)].into_iter().enumerate() {

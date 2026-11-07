@@ -1,4 +1,4 @@
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 use sketcraft_geom::prelude::*;
 use sketcraft_kernel::{Body, BoolOp};
 
@@ -375,7 +375,7 @@ fn tessellation_without_surfaces_does_not_dispatch() {
 #[test]
 #[ignore]
 fn bench_plate() {
-    use solidcore_record::{Loop2, Plane, Region2, Seg2, Vec2};
+    use sketcore_record::{Loop2, Plane, Region2, Seg2, Vec2};
     let rect = |w: f64| Loop2 {
         segs: vec![
             Seg2::Line { a: Vec2::new(0.0, 0.0), b: Vec2::new(w, 0.0) },

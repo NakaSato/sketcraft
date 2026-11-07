@@ -53,7 +53,7 @@ impl Drop for WorkerPermit {
     }
 }
 
-pub(super) fn pick(app: &mut SolveApp, previous: String) {
+pub(super) fn pick(app: &mut SketApp, previous: String) {
     let document = Arc::downgrade(&app.session.doc);
     let revision = app.session.revision;
     let shot = app.render_workspace.view.name.clone();
@@ -74,7 +74,7 @@ pub(super) fn pick(app: &mut SolveApp, previous: String) {
     });
 }
 
-pub(super) fn request(app: &mut SolveApp, view: &super::View) -> Result<Value, String> {
+pub(super) fn request(app: &mut SketApp, view: &super::View) -> Result<Value, String> {
     if app.render_workspace.view.method == ImageMethod::Raster {
         return Err(app.tr("render.surface_import.raytrace_required").into());
     }
@@ -109,7 +109,7 @@ pub(super) fn request(app: &mut SolveApp, view: &super::View) -> Result<Value, S
         "normal_strength":1.0,"flip_v":false,"replace":true}))
 }
 
-fn finish(app: &mut SolveApp, imported: Imported) -> Result<(), String> {
+fn finish(app: &mut SketApp, imported: Imported) -> Result<(), String> {
     if app.file_load.busy() || app.file_picker_busy() {
         return Err("a file operation is in progress".into());
     }
@@ -122,7 +122,7 @@ fn finish(app: &mut SolveApp, imported: Imported) -> Result<(), String> {
     Ok(())
 }
 
-fn begin(app: &mut SolveApp, view: &mut super::View, ctx: &egui::Context) -> Result<(), String> {
+fn begin(app: &mut SketApp, view: &mut super::View, ctx: &egui::Context) -> Result<(), String> {
     let params = request(app, view)?;
     let session = app.session.scratch();
     let commands = vec![("render.surface.import".into(), params)];
@@ -164,7 +164,7 @@ fn begin(app: &mut SolveApp, view: &mut super::View, ctx: &egui::Context) -> Res
     }
 }
 
-pub(super) fn poll(app: &mut SolveApp, ctx: &egui::Context) {
+pub(super) fn poll(app: &mut SketApp, ctx: &egui::Context) {
     let Some(pending) = app.render_workspace.view.library.imported.pending.as_ref() else { return };
     let current = pending.revision == app.session.revision
         && Weak::ptr_eq(&pending.document, &Arc::downgrade(&app.session.doc))
@@ -193,7 +193,7 @@ pub(super) fn poll(app: &mut SolveApp, ctx: &egui::Context) {
     }
 }
 
-pub(super) fn controls(app: &mut SolveApp, ui: &mut egui::Ui, view: &mut super::View) {
+pub(super) fn controls(app: &mut SketApp, ui: &mut egui::Ui, view: &mut super::View) {
     let title = app.tr("render.surface_import.title").to_string();
     if std::mem::take(&mut view.imported.reveal) {
         let section = ui.make_persistent_id("surface_import");

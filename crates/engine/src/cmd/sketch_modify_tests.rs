@@ -1,5 +1,5 @@
 use serde_json::{Value, json};
-use solidcore_record::Vec2;
+use sketcore_record::Vec2;
 use sketcraft_geom::prelude::*;
 use sketcraft_sketch::{ConstraintKind, CurveKind, LinkSource};
 
@@ -1999,7 +1999,7 @@ fn a_point_added_to_a_spline_keeps_its_constraints_and_undoes() {
     let fit: Vec<Vec2> = old.iter().map(|i| before.point(*i).unwrap()).collect();
     let curve = before.exact_segs(si).unwrap();
     let off =
-        |segs: &[solidcore_record::Seg2], q: Vec2| segs.iter().map(|seg| seg.point_at(seg.closest_param(q)).dist(q)).fold(f64::INFINITY, f64::min);
+        |segs: &[sketcore_record::Seg2], q: Vec2| segs.iter().map(|seg| seg.point_at(seg.closest_param(q)).dist(q)).fold(f64::INFINITY, f64::min);
 
     let out = run(&mut s, "sketch.spline.insert_point", json!({"curve": sid, "at": [15, 6]}));
     let after = sketch(&s);
@@ -2102,7 +2102,7 @@ fn a_point_removed_from_a_spline_goes_with_its_dimension_and_undoes() {
 /// of an offset are refused.
 #[test]
 fn a_reversed_spline_runs_the_other_way_along_the_same_path() {
-    use solidcore_record::Seg2;
+    use sketcore_record::Seg2;
     let mut s = new_sketch();
     let fit =
         ids(&run(&mut s, "sketch.spline.fit_point", json!({"points": [[0, 0], [10, 8], [25, 2], [30, 6]], "connect": false}))["curves"])[0].clone();
@@ -3115,7 +3115,7 @@ fn periodic_offset_extrusion_survives_post_extrude_span_changes_and_cold_reopen(
         for (distance, material) in [(1.25, true), (0.5, false), (1.75, false)] {
             let point = ellipse + normal * distance;
             assert_eq!(
-                body.classify_point(solidcore_record::Vec3::new(point.x, point.y, 1.5)).unwrap() == sketcraft_kernel::PointClass::Inside,
+                body.classify_point(sketcore_record::Vec3::new(point.x, point.y, 1.5)).unwrap() == sketcraft_kernel::PointClass::Inside,
                 material
             );
         }
@@ -3124,7 +3124,7 @@ fn periodic_offset_extrusion_survives_post_extrude_span_changes_and_cold_reopen(
             let point = centre + u * (major + distance);
             assert_eq!(ring.region.contains(point), material);
             assert_eq!(
-                body.classify_point(solidcore_record::Vec3::new(point.x, point.y, 1.5)).unwrap() == sketcraft_kernel::PointClass::Inside,
+                body.classify_point(sketcore_record::Vec3::new(point.x, point.y, 1.5)).unwrap() == sketcraft_kernel::PointClass::Inside,
                 material
             );
         }
@@ -5299,7 +5299,7 @@ fn offset_corners_trim_the_overlap_and_extend_the_gap() {
 
 #[test]
 fn move_copy_drawn_arc_keeps_exact_geometry_and_original() {
-    use solidcore_record::Vec3;
+    use sketcore_record::Vec3;
     let mut s = new_sketch();
     run(&mut s, "sketch.options", json!({"sketch_3d":true}));
     let source = ids(&run(&mut s, "sketch.arc3d", json!({"start":[10,0,3],"through":[0,10,3],"end":[-10,0,3]}))["curves"])[0].clone();
@@ -5335,7 +5335,7 @@ fn move_copy_drawn_arc_keeps_exact_geometry_and_original() {
 
 #[test]
 fn move_copy_drawn_arc_turns_in_the_sketch_plane_without_flattening() {
-    use solidcore_record::Vec3;
+    use sketcore_record::Vec3;
     let mut s = Session::default();
     run(&mut s, "sketch.create", json!({"plane":"YZ"}));
     run(&mut s, "sketch.options", json!({"sketch_3d":true}));
@@ -5354,7 +5354,7 @@ fn move_copy_drawn_arc_turns_in_the_sketch_plane_without_flattening() {
 
 #[test]
 fn move_copy_drawn_wires_mix_with_planar_curves_and_deduplicate() {
-    use solidcore_record::Vec3;
+    use sketcore_record::Vec3;
     let mut s = new_sketch();
     run(&mut s, "sketch.options", json!({"sketch_3d":true}));
     let curve = ids(&run(&mut s, "sketch.line", json!({"points":[[1,2],[4,2]]}))["curves"])[0].clone();

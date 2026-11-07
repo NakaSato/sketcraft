@@ -2,8 +2,8 @@
 //! from each other join without any intersection work, their records side by side.
 
 use serde::{Deserialize, Serialize};
-use solidcore_record::Vec3;
-use solidcore_record::brep::part;
+use sketcore_record::Vec3;
+use sketcore_record::brep::part;
 use sketcraft_geom::brep::placement::Rigid;
 use sketcraft_geom::prelude::*;
 
@@ -138,7 +138,7 @@ pub(crate) fn join_pieces(pieces: Vec<Body>) -> Result<Option<Body>> {
 
 /// The records of `bodies` side by side, as one body, and where its items come from.
 fn joined(bodies: &[Body]) -> Result<(Body, part::Part)> {
-    let records: Vec<&solidcore_record::brep::Brep> = bodies.iter().map(Body::record).collect();
+    let records: Vec<&sketcore_record::brep::Brep> = bodies.iter().map(Body::record).collect();
     let part = part::compound(&records).map_err(|e| KernelError::Failed(format!("pieces: {e}")))?;
     // Each face's source, numbered as `compound` numbers the inputs: one after another.
     let sources: Vec<Option<crate::FaceSource>> =
@@ -250,7 +250,7 @@ pub fn transform(body: &Body, translate: Vec3, origin: Vec3, axis: Vec3, angle: 
 
 /// Split a body with a plane: the parts on the positive and the negative side of the plane
 /// (only the non-empty ones).
-pub fn split_by_plane(body: &Body, plane: &solidcore_record::Plane) -> Result<Vec<Body>> {
+pub fn split_by_plane(body: &Body, plane: &sketcore_record::Plane) -> Result<Vec<Body>> {
     let _span = sketcraft_profile::span("kernel", "split_by_plane");
     let mut out = Vec::new();
     for positive in [true, false] {
@@ -263,7 +263,7 @@ pub fn split_by_plane(body: &Body, plane: &solidcore_record::Plane) -> Result<Ve
 /// cut with: the part is the body's intersection with [`half_box`] (the tool), whose history it
 /// carries, over the body and the box. The box's face in the plane, the part's cut face, is its
 /// start cap on the positive side and its end cap on the negative side.
-pub fn half_space(body: &Body, plane: &solidcore_record::Plane, positive: bool) -> Result<(Option<Body>, Body)> {
+pub fn half_space(body: &Body, plane: &sketcore_record::Plane, positive: bool) -> Result<(Option<Body>, Body)> {
     let _span = sketcraft_profile::span("kernel", "half_space");
     // The box's own construction roles describe no face of the design: the cut face has none.
     let tool = half_box(body, plane, positive)?.with_face_sources(None);
@@ -271,17 +271,17 @@ pub fn half_space(body: &Body, plane: &solidcore_record::Plane, positive: bool) 
 }
 
 /// A box covering everything of `body` on one side of a plane, its start cap in the plane.
-pub(crate) fn half_box(body: &Body, plane: &solidcore_record::Plane, positive: bool) -> Result<Body> {
+pub(crate) fn half_box(body: &Body, plane: &sketcore_record::Plane, positive: bool) -> Result<Body> {
     body.require_brep("split")?;
     let bb = body.exact_bounds()?;
     let reach = (bb.diagonal() + plane.origin.dist(bb.center())) * 2.0 + body.size();
     let c = plane.to_local(bb.center());
-    let sq = solidcore_record::Region2 {
-        outer: solidcore_record::Loop2::polygon(&[
-            solidcore_record::Vec2::new(c.x - reach, c.y - reach),
-            solidcore_record::Vec2::new(c.x + reach, c.y - reach),
-            solidcore_record::Vec2::new(c.x + reach, c.y + reach),
-            solidcore_record::Vec2::new(c.x - reach, c.y + reach),
+    let sq = sketcore_record::Region2 {
+        outer: sketcore_record::Loop2::polygon(&[
+            sketcore_record::Vec2::new(c.x - reach, c.y - reach),
+            sketcore_record::Vec2::new(c.x + reach, c.y - reach),
+            sketcore_record::Vec2::new(c.x + reach, c.y + reach),
+            sketcore_record::Vec2::new(c.x - reach, c.y + reach),
         ]),
         holes: vec![],
     };

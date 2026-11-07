@@ -7,7 +7,7 @@
 use super::{EvalCurve, EvalSurface, affine, linear, onto_knots};
 use crate::bspline::{MAX_SPLINE_DEGREE, basis_derivatives, binomial};
 use crate::prelude::*;
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 
 /// The highest total order of [`Partials`].
 pub const MAX_PARTIAL_ORDER: usize = 4;

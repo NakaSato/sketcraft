@@ -28,7 +28,7 @@ mod point_clouds;
 pub use point_clouds::CloudPanel;
 pub(crate) use point_clouds::point_cloud_tracks;
 
-pub(crate) fn reveal_feature(app: &mut SolveApp, id: u64, body: &str) {
+pub(crate) fn reveal_feature(app: &mut SketApp, id: u64, body: &str) {
     features::reveal(app, id, body);
 }
 
@@ -36,19 +36,19 @@ pub(crate) fn reveal_feature(app: &mut SolveApp, id: u64, body: &str) {
 /// when they, and placements whatever "Components start open" says ([`placement_open`]), open
 /// with their arrow, Find in Browser or Expand All (#8768). The design's own row always starts
 /// open.
-pub(crate) fn rows_start_open(app: &SolveApp) -> bool {
+pub(crate) fn rows_start_open(app: &SketApp) -> bool {
     !app.preferences.browser_rows_start_closed
 }
 
 /// Whether the Browser follows the 3D view: a body picked there opens the Browser down to its row
 /// (#3005), and the rows above what is selected or under the pointer are marked (#3009). It does
 /// while the rows start open; while they start closed, only Find in Browser opens them.
-fn follows_view(app: &SolveApp) -> bool {
+fn follows_view(app: &SketApp) -> bool {
     rows_start_open(app)
 }
 
 /// Find in Browser for a body: show the Browser and find the body there ([`find_in_tree`]).
-pub(crate) fn reveal_body(app: &mut SolveApp, body: &str) {
+pub(crate) fn reveal_body(app: &mut SketApp, body: &str) {
     sync_reveals(app);
     app.ui.show_browser = true;
     app.preferences.timeline_left_browser_collapsed = false;
@@ -71,7 +71,7 @@ struct Found {
 /// body's row is scrolled into view, and the path lights the rows leading to it. The path is
 /// looked up once, here: the rows are opened before drawing, because a closed row never draws
 /// what is inside it.
-fn find_in_tree(app: &mut SolveApp, body: &str) {
+fn find_in_tree(app: &mut SketApp, body: &str) {
     app.tree.reveal_feature = None;
     app.tree.reveal = Some(body.to_string());
     remember_reveal_source(app, body);
@@ -107,14 +107,14 @@ fn find_in_tree(app: &mut SolveApp, body: &str) {
 
 /// Another design is shown: the rows the last Find in Browser opened were that design's, and the
 /// next Find leaves this one's rows as they are.
-pub(crate) fn forget_found(app: &mut SolveApp) {
+pub(crate) fn forget_found(app: &mut SketApp) {
     app.tree.found_rows.clear();
     app.tree.found = None;
 }
 
 /// The placement a body (by its world name) is in: its component, its name in that component and
 /// the placement's path. One look through the placements.
-fn body_placement(app: &SolveApp, body: &str) -> Option<(u64, String, Vec<u64>)> {
+fn body_placement(app: &SketApp, body: &str) -> Option<(u64, String, Vec<u64>)> {
     let source = crate::open_meshing::session_world(&app.session).body(body).map(|selected| selected.definition_name().to_string())?;
     let component = app.session.model.state().body(&source).map(|definition| definition.component)?;
     let path = placement_named(app, &source, component, body)?;
@@ -125,14 +125,14 @@ fn body_placement(app: &SolveApp, body: &str) -> Option<(u64, String, Vec<u64>)>
 /// `body`. Every component's first placement keeps the definition's name, so the owner must
 /// match too. The design is indexed once for the look, so a component placed many times costs
 /// its placements, not its placements times the design.
-pub(crate) fn placement_named(app: &SolveApp, source: &str, component: u64, body: &str) -> Option<Vec<u64>> {
+pub(crate) fn placement_named(app: &SketApp, source: &str, component: u64, body: &str) -> Option<Vec<u64>> {
     let state = app.session.model.state();
     let doc = &app.session.doc;
     let names = sketcraft_engine::doc::WorldNames::new(doc, &state);
     doc.placements().into_iter().find(|(owner, path, _)| *owner == component && names.name(source, component, path) == body).map(|(_, path, _)| path)
 }
 
-pub(crate) fn reveal_in_history(app: &mut SolveApp, id: u64) {
+pub(crate) fn reveal_in_history(app: &mut SketApp, id: u64) {
     features::reveal_in_history(app, id);
 }
 
@@ -151,7 +151,7 @@ use sketcraft_engine::doc::{BrowserEntry, Document, FeatureKind};
 use crate::context_menu::{Item, Target};
 use crate::theme::Tokens;
 
-use crate::SolveApp;
+use crate::SketApp;
 
 /// The Browser's rows on screen: (label, row rect, fold arrow area, open).
 /// Other presentations expose their geometry through `semantic_content::output`.
@@ -230,7 +230,7 @@ pub struct TreeState {
     pub cloud_panel: Option<CloudPanel>,
     /// A Section Analysis hidden with its eye in the Analysis folder: its plane (origin,
     /// normal), so the eye can bring it back (#822).
-    pub hidden_section: Option<(solidcore_record::Vec3, solidcore_record::Vec3)>,
+    pub hidden_section: Option<(sketcore_record::Vec3, sketcore_record::Vec3)>,
     /// What the Section Analysis dialog's OK last made, for Edit to start from.
     pub section_dialog: Option<crate::dialogs::SectionDraft>,
     /// The Analysis folder hidden with its own eye, and the Section Analysis hidden with its
@@ -269,7 +269,7 @@ pub(crate) struct PendingReveals {
     timeline: Option<u64>,
 }
 
-pub(crate) fn discard_reveals(app: &mut SolveApp) {
+pub(crate) fn discard_reveals(app: &mut SketApp) {
     app.tree.reveal = None;
     app.tree.reveal_source = None;
     app.tree.reveal_feature = None;
@@ -279,7 +279,7 @@ pub(crate) fn discard_reveals(app: &mut SolveApp) {
 }
 
 /// Guard request creation and presentation even when a session changes after frame begin.
-pub(crate) fn sync_reveals(app: &mut SolveApp) {
+pub(crate) fn sync_reveals(app: &mut SketApp) {
     if app.tree.reveal_session.is_some_and(|session| session != app.session.uid) {
         discard_reveals(app);
     }
@@ -290,7 +290,7 @@ pub(crate) fn sync_reveals(app: &mut SolveApp) {
     app.tree.reveal_session = Some(app.session.uid);
 }
 
-pub(crate) fn take_reveals(app: &mut SolveApp) -> PendingReveals {
+pub(crate) fn take_reveals(app: &mut SketApp) -> PendingReveals {
     sync_reveals(app);
     app.tree.view_pick = None;
     PendingReveals {
@@ -302,7 +302,7 @@ pub(crate) fn take_reveals(app: &mut SolveApp) -> PendingReveals {
     }
 }
 
-pub(crate) fn restore_reveals(app: &mut SolveApp, pending: PendingReveals) {
+pub(crate) fn restore_reveals(app: &mut SketApp, pending: PendingReveals) {
     discard_reveals(app);
     if pending.session == Some(app.session.uid) {
         app.tree.reveal = pending.body;
@@ -312,13 +312,13 @@ pub(crate) fn restore_reveals(app: &mut SolveApp, pending: PendingReveals) {
     }
 }
 
-pub(crate) fn request_timeline_reveal(app: &mut SolveApp, id: u64) {
+pub(crate) fn request_timeline_reveal(app: &mut SketApp, id: u64) {
     sync_reveals(app);
     app.tree.timeline_reveal = Some(id);
 }
 
 impl FolderPick {
-    fn current(&self, app: &SolveApp) -> bool {
+    fn current(&self, app: &SketApp) -> bool {
         self.session == app.session.uid && std::ptr::eq(self.doc.as_ptr(), Arc::as_ptr(&app.session.doc))
     }
 }
@@ -369,7 +369,7 @@ pub struct OccMove {
     pub translate: [f64; 3],
     pub angles: [f64; 3],
     /// The occurrence's origin when the move began: what it turns about.
-    pub pivot: Option<solidcore_record::Vec3>,
+    pub pivot: Option<sketcore_record::Vec3>,
     /// The values when the current triad drag began.
     drag0: Option<([f64; 3], [f64; 3])>,
 }
@@ -386,30 +386,30 @@ impl OccMove {
 
 /// Is a sketch shown itself (its eye)? A hidden Sketches folder or component still keeps it out
 /// of the viewport (`sketcraft_engine::view::sketch_shown`).
-pub fn sketch_visible(app: &SolveApp, id: u64) -> bool {
+pub fn sketch_visible(app: &SketApp, id: u64) -> bool {
     if app.session.visibility.hidden_sketches.contains(&id) {
         return false;
     }
     app.session.visibility.shown_sketches.contains(&id) || !sketcraft_engine::view::sketch_consumed(&app.session, id)
 }
 
-pub fn set_sketch_visible(app: &mut SolveApp, id: u64, on: bool) {
+pub fn set_sketch_visible(app: &mut SketApp, id: u64, on: bool) {
     // Through the command, so showing or hiding a sketch is an undo step too (#2219).
     let _ = app.run("browser.visibility", json!({ "items": [id], "visible": on }));
 }
 
-pub fn redefine_sketch(app: &mut SolveApp, id: u64) {
+pub fn redefine_sketch(app: &mut SketApp, id: u64) {
     app.tree.redefine = Some(id);
     app.tree.redefine_draft = Some(crate::sketch_attachment_ui::Draft::new(app, id));
 }
 
-fn find_group(app: &SolveApp, id: u64) -> Option<&sketcraft_engine::doc::BrowserGroup> {
+fn find_group(app: &SketApp, id: u64) -> Option<&sketcraft_engine::doc::BrowserGroup> {
     app.session.doc.browser_groups.iter().find(|g| g.id == id)
 }
 
 /// World bodies of a component picked in the tree. The root is the whole design; a nested
 /// component is its own placement, including bodies inside it.
-pub(crate) fn bodies_of_component(app: &SolveApp, id: u64) -> Vec<String> {
+pub(crate) fn bodies_of_component(app: &SketApp, id: u64) -> Vec<String> {
     let present: Vec<String> = crate::open_meshing::session_world(&app.session).bodies.iter().map(|b| b.name.clone()).collect();
     let mut names = if id == 0 {
         present.clone()
@@ -445,7 +445,7 @@ enum Take {
 /// Put these bodies into the open dialog's active input, the same way as clicking each one
 /// ([`pick_from_browser`]). Returns false when that input does not take bodies, so the click
 /// keeps its ordinary meaning. A Shift range only adds; a group or component toggles.
-fn offer_bodies(app: &mut SolveApp, names: &[String], take: Take) -> bool {
+fn offer_bodies(app: &mut SketApp, names: &[String], take: Take) -> bool {
     if !dialog_takes_body(app) || app.dialog.as_ref().is_some_and(|d| d.takes_components()) {
         return false;
     }
@@ -470,7 +470,7 @@ fn offer_bodies(app: &mut SolveApp, names: &[String], take: Take) -> bool {
 }
 
 /// The bodies in a group (none for sketch and plane groups).
-pub fn group_bodies(app: &SolveApp, id: u64) -> Vec<String> {
+pub fn group_bodies(app: &SketApp, id: u64) -> Vec<String> {
     let st = crate::open_meshing::session_world(&app.session);
     find_group(app, id)
         .filter(|g| g.folder == "bodies")
@@ -478,7 +478,7 @@ pub fn group_bodies(app: &SolveApp, id: u64) -> Vec<String> {
         .unwrap_or_default()
 }
 
-pub fn group_name(app: &SolveApp, id: u64) -> Option<String> {
+pub fn group_name(app: &SketApp, id: u64) -> Option<String> {
     find_group(app, id).map(|g| g.name.clone())
 }
 
@@ -490,7 +490,7 @@ fn scope_path(scope: &str) -> Vec<u64> {
 /// Whether a folder or group's scope key is a row the browser draws for `component`: the design's
 /// own (`c0`, the root only), or a placement of it, spelt as the browser keys it (`o:12/3`, not
 /// `o:012/3`: the rows' state is kept by that key).
-pub(crate) fn scope_shows(app: &SolveApp, scope: &str, component: u64) -> bool {
+pub(crate) fn scope_shows(app: &SketApp, scope: &str, component: u64) -> bool {
     if component == 0 && scope == "c0" {
         return true;
     }
@@ -500,7 +500,7 @@ pub(crate) fn scope_shows(app: &SolveApp, scope: &str, component: u64) -> bool {
 
 /// Paste on a Bodies or Sketches folder or group: copied (or cut) bodies, or copied sketches and
 /// features, go into its component (that placement), and into the group.
-fn paste_item(app: &SolveApp, component: u64, scope: &str, folder: &str, group: Option<u64>) -> Item {
+fn paste_item(app: &SketApp, component: u64, scope: &str, folder: &str, group: Option<u64>) -> Item {
     let mut item = Item::action("ui.paste", "Paste", "paste")
         .key("Ctrl+V")
         .with(json!({ "component": component, "path": scope_path(scope), "group": group, "folder": folder }));
@@ -509,7 +509,7 @@ fn paste_item(app: &SolveApp, component: u64, scope: &str, folder: &str, group: 
 }
 
 /// The menu of a group row.
-pub fn group_items(app: &SolveApp, id: u64, scope: &str) -> Vec<Item> {
+pub fn group_items(app: &SketApp, id: u64, scope: &str) -> Vec<Item> {
     let Some(g) = find_group(app, id) else { return Vec::new() };
     let mut v = Vec::new();
     // Paste beside Rename, as the clipboard sits beside Delete and Rename in every menu.
@@ -539,7 +539,7 @@ pub(crate) fn sketches_to_parts_item(sketches: Vec<String>) -> Item {
 }
 
 /// The menu of a folder row (Bodies, Sketches, Construction).
-pub fn folder_items(app: &SolveApp, component: u64, folder: &str, scope: &str) -> Vec<Item> {
+pub fn folder_items(app: &SketApp, component: u64, folder: &str, scope: &str) -> Vec<Item> {
     let sel: Vec<String> = selected_keys(app, component, folder);
     let all = entries(app, component, folder);
     let mut v = Vec::new();
@@ -569,7 +569,7 @@ pub fn folder_items(app: &SolveApp, component: u64, folder: &str, scope: &str) -
 /// A component's or placement's menu, while its Bodies folder is folded away (#4217), takes the
 /// folder's items it lacks: Create Components from Bodies and Group Selected (New Group and Show
 /// All are on every component's menu).
-pub fn folded_folder_items(app: &SolveApp, target: &Target) -> Vec<Item> {
+pub fn folded_folder_items(app: &SketApp, target: &Target) -> Vec<Item> {
     let (comp, scope) = match target {
         Target::Component { id } => (*id, format!("c{id}")),
         Target::Occurrence { path } => match app.session.occurrence_placement(path) {
@@ -594,7 +594,7 @@ pub fn folded_folder_items(app: &SolveApp, target: &Target) -> Vec<Item> {
 }
 
 /// The menu of the Origin folder.
-pub fn origin_items(app: &SolveApp) -> Vec<Item> {
+pub fn origin_items(app: &SketApp) -> Vec<Item> {
     let planes = ["XY", "XZ", "YZ"].iter().all(|p| !app.session.visibility.hidden_origin.iter().any(|h| h == p));
     let axes = ["X", "Y", "Z"].iter().all(|p| !app.session.visibility.hidden_origin.iter().any(|h| h == p));
     vec![
@@ -608,14 +608,14 @@ pub fn origin_items(app: &SolveApp) -> Vec<Item> {
 
 /// Show or hide a browser folder or group itself, by tree key (`c0/bodies`, `o:4/g7`): its
 /// items keep their own state, and hiding or showing them never changes it.
-pub fn toggle_folder(app: &mut SolveApp, key: &str) {
+pub fn toggle_folder(app: &mut SketApp, key: &str) {
     let _ = app.run("browser.visibility", json!({ "tree_folders": [key], "visible": app.session.folder_hidden(key) }));
 }
 
 /// A drag over the eyes is one undo step (#9680). When the button goes down the undo depth and the
 /// hidden items are noted; when it comes up, the steps the drag made are merged into the first of
 /// them. Runs every frame, whatever else is open, so a release is never missed.
-pub(crate) fn eye_drag_frame(app: &mut SolveApp, ctx: &egui::Context) {
+pub(crate) fn eye_drag_frame(app: &mut SketApp, ctx: &egui::Context) {
     crate::semantic_content::ensure_session(app, ctx);
     let (pressed, down) = ctx.input(|i| (i.pointer.primary_pressed(), i.pointer.primary_down()));
     if pressed && app.tree.eye_press.is_none() {
@@ -628,7 +628,7 @@ pub(crate) fn eye_drag_frame(app: &mut SolveApp, ctx: &egui::Context) {
 }
 
 /// Also called when the presentation holding the gesture disappears while the button is down.
-pub(crate) fn end_eye_drag(app: &mut SolveApp, ctx: &egui::Context) {
+pub(crate) fn end_eye_drag(app: &mut SketApp, ctx: &egui::Context) {
     let capture = crate::semantic_content::release_eye(ctx);
     let dragged = ctx.data_mut(|d| d.remove_temp::<bool>(crate::ui_kit::eye_drag_id())).is_some();
     let Some((_, doc, depth, visibility)) = app
@@ -648,7 +648,7 @@ pub(crate) fn end_eye_drag(app: &mut SolveApp, ctx: &egui::Context) {
     }
 }
 
-pub(crate) fn discard_eye_press(app: &mut SolveApp) {
+pub(crate) fn discard_eye_press(app: &mut SketApp) {
     app.tree.eye_press = None;
 }
 
@@ -661,7 +661,7 @@ fn without_origin(mut visibility: sketcraft_engine::Visibility) -> sketcraft_eng
 
 /// A folder shortcut target lasts until another click, Escape, or a change of design/model.
 /// Visibility changes keep the document snapshot, so V can toggle the same folder again.
-pub(crate) fn update_folder_pick(app: &mut SolveApp, ctx: &egui::Context) {
+pub(crate) fn update_folder_pick(app: &mut SketApp, ctx: &egui::Context) {
     if ctx.input(|i| i.pointer.any_pressed() || i.key_pressed(egui::Key::Escape))
         || app.tree.picked_folder.as_ref().is_some_and(|pick| !pick.current(app))
     {
@@ -669,19 +669,19 @@ pub(crate) fn update_folder_pick(app: &mut SolveApp, ctx: &egui::Context) {
     }
 }
 
-fn pick_folder(app: &mut SolveApp, key: &str) {
+fn pick_folder(app: &mut SketApp, key: &str) {
     app.tree.picked_folder = Some(FolderPick { key: key.into(), session: app.session.uid, doc: Arc::downgrade(&app.session.doc) });
 }
 
 /// The group whose row was clicked last (its key ends in `/g<id>`), while that pick still holds
 /// and the group exists: F2 renames it (#10005).
-pub(crate) fn picked_group(app: &SolveApp) -> Option<u64> {
+pub(crate) fn picked_group(app: &SketApp) -> Option<u64> {
     let pick = app.tree.picked_folder.as_ref().filter(|pick| pick.current(app))?;
     let id = pick.key.rsplit_once("/g")?.1.parse().ok()?;
     find_group(app, id).map(|g| g.id)
 }
 
-pub(crate) fn toggle_picked_folder(app: &mut SolveApp) -> bool {
+pub(crate) fn toggle_picked_folder(app: &mut SketApp) -> bool {
     let Some(pick) = app.tree.picked_folder.as_ref().filter(|pick| pick.current(app)) else { return false };
     let key = pick.key.clone();
     toggle_folder(app, &key);
@@ -690,7 +690,7 @@ pub(crate) fn toggle_picked_folder(app: &mut SolveApp) -> bool {
 
 /// Selected browser items of the folder of a body or sketch, when more than one (for Group
 /// Selected in their menus).
-pub fn selection_group(app: &SolveApp, target: &Target) -> Option<Value> {
+pub fn selection_group(app: &SketApp, target: &Target) -> Option<Value> {
     let (comp, folder) = match target {
         Target::Body { name } => {
             let st = crate::open_meshing::session_world(&app.session);
@@ -707,7 +707,7 @@ pub fn selection_group(app: &SolveApp, target: &Target) -> Option<Value> {
 
 /// The group holding an item in a component's folder, then the groups holding that one, out to the
 /// folder.
-fn group_chain(app: &SolveApp, component: u64, folder: &str, key: &str) -> Vec<u64> {
+fn group_chain(app: &SketApp, component: u64, folder: &str, key: &str) -> Vec<u64> {
     let doc = &app.session.doc;
     std::iter::successors(doc.group_of_item(component, folder, key).map(|g| g.id), |id| doc.browser_group(*id).and_then(|g| g.parent))
         .take(sketcraft_engine::doc::MAX_GROUP_NESTING + 1)
@@ -715,7 +715,7 @@ fn group_chain(app: &SolveApp, component: u64, folder: &str, key: &str) -> Vec<u
 }
 
 /// Group actions from the menus.
-pub fn group_action(app: &mut SolveApp, action: &str, p: &Value) {
+pub fn group_action(app: &mut SketApp, action: &str, p: &Value) {
     match action {
         "ui.newGroup" | "ui.groupSelected" => {
             let folder = p.get("folder").and_then(Value::as_str).unwrap_or("bodies");
@@ -769,7 +769,7 @@ fn compact_tree(ui: &egui::Ui) -> bool {
 }
 
 /// Where tree rows put their eye this frame (Preferences › Interface, #8718).
-pub(crate) fn publish_row_prefs(app: &SolveApp, ctx: &egui::Context) {
+pub(crate) fn publish_row_prefs(app: &SketApp, ctx: &egui::Context) {
     ctx.data_mut(|d| d.insert_temp(egui::Id::unique("sc_tree_eye_left"), app.preferences.browser_eye_left));
 }
 
@@ -790,7 +790,7 @@ pub(crate) fn draw_row(ui: &mut egui::Ui, id: egui::Id, row: &Row<'_>) -> RowRes
 }
 
 /// A Ctrl/Shift-aware click on a selectable row.
-fn click_select(app: &mut SolveApp, ui: &egui::Ui, key: String, sel: Option<Sel>) {
+fn click_select(app: &mut SketApp, ui: &egui::Ui, key: String, sel: Option<Sel>) {
     let mods = ui.input(|i| i.modifiers);
     let rows = app.tree.content.current_mut();
     if mods.shift
@@ -868,7 +868,7 @@ pub(crate) fn picked_body(sel: &Sel) -> Option<&str> {
 
 /// A pick in the viewport, while the Browser is shown and follows the 3D view ([`follows_view`]):
 /// the Browser finds the body of the last item picked, as Find in Browser does (#3005).
-pub(crate) fn reveal_pick(app: &mut SolveApp) {
+pub(crate) fn reveal_pick(app: &mut SketApp) {
     sync_reveals(app);
     if follows_view(app)
         && app.ui.show_browser
@@ -878,7 +878,7 @@ pub(crate) fn reveal_pick(app: &mut SolveApp) {
     }
 }
 
-fn remember_reveal_source(app: &mut SolveApp, body: &str) {
+fn remember_reveal_source(app: &mut SketApp, body: &str) {
     app.tree.reveal_source = crate::open_meshing::session_world(&app.session).body(body).map(|selected| BodyRevealSource {
         body: body.to_owned(),
         session: app.session.uid,
@@ -887,7 +887,7 @@ fn remember_reveal_source(app: &mut SolveApp, body: &str) {
 }
 
 /// Opens the design row and every placement down to `path` (Find in Timeline).
-pub(crate) fn open_path(app: &mut SolveApp, path: &[u64]) {
+pub(crate) fn open_path(app: &mut SketApp, path: &[u64]) {
     set_open(app, "c0", true, true);
     let start_open = rows_start_open(app);
     for depth in 1..=path.len() {
@@ -903,11 +903,11 @@ pub(crate) fn is_placement_key(key: &str) -> bool {
 /// Whether a placement's row is open. Placements start closed, so a large assembly opens as a
 /// short list (#9274); the "Components start open" preference keeps them open as before, unless
 /// the Browser's rows start closed ([`rows_start_open`]).
-pub(crate) fn placement_open(app: &SolveApp, key: &str) -> bool {
+pub(crate) fn placement_open(app: &SketApp, key: &str) -> bool {
     !app.tree.collapsed.contains(key) && ((app.preferences.browser_components_open && rows_start_open(app)) || app.tree.expanded.contains(key))
 }
 
-pub(crate) fn is_open(app: &SolveApp, key: &str, default: bool) -> bool {
+pub(crate) fn is_open(app: &SketApp, key: &str, default: bool) -> bool {
     if is_placement_key(key) {
         return placement_open(app, key);
     }
@@ -915,7 +915,7 @@ pub(crate) fn is_open(app: &SolveApp, key: &str, default: bool) -> bool {
 }
 
 /// Open or close a row, whichever way it starts; whether that changed it.
-fn set_open(app: &mut SolveApp, key: &str, default: bool, open: bool) -> bool {
+fn set_open(app: &mut SketApp, key: &str, default: bool, open: bool) -> bool {
     let was = is_open(app, key, default);
     if open {
         app.tree.collapsed.remove(key);
@@ -928,7 +928,7 @@ fn set_open(app: &mut SolveApp, key: &str, default: bool, open: bool) -> bool {
 }
 
 /// A row opened or closed by hand: the next Find in Browser leaves it as it is.
-pub(crate) fn toggle(app: &mut SolveApp, key: &str, default: bool) {
+pub(crate) fn toggle(app: &mut SketApp, key: &str, default: bool) {
     app.tree.found_rows.retain(|(row, _)| row != key);
     let open = is_open(app, key, default);
     set_open(app, key, default, !open);
@@ -936,7 +936,7 @@ pub(crate) fn toggle(app: &mut SolveApp, key: &str, default: bool) {
 
 /// Apply Expand All / Collapse All to the rows the command listed, whichever way each starts.
 /// They count as folded by hand: the next Find in Browser leaves them as they are.
-pub fn apply_fold(app: &mut SolveApp, open: bool, open_by_default: &[String], closed_by_default: &[String]) {
+pub fn apply_fold(app: &mut SketApp, open: bool, open_by_default: &[String], closed_by_default: &[String]) {
     app.tree.found_rows.retain(|(row, _)| !open_by_default.contains(row) && !closed_by_default.contains(row));
     for key in open_by_default.iter().chain(closed_by_default) {
         set_open(app, key, false, open);
@@ -993,7 +993,7 @@ struct Lit {
 }
 
 impl Lit {
-    fn of(app: &mut SolveApp) -> Lit {
+    fn of(app: &mut SketApp) -> Lit {
         use crate::viewport::Hit;
         let mut selected = std::collections::HashSet::new();
         // Bodies chosen in an open dialog light up even when the click was in the 3D view,
@@ -1084,13 +1084,13 @@ impl Lit {
 
     /// Whether a folder entry is lit: (selected, under the pointer). Its own `selected` (picked
     /// in the tree, or the sketch being edited) counts as selected.
-    fn entry(&self, app: &SolveApp, e: &Entry) -> (bool, bool) {
+    fn entry(&self, app: &SketApp, e: &Entry) -> (bool, bool) {
         let (selected, hovered) = self.thing(&e.thing);
         (e.is_selected(app) || selected, hovered)
     }
 
     /// The mark of a row holding these entries: a faint bar when any of them is lit.
-    fn branch<'e>(&self, app: &SolveApp, entries: impl IntoIterator<Item = &'e Entry>) -> Mark {
+    fn branch<'e>(&self, app: &SketApp, entries: impl IntoIterator<Item = &'e Entry>) -> Mark {
         if entries.into_iter().any(|e| self.entry(app, e) != (false, false)) { Mark::Branch } else { Mark::None }
     }
 
@@ -1138,7 +1138,7 @@ pub(crate) fn browser_width(remembered: f32) -> f32 {
 }
 
 /// Either card in a stacked column changes the same remembered width.
-pub(crate) fn resize_column(app: &mut SolveApp, ui: &egui::Ui, rect: Rect, width: f32, handle: &'static str) {
+pub(crate) fn resize_column(app: &mut SketApp, ui: &egui::Ui, rect: Rect, width: f32, handle: &'static str) {
     let rail = Rect::from_x_y_ranges(rect.right() - BROWSER_RAIL..=rect.right(), rect.y_range());
     let response =
         ui.interact(rail, egui::Id::unique(("sc_shared_column_rail", handle)), Sense::drag()).on_hover_cursor(egui::CursorIcon::ResizeHorizontal);
@@ -1171,7 +1171,7 @@ pub enum BrowserShow {
 
 /// Does the browser hide until hovered? Only its own card does: not the one sharing its column
 /// with History, nor the Render page's.
-pub(crate) fn reveals(app: &SolveApp) -> bool {
+pub(crate) fn reveals(app: &SketApp) -> bool {
     app.preferences.browser_show == BrowserShow::Hover && !crate::timeline_left::stacked(app) && !crate::render_workspace::active(app)
 }
 
@@ -1179,7 +1179,7 @@ pub(crate) fn reveals(app: &SolveApp) -> bool {
 /// pointer over last frame's card or the strip at its left edge shows it; a menu, popup, drag or
 /// text edit started while it showed keeps it shown. A drag started elsewhere (orbiting the view)
 /// passes over it without showing it.
-fn reveal_opacity(app: &SolveApp, ctx: &egui::Context, previous: Option<Rect>, edge: Rect) -> f32 {
+fn reveal_opacity(app: &SketApp, ctx: &egui::Context, previous: Option<Rect>, edge: Rect) -> f32 {
     let card = egui::Id::unique("sc_browser_card");
     let memory = card.with("reveal");
     let was = ctx.data(|d| d.get_temp::<bool>(memory)).unwrap_or(false);
@@ -1205,7 +1205,7 @@ fn reveal_tab(ui: &egui::Ui, card: Rect, opacity: f32) {
 }
 
 /// One content-hugging browser; the shared container supplies floating or flush compact chrome.
-pub fn browser(app: &mut SolveApp, ui: &mut egui::Ui) {
+pub fn browser(app: &mut SketApp, ui: &mut egui::Ui) {
     sync_reveals(app);
     let available = ui.available_rect_before_wrap();
     let t = Tokens::get();
@@ -1289,7 +1289,7 @@ pub fn browser(app: &mut SolveApp, ui: &mut egui::Ui) {
     }
 }
 
-fn render_card(app: &mut SolveApp, ui: &mut egui::Ui) {
+fn render_card(app: &mut SketApp, ui: &mut egui::Ui) {
     let bounds = crate::shell::panel_bounds(app, ui.available_rect_before_wrap());
     let narrow = bounds.width() < 800.0;
     crate::shell::register_panel(app, "render:browser:show", None, None);
@@ -1368,7 +1368,7 @@ fn render_card(app: &mut SolveApp, ui: &mut egui::Ui) {
     }
 }
 
-fn browser_collapsed_rail(app: &mut SolveApp, ui: &mut egui::Ui) {
+fn browser_collapsed_rail(app: &mut SketApp, ui: &mut egui::Ui) {
     let t = Tokens::get();
     let title_top = t.space_24 + ui.spacing().item_spacing.y;
     let height = title_top + t.space_24 * 4.0 + t.space_8;
@@ -1403,7 +1403,7 @@ pub(crate) fn panel_bounds(available: Rect, history: Option<Rect>, width: f32, g
     Rect::from_min_max(min, pos2((min.x + width).min(right), bottom))
 }
 
-fn browser_contents(app: &mut SolveApp, ui: &mut egui::Ui, collapsible: bool) {
+fn browser_contents(app: &mut SketApp, ui: &mut egui::Ui, collapsible: bool) {
     let t = Tokens::get();
     // Only the floating card folds; the docked column keeps its full height.
     let render = crate::render_workspace::active(app);
@@ -1440,7 +1440,7 @@ fn browser_contents(app: &mut SolveApp, ui: &mut egui::Ui, collapsible: bool) {
 /// The header: the title, the body count and (on the floating card) a chevron that folds the
 /// card to just this row. The whole row is the button. A browser that reveals on hover never
 /// folds: the whole card is what the pointer finds.
-fn browser_header(app: &mut SolveApp, ui: &mut egui::Ui, collapsible: bool) {
+fn browser_header(app: &mut SketApp, ui: &mut egui::Ui, collapsible: bool) {
     let collapsible = collapsible && !reveals(app);
     let t = Tokens::get();
     let (rect, _) = ui.allocate_exact_size(vec2(ui.available_width(), HEADER_H), Sense::hover());
@@ -1485,26 +1485,26 @@ fn browser_header(app: &mut SolveApp, ui: &mut egui::Ui, collapsible: bool) {
     }
 }
 
-fn prepare_model(app: &mut SolveApp) {
+fn prepare_model(app: &mut SketApp) {
     if app.tree.model.as_ref().is_none_or(|model| !model.matches(&app.session)) {
         app.tree.model = Some(model::Model::new(&app.session));
     }
 }
 
-fn model_placement(app: &mut SolveApp, path: &[u64]) -> Option<std::sync::Arc<sketcraft_engine::occurrences::OccurrencePlacement>> {
+fn model_placement(app: &mut SketApp, path: &[u64]) -> Option<std::sync::Arc<sketcraft_engine::occurrences::OccurrencePlacement>> {
     prepare_model(app);
     app.tree.model.as_mut()?.placement(&app.session, path)
 }
 
 #[cfg(test)]
-fn model_children(app: &SolveApp, component: u64) -> Vec<u64> {
+fn model_children(app: &SketApp, component: u64) -> Vec<u64> {
     match app.tree.model.as_ref().filter(|model| model.matches(&app.session)) {
         Some(model) => model.children.get(&component).cloned().unwrap_or_default(),
         None => app.session.doc.occurrences.iter().filter(|o| o.parent == component).map(|o| o.id).collect(),
     }
 }
 
-fn model_body_indices(app: &SolveApp, component: u64) -> Vec<usize> {
+fn model_body_indices(app: &SketApp, component: u64) -> Vec<usize> {
     match app.tree.model.as_ref().filter(|model| model.matches(&app.session)) {
         Some(model) => model.bodies.get(&component).cloned().unwrap_or_default(),
         None => app
@@ -1520,7 +1520,7 @@ fn model_body_indices(app: &SolveApp, component: u64) -> Vec<usize> {
     }
 }
 
-fn model_feature_indices(app: &SolveApp, component: u64, sketches: bool) -> Vec<usize> {
+fn model_feature_indices(app: &SketApp, component: u64, sketches: bool) -> Vec<usize> {
     match app.tree.model.as_ref().filter(|model| model.matches(&app.session)) {
         Some(model) => (if sketches { &model.sketches } else { &model.planes }).get(&component).cloned().unwrap_or_default(),
         None => app
@@ -1545,7 +1545,7 @@ fn model_feature_indices(app: &SolveApp, component: u64, sketches: bool) -> Vec<
     }
 }
 
-fn browser_rows(app: &mut SolveApp, ui: &mut egui::Ui) {
+fn browser_rows(app: &mut SketApp, ui: &mut egui::Ui) {
     crate::semantic_content::show(
         app,
         ui,
@@ -1556,7 +1556,7 @@ fn browser_rows(app: &mut SolveApp, ui: &mut egui::Ui) {
 
 /// As [browser_rows], but the area hugs the rows it drew (the floating card), up to the height
 /// the caller allowed.
-fn browser_rows_hugging(app: &mut SolveApp, ui: &mut egui::Ui) {
+fn browser_rows_hugging(app: &mut SketApp, ui: &mut egui::Ui) {
     crate::semantic_content::show(
         app,
         ui,
@@ -1565,7 +1565,7 @@ fn browser_rows_hugging(app: &mut SolveApp, ui: &mut egui::Ui) {
     );
 }
 
-fn rows_scrolling(app: &mut SolveApp, ui: &mut egui::Ui, acts: &mut Actions, shrink_height: bool) {
+fn rows_scrolling(app: &mut SketApp, ui: &mut egui::Ui, acts: &mut Actions, shrink_height: bool) {
     prepare_model(app);
     let mut cache = app.tree.cache.take().unwrap_or_default();
     cache.prepare(app);
@@ -1590,7 +1590,7 @@ fn rows_scrolling(app: &mut SolveApp, ui: &mut egui::Ui, acts: &mut Actions, shr
 }
 
 /// Existing semantic rows, reusable by either presentation without a panel host.
-pub(crate) fn render_content(app: &mut SolveApp, ui: &mut egui::Ui, request: crate::semantic_content::ContentRequest) -> Actions {
+pub(crate) fn render_content(app: &mut SketApp, ui: &mut egui::Ui, request: crate::semantic_content::ContentRequest) -> Actions {
     crate::semantic_content::ensure_session(app, ui.ctx());
     let mut acts = Actions { session: Some(app.session.uid), lit: Lit::of(app), ..Default::default() };
     match request {
@@ -1601,7 +1601,7 @@ pub(crate) fn render_content(app: &mut SolveApp, ui: &mut egui::Ui, request: cra
 }
 
 /// History's optional prefix shares the Browser's cache, folds, row renderers and commands.
-pub(crate) fn history_rows(app: &mut SolveApp, ui: &mut egui::Ui) {
+pub(crate) fn history_rows(app: &mut SketApp, ui: &mut egui::Ui) {
     crate::semantic_content::show(
         app,
         ui,
@@ -1610,7 +1610,7 @@ pub(crate) fn history_rows(app: &mut SolveApp, ui: &mut egui::Ui) {
     );
 }
 
-fn active_bodies_origin(app: &mut SolveApp, ui: &mut egui::Ui, acts: &mut Actions) {
+fn active_bodies_origin(app: &mut SketApp, ui: &mut egui::Ui, acts: &mut Actions) {
     prepare_model(app);
     let component = app.session.active_component;
     let path = (component != 0)
@@ -1628,7 +1628,7 @@ fn active_bodies_origin(app: &mut SolveApp, ui: &mut egui::Ui, acts: &mut Action
     });
 }
 
-pub(crate) fn apply_content_actions(app: &mut SolveApp, acts: Actions) {
+pub(crate) fn apply_content_actions(app: &mut SketApp, acts: Actions) {
     if acts.session != Some(app.session.uid) {
         return;
     }
@@ -1651,7 +1651,7 @@ pub(crate) fn cancel_content_drag(ctx: &egui::Context, session: u64) {
 }
 
 /// App-owned editor lifecycle; these windows do not depend on any tree being presented.
-pub(crate) fn editors(app: &mut SolveApp, ui: &mut egui::Ui) {
+pub(crate) fn editors(app: &mut SketApp, ui: &mut egui::Ui) {
     crate::browser_prompts::occurrence_panel(app, ui);
     crate::browser_prompts::capture_prompt(app, ui.ctx());
     crate::browser_canvas::panel(app, ui.ctx());
@@ -1660,12 +1660,12 @@ pub(crate) fn editors(app: &mut SolveApp, ui: &mut egui::Ui) {
 }
 
 /// History's prefix must neither open ancestors nor acknowledge a Browser reveal.
-fn body_reveal(app: &SolveApp) -> Option<&str> {
+fn body_reveal(app: &SketApp) -> Option<&str> {
     app.tree.content.browser_presentation().then_some(app.tree.reveal.as_deref()).flatten()
 }
 
 /// A hidden or collapsed presentation retains its request. Removed targets expire here.
-pub(crate) fn prune_reveals(app: &mut SolveApp) {
+pub(crate) fn prune_reveals(app: &mut SketApp) {
     sync_reveals(app);
     if let Some(body) = app.tree.reveal.as_ref() {
         let world = crate::open_meshing::session_world(&app.session);
@@ -1696,7 +1696,7 @@ pub(crate) fn prune_reveals(app: &mut SolveApp) {
     }
 }
 
-fn component_name(app: &SolveApp, id: u64) -> String {
+fn component_name(app: &SketApp, id: u64) -> String {
     if id == 0 {
         return app.session.doc.name.clone();
     }
@@ -1707,14 +1707,14 @@ fn component_name(app: &SolveApp, id: u64) -> String {
     crate::dialogs_part_size::browser_label(app, id, &name)
 }
 
-fn component_rows(app: &mut SolveApp, ui: &mut egui::Ui, id: u64, depth: usize, acts: &mut Actions, cache: &mut cache::Cache) {
+fn component_rows(app: &mut SketApp, ui: &mut egui::Ui, id: u64, depth: usize, acts: &mut Actions, cache: &mut cache::Cache) {
     let mut root = std::mem::take(&mut cache.root);
     component_rows_inner(app, ui, id, depth, acts, cache, &mut root);
     cache.root = root;
 }
 
 fn component_rows_inner(
-    app: &mut SolveApp,
+    app: &mut SketApp,
     ui: &mut egui::Ui,
     id: u64,
     depth: usize,
@@ -1862,13 +1862,13 @@ fn occurrence_key(path: &[u64]) -> String {
 
 /// Show a placement's row closed: a pasted (or moved) component arrives folded, whatever a row
 /// at that path showed before.
-pub(crate) fn close_placement(app: &mut SolveApp, path: &[u64]) {
+pub(crate) fn close_placement(app: &mut SketApp, path: &[u64]) {
     app.tree.close_row(&occurrence_key(path));
 }
 
 /// A placement, rather than a component definition: repeated child IDs remain distinct
 /// because their complete paths are the selection and row identity.
-fn occurrence_rows(app: &mut SolveApp, ui: &mut egui::Ui, path: &[u64], depth: usize, acts: &mut Actions, cache: &mut cache::Cache) {
+fn occurrence_rows(app: &mut SketApp, ui: &mut egui::Ui, path: &[u64], depth: usize, acts: &mut Actions, cache: &mut cache::Cache) {
     // Own this cached row while drawing: children can populate the cache without copying it.
     let Some((path, mut placement)) = cache.take_occurrence(app, path) else { return };
     occurrence_rows_inner(app, ui, &path, depth, acts, cache, &mut placement);
@@ -1876,7 +1876,7 @@ fn occurrence_rows(app: &mut SolveApp, ui: &mut egui::Ui, path: &[u64], depth: u
 }
 
 fn occurrence_rows_inner(
-    app: &mut SolveApp,
+    app: &mut SketApp,
     ui: &mut egui::Ui,
     path: &[u64],
     depth: usize,
@@ -2049,7 +2049,7 @@ fn occurrence_rows_inner(
 
 /// The Document Settings group. A second click on an entry closes the window it opened, the way
 /// that window's own × does (#4150).
-fn doc_settings(app: &mut SolveApp, ui: &mut egui::Ui, depth: usize) {
+fn doc_settings(app: &mut SketApp, ui: &mut egui::Ui, depth: usize) {
     let key = "docsettings";
     let open = is_open(app, key, false);
     let r =
@@ -2119,7 +2119,7 @@ fn origin_things() -> [(&'static str, &'static str, Option<Thing>); 7] {
     ]
 }
 
-fn origin_rows(app: &mut SolveApp, ui: &mut egui::Ui, depth: usize, acts: &mut Actions) {
+fn origin_rows(app: &mut SketApp, ui: &mut egui::Ui, depth: usize, acts: &mut Actions) {
     let key = "origin";
     let open = is_open(app, key, false);
     let lit = |thing: &Option<Thing>| thing.as_ref().map_or((false, false), |t| acts.lit.thing(t));
@@ -2157,7 +2157,7 @@ fn origin_rows(app: &mut SolveApp, ui: &mut egui::Ui, depth: usize, acts: &mut A
         let sel = match icon {
             "plane" => Some(Sel::Plane { name: k.into() }),
             "axis" => Some(Sel::Axis { name: k.into() }),
-            _ => Some(Sel::Vertex { body: String::new(), point: solidcore_record::Vec3::ZERO }),
+            _ => Some(Sel::Vertex { body: String::new(), point: sketcore_record::Vec3::ZERO }),
         };
         let (selected, mark) = lit_row(lit(&thing));
         let r = draw_row(
@@ -2207,7 +2207,7 @@ pub const STANDARD_VIEWS: [(&str, &str); 4] = [("Top", "top"), ("Front", "front"
 
 /// Named Views: the standard views, then the design's saved cameras. A double-click restores
 /// one (animated).
-fn named_view_rows(app: &mut SolveApp, ui: &mut egui::Ui, depth: usize, acts: &mut Actions) {
+fn named_view_rows(app: &mut SketApp, ui: &mut egui::Ui, depth: usize, acts: &mut Actions) {
     let key = "namedviews";
     let open = is_open(app, key, false);
     let r = draw_row(ui, ui.scope_id().with(key), &Row { depth, fold: Some(open), icon: "folder", label: "Named Views", ..Default::default() });
@@ -2246,7 +2246,7 @@ fn named_view_rows(app: &mut SolveApp, ui: &mut egui::Ui, depth: usize, acts: &m
 }
 
 /// Turn the camera to a named view (a saved one or a standard one), animated.
-pub fn restore_view(app: &mut SolveApp, name: &str) {
+pub fn restore_view(app: &mut SketApp, name: &str) {
     if let Some((_, v)) = STANDARD_VIEWS.iter().find(|(l, _)| *l == name) {
         app.animate_view(v);
         return;
@@ -2257,7 +2257,7 @@ pub fn restore_view(app: &mut SolveApp, name: &str) {
 }
 
 /// Save the current camera as a named view.
-pub fn save_view(app: &mut SolveApp, name: Option<&str>) -> Option<String> {
+pub fn save_view(app: &mut SketApp, name: Option<&str>) -> Option<String> {
     let cam = serde_json::to_value(app.cam).ok()?;
     let r = app.run("view.save", json!({ "name": name, "camera": cam })).ok()?;
     app.tree.collapsed.remove("namedviews");
@@ -2266,7 +2266,7 @@ pub fn save_view(app: &mut SolveApp, name: Option<&str>) -> Option<String> {
 }
 
 /// The menu of a named view.
-pub fn view_items(app: &SolveApp, name: &str) -> Vec<Item> {
+pub fn view_items(app: &SketApp, name: &str) -> Vec<Item> {
     let saved = app.session.doc.named_views.iter().any(|v| v.name == name);
     vec![
         Item::action("ui.restoreView", "Restore", "home").with(json!({ "view": name })),
@@ -2279,7 +2279,7 @@ pub fn view_items(app: &SolveApp, name: &str) -> Vec<Item> {
 
 /// The Analysis folder: the Section Analysis, while there is one (shown or hidden), with an eye
 /// to hide and show it, a double-click to edit it and a menu to delete it (#822).
-fn analysis_rows(app: &mut SolveApp, ui: &mut egui::Ui, depth: usize, acts: &mut Actions) {
+fn analysis_rows(app: &mut SketApp, ui: &mut egui::Ui, depth: usize, acts: &mut Actions) {
     if app.session.section.is_some() {
         // A section made (or remade) while an older one was hidden replaces it, shown.
         app.tree.hidden_section = None;
@@ -2336,19 +2336,19 @@ fn analysis_rows(app: &mut SolveApp, ui: &mut egui::Ui, depth: usize, acts: &mut
 
 /// Show or hide the Section Analysis itself (its eye): a hidden Analysis folder still keeps it
 /// off.
-pub fn set_section_shown(app: &mut SolveApp, shown: bool) {
+pub fn set_section_shown(app: &mut SketApp, shown: bool) {
     app.tree.section_hidden = !shown;
     sync_section(app);
 }
 
 /// The section is on while both the Analysis folder and the section itself are shown.
-fn sync_section(app: &mut SolveApp) {
+fn sync_section(app: &mut SketApp) {
     let on = !app.tree.analysis_hidden && !app.tree.section_hidden;
     set_section_visible(app, on);
 }
 
 /// Hide the Section Analysis (keeping its plane to show it again) or show the hidden one.
-pub fn set_section_visible(app: &mut SolveApp, visible: bool) {
+pub fn set_section_visible(app: &mut SketApp, visible: bool) {
     if visible {
         if let Some((origin, normal)) = app.tree.hidden_section {
             let plane = json!({"origin": [origin.x, origin.y, origin.z], "normal": [normal.x, normal.y, normal.z]});
@@ -2364,7 +2364,7 @@ pub fn set_section_visible(app: &mut SolveApp, visible: bool) {
 }
 
 /// The menu of the Section Analysis row.
-pub fn section_items(app: &SolveApp) -> Vec<Item> {
+pub fn section_items(app: &SketApp) -> Vec<Item> {
     let visible = !app.tree.section_hidden;
     vec![
         Item::action("ui.editSection", "Edit Section Analysis", "section"),
@@ -2379,7 +2379,7 @@ pub fn section_items(app: &SolveApp) -> Vec<Item> {
 pub const CANVASES: &str = "c0/canvases";
 
 /// The Canvases folder (reference images) with an eye per canvas.
-fn canvas_rows(app: &mut SolveApp, ui: &mut egui::Ui, depth: usize, acts: &mut Actions) {
+fn canvas_rows(app: &mut SketApp, ui: &mut egui::Ui, depth: usize, acts: &mut Actions) {
     let canvases: Vec<(u64, String, bool)> = app.session.doc.canvases.iter().map(|c| (c.id, c.name.clone(), c.visible)).collect();
     if canvases.is_empty() {
         return;
@@ -2448,12 +2448,12 @@ fn canvas_rows(app: &mut SolveApp, ui: &mut egui::Ui, depth: usize, acts: &mut A
 }
 
 /// The menu of a point cloud.
-pub fn point_cloud_items(app: &SolveApp, id: u64) -> Vec<Item> {
+pub fn point_cloud_items(app: &SketApp, id: u64) -> Vec<Item> {
     point_clouds::items(app, id)
 }
 
 /// The menu of a canvas.
-pub fn canvas_items(app: &SolveApp, id: u64) -> Vec<Item> {
+pub fn canvas_items(app: &SketApp, id: u64) -> Vec<Item> {
     let visible = app.session.doc.canvases.iter().find(|c| c.id == id).is_some_and(|c| c.visible);
     vec![
         Item::action("ui.editCanvas", "Edit Canvas", "canvas").with(json!({ "canvas": id })),
@@ -2483,7 +2483,7 @@ pub struct CanvasPanel {
 }
 
 impl CanvasPanel {
-    pub fn new(app: &SolveApp, canvas: u64, calibrate: bool) -> Self {
+    pub fn new(app: &SketApp, canvas: u64, calibrate: bool) -> Self {
         // Calibration starts from the image's left and right edge midpoints.
         let (a, b, d) = app
             .session
@@ -2501,14 +2501,14 @@ impl CanvasPanel {
 /// Move/Copy's bodies, #4771; Shell's Faces/Body for a closed hollow, #794)? Then a body
 /// clicked in the Browser goes there, as a click on it in the view does, rather than
 /// replacing the selection: overlapping bodies are often only told apart in the Browser.
-fn dialog_takes_body(app: &SolveApp) -> bool {
+fn dialog_takes_body(app: &SketApp) -> bool {
     app.dialog.as_ref().and_then(|d| d.active_input()).is_some_and(|i| i.accept & crate::selection::BODIES != 0)
 }
 
 /// A plain click on a sketch (a Browser row or a History item) while Extrude, Revolve or Emboss
 /// is open gives the dialog every profile of that sketch (#6106). False when it is not one: the
 /// click then selects as usual.
-pub(crate) fn pick_sketch_into_dialog(app: &mut SolveApp, id: u64) -> bool {
+pub(crate) fn pick_sketch_into_dialog(app: &mut SketApp, id: u64) -> bool {
     let Some(mut d) = app.dialog.take() else { return false };
     let taken = d.pick_sketch(&app.session, id);
     app.dialog = Some(d);
@@ -2517,7 +2517,7 @@ pub(crate) fn pick_sketch_into_dialog(app: &mut SolveApp, id: u64) -> bool {
 
 /// Browser picks go only into compatible active dialog inputs. Outside a dialog, planes and
 /// axes become the selection; body rows use the ordinary Ctrl/Shift-aware selection path.
-fn pick_from_browser(app: &mut SolveApp, x: Sel) {
+fn pick_from_browser(app: &mut SketApp, x: Sel) {
     if let Sel::Body { name } = &x
         && dialog_takes_body(app)
         && let Some(mut d) = app.dialog.take()
@@ -2534,7 +2534,7 @@ fn pick_from_browser(app: &mut SolveApp, x: Sel) {
         return;
     }
     let hit = match &x {
-        Sel::Plane { name } => crate::viewport::Hit::Plane { name: name.clone(), point: solidcore_record::Vec3::ZERO },
+        Sel::Plane { name } => crate::viewport::Hit::Plane { name: name.clone(), point: sketcore_record::Vec3::ZERO },
         Sel::Axis { name } => crate::viewport::Hit::Axis { name: name.clone() },
         Sel::ConstructionPoint { name } => crate::viewport::Hit::ConstructionPoint { name: name.clone() },
         // The origin point goes only into a dialog input that takes it.
@@ -2577,7 +2577,7 @@ struct Entry {
 }
 
 impl Entry {
-    fn body(app: &SolveApp, b: &sketcraft_engine::doc::ModelBody, world: String) -> Self {
+    fn body(app: &SketApp, b: &sketcraft_engine::doc::ModelBody, world: String) -> Self {
         // A mesh body (an imported STL, 3MF, OBJ, …) has no faces to model on; an open shell is a
         // surface body, not a solid.
         let (icon, tip) = if b.body.is_mesh() {
@@ -2607,7 +2607,7 @@ impl Entry {
         }
     }
 
-    fn sketch(app: &SolveApp, f: &sketcraft_engine::doc::Feature) -> Self {
+    fn sketch(app: &SketApp, f: &sketcraft_engine::doc::Feature) -> Self {
         let t = Tokens::get();
         let active = app.session.active_sketch == Some(f.id);
         let sketch_state = app.session.model.state().sketch(f.id).map(crate::sketch_state::SketchState::of);
@@ -2638,7 +2638,7 @@ impl Entry {
         }
     }
 
-    fn plane(app: &SolveApp, f: &sketcraft_engine::doc::Feature) -> Self {
+    fn plane(app: &SketApp, f: &sketcraft_engine::doc::Feature) -> Self {
         let sel = construction_sel(f);
         let thing = match &sel {
             Sel::Axis { name } => Thing::Axis(name.clone()),
@@ -2664,7 +2664,7 @@ impl Entry {
         }
     }
 
-    fn is_visible(&self, app: &SolveApp) -> bool {
+    fn is_visible(&self, app: &SketApp) -> bool {
         match &self.sel {
             Some(Sel::Body { name }) => !app.session.visibility.hidden_bodies.contains(name),
             Some(Sel::Feature { id }) => sketch_visible(app, *id),
@@ -2673,7 +2673,7 @@ impl Entry {
         }
     }
 
-    fn is_selected(&self, app: &SolveApp) -> bool {
+    fn is_selected(&self, app: &SketApp) -> bool {
         self.sel
             .as_ref()
             .is_some_and(|s| app.session.selection.contains(s) || matches!(s, Sel::Feature { id } if app.session.active_sketch == Some(*id)))
@@ -2709,7 +2709,7 @@ struct OccurrenceDrag {
 }
 
 /// The items of a component folder, in model order.
-fn entries(app: &SolveApp, comp: u64, folder: &str) -> Vec<Entry> {
+fn entries(app: &SketApp, comp: u64, folder: &str) -> Vec<Entry> {
     let doc = &app.session.doc;
     let state = app.session.model.state();
     match folder {
@@ -2786,7 +2786,7 @@ fn arrange(doc: &sketcraft_engine::doc::Document, comp: u64, folder: &str, prefi
 }
 
 /// Show or hide items of a folder, through `browser.visibility` so each is an undo step (#2219).
-fn set_visible(app: &mut SolveApp, folder: &str, items: &[&Entry], on: bool) {
+fn set_visible(app: &mut SketApp, folder: &str, items: &[&Entry], on: bool) {
     for e in items {
         match folder {
             "bodies" => {
@@ -2826,7 +2826,7 @@ fn folder_static(folder: &str) -> &'static str {
 /// under the component or placement row (Preferences › Interface › Bodies folders, #4217).
 /// `scope` is that row's tree key (`c{id}`, `o:{path}`) and `bodies` how many items the folder
 /// holds. The design's own folder always stays, and so does a hidden one: its eye is the way back.
-fn bodies_folded(app: &SolveApp, comp: u64, scope: &str, bodies: usize) -> bool {
+fn bodies_folded(app: &SketApp, comp: u64, scope: &str, bodies: usize) -> bool {
     use crate::prefs::BodiesFolders;
     if comp == 0 || bodies == 0 || app.session.folder_hidden(&format!("{scope}/bodies")) {
         return false;
@@ -2842,7 +2842,7 @@ fn bodies_folded(app: &SolveApp, comp: u64, scope: &str, bodies: usize) -> bool 
 /// groups and the folder row are drop targets (reorder, into a group, out of groups).
 #[allow(clippy::too_many_arguments)]
 fn folder_rows_at(
-    app: &mut SolveApp,
+    app: &mut SketApp,
     ui: &mut egui::Ui,
     comp: u64,
     path: Option<&[u64]>,
@@ -2947,7 +2947,7 @@ fn folder_rows_at(
 /// own rows the same way one level deeper. `top` is the folder's top-level order as drawn.
 #[allow(clippy::too_many_arguments)]
 fn folder_level(
-    app: &mut SolveApp,
+    app: &mut SketApp,
     ui: &mut egui::Ui,
     comp: u64,
     path: Option<&[u64]>,
@@ -3081,7 +3081,7 @@ fn order_before(top: &[BrowserEntry], dragged: &[BrowserEntry], before: Option<&
 
 /// The body's name edited in its row (started by a double-click): Enter or leaving the box keeps
 /// the name, Escape cancels.
-fn inline_rename(app: &mut SolveApp, ui: &mut egui::Ui, row: Rect, label_left: f32, e: &Entry) {
+fn inline_rename(app: &mut SketApp, ui: &mut egui::Ui, row: Rect, label_left: f32, e: &Entry) {
     let editing = app.menu.rename.as_ref().is_some_and(|r| r.inline && matches!(&r.what, crate::context_menu::RenameWhat::Body(b) if *b == e.key));
     if !editing {
         return;
@@ -3118,7 +3118,7 @@ fn inline_rename(app: &mut SolveApp, ui: &mut egui::Ui, row: Rect, label_left: f
 /// One item row of a folder.
 #[allow(clippy::too_many_arguments)]
 fn entry_row(
-    app: &mut SolveApp,
+    app: &mut SketApp,
     ui: &mut egui::Ui,
     comp: u64,
     path: Option<&[u64]>,
@@ -3302,7 +3302,7 @@ fn entry_row(
 }
 
 /// Keys of the selected items of a component folder.
-fn selected_keys(app: &SolveApp, comp: u64, folder: &str) -> Vec<String> {
+fn selected_keys(app: &SketApp, comp: u64, folder: &str) -> Vec<String> {
     entries(app, comp, folder).into_iter().filter(|e| e.selected).map(|e| e.key).collect()
 }
 
@@ -3359,7 +3359,7 @@ fn drop_target_zone(ui: &egui::Ui, resp: &egui::Response, accept: impl Fn(&Drag,
 /// Whether a placement dragged from `d` may land in component `parent`: not where it already is,
 /// and not in itself or a component it holds. The command refuses those too; this keeps the row
 /// from showing a drop mark it would refuse.
-fn occurrence_can_land(app: &SolveApp, d: &OccurrenceDrag, parent: u64) -> bool {
+fn occurrence_can_land(app: &SketApp, d: &OccurrenceDrag, parent: u64) -> bool {
     let Some(id) = d.path.last().copied() else { return false };
     let Some(o) = app.session.doc.occurrences.iter().find(|o| o.id == id) else { return false };
     if parent == 0 {
@@ -3377,7 +3377,7 @@ fn pointer_in_top(ui: &egui::Ui, row: Rect) -> bool {
 
 /// The component a placement shares with the placement under it, when both sit in the same one
 /// (and are two placements): the parent whose sub-components they are ordered among.
-fn occurrence_sibling(app: &SolveApp, d: &OccurrenceDrag, target: u64) -> Option<u64> {
+fn occurrence_sibling(app: &SketApp, d: &OccurrenceDrag, target: u64) -> Option<u64> {
     let dragged = d.path.last().copied().filter(|o| *o != target)?;
     let occurrences = &app.session.doc.occurrences;
     let parent = occurrences.iter().find(|o| o.id == dragged)?.parent;
@@ -3466,7 +3466,7 @@ fn entries_json(keys: &[String], groups: &[u64]) -> Vec<Value> {
     keys.iter().map(|k| json!(k)).chain(groups.iter().map(|g| json!(g))).collect()
 }
 
-fn apply_drop(app: &mut SolveApp, d: DropAction) {
+fn apply_drop(app: &mut SketApp, d: DropAction) {
     match d {
         DropAction::OccurrenceOrder { parent, order } => {
             let order: Vec<String> = order.iter().map(u64::to_string).collect();
@@ -3515,7 +3515,7 @@ fn apply_drop(app: &mut SolveApp, d: DropAction) {
 // Panels opened from the menus
 // ---------------------------------------------------------------------------------------------
 
-pub(crate) fn revert_occurrence_dialog(app: &mut SolveApp, m: &OccMove) {
+pub(crate) fn revert_occurrence_dialog(app: &mut SketApp, m: &OccMove) {
     if m.had_pending {
         let _ = app.run("occurrence.move", json!({"occurrence":m.occurrence,"base_transform":m.baseline,"capture":false}));
     } else {
@@ -3524,9 +3524,9 @@ pub(crate) fn revert_occurrence_dialog(app: &mut SolveApp, m: &OccMove) {
 }
 
 /// The pending move: turned about X, then Y, then Z through the starting origin, then moved.
-pub fn apply_occurrence_move(app: &mut SolveApp, m: &OccMove) {
+pub fn apply_occurrence_move(app: &mut SketApp, m: &OccMove) {
     use crate::gizmo;
-    use solidcore_record::Vec3;
+    use sketcore_record::Vec3;
     let a = m.angles.map(f64::to_radians);
     let r = gizmo::mul(&gizmo::mul(&gizmo::rotation(Vec3::Z, a[2]), &gizmo::rotation(Vec3::Y, a[1])), &gizmo::rotation(Vec3::X, a[0]));
     let (axis, angle) = gizmo::axis_angle(&r);
@@ -3543,14 +3543,14 @@ pub fn apply_occurrence_move(app: &mut SolveApp, m: &OccMove) {
 }
 
 /// The shared move triad at the occurrence's origin: arrows and squares move it, rings turn it.
-pub(crate) fn occurrence_triad_model(app: &SolveApp) -> Option<crate::gizmo::Triad> {
+pub(crate) fn occurrence_triad_model(app: &SketApp) -> Option<crate::gizmo::Triad> {
     let movement = app.tree.occurrence_move.as_ref()?;
-    let center = movement.pivot? + solidcore_record::Vec3::new(movement.translate[0], movement.translate[1], movement.translate[2]);
+    let center = movement.pivot? + sketcore_record::Vec3::new(movement.translate[0], movement.translate[1], movement.translate[2]);
     Some(crate::gizmo::Triad { center, translate: true, rotate: true })
 }
 
 /// Occurrence handles belong to the viewport, not the clipped Move panel's child UI.
-pub(crate) fn occurrence_triad(app: &mut SolveApp, ui: &mut egui::Ui, painter: &egui::Painter, proj: &crate::viewport::Proj) {
+pub(crate) fn occurrence_triad(app: &mut SketApp, ui: &mut egui::Ui, painter: &egui::Painter, proj: &crate::viewport::Proj) {
     use crate::gizmo::{self, Change};
     let Some(mut m) = app.tree.occurrence_move.clone() else { return };
     let before = (m.translate, m.angles);
@@ -3581,8 +3581,8 @@ pub(crate) fn occurrence_triad(app: &mut SolveApp, ui: &mut egui::Ui, painter: &
 /// Dimensions of finished sketches whose dimensions are shown (Show Dimensions), drawn over the
 /// viewport like the sketch being edited draws its own (`crate::dim_view`). A double-click on a
 /// value edits it in place without editing the sketch (`crate::dim_view::model_double_click`).
-pub fn dims_overlay(app: &SolveApp, ctx: &egui::Context) {
-    use solidcore_record::Vec2;
+pub fn dims_overlay(app: &SketApp, ctx: &egui::Context) {
+    use sketcore_record::Vec2;
     use sketcraft_engine::sketch::{DimFrame, chain_centres, default_text, dim_layout_reaching, dim_reach};
     crate::dim_view::set_model_drawn(Vec::new());
     let Some(rect) = app.viewport.rect else { return };
@@ -3651,7 +3651,7 @@ pub fn dims_overlay(app: &SolveApp, ctx: &egui::Context) {
 }
 
 /// Keep browser panels beside the browser and below the ribbon, including the floating shell.
-pub(crate) fn panel_pos(app: &SolveApp) -> Pos2 {
+pub(crate) fn panel_pos(app: &SketApp) -> Pos2 {
     app.viewport
         .rect
         .map(|r| crate::shell::content_rect(app, r).left_top() + vec2(Tokens::get().space_16, Tokens::get().space_16))
@@ -3676,7 +3676,7 @@ pub fn save_as_question(name: &str, extension: &str) -> String {
 /// Does starting `what` (a command id or [`SAVE`]) need the Capture Position question first?
 /// Yes while components were moved without capturing their positions, except for the commands
 /// that capture, revert or keep moving.
-pub fn needs_capture(app: &SolveApp, what: &str) -> bool {
+pub fn needs_capture(app: &SketApp, what: &str) -> bool {
     !app.session.pending_moves.is_empty()
         && !matches!(
             what,
@@ -3693,7 +3693,7 @@ pub fn needs_capture(app: &SolveApp, what: &str) -> bool {
 
 /// Answer the Capture Position question: `capture`, `revert` or `cancel`. The waiting command
 /// (or save) then goes ahead, unless cancelled.
-pub fn answer_capture(app: &mut SolveApp, action: &str) -> Result<(), String> {
+pub fn answer_capture(app: &mut SketApp, action: &str) -> Result<(), String> {
     let Some(what) = app.tree.capture_prompt.clone() else { return Err("no Capture Position question is open".into()) };
     match action {
         "capture" => drop(app.run("component.capture_position", json!({}))),
@@ -3726,16 +3726,16 @@ pub fn answer_capture(app: &mut SolveApp, action: &str) -> Result<(), String> {
 }
 
 /// Where an occurrence's origin is now (with its pending move).
-pub(crate) fn occurrence_origin(app: &SolveApp, occurrence: u64) -> Option<solidcore_record::Vec3> {
+pub(crate) fn occurrence_origin(app: &SketApp, occurrence: u64) -> Option<sketcore_record::Vec3> {
     let o = app.session.doc.occurrences.iter().find(|o| o.id == occurrence)?;
     let parent = app.session.doc.component_transform(o.parent);
     let own = app.session.pending_moves.get(&occurrence).copied().unwrap_or(o.transform);
-    Some(sketcraft_engine::doc::apply_point(&sketcraft_engine::doc::mat_mul(&parent, &own), solidcore_record::Vec3::ZERO))
+    Some(sketcraft_engine::doc::apply_point(&sketcraft_engine::doc::mat_mul(&parent, &own), sketcore_record::Vec3::ZERO))
 }
 
 /// The names the Bodies folder lists at the top level, for tests.
 #[cfg(test)]
-pub(crate) fn body_rows(app: &SolveApp) -> Vec<String> {
+pub(crate) fn body_rows(app: &SketApp) -> Vec<String> {
     entries(app, 0, "bodies").into_iter().map(|e| e.key).collect()
 }
 

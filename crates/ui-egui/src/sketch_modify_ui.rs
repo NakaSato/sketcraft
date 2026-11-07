@@ -28,14 +28,14 @@
 
 use egui::Pos2;
 use serde_json::{Map, Value, json};
-use solidcore_record::{Vec2, Vec3};
+use sketcore_record::{Vec2, Vec3};
 use sketcraft_engine::Sel;
 use sketcraft_engine::doc::Document;
 use sketcraft_engine::doc::expr::Kind as ValueKind;
 use sketcraft_engine::geom::prelude::*;
 use sketcraft_engine::sketch::{PatternAlignment, VariableUnit};
 
-use crate::SolveApp;
+use crate::SketApp;
 use crate::dialogs::{CHAMFER_TYPES, Dialog, Kind};
 use crate::selection::{AXES, CURVES, PROFILES, SKETCH_POINTS, SelInput};
 use crate::tool_modifiers::{Audit, Scope, ToolModifiers};
@@ -235,7 +235,7 @@ fn inputs(k: &Mod) -> Vec<SelInput> {
 }
 
 /// The dialog for a sketch modify command.
-pub fn start(app: &SolveApp, id: &str) -> Option<(Kind, Vec<SelInput>)> {
+pub fn start(app: &SketApp, id: &str) -> Option<(Kind, Vec<SelInput>)> {
     let corner = |chamfer: bool, ctype: usize| Mod::Corner {
         chamfer,
         ctype,
@@ -304,7 +304,7 @@ pub fn start(app: &SolveApp, id: &str) -> Option<(Kind, Vec<SelInput>)> {
 
 /// Reopen the equation curve window on curve `id` of the sketch being edited, with its formulas.
 /// OK runs `sketch.equation_curve.edit` on it.
-pub fn edit_equation(app: &mut SolveApp, id: &str) -> bool {
+pub fn edit_equation(app: &mut SketApp, id: &str) -> bool {
     let Some(sid) = app.session.active_sketch else { return false };
     let state = crate::open_meshing::session_world(&app.session);
     let Some(eq) = state.sketch(sid).and_then(|s| s.sketch.equation_of(id)).cloned() else { return false };
@@ -325,7 +325,7 @@ pub fn edit_equation(app: &mut SolveApp, id: &str) -> bool {
 }
 
 /// The equation curve the selection is, when it is one curve that has formulas.
-pub(crate) fn selected_equation(app: &SolveApp) -> Option<String> {
+pub(crate) fn selected_equation(app: &SketApp) -> Option<String> {
     let [Sel::SketchCurve { id, .. }] = app.session.selection.as_slice() else { return None };
     let sid = app.session.active_sketch?;
     let state = crate::open_meshing::session_world(&app.session);
@@ -353,7 +353,7 @@ pub fn candidate(d: &Dialog, session: &sketcraft_engine::Session, hit: &Hit) -> 
 
 /// Reopen the same pattern window with its stored parameters. OK reaches the same engine
 /// command with the pattern id, so previews and programmatic edits share the implementation.
-pub fn edit_pattern(app: &mut SolveApp, id: &str) -> bool {
+pub fn edit_pattern(app: &mut SketApp, id: &str) -> bool {
     use sketcraft_engine::sketch::SketchPatternKind;
     let Some(sid) = app.session.active_sketch else { return false };
     let state = crate::open_meshing::session_world(&app.session);
@@ -413,7 +413,7 @@ pub fn edit_pattern(app: &mut SolveApp, id: &str) -> bool {
     true
 }
 
-pub fn double_click_pattern(app: &mut SolveApp, pos: Pos2) -> bool {
+pub fn double_click_pattern(app: &mut SketApp, pos: Pos2) -> bool {
     let Some(glyph) = crate::sketch_tools::glyph_at(pos) else { return false };
     let Some(sid) = app.session.active_sketch else { return false };
     let id = crate::open_meshing::session_world(&app.session)
@@ -426,7 +426,7 @@ pub fn double_click_pattern(app: &mut SolveApp, pos: Pos2) -> bool {
 /// Mirror, Move/Copy, Scale and the two patterns, as a profile click adds a whole closed region
 /// (#8390). The single-curve pick of the double-click's two clicks cancels itself out (each click
 /// toggles the same curve), so the chain toggle lands on the state before the double-click.
-pub fn double_click_entities(app: &mut SolveApp) -> bool {
+pub fn double_click_entities(app: &mut SketApp) -> bool {
     let Some(Hit::SketchCurve { sketch, id, .. }) = app.viewport.hover.clone() else {
         return false;
     };
@@ -653,7 +653,7 @@ pub fn rows(ui: &mut egui::Ui, k: &mut Mod, doc: &Document) -> bool {
 /// sketch, as `sketch.pattern.rectangular` reads its `dir`. None when there is no active
 /// sketch, or when the axis stands perpendicular to the sketch plane and so has no direction
 /// in it.
-fn sketch_dir(app: &SolveApp, sel: &Sel) -> Option<Vec2> {
+fn sketch_dir(app: &SketApp, sel: &Sel) -> Option<Vec2> {
     let dir = crate::dialogs::axis_of(app, sel)?.1;
     let plane = crate::open_meshing::session_world(&app.session).sketch(app.session.active_sketch?)?.plane;
     Vec2::new(dir.dot(plane.x), dir.dot(plane.y)).normalized()
@@ -664,7 +664,7 @@ fn sketch_dir(app: &SolveApp, sel: &Sel) -> Option<Vec2> {
 /// rectangular pattern's spacing follows the picked direction, or the sketch's own x axis, which
 /// is what the command uses when nothing is picked. Every other variant keeps the arrow
 /// `canvas::anchor` already works out for it.
-pub fn arrow(app: &SolveApp, d: &Dialog) -> Option<Vec3> {
+pub fn arrow(app: &SketApp, d: &Dialog) -> Option<Vec3> {
     let Kind::SketchModify(k) = &d.kind else { return None };
     match k {
         Mod::PatternRect { alignment, reversed, .. } => {
@@ -680,7 +680,7 @@ pub fn arrow(app: &SolveApp, d: &Dialog) -> Option<Vec3> {
 }
 
 /// The rectangular pattern's first direction in the sketch: the picked one, or the sketch's x axis.
-fn pattern_dir(app: &SolveApp, d: &Dialog) -> Option<Vec2> {
+fn pattern_dir(app: &SketApp, d: &Dialog) -> Option<Vec2> {
     match d.inputs.get(1).and_then(|i| i.items.first()) {
         Some(sel) => sketch_dir(app, sel),
         None => Some(Vec2::X),
@@ -690,7 +690,7 @@ fn pattern_dir(app: &SolveApp, d: &Dialog) -> Option<Vec2> {
 /// The world direction the rectangular pattern's Spacing 2 grows along, for its own drag arrow
 /// (#2462): the picked second direction, the one an edited pattern was made with, or square to
 /// the first, as the command does.
-pub fn arrow2(app: &SolveApp, d: &Dialog) -> Option<Vec3> {
+pub fn arrow2(app: &SketApp, d: &Dialog) -> Option<Vec3> {
     let Kind::SketchModify(Mod::PatternRect { alignment2, reversed2, .. }) = &d.kind else { return None };
     let plane = crate::open_meshing::session_world(&app.session).sketch(app.session.active_sketch?)?.plane;
     let dir = match d.inputs.get(2).and_then(|i| i.items.first()) {
@@ -721,7 +721,7 @@ fn size_label(chamfer: bool, ctype: usize) -> &'static str {
 /// nearest-point test. A rectangle drawn from the origin leaves its own endpoint on top of the
 /// fixed origin point, and the nearest-point test returns the origin, which ends no two curves.
 /// That resolution chooses among the endpoints that actually make a corner instead.
-pub(crate) fn corner_hit(app: &SolveApp, proj: &Proj, pos: Pos2) -> Option<(Hit, Sel)> {
+pub(crate) fn corner_hit(app: &SketApp, proj: &Proj, pos: Pos2) -> Option<(Hit, Sel)> {
     let Some(Kind::SketchModify(Mod::Corner { chamfer, .. })) = app.dialog.as_ref().map(|d| &d.kind) else { return None };
     let sketch = app.session.active_sketch?;
     let (at, id) = crate::sketch_tools::corner_point(app, proj, pos, !*chamfer)?;
@@ -781,7 +781,7 @@ fn curve_ids(inputs: &[SelInput], i: usize) -> Vec<String> {
 /// A typed scale factor as the command wants it: the field evaluated against the document's
 /// parameters, in the range the command accepts. Checking the range here lets the window say
 /// so in its own error line instead of the status bar.
-pub(crate) fn factor(app: &SolveApp, text: &str) -> Result<f64, String> {
+pub(crate) fn factor(app: &SketApp, text: &str) -> Result<f64, String> {
     crate::length_input::no_definition(text, "Factor")?;
     let v = app.session.doc.eval(text.trim(), ValueKind::Unitless).map_err(|e| format!("Factor: {e}"))?;
     if !(v.is_finite() && v > 1e-9 && v < 1e6) {
@@ -793,7 +793,7 @@ pub(crate) fn factor(app: &SolveApp, text: &str) -> Result<f64, String> {
 /// A typed field as the command wants it: evaluated against the document's parameters, so an
 /// expression works, with a bare number read in the design's own units. An empty field is zero,
 /// the way an untouched row should leave the geometry where it is.
-pub(crate) fn value(app: &SolveApp, text: &str, kind: ValueKind, label: &str) -> Result<f64, String> {
+pub(crate) fn value(app: &SketApp, text: &str, kind: ValueKind, label: &str) -> Result<f64, String> {
     let text = text.trim();
     if text.is_empty() {
         return Ok(0.0);
@@ -810,7 +810,7 @@ pub(crate) fn value(app: &SolveApp, text: &str, kind: ValueKind, label: &str) ->
 /// A typed distance as the command wants it: the field evaluated against the document's
 /// parameters, with the sign reversed when Flip is set. A bare number means the design's units,
 /// as a typed sketch value does everywhere else.
-fn signed_length(app: &SolveApp, label: &str, text: &str, flip: bool) -> Result<f64, String> {
+fn signed_length(app: &SketApp, label: &str, text: &str, flip: bool) -> Result<f64, String> {
     let doc = &app.session.doc;
     let v = crate::length_input::eval(doc, text.trim(), ValueKind::Length).map_err(|e| format!("{label}: {e}"))?;
     if !v.is_finite() || v.abs() <= 1e-9 {
@@ -820,7 +820,7 @@ fn signed_length(app: &SolveApp, label: &str, text: &str, flip: bool) -> Result<
 }
 
 /// Validate a typed count before sending its expression to the command.
-fn whole(app: &SolveApp, label: &str, text: &str) -> Result<u64, String> {
+fn whole(app: &SketApp, label: &str, text: &str) -> Result<u64, String> {
     let v = app.session.doc.eval(text.trim(), ValueKind::Unitless).map_err(|e| format!("{label}: {e}"))?;
     if !v.is_finite() || !(1.0..=MAX_COPIES).contains(&v) || (v - v.round()).abs() > 1e-9 {
         return Err(format!("{label} must be a whole number from 1 to {MAX_COPIES:.0}"));
@@ -829,7 +829,7 @@ fn whole(app: &SolveApp, label: &str, text: &str) -> Result<u64, String> {
 }
 
 /// Validate a typed offset instance count before sending it to the command.
-fn offset_instances(app: &SolveApp, text: &str) -> Result<u64, String> {
+fn offset_instances(app: &SketApp, text: &str) -> Result<u64, String> {
     let v = app.session.doc.eval(text.trim(), ValueKind::Unitless).map_err(|e| format!("Instances: {e}"))?;
     if !v.is_finite() || !(1.0..=MAX_OFFSET_INSTANCES as f64).contains(&v) || (v - v.round()).abs() > 1e-9 {
         return Err(format!("Instances must be a whole number from 1 to {MAX_OFFSET_INSTANCES}"));
@@ -840,7 +840,7 @@ fn offset_instances(app: &SolveApp, text: &str) -> Result<u64, String> {
 /// A typed length as the command wants it, in millimetres. A bare number means the design's
 /// units, as a typed sketch value does everywhere else. `value` above reads an empty row as
 /// zero, which a Move window wants and a pattern spacing does not.
-fn length(app: &SolveApp, label: &str, text: &str) -> Result<f64, String> {
+fn length(app: &SketApp, label: &str, text: &str) -> Result<f64, String> {
     let doc = &app.session.doc;
     let v = crate::length_input::eval(doc, text.trim(), ValueKind::Length).map_err(|e| format!("{label}: {e}"))?;
     if !v.is_finite() {
@@ -860,7 +860,7 @@ fn line_ids(inputs: &[SelInput], i: usize) -> Vec<String> {
 }
 
 /// Corner point ids within the active sketch, including qualified script selections.
-fn corner_ids(app: &SolveApp, inputs: &[SelInput], i: usize) -> Vec<String> {
+fn corner_ids(app: &SketApp, inputs: &[SelInput], i: usize) -> Vec<String> {
     items(inputs, i).iter().filter_map(|sel| point_id(&app.session, sel).map(str::to_string)).collect()
 }
 
@@ -869,7 +869,7 @@ fn corner_ids(app: &SolveApp, inputs: &[SelInput], i: usize) -> Vec<String> {
 /// an angle, as every other typed sketch value does. `value` above is the Move window's reading
 /// of a field, where an empty row means zero and a negative distance is a direction; neither is
 /// a radius or a chamfer leg, so this one is its own.
-fn corner_size(app: &SolveApp, label: &str, text: &str, kind: ValueKind) -> Result<f64, String> {
+fn corner_size(app: &SketApp, label: &str, text: &str, kind: ValueKind) -> Result<f64, String> {
     crate::length_input::no_definition(text, label)?;
     let doc = &app.session.doc;
     let v = crate::length_input::eval(doc, text.trim(), kind).map_err(|e| format!("{label}: {e}"))?;
@@ -882,7 +882,7 @@ fn corner_size(app: &SolveApp, label: &str, text: &str, kind: ValueKind) -> Resu
 /// The corner as a chamfer command takes it. Unflipped it is the point itself, and the command
 /// resolves the two lines in curve order. Flipped it names those two lines in the other order,
 /// so `distance` applies to the other leg.
-fn corner_ref(app: &SolveApp, point: &str, flip: bool) -> Result<Value, String> {
+fn corner_ref(app: &SketApp, point: &str, flip: bool) -> Result<Value, String> {
     if !flip {
         return Ok(json!({ "point": point }));
     }
@@ -899,7 +899,7 @@ fn corner_ref(app: &SolveApp, point: &str, flip: bool) -> Result<Value, String> 
 /// A typed total angle as the command wants it, in degrees. A bare number means degrees, as a
 /// typed angle does everywhere else. `sketch.pattern.circular` takes the full turn as 360 and
 /// refuses anything outside that range.
-fn total_angle(app: &SolveApp, label: &str, text: &str) -> Result<f64, String> {
+fn total_angle(app: &SketApp, label: &str, text: &str) -> Result<f64, String> {
     let v = app.session.doc.eval(text.trim(), ValueKind::Angle).map_err(|e| format!("{label}: {e}"))?.to_degrees();
     if !v.is_finite() || v.abs() <= 1e-9 || v.abs() > 360.0 {
         return Err(format!("{label} must be more than 0 and at most 360 degrees"));
@@ -916,7 +916,7 @@ fn picked_point(session: &sketcraft_engine::Session, inputs: &[SelInput], i: usi
 /// The command a sketch modify dialog makes. Scale, Move, and patterns send evaluated
 /// numbers, except circular Quantity, which keeps its authored expression. Offset and Fillet
 /// retain expressions in persistent driving dimensions.
-pub fn commands(app: &SolveApp, k: &Mod, inputs: &[SelInput], extra: &Map<String, Value>) -> Result<Vec<(String, Value)>, String> {
+pub fn commands(app: &SketApp, k: &Mod, inputs: &[SelInput], extra: &Map<String, Value>) -> Result<Vec<(String, Value)>, String> {
     if inputs.iter().flat_map(|input| &input.items).any(|sel| matches!(sel, Sel::SketchPoint { .. }) && point_id(&app.session, sel).is_none()) {
         return Err("Select points of the sketch being edited".into());
     }

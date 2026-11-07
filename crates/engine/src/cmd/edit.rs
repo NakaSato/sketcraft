@@ -163,7 +163,7 @@ fn assistant(_s: &mut Session, _p: &Value) -> Result<Value> {
 const REPEAT_CONTRACT: crate::schema::TypedContract<crate::schema::edit::RepeatParams> = crate::schema::TypedContract::new();
 
 /// Repeat Last Command (#7077) starts a tool, which only the app has: it starts the last one in
-/// `SolveApp::start` and never reaches this. A script runs the command it wants itself.
+/// `SketApp::start` and never reaches this. A script runs the command it wants itself.
 fn repeat(_s: &mut Session, _p: &Value) -> Result<Value> {
     Err(EngineError::Other(
         "edit.repeat starts the last tool or dialog again in the app (its key, the canvas menu or command search); there is no tool to start here: run that command itself".into(),
@@ -1341,7 +1341,7 @@ fn edit_feature(s: &mut Session, p: &Value) -> Result<Value> {
 /// an existing index-and-point pair. Unlike Measure, selection keeps the exact face/edge index:
 /// it must not merge a cylinder's patches or a circular rim's arcs into a different item.
 fn selection_item(s: &Session, value: Value) -> Result<Sel> {
-    use solidcore_record::Vec3;
+    use sketcore_record::Vec3;
 
     let kind = value.get("type").and_then(Value::as_str);
     if !matches!(kind, Some("face" | "edge")) || (value.get("index").is_some() && value.get("point").is_some()) {
@@ -1830,11 +1830,8 @@ fn redefine(s: &mut Session, p: &Value) -> Result<Value> {
         && matches!(cid, "solid.extrude" | "surface.extrude")
         && let Some(parameters) = params.as_object_mut()
     {
-        let convention = if extent.direction == sketcraft_doc::Direction::Symmetric {
-            extent.convention
-        } else {
-            sketcraft_doc::ExtrudeConvention::TotalDistance
-        };
+        let convention =
+            if extent.direction == sketcraft_doc::Direction::Symmetric { extent.convention } else { sketcraft_doc::ExtrudeConvention::TotalDistance };
         parameters.entry("convention").or_insert_with(|| json!(convention));
     }
     if let FeatureKind::Revolve { convention, .. } = &old.kind

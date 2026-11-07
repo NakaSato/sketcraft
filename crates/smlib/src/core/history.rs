@@ -1,6 +1,6 @@
-//! Face and edge history on solidcore: a port of the fork's `capi/src/smlib_history.cpp`
-//! (`smlib_history_tag`, `smlib_history_read`) onto solidcore's B-rep-owned attribute store
-//! ([`Brep::add_attribute`]), which solidcore's operations carry through their edits as SMLib's
+//! Face and edge history on sketcore: a port of the fork's `capi/src/smlib_history.cpp`
+//! (`smlib_history_tag`, `smlib_history_read`) onto sketcore's B-rep-owned attribute store
+//! ([`Brep::add_attribute`]), which sketcore's operations carry through their edits as SMLib's
 //! `SmAObject::Notify` does: Split when a face or edge is cut in two, Merge when two become one,
 //! Copy when an object is copied (a boolean copies the second operand into the first), Coincident
 //! where a boolean finds one operand's entity lying on the other's. New topology (a boolean's
@@ -13,20 +13,20 @@
 
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 
-use solidcore::geom::attribute::{
+use sketcore::geom::attribute::{
     ApplicationValue, Attribute, AttributeHandle, AttributeHandlers, AttributeValue, AttributeView, Behavior, ObjectKey, Placement, ids,
 };
-use solidcore::kernel::Kernel;
-use solidcore::query::api_queries::edge_closest_point;
-use solidcore::topology::face::p4 as face4;
-use solidcore::topology::{Brep, EdgeId, VertexId, edge};
-use solidcore::{EntityRef, Point3, SolidError};
-use solidcore_record::brep::history::Change;
+use sketcore::kernel::Kernel;
+use sketcore::query::api_queries::edge_closest_point;
+use sketcore::topology::face::p4 as face4;
+use sketcore::topology::{Brep, EdgeId, VertexId, edge};
+use sketcore::{EntityRef, Point3, SolidError};
+use sketcore_record::brep::history::Change;
 
 use super::{Body, answer, with_body};
 use crate::history::{Raw, RawEdge, RawFace};
 use crate::{Error, Result};
-use solidcore::topology::brep::p3::brep_copy;
+use sketcore::topology::brep::p3::brep_copy;
 
 /// `TAG_ID`: above SMLib's own ids (all below `SM_AI_USER_1`).
 const TAG_ID: u64 = ids::USER_1 + 7;
@@ -89,7 +89,7 @@ fn set(view: &AttributeView<'_>, x: ObjectKey, o: BTreeSet<Origin>, e: BTreeSet<
 impl AttributeHandlers for Tag {
     /// A split: both children stand for what the split object stood for, and lie where it lay
     /// (each a piece of it): a child with no tag gets this one's `at` too.
-    fn split(&self, view: &AttributeView<'_>, split: ObjectKey, a: ObjectKey, b: ObjectKey) -> solidcore::Result<Vec<Placement>> {
+    fn split(&self, view: &AttributeView<'_>, split: ObjectKey, a: ObjectKey, b: ObjectKey) -> sketcore::Result<Vec<Placement>> {
         let mut out = Vec::new();
         for x in [a, b] {
             if x == split {
@@ -105,7 +105,7 @@ impl AttributeHandlers for Tag {
     }
 
     /// A merge: the result stands for both (the tags on the sources other than the result).
-    fn merge(&self, view: &AttributeView<'_>, a: ObjectKey, b: ObjectKey, result: ObjectKey) -> solidcore::Result<Vec<Placement>> {
+    fn merge(&self, view: &AttributeView<'_>, a: ObjectKey, b: ObjectKey, result: ObjectKey) -> sketcore::Result<Vec<Placement>> {
         let (mut o, mut e) = (BTreeSet::new(), BTreeSet::new());
         for x in [a, b] {
             if x != result
@@ -119,7 +119,7 @@ impl AttributeHandlers for Tag {
     }
 
     /// One operand's entity found lying on the other's, which survives: it stands for both.
-    fn coincident(&self, view: &AttributeView<'_>, _from: ObjectKey, to: ObjectKey) -> solidcore::Result<Vec<Placement>> {
+    fn coincident(&self, view: &AttributeView<'_>, _from: ObjectKey, to: ObjectKey) -> sketcore::Result<Vec<Placement>> {
         Ok(join(view, to, &self.origins, &self.edges))
     }
 }

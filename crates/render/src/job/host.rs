@@ -2601,8 +2601,8 @@ mod retained_request_tests {
         request.raytrace.as_mut().unwrap().emissions = Some(values);
         let expected = retained_request_bytes(&request).unwrap() + request.retained_resource_metadata_bytes();
         let mesh = sketcraft_geom::Mesh {
-            positions: vec![solidcore_record::Vec3::ZERO, solidcore_record::Vec3::X, solidcore_record::Vec3::Y],
-            normals: vec![solidcore_record::Vec3::Z; 3],
+            positions: vec![sketcore_record::Vec3::ZERO, sketcore_record::Vec3::X, sketcore_record::Vec3::Y],
+            normals: vec![sketcore_record::Vec3::Z; 3],
             triangles: vec![[0, 1, 2]],
             tri_face: vec![0],
             ..Default::default()
@@ -2641,7 +2641,7 @@ mod retained_request_tests {
     fn cpu_map_capture_fixture(mapped: bool, corrupt: bool) -> (ProductScene, ImageRequest, std::sync::Weak<Vec<u8>>) {
         use super::super::textures::{BaseColorMode, PlanarFrame, RuntimeTextures, TextureBinding, TextureMap};
         use image::ImageEncoder;
-        use solidcore_record::Vec3;
+        use sketcore_record::Vec3;
         use sketcraft_geom::Mesh;
         let mut encoded = Vec::new();
         image::codecs::png::PngEncoder::new(&mut encoded).write_image(&[128, 64, 255, 255], 1, 1, image::ExtendedColorType::Rgba8).unwrap();
@@ -2981,7 +2981,7 @@ mod surface_request_metadata_tests {
                 bump_amplitude_mm: 0.0,
             });
         }
-        let scene = ProductScene { meshes, bounds: Aabb3 { min: solidcore_record::Vec3::ZERO, max: solidcore_record::Vec3::ZERO } };
+        let scene = ProductScene { meshes, bounds: Aabb3 { min: sketcore_record::Vec3::ZERO, max: sketcore_record::Vec3::ZERO } };
         let mut request = request();
         request.integrator = Integrator::Raytrace;
         request.raytrace = Some(super::super::RaytraceOptions { surface_effects: Some(effects), ..Default::default() });

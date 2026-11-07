@@ -12,7 +12,7 @@
 
 use crate::bspline::{Dir, HPoint, NurbsSurface, Side, SplineError, SplineResult, find_span, invalid, local_basis_array};
 use crate::prelude::*;
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 
 /// Most loop points a fill takes.
 pub const MAX_LOOP_POINTS: usize = 8192;

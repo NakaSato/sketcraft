@@ -17,7 +17,7 @@ pub const MAX_WIDTH: f32 = 760.0;
 const STRIP: f32 = 30.0;
 /// Consume the configured toggle before CAD shortcuts, including in the chat's own window.
 /// Bare character keys remain text while a field owns the keyboard; chords still hide chat.
-pub fn toggle_shortcut(app: &mut SolveApp, ctx: &egui::Context) {
+pub fn toggle_shortcut(app: &mut SketApp, ctx: &egui::Context) {
     if !shown(app) || crate::keymap::capturing(app) {
         return;
     }
@@ -55,7 +55,7 @@ const THUMB_MAX: (f32, f32) = (150.0, 56.0);
 const PREVIEW_MAX: (f32, f32) = (560.0, 380.0);
 
 /// Show or hide the panel (a folded panel unfolds first).
-pub fn toggle(app: &mut SolveApp) {
+pub fn toggle(app: &mut SketApp) {
     let c = &mut app.agent_chat;
     if !c.open {
         c.open = true;
@@ -68,7 +68,7 @@ pub fn toggle(app: &mut SolveApp) {
 }
 
 /// The tooltip of the chat's buttons: its name and shortcut.
-pub fn tip(app: &SolveApp) -> String {
+pub fn tip(app: &SketApp) -> String {
     match crate::keymap::display_for(app, "ui.assistant") {
         Some(key) => format!("{} ({key})", tr("ui.agent_chat")),
         None => tr("ui.agent_chat").to_string(),
@@ -79,7 +79,7 @@ pub fn tip(app: &SolveApp) -> String {
 /// CAD until a pointer press outside the chat, not merely a move of the pointer. Use the
 /// panel in this window, never label selections belonging to another native viewport.
 /// Called before layout so even a click and a shortcut in the same frame are routed here.
-pub(crate) fn owns_keyboard_input(app: &mut SolveApp, ctx: &egui::Context) -> bool {
+pub(crate) fn owns_keyboard_input(app: &mut SketApp, ctx: &egui::Context) -> bool {
     let rect = app.agent_chat.panel_rect.filter(|_| shown(app) && app.agent_chat.open && !app.preferences.agent_chat_minimized);
     let Some(rect) = rect else {
         app.agent_chat.keyboard_owned = false;
@@ -96,7 +96,7 @@ pub(crate) fn owns_keyboard_input(app: &mut SolveApp, ctx: &egui::Context) -> bo
 }
 
 /// The panel, when the chat is turned on and open. Call before the central viewport is laid out.
-pub fn show(app: &mut SolveApp, ui: &mut egui::Ui) {
+pub fn show(app: &mut SketApp, ui: &mut egui::Ui) {
     let ctx = ui.ctx().clone();
     poll(app, &ctx);
     // Set again below if the chat is drawn this frame.
@@ -181,7 +181,7 @@ pub fn show(app: &mut SolveApp, ui: &mut egui::Ui) {
 }
 
 /// Horizontal room reserved before the history and browser when Assistant is on the left.
-pub(crate) fn left_inset(app: &SolveApp, available: Rect) -> f32 {
+pub(crate) fn left_inset(app: &SketApp, available: Rect) -> f32 {
     if Container::for_layout(app.ui.layout, Surface::Panel).floating()
         && shown(app)
         && app.agent_chat.open
@@ -197,7 +197,7 @@ pub(crate) fn left_inset(app: &SolveApp, available: Rect) -> f32 {
 
 /// Assistant-specific precedence over tool sheets. Keep this out of the shared container:
 /// ordinary tool panels never reserve an outside rail for themselves.
-pub(crate) fn tool_space(app: &SolveApp, mut available: Rect) -> Rect {
+pub(crate) fn tool_space(app: &SketApp, mut available: Rect) -> Rect {
     if Container::for_layout(app.ui.layout, Surface::Panel).floating()
         && shown(app)
         && app.agent_chat.open
@@ -214,7 +214,7 @@ pub(crate) fn tool_space(app: &SolveApp, mut available: Rect) -> Rect {
 }
 
 /// The same outer rectangle is used for the floating sheet and its docking preview.
-fn floating_bounds(app: &SolveApp, available: Rect, left: bool) -> Rect {
+fn floating_bounds(app: &SketApp, available: Rect, left: bool) -> Rect {
     let t = Tokens::get();
     let gap = crate::shell::SHELL_GAP;
     let mut bounds = available.shrink(gap);
@@ -236,7 +236,7 @@ fn floating_bounds(app: &SolveApp, available: Rect, left: bool) -> Rect {
 
 /// Use the same bounded, rounded floating surface as feature panels. The sheet overlays
 /// the viewport, leaving the model's rendering and picking projection unchanged.
-fn floating(app: &mut SolveApp, ui: &mut egui::Ui) {
+fn floating(app: &mut SketApp, ui: &mut egui::Ui) {
     let ctx = ui.ctx().clone();
     let t = Tokens::get();
     let available = ui.available_rect_before_wrap();
@@ -450,7 +450,7 @@ fn fit(size: egui::Vec2, max: egui::Vec2) -> egui::Vec2 {
 /// The viewer: a message's pictures over the app, one at a time with a counter, Previous and Next
 /// (also the arrow keys), closed with the button, Esc or a click outside.
 #[cfg(not(target_arch = "wasm32"))]
-fn gallery_window(app: &mut SolveApp, ctx: &egui::Context) {
+fn gallery_window(app: &mut SketApp, ctx: &egui::Context) {
     let Some(mut gallery) = app.agent_chat.gallery.take() else { return };
     let count = gallery.pictures.len();
     gallery.at = gallery.at.min(count.saturating_sub(1));
@@ -501,7 +501,7 @@ fn gallery_window(app: &mut SolveApp, ctx: &egui::Context) {
 }
 
 /// While files are dragged over the window: if they would drop on the chat, say so over it.
-fn show_drop_hint(app: &SolveApp, ctx: &egui::Context) {
+fn show_drop_hint(app: &SketApp, ctx: &egui::Context) {
     #[cfg(not(target_arch = "wasm32"))]
     if let Some(rect) = app.agent_chat.drop_rect
         && ctx.input(|i| !i.raw.hovered_files.is_empty())
@@ -532,7 +532,7 @@ pub const NEW_CHAT_SHORTCUT: egui::KeyboardShortcut =
     egui::KeyboardShortcut::new(egui::Modifiers::COMMAND.plus(egui::Modifiers::SHIFT), egui::Key::L);
 
 /// Clear the chat, asking first when something would be lost.
-fn request_new_chat(app: &mut SolveApp) {
+fn request_new_chat(app: &mut SketApp) {
     if new_chat_needs_confirm(app) {
         app.agent_chat.confirm_new = true;
     } else {
@@ -555,7 +555,7 @@ pub fn window_place(saved: Option<[f32; 4]>) -> Option<([f32; 2], [f32; 2])> {
 /// The chat window's settings. The saved place and size go only to a window that is opening:
 /// egui turns a changed place into a move, and the system rounds what it is given, so giving it
 /// every frame made the window chase its own rounding (it shook a pixel up and down).
-pub fn window_builder(app: &SolveApp) -> egui::ViewportBuilder {
+pub fn window_builder(app: &SketApp) -> egui::ViewportBuilder {
     let title = format!("{} — {}", app.session.doc.name, tr("ui.agent_chat"));
     let builder = egui::ViewportBuilder::default().with_title(title).with_min_inner_size([MIN_WIDTH, 320.0]);
     if app.agent_chat.window_placed {
@@ -571,13 +571,13 @@ pub fn window_builder(app: &SolveApp) -> egui::ViewportBuilder {
 /// go to another screen, or a window floating inside the app where the system can't open one.
 /// The system's close button closes the chat (it opens there again); Dock puts it back.
 #[cfg(not(target_arch = "wasm32"))]
-fn window(app: &mut SolveApp, ctx: &egui::Context) {
+fn window(app: &mut SketApp, ctx: &egui::Context) {
     let builder = window_builder(app);
     app.agent_chat.window_placed = true;
     // The side panel isn't drawn: its place no longer counts as "in the chat".
     app.agent_chat.panel_rect = None;
     ctx.show_viewport_immediate(egui::ViewportId::from_hash_of("sc_agent_chat_window"), builder, |ui, class| {
-        // Root/embedded inputs are handled by SolveApp::logic. A native chat window owns
+        // Root/embedded inputs are handled by SketApp::logic. A native chat window owns
         // its input and must see the toggle before its text editor can consume the chord.
         if class != egui::ViewportClass::EmbeddedWindow {
             toggle_shortcut(app, ui.ctx());
@@ -688,7 +688,7 @@ fn state_color(state: State) -> Color32 {
 
 /// The folded panel: the chat icon (unfolds it), the agent's state, and a mark while something
 /// waits for the user.
-fn strip(app: &mut SolveApp, ui: &mut egui::Ui) {
+fn strip(app: &mut SketApp, ui: &mut egui::Ui) {
     let t = Tokens::get();
     let r = ui.max_rect();
     let button = Rect::from_center_size(pos2(r.center().x, r.top() + 22.0), vec2(26.0, 26.0));
@@ -717,7 +717,7 @@ fn strip(app: &mut SolveApp, ui: &mut egui::Ui) {
 /// The header: a grip to drag the panel to the other side, the title and state, Connect or Stop,
 /// Pop out (or Dock, in its own window), Minimise and Close. In its own window the system moves
 /// and minimises it, so there is no grip and no Minimise.
-fn header(app: &mut SolveApp, ui: &mut egui::Ui, left: bool) {
+fn header(app: &mut SketApp, ui: &mut egui::Ui, left: bool) {
     let t = Tokens::get();
     let state = app.agent_chat.state();
     let popped = app.preferences.agent_chat_popped;
@@ -785,7 +785,7 @@ fn header(app: &mut SolveApp, ui: &mut egui::Ui, left: bool) {
 
 /// While the header is dragged: the cursor grabs and the side it would dock on lights up; on
 /// release over the other half of the window the panel moves there.
-fn dock_drag(app: &mut SolveApp, ui: &egui::Ui, drag: &egui::Response, left: bool) {
+fn dock_drag(app: &mut SketApp, ui: &egui::Ui, drag: &egui::Response, left: bool) {
     if drag.hovered() {
         ui.ctx().set_cursor_icon(egui::CursorIcon::Grab);
     }
@@ -823,7 +823,7 @@ fn dock_drag(app: &mut SolveApp, ui: &egui::Ui, drag: &egui::Response, left: boo
     }
 }
 
-fn body(app: &mut SolveApp, ui: &mut egui::Ui, left: bool) {
+fn body(app: &mut SketApp, ui: &mut egui::Ui, left: bool) {
     header(app, ui, left);
     #[cfg(not(target_arch = "wasm32"))]
     ui_kit::assistant_controls(ui, |ui| switcher(app, ui));
@@ -836,7 +836,7 @@ fn body(app: &mut SolveApp, ui: &mut egui::Ui, left: bool) {
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-fn desktop_body(app: &mut SolveApp, ui: &mut egui::Ui) {
+fn desktop_body(app: &mut SketApp, ui: &mut egui::Ui) {
     if app.agent_chat.detection.is_none() && app.agent_chat.detecting.is_none() {
         refresh(app, ui.ctx());
     }
@@ -1074,7 +1074,7 @@ fn desktop_body(app: &mut SolveApp, ui: &mut egui::Ui) {
 /// The header's second row: the agent this conversation uses (a compact switcher), the agent's
 /// own mode when it has modes, and the state of its login.
 #[cfg(not(target_arch = "wasm32"))]
-fn switcher(app: &mut SolveApp, ui: &mut egui::Ui) {
+fn switcher(app: &mut SketApp, ui: &mut egui::Ui) {
     let t = Tokens::get();
     let all = agents::entries(app);
     let current = agents::current(app);
@@ -1258,7 +1258,7 @@ fn picker_width(ui: &egui::Ui, label: &str) -> f32 {
 /// An agent's select options are authoritative. Compact value pickers share a strip below the
 /// agent switcher; only a narrow chat wraps them, rather than spending two full rows per option.
 #[cfg(not(target_arch = "wasm32"))]
-fn config_selects(app: &mut SolveApp, ui: &mut egui::Ui, options: &[acp::ConfigOption]) {
+fn config_selects(app: &mut SketApp, ui: &mut egui::Ui, options: &[acp::ConfigOption]) {
     let t = Tokens::get();
     let pending = app.agent_chat.config_pending;
     let strip_width = ui.available_width().min(ui.max_rect().width()).max(0.0);
@@ -1292,7 +1292,7 @@ fn config_selects(app: &mut SolveApp, ui: &mut egui::Ui, options: &[acp::ConfigO
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-fn config_select(app: &mut SolveApp, ui: &mut egui::Ui, option: &acp::ConfigOption, width: f32, pending: bool) {
+fn config_select(app: &mut SketApp, ui: &mut egui::Ui, option: &acp::ConfigOption, width: f32, pending: bool) {
     let t = Tokens::get();
     let current = option.options.iter().find(|choice| choice.value == option.current_value);
     let selected = current.map_or(option.current_value.as_str(), |choice| choice.name.as_str());
@@ -1436,7 +1436,7 @@ mod config_ui_tests {
         }
     }
 
-    fn draw_switcher(app: &mut SolveApp, ctx: &egui::Context, width: f32) {
+    fn draw_switcher(app: &mut SketApp, ctx: &egui::Context, width: f32) {
         crate::scenario::clear_handles();
         let screen = Rect::from_min_size(pos2(0.0, 0.0), vec2(width, 700.0));
         ctx.run_ui(egui::RawInput { screen_rect: Some(screen), ..Default::default() }, |ui| {
@@ -1451,7 +1451,7 @@ mod config_ui_tests {
     #[test]
     fn config_options_share_one_row_when_they_fit_and_wrap_without_legacy_duplicates() {
         assert_eq!(compact_text("Énergie très élevée", 7), "Énergie…");
-        let mut app = SolveApp::new(sketcraft_engine::Session::default(), crate::Services::default());
+        let mut app = SketApp::new(sketcraft_engine::Session::default(), crate::Services::default());
         // Make legacy provider/model pickers eligible so their absence is meaningful.
         app.agent_chat.state = Some(State::Ready);
         app.agent_chat.modes = vec![("legacy".into(), "Legacy mode".into())];
@@ -1524,7 +1524,7 @@ fn inset<R>(ui: &mut egui::Ui, add: impl FnOnce(&mut egui::Ui) -> R) -> R {
 
 /// Before the first connection: what's installed, how to install the rest, and Add agent.
 #[cfg(not(target_arch = "wasm32"))]
-fn picker(app: &mut SolveApp, ui: &mut egui::Ui) {
+fn picker(app: &mut SketApp, ui: &mut egui::Ui) {
     let open = app.agent_chat.picking.unwrap_or(!app.agent_chat.state().running() && app.agent_chat.items.is_empty());
     if !open {
         return;
@@ -1534,7 +1534,7 @@ fn picker(app: &mut SolveApp, ui: &mut egui::Ui) {
 
 /// [`picker`]'s content: the agents found, Refresh and Add agent, and what isn't installed.
 #[cfg(not(target_arch = "wasm32"))]
-fn agent_list(app: &mut SolveApp, ui: &mut egui::Ui) {
+fn agent_list(app: &mut SketApp, ui: &mut egui::Ui) {
     let all = agents::entries(app);
     let current = agents::current(app);
     ui.horizontal(|ui| {
@@ -1584,7 +1584,7 @@ fn agent_list(app: &mut SolveApp, ui: &mut egui::Ui) {
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-fn auth_box(app: &mut SolveApp, ui: &mut egui::Ui) {
+fn auth_box(app: &mut SketApp, ui: &mut egui::Ui) {
     ui_kit::section(ui, "authentication", tr("ui.agent_chat_auth_title"), true, |ui| {
         ui.set_width(ui.available_width());
         ui_kit::text(ui, tr("ui.agent_chat_auth_needed"), ui_kit::Text::Note("auth_needed"));
@@ -1709,7 +1709,7 @@ fn scroll_while_selecting(ui: &egui::Ui) {
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-fn conversation(app: &mut SolveApp, ui: &mut egui::Ui) {
+fn conversation(app: &mut SketApp, ui: &mut egui::Ui) {
     let t = Tokens::get();
     let mut answer: Option<(usize, Option<String>)> = None;
     // Allow (true), Deny (false), Always allow (None).
@@ -2034,7 +2034,7 @@ const CHIP_W: f32 = 170.0;
 /// a file mark), the name cut to fit, and a × that takes the file off. Laid out by hand: egui
 /// wraps plain widgets, not framed groups, and one row wider than the chat widens all below it.
 #[cfg(not(target_arch = "wasm32"))]
-fn attachment_chips(app: &mut SolveApp, ui: &mut egui::Ui) {
+fn attachment_chips(app: &mut SketApp, ui: &mut egui::Ui) {
     let chat = &mut app.agent_chat;
     // Thumbnails of files no longer on the message are let go.
     let keep: Vec<u64> = chat.attachments.iter().filter(|f| f.thumb.is_some()).map(|f| f.id).collect();
@@ -2190,7 +2190,7 @@ fn chip(ui: &mut egui::Ui, thumbs: &mut std::collections::HashMap<u64, egui::Tex
 /// The + button: choose a file with the app's picker (pictures, text and CAD files), or paste
 /// the clipboard's picture.
 #[cfg(not(target_arch = "wasm32"))]
-fn add_menu(app: &mut SolveApp, ui: &mut egui::Ui) {
+fn add_menu(app: &mut SketApp, ui: &mut egui::Ui) {
     let (mut choose, mut paste) = (false, false);
     let r = ui_kit::action_menu(ui, "+", |ui| {
         let a = ui_kit::button(ui, tr("ui.agent_chat_add_file"), ui_kit::Button::Normal);
@@ -2352,7 +2352,7 @@ mod tests {
     fn empty_discovery_explains_flatpak_permissions() {
         const CHILD: &str = "SKETCRAFT_TEST_FLATPAK_MESSAGE";
         if let Ok(case) = std::env::var(CHILD) {
-            let mut app = SolveApp::new(sketcraft_engine::Session::default(), crate::Services::default());
+            let mut app = SketApp::new(sketcraft_engine::Session::default(), crate::Services::default());
             app.agent_chat.detection = Some(discover::Detection::default());
             assert!(agents::entries(&app).is_empty());
             let message = no_agents_message();
@@ -2406,7 +2406,7 @@ mod tests {
 
     #[test]
     fn the_shortcut_shows_folds_and_hides() {
-        let mut app = SolveApp::new(sketcraft_engine::Session::default(), crate::Services::default());
+        let mut app = SketApp::new(sketcraft_engine::Session::default(), crate::Services::default());
         toggle(&mut app);
         assert!(app.agent_chat.open);
         app.preferences.agent_chat_minimized = true;
@@ -2423,7 +2423,7 @@ mod tests {
             for width in [280.0, 440.0, 760.0] {
                 let ctx = crate::fonts::test_context();
                 crate::theme::apply(&ctx);
-                let mut app = SolveApp::new(sketcraft_engine::Session::default(), crate::Services::default());
+                let mut app = SketApp::new(sketcraft_engine::Session::default(), crate::Services::default());
                 app.agent_chat.detection = Some(discover::Detection::default());
                 app.agent_chat.picking = Some(false);
                 app.agent_chat.state = Some(State::Ready);
@@ -2463,7 +2463,7 @@ mod tests {
     fn assistant_permissions_keep_provider_choices_and_responsive_approval_actions() {
         for width in [280.0, 440.0, 760.0] {
             let ctx = crate::fonts::test_context();
-            let mut app = SolveApp::new(sketcraft_engine::Session::default(), crate::Services::default());
+            let mut app = SketApp::new(sketcraft_engine::Session::default(), crate::Services::default());
             app.agent_chat.items.push(Item::Permission {
                 key: 4,
                 title: "Run solid.fillet".into(),
@@ -2496,7 +2496,7 @@ mod tests {
     #[test]
     fn assistant_agent_mode_and_model_wrap_without_escaping_narrow_width() {
         let ctx = crate::fonts::test_context();
-        let mut app = SolveApp::new(sketcraft_engine::Session::default(), crate::Services::default());
+        let mut app = SketApp::new(sketcraft_engine::Session::default(), crate::Services::default());
         app.agent_chat.state = Some(State::Ready);
         app.agent_chat.detection = Some(discover::Detection::default());
         app.agent_chat.agent_id = Some("fixture".into());

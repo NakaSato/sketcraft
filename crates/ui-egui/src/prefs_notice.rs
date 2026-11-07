@@ -1,12 +1,12 @@
 //! The notice for settings put back at start because they would keep SketCraft from starting
-//! on this computer (`SolveApp::settings_reset`), shown until dismissed.
+//! on this computer (`SketApp::settings_reset`), shown until dismissed.
 
-use crate::SolveApp;
+use crate::SketApp;
 use crate::ui_kit;
 
 /// Draw the notice while any setting was reset. OK dismisses it; "Open Preferences" dismisses it
 /// and opens the Graphics page.
-pub fn show(app: &mut SolveApp, ctx: &egui::Context) {
+pub fn show(app: &mut SketApp, ctx: &egui::Context) {
     if app.settings_reset.is_empty() {
         return;
     }

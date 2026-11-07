@@ -3,7 +3,7 @@
 //! they are, because a rigid motion keeps distances, angles and handedness. The moved record is
 //! the same B-rep in other coordinates, exactly. Reflections and scalings change parameters or
 //! geometry kinds; they are a kernel operation, not this.
-use solidcore_record::brep::{Brep, Curve, Frame, Surface};
+use sketcore_record::brep::{Brep, Curve, Frame, Surface};
 
 /// A rotation (rows of an orthonormal matrix with determinant +1) and a translation:
 /// `p ↦ rotation · p + translation`.

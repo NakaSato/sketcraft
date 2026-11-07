@@ -25,7 +25,7 @@ use egui::{FontId, RichText, text::LayoutJob};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
-use crate::SolveApp;
+use crate::SketApp;
 use crate::theme::Tokens;
 use crate::ui_kit;
 
@@ -426,9 +426,7 @@ impl InstallKind {
         match self {
             InstallKind::Flatpak(id) => Some(format!("flatpak update {id}")),
             InstallKind::Snap { store: true } => Some("sudo snap refresh sketcraft".into()),
-            InstallKind::Snap { store: false } => {
-                Some(format!("sudo snap install --dangerous ./{}", asset.unwrap_or("sketcraft-linux-x86_64.snap")))
-            }
+            InstallKind::Snap { store: false } => Some(format!("sudo snap install --dangerous ./{}", asset.unwrap_or("sketcraft-linux-x86_64.snap"))),
             InstallKind::Deb => Some(format!("sudo apt install ./{}", asset.unwrap_or("sketcraft-linux-x86_64.deb"))),
             InstallKind::Rpm => Some(format!("sudo dnf install ./{}", asset.unwrap_or("sketcraft-linux-x86_64.rpm"))),
             _ => None,
@@ -527,13 +525,7 @@ impl Release {
                 is_release_url(&url).then(|| Asset { name, url, size: a.get("size").and_then(Value::as_u64).unwrap_or(0) })
             })
             .collect();
-        Ok(Release {
-            name: Some(s("name")).filter(|n| !n.trim().is_empty()).unwrap_or_else(|| format!("SketCraft {tag}")),
-            tag,
-            notes,
-            page,
-            assets,
-        })
+        Ok(Release { name: Some(s("name")).filter(|n| !n.trim().is_empty()).unwrap_or_else(|| format!("SketCraft {tag}")), tag, notes, page, assets })
     }
 
     /// The version without the `v`.
@@ -683,19 +675,19 @@ impl Updater {
 }
 
 /// The Update button shows.
-pub fn offered(app: &SolveApp) -> Option<&Release> {
+pub fn offered(app: &SketApp) -> Option<&Release> {
     let r = app.updater.release.as_ref()?;
     app.preferences.update.offers(r, current_version(), unix_now()).then_some(r)
 }
 
 /// Checks may run here: a release build with the host's HTTP client, or a test feed.
-pub fn available(app: &mut SolveApp) -> bool {
+pub fn available(app: &mut SketApp) -> bool {
     !app.updater.off && (app.updater.feed.is_some() || (app.services.http_get.is_some() && app.updater.kind().checks()))
 }
 
 /// Per frame: the first frame of each launch starts an automatic check, the open app checks
 /// again once a day (an hour after a failure), and a finished check is collected.
-pub fn tick(app: &mut SolveApp, ctx: &egui::Context) {
+pub fn tick(app: &mut SketApp, ctx: &egui::Context) {
     poll_install(app);
     // Quitting to restart or install was cancelled (a "save changes?" answered Cancel).
     if app.updater.launch.is_some() && app.docs.quitting.is_none() && !app.quit_requested {
@@ -729,7 +721,7 @@ pub fn tick(app: &mut SolveApp, ctx: &egui::Context) {
 
 /// Check now (Help or Preferences): show progress and the result, ignoring the daily interval,
 /// but not GitHub's rate limit. A check already in flight serves the manual request too.
-pub fn check_now(app: &mut SolveApp, ctx: &egui::Context) {
+pub fn check_now(app: &mut SketApp, ctx: &egui::Context) {
     app.updater.open = true;
     // Keep a download or a completed installation on screen without starting another check.
     if app.updater.job.is_some() || app.updater.installed.as_ref().is_some_and(Result::is_ok) || !available(app) {
@@ -769,7 +761,7 @@ fn fetch_latest(feed: Option<&Path>, http: Option<&HttpGet>) -> Result<Release, 
     Release::parse(&body)
 }
 
-fn start(app: &mut SolveApp, ctx: &egui::Context, manual: bool) {
+fn start(app: &mut SketApp, ctx: &egui::Context, manual: bool) {
     let (tx, rx) = std::sync::mpsc::channel();
     app.updater.status = Status::Checking;
     app.updater.rx = Some((rx, manual));
@@ -796,7 +788,7 @@ fn start(app: &mut SolveApp, ctx: &egui::Context, manual: bool) {
     }
 }
 
-fn poll(app: &mut SolveApp) {
+fn poll(app: &mut SketApp) {
     let Some((rx, manual)) = &app.updater.rx else { return };
     let manual = *manual;
     let result = match rx.try_recv() {
@@ -830,7 +822,7 @@ fn poll(app: &mut SolveApp) {
 // ---- one-click updates ------------------------------------------------------------------------
 
 /// How this installation updates in place, when the host can download (None: Download only).
-pub fn install_method(app: &mut SolveApp) -> Option<install::Method> {
+pub fn install_method(app: &mut SketApp) -> Option<install::Method> {
     // A launcher updates its copies itself: no Update now, no replacing the AppImage under it.
     if app.updater.managed_by().is_some() {
         return None;
@@ -850,7 +842,7 @@ pub fn install_method(app: &mut SolveApp) -> Option<install::Method> {
 }
 
 /// Re-check the feed, then download, verify and apply the newest release (Update now).
-pub fn start_install(app: &mut SolveApp, ctx: &egui::Context) {
+pub fn start_install(app: &mut SketApp, ctx: &egui::Context) {
     let (Some(release), Some(method), Some(get), Some(download)) =
         (app.updater.release.clone(), install_method(app), app.services.http_get.clone(), app.services.http_download.clone())
     else {
@@ -887,7 +879,7 @@ pub fn start_install(app: &mut SolveApp, ctx: &egui::Context) {
     }
 }
 
-fn poll_install(app: &mut SolveApp) {
+fn poll_install(app: &mut SketApp) {
     let Some((rx, progress)) = &app.updater.job else { return };
     let received = rx.try_recv();
     if let Some((release, _)) = progress.selection() {
@@ -930,7 +922,7 @@ fn poll_install(app: &mut SolveApp) {
 }
 
 /// Restart now: close (asking about unsaved designs), then start the new version.
-pub fn restart(app: &mut SolveApp) {
+pub fn restart(app: &mut SketApp) {
     if let Some(Ok(install::Outcome::Restart(program))) = &app.updater.installed {
         app.updater.launch = Some((program.clone(), Vec::new()));
         crate::documents::request_quit(app);
@@ -938,7 +930,7 @@ pub fn restart(app: &mut SolveApp) {
 }
 
 /// For the host, as SketCraft exits: the program to start (the new version, an installer).
-pub fn take_launch(app: &mut SolveApp) -> Option<(PathBuf, Vec<String>)> {
+pub fn take_launch(app: &mut SketApp) -> Option<(PathBuf, Vec<String>)> {
     app.updater.launch.take()
 }
 
@@ -946,7 +938,7 @@ pub fn take_launch(app: &mut SolveApp) -> Option<(PathBuf, Vec<String>)> {
 
 /// The application bar's Update pill ("Update to 0.14.0"), at the right of `span`: it opens and
 /// closes the Update window. Returns its rect (None: not shown).
-pub fn button(app: &mut SolveApp, ui: &mut egui::Ui, span: egui::Rect, labeled: bool) -> Option<egui::Rect> {
+pub fn button(app: &mut SketApp, ui: &mut egui::Ui, span: egui::Rect, labeled: bool) -> Option<egui::Rect> {
     let version = offered(app)?.version().to_string();
     // "Update to 0.14.0" while the document tabs keep room; a short "Update" when they would be
     // squeezed; the icon alone in a narrow bar.
@@ -960,7 +952,7 @@ pub fn button(app: &mut SolveApp, ui: &mut egui::Ui, span: egui::Rect, labeled: 
 }
 
 /// The Update card.
-pub fn show(app: &mut SolveApp, ctx: &egui::Context) {
+pub fn show(app: &mut SketApp, ctx: &egui::Context) {
     if !app.updater.open {
         return;
     }
@@ -1117,7 +1109,7 @@ pub fn show(app: &mut SolveApp, ctx: &egui::Context) {
 }
 
 /// Manual checks also have a visible result when no update can be offered.
-fn show_check_status(app: &mut SolveApp, ctx: &egui::Context) {
+fn show_check_status(app: &mut SketApp, ctx: &egui::Context) {
     let (message, warning) = if !available(app) {
         (crate::i18n::tr("update.check_unavailable").to_string(), false)
     } else {
@@ -1158,7 +1150,7 @@ enum State {
 }
 
 /// Preferences ▸ General: the automatic check and Check now.
-pub fn prefs_rows(app: &mut SolveApp, ui: &mut egui::Ui) {
+pub fn prefs_rows(app: &mut SketApp, ui: &mut egui::Ui) {
     let can = available(app);
     let kind = app.updater.kind().clone();
     let note = if kind == InstallKind::Web {
@@ -1216,7 +1208,7 @@ pub fn prefs_rows(app: &mut SolveApp, ui: &mut egui::Ui) {
 }
 
 /// The newer version found, if any (offered or skipped).
-fn offered_or_newer(app: &SolveApp) -> Option<String> {
+fn offered_or_newer(app: &SketApp) -> Option<String> {
     app.updater.release.as_ref().filter(|r| is_newer(&r.tag, current_version())).map(|r| r.version().to_string())
 }
 

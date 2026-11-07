@@ -3,8 +3,8 @@
 //! against the analytic surface the loop was cut from, or against a quadrature of the fitted
 //! surface itself, never against the mesher alone.
 
-use solidcore_record::brep::{self as b};
-use solidcore_record::{Loop2, Plane, Region2, Vec2, Vec3};
+use sketcore_record::brep::{self as b};
+use sketcore_record::{Loop2, Plane, Region2, Vec2, Vec3};
 use sketcraft_geom::brep::{eval::CurveEval, eval::SurfaceEval};
 use sketcraft_geom::prelude::*;
 
@@ -37,11 +37,8 @@ impl Faces {
                                     let [t0, t1] = r.edges[u.edge as usize].interval;
                                     (0..64).map(move |k| {
                                         let x = k as f64 / 64.0;
-                                        sketcraft_geom::brep::pcurve::eval(
-                                            &u.pcurve,
-                                            if u.forward { t0 + (t1 - t0) * x } else { t1 - (t1 - t0) * x },
-                                        )
-                                        .unwrap()
+                                        sketcraft_geom::brep::pcurve::eval(&u.pcurve, if u.forward { t0 + (t1 - t0) * x } else { t1 - (t1 - t0) * x })
+                                            .unwrap()
                                     })
                                 })
                                 .collect(),

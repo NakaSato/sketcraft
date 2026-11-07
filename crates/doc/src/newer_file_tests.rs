@@ -11,7 +11,7 @@ fn design() -> Document {
     let mut d = Document::new("Plate");
     d.set_param("depth", "5 mm", Some("mm"), None).unwrap();
     let mut sketch = Sketch::new();
-    sketch.add_circle(solidcore_record::Vec2::new(0.0, 0.0), 10.0, None, None).unwrap();
+    sketch.add_circle(sketcore_record::Vec2::new(0.0, 0.0), 10.0, None, None).unwrap();
     let base = d.add_feature(FeatureKind::Sketch { plane: PlaneRef::Origin { name: "XY".into() }, sketch }, Some("Base")).unwrap();
     d.add_feature(extrude(base), Some("Pad")).unwrap();
     d

@@ -34,7 +34,6 @@ sketcraft-engine = { workspace = true }
 # The D3D12 shader compiler the window starts with (#6756).
 sketcraft-gpu = { workspace = true }
 sketcraft-ui-egui = { workspace = true }
-sketcraft-space-mouse = { workspace = true }
 eframe = { workspace = true, features = ["default_fonts", "wgpu", "accesskit", "wayland", "x11", "links"] }
 egui = { workspace = true }
 serde = { workspace = true }
@@ -57,13 +56,11 @@ keyring = { version = "3.6", default-features = false, features = ["apple-native
 quick-xml = { workspace = true }
 
 [target.'cfg(target_os = "windows")'.dependencies]
-hidapi = { version = "2.6.7", default-features = false, features = ["windows-native"] }
 # The main window's handle for src/native_frame.rs (already in the tree through eframe and winit).
 raw-window-handle = "0.6"
 # Native crash capture (src/native_crash.rs): the exception filter, the faulting module, a minidump.
 # The window's resize border, DPI size and class icon (src/native_frame.rs): the window procedure, hit
 # test, DPI, the exe's icon.
-# Finding 3D mice through Plug and Play without asking other devices anything (src/space_mouse/windows_hid.rs).
 windows-sys = { version = "0.61", features = [
     "Win32_Devices_DeviceAndDriverInstallation",
     "Win32_Devices_HumanInterfaceDevice",
@@ -85,11 +82,6 @@ winreg = "0.56"
 
 [target.'cfg(target_os = "macos")'.dependencies]
 muda = { version = "0.21.2", default-features = false }
-# The 3D mouse through the 3Dconnexion driver, which keeps the device to itself (src/space_mouse.rs).
-sketcraft-3dx-client = { workspace = true }
-# The 3D mouse (src/space_mouse.rs), in the shared-device open mode so that a running 3DxWare
-# driver does not shut the app out.
-hidapi = { version = "2.6.7", default-features = false, features = ["macos-shared-device"] }
 # Files opened from Finder and the Dock (src/open_documents.rs), and the fullscreen title-bar
 # inset (src/main.rs); all already come with eframe and rfd.
 objc2 = "0.6"

@@ -4,17 +4,17 @@
 
 use egui::{Pos2, Stroke, vec2};
 use serde_json::{Value, json};
-use solidcore_record::Vec2;
+use sketcore_record::Vec2;
 use sketcraft_engine::doc::canvas::Canvas;
 use sketcraft_engine::geom::prelude::*;
 
-use crate::SolveApp;
+use crate::SketApp;
 use crate::browser::panel_pos;
 use crate::theme::Tokens;
 use crate::ui_kit;
 use crate::viewport::Proj;
 
-pub(crate) fn panel(app: &mut SolveApp, ctx: &egui::Context) {
+pub(crate) fn panel(app: &mut SketApp, ctx: &egui::Context) {
     let Some(mut m) = app.tree.canvas_panel.clone() else { return };
     let Some(c) = app.session.doc.canvases.iter().find(|c| c.id == m.canvas).cloned() else {
         app.tree.canvas_panel = None;
@@ -86,7 +86,7 @@ pub(crate) fn panel(app: &mut SolveApp, ctx: &egui::Context) {
 }
 
 /// A viewport click while Calibrate is open: set Point A or B on the image (#9108).
-pub(crate) fn click(app: &mut SolveApp, proj: &Proj, screen: Pos2) -> bool {
+pub(crate) fn click(app: &mut SketApp, proj: &Proj, screen: Pos2) -> bool {
     let Some(mut panel) = app.tree.canvas_panel.clone() else {
         return false;
     };
@@ -124,7 +124,7 @@ pub(crate) fn click(app: &mut SolveApp, proj: &Proj, screen: Pos2) -> bool {
 }
 
 /// Markers for the two calibration points on the image.
-pub(crate) fn paint_marks(app: &SolveApp, painter: &egui::Painter, proj: &Proj) {
+pub(crate) fn paint_marks(app: &SketApp, painter: &egui::Painter, proj: &Proj) {
     let Some(panel) = app.tree.canvas_panel.as_ref().filter(|p| p.calibrate) else {
         return;
     };
@@ -238,8 +238,8 @@ mod tests {
         let plane = h.app.session.doc.canvas_plane(&vals, &c).unwrap();
         let ax = c.center.x - 20.0;
         let bx = c.center.x + 20.0;
-        let sa = proj.to_screen(plane.to_world(solidcore_record::Vec2::new(ax, c.center.y))).expect("point A on screen");
-        let sb = proj.to_screen(plane.to_world(solidcore_record::Vec2::new(bx, c.center.y))).expect("point B on screen");
+        let sa = proj.to_screen(plane.to_world(sketcore_record::Vec2::new(ax, c.center.y))).expect("point A on screen");
+        let sb = proj.to_screen(plane.to_world(sketcore_record::Vec2::new(bx, c.center.y))).expect("point B on screen");
         assert!(super::click(&mut h.app, &proj, sa), "first click sets A");
         let panel = h.app.tree.canvas_panel.as_ref().unwrap();
         assert_eq!(panel.next, 1);
@@ -249,7 +249,7 @@ mod tests {
         assert_eq!(panel.next, 0);
         assert!((panel.b[0] - bx).abs() < 0.5, "{:?}", panel.b);
         let before = panel.a;
-        let miss = plane.to_world(solidcore_record::Vec2::new(c.center.x + 500.0, c.center.y));
+        let miss = plane.to_world(sketcore_record::Vec2::new(c.center.x + 500.0, c.center.y));
         if let Some(sm) = proj.to_screen(miss) {
             assert!(!super::click(&mut h.app, &proj, sm));
             assert_eq!(h.app.tree.canvas_panel.as_ref().unwrap().a, before);

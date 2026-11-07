@@ -7,7 +7,7 @@ use sketcraft_geom::prelude::*;
 use std::collections::{BTreeMap, BTreeSet};
 
 use serde_json::{Value, json};
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 use sketcraft_doc::expr::{self, Kind};
 use sketcraft_doc::joints::cam::{self, Cam, CamProfile, Follower};
 use sketcraft_doc::joints::{self, Coupling, Joint, JointExprs, JointKind, JointOrigin, MotionLink, NamedOrigin, Size, Snap, XRef};

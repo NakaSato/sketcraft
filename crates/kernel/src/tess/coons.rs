@@ -4,7 +4,7 @@
 //! A blend that folds (a strongly non-convex boundary) is refused, and the face goes to the
 //! constrained Delaunay path.
 
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 use sketcraft_geom::prelude::*;
 
 /// Smallest turn (radians) of the boundary at a corner, in the tolerance metric.

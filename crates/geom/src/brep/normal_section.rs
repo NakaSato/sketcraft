@@ -19,7 +19,7 @@
 
 use crate::prelude::*;
 use crate::tess::partials::{MAX_PARTIAL_ORDER, Partials, orders};
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 
 /// Taylor coefficients in `x` up to the fourth power (index = power).
 type Series<T> = [T; MAX_PARTIAL_ORDER + 1];
@@ -119,7 +119,7 @@ fn factorial(n: usize) -> f64 {
 mod tests {
     use super::*;
     use crate::brep::eval::SurfaceEval;
-    use solidcore_record::brep::{Frame, Surface};
+    use sketcore_record::brep::{Frame, Surface};
 
     fn frame() -> Frame {
         Frame { origin: [1., 2., 3.], x_axis: [0., 1., 0.], y_axis: [0., 0., 1.] }

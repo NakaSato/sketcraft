@@ -46,7 +46,7 @@ impl GroundAo {
             return false;
         }
         let cam = sketcraft_render::Camera { up: self.up, ..Default::default() };
-        cam.to_frame(solidcore_record::Vec3::new(f64::from(back[0]), f64::from(back[1]), f64::from(back[2]))).z > 0.0
+        cam.to_frame(sketcore_record::Vec3::new(f64::from(back[0]), f64::from(back[1]), f64::from(back[2]))).z > 0.0
     }
 
     pub fn new(bounds: sketcraft_geom::Aabb3, height: f64, up: sketcraft_render::UpAxis, radius: f32) -> Option<Self> {
@@ -64,7 +64,7 @@ impl GroundAo {
 
     /// Cover the preview plus the current frame's sampling margin. Invalid radii draw nothing.
     pub fn vertices_with_radius(&self, preview: Option<sketcraft_geom::Aabb3>, radius: f32) -> Vec<u8> {
-        use solidcore_record::Vec3;
+        use sketcore_record::Vec3;
         if !radius.is_finite() || radius <= 0.0 {
             return Vec::new();
         }
@@ -376,7 +376,7 @@ mod tests {
 
     #[test]
     fn receiver_visibility_follows_the_camera_side_in_both_up_axes() {
-        use solidcore_record::Vec3;
+        use sketcore_record::Vec3;
         let bounds = sketcraft_geom::Aabb3 { min: Vec3::ZERO, max: Vec3::new(3.0, 4.0, 12.0) };
         for up in [sketcraft_render::UpAxis::Y, sketcraft_render::UpAxis::Z] {
             let cam = sketcraft_render::Camera { up, ..Default::default() };
@@ -390,7 +390,7 @@ mod tests {
 
     #[test]
     fn a_growing_preview_keeps_the_current_sampling_margin_at_the_fixed_ground_height() {
-        use solidcore_record::Vec3;
+        use sketcore_record::Vec3;
         use sketcraft_geom::Aabb3;
         let bounds = Aabb3 { min: Vec3::ZERO, max: Vec3::new(3.0, 4.0, 12.0) };
         let ground = GroundAo::new(bounds, -0.014, sketcraft_render::UpAxis::Z, 1.0).unwrap();

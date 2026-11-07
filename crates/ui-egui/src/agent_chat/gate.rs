@@ -40,27 +40,8 @@ const FILE_KEYS: &[&str] = &["file", "files", "dir", "folder", "out", "output", 
 const AMBIGUOUS_KEYS: &[&str] = &["path", "paths", "source"];
 
 /// File extensions that make a bare word a file name.
-const FILE_EXTENSIONS: &[&str] = &[
-    "sketcraft",
-    "json",
-    "csv",
-    "step",
-    "stp",
-    "iges",
-    "igs",
-    "stl",
-    "3mf",
-    "obj",
-    "dxf",
-    "svg",
-    "png",
-    "jpg",
-    "jpeg",
-    "urdf",
-    "txt",
-    "py",
-    "toml",
-];
+const FILE_EXTENSIONS: &[&str] =
+    &["sketcraft", "json", "csv", "step", "stp", "iges", "igs", "stl", "3mf", "obj", "dxf", "svg", "png", "jpg", "jpeg", "urdf", "txt", "py", "toml"];
 
 /// Commands that only read (not counted as changes).
 fn reads_only(id: &str) -> bool {

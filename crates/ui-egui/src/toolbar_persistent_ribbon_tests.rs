@@ -218,10 +218,7 @@ fn persistent_grid_deferred_paint_retains_partial_and_offscreen_scroll_clips() {
             for clipped in &output.shapes {
                 let mut drawn = Vec::new();
                 shapes(&clipped.shape, &mut drawn);
-                if drawn
-                    .iter()
-                    .any(|shape| matches!(shape, egui::Shape::Rect(rect) if rect.rect == cell && rect.fill == Tokens::get().selected_bg))
-                {
+                if drawn.iter().any(|shape| matches!(shape, egui::Shape::Rect(rect) if rect.rect == cell && rect.fill == Tokens::get().selected_bg)) {
                     backgrounds.push(clipped.clip_rect);
                 }
             }

@@ -23,7 +23,7 @@ use std::hash::{Hash, Hasher};
 
 use gltf::accessor::{DataType, Dimensions};
 use gltf::mesh::Mode;
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 use sketcraft_doc::appearance::Look;
 use sketcraft_doc::{Mat, MeshData, mat_mul};
 
@@ -857,9 +857,7 @@ fn look_of(m: &gltf::Material<'_>) -> Look {
     let name = m.name().map(clean_name).filter(|n| !n.is_empty()).unwrap_or_else(|| "glTF material".into());
     let finite = |v: f32, d: f64| if v.is_finite() { f64::from(v).clamp(0.0, 1.0) } else { d };
     let pbr = (opacity >= 1.0)
-        .then(|| {
-            sketcraft_doc::pbr_appearance::PbrParameters::new(finite(pbr.metallic_factor(), 1.0), finite(pbr.roughness_factor(), 1.0), 1.5).ok()
-        })
+        .then(|| sketcraft_doc::pbr_appearance::PbrParameters::new(finite(pbr.metallic_factor(), 1.0), finite(pbr.roughness_factor(), 1.0), 1.5).ok())
         .flatten();
     Look { name, color, opacity, pbr }
 }

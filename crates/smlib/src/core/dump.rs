@@ -1,4 +1,4 @@
-//! What a failing solidcore call leaves behind, and which one is running: `smlib_set_dump_dir` and
+//! What a failing sketcore call leaves behind, and which one is running: `smlib_set_dump_dir` and
 //! `smlib_current_call` for this kernel. While a folder is set, a call that fails leaves its B-rep
 //! inputs in it: `<n>-<call>.txt`, what failed, and `<n>-<call>-<input>.smb`, each input as a
 //! binary `.smb`, which `Brep::read` reads back. The inputs are the caller's bodies, which it keeps
@@ -9,8 +9,8 @@ use std::path::PathBuf;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Mutex, PoisonError};
 
-use solidcore::kernel::Kernel;
-use solidcore::topology::Brep;
+use sketcore::kernel::Kernel;
+use sketcore::topology::Brep;
 
 use super::Body;
 use crate::{Error, Result};
@@ -96,7 +96,7 @@ plain!(
     Vec<u8>,
     Vec<[f64; 3]>,
     Brep,
-    solidcore::geom::vector3d::Point3,
+    sketcore::geom::vector3d::Point3,
     crate::history::Raw,
     crate::MassProperties,
     Vec<crate::trace::Pick>

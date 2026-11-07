@@ -75,7 +75,7 @@ fn construction_angle_accepts_inline_value_and_undo_is_one_step() {
     dim.locked = true;
     dim.value = "30 deg".into();
     let mut tool = h.app.tool.take().unwrap();
-    super::place_point(&mut h.app, &mut tool, (solidcore_record::Vec2::new(15., 15.), None));
+    super::place_point(&mut h.app, &mut tool, (sketcore_record::Vec2::new(15., 15.), None));
     let sid = h.app.session.active_sketch.unwrap();
     let sk = h.app.session.doc.sketch(sid).unwrap();
     let curve = sk.curves.last().unwrap();
@@ -183,9 +183,9 @@ fn a_typed_length_makes_two_clicks_draw_a_dimensioned_segment() {
         assert!(!curve.infinite && curve.construction, "{id}: {curve:?}");
         let CurveKind::Line { a, b } = curve.kind else { panic!("{id}: a line") };
         let (a, b) = (sk.point(a).unwrap(), sk.point(b).unwrap());
-        assert!(a.dist(solidcore_record::Vec2::new(start[0], start[1])) < 1e-6, "{id}: starts at the snapped point {a:?}");
+        assert!(a.dist(sketcore_record::Vec2::new(start[0], start[1])) < 1e-6, "{id}: starts at the snapped point {a:?}");
         assert!((a.dist(b) - 8.0).abs() < 1e-6, "{id}: {a:?} {b:?}");
-        let s = solidcore_record::Vec2::new(side[0], side[1]);
+        let s = sketcore_record::Vec2::new(side[0], side[1]);
         assert!((b - a).dot(s - a) > 0.0, "{id}: runs towards the side clicked");
         assert!(sk.constraints.iter().any(|c| matches!(c.kind, sketcraft_engine::sketch::ConstraintKind::Length { .. })), "{id}");
         let tool = h.app.tool.as_ref().unwrap();

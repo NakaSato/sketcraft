@@ -10,7 +10,7 @@
 //! size), and the decoder itself runs under the same limit.
 
 use serde_json::{Value, json};
-use solidcore_record::Vec2;
+use sketcore_record::Vec2;
 use sketcraft_doc::canvas::{Canvas, base64_decode, image_info};
 use sketcraft_geom::prelude::*;
 use sketcraft_io::Geom2;

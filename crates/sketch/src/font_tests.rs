@@ -5,7 +5,7 @@
 use sketcraft_geom::prelude::*;
 use std::path::PathBuf;
 
-use solidcore_record::Vec2;
+use sketcore_record::Vec2;
 
 use crate::fonts::find_family_in;
 use crate::tests::v;

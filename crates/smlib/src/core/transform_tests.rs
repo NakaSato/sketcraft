@@ -1,4 +1,4 @@
-//! Copies and affine transforms on solidcore, against closed forms: every result keeps its counts,
+//! Copies and affine transforms on sketcore, against closed forms: every result keeps its counts,
 //! its volume scales by the matrix's |det|, its bounds are the moved box's, and it exports to a
 //! record that validates.
 
@@ -110,7 +110,7 @@ struct Measured {
 
 type Got = std::result::Result<Measured, Error>;
 
-fn kinds(rec: &solidcore_record::brep::Brep) -> BTreeMap<String, usize> {
+fn kinds(rec: &sketcore_record::brep::Brep) -> BTreeMap<String, usize> {
     let mut out = BTreeMap::new();
     for f in &rec.faces {
         let v = serde_json::to_value(&f.surface).unwrap();
@@ -164,14 +164,14 @@ fn judge(name: &str, who: &str, got: Got) -> Got {
     got
 }
 
-fn solidcore_case(name: &str) -> Got {
+fn sketcore_case(name: &str) -> Got {
     let c = case(name);
     let got = transform(&c.shape.core(), &c.matrix).map(|b| {
         let (rec, _) = native(&to_arrays(&b).unwrap()).unwrap_or_else(|e| panic!("{name}: record: {e:?}"));
         sketcraft_geom::brep::check::validate(&rec).unwrap_or_else(|e| panic!("{name}: record: {e}"));
         Measured { volume: volume(&b, 1e-8).unwrap(), bounds: bounds(&b).unwrap(), counts: counts(&b).unwrap(), kinds: kinds(&rec) }
     });
-    judge(name, "solidcore", got)
+    judge(name, "sketcore", got)
 }
 
 macro_rules! cases {
@@ -179,8 +179,8 @@ macro_rules! cases {
         mod $m {
             #[test]
             $(#[$ign])?
-            fn solidcore_matches_the_closed_form() {
-                let _ = super::solidcore_case(stringify!($m));
+            fn sketcore_matches_the_closed_form() {
+                let _ = super::sketcore_case(stringify!($m));
             }
         }
     )*};

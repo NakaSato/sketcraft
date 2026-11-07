@@ -42,7 +42,7 @@ cargo test --release -p sketcraft-sketch --lib rounds_and_tangents_without_the_s
 
 ## Rules
 
-- May depend on `sketcraft-geom` only (plus `solidcore-record`). Not on the kernel, doc or UI.
+- May depend on `sketcraft-geom` only (plus `sketcore-record`). Not on the kernel, doc or UI.
 - No egui, no `unsafe`. The crate root denies `unwrap`/`expect`/`panic!`.
 - Sketch input is hostile: respect the `MAX_*` caps, check finite coordinates within `MAX_COORD`.
   See `skills/sketcraft-crash-safety/SKILL.md`.

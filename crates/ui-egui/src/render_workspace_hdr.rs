@@ -4,7 +4,7 @@ use serde_json::{Value, json};
 use sketcraft_engine::doc::render_resources::HdrId;
 
 use super::{ImageMethod, cpu, studio};
-use crate::{SolveApp, ui_kit};
+use crate::{SketApp, ui_kit};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(super) enum Target {
@@ -58,14 +58,14 @@ impl Input {
     }
 }
 
-pub(super) fn input(app: &SolveApp, target: Target) -> &Input {
+pub(super) fn input(app: &SketApp, target: Target) -> &Input {
     match target {
         Target::Cpu => &app.render_workspace.view.cpu.hdr,
         Target::Gpu => &app.render_workspace.view.studio.hdr,
     }
 }
 
-fn set_input(app: &mut SolveApp, target: Target, input: Input) {
+fn set_input(app: &mut SketApp, target: Target, input: Input) {
     match target {
         Target::Cpu => {
             app.render_workspace.view.cpu.hdr = input;
@@ -76,7 +76,7 @@ fn set_input(app: &mut SolveApp, target: Target, input: Input) {
     app.render_workspace.view.dirty = true;
 }
 
-pub(super) fn active(app: &SolveApp) -> Option<Target> {
+pub(super) fn active(app: &SketApp) -> Option<Target> {
     let view = &app.render_workspace.view;
     match view.method {
         ImageMethod::CpuRaytrace if view.cpu.environment == cpu::Environment::Hdr => Some(Target::Cpu),
@@ -90,7 +90,7 @@ fn valid_path(path: &str) -> bool {
 }
 
 /// No host is consulted and no document mutation occurs. A failed inspection keeps the input.
-pub(super) fn inspect(app: &mut SolveApp, target: Target, path: String) -> Result<(), String> {
+pub(super) fn inspect(app: &mut SketApp, target: Target, path: String) -> Result<(), String> {
     if !valid_path(&path) {
         return Err(app.tr("render.studio_hdr_required").to_string());
     }
@@ -102,7 +102,7 @@ pub(super) fn inspect(app: &mut SolveApp, target: Target, path: String) -> Resul
 
 /// The picker belongs to this document revision, setup, method and input selection.
 /// Cancelling or answering after any of those changed cannot replace a newer selection.
-pub(super) fn pick(app: &mut SolveApp, target: Target) {
+pub(super) fn pick(app: &mut SketApp, target: Target) {
     let document = std::sync::Arc::downgrade(&app.session.doc);
     let revision = app.session.revision;
     let method = app.render_workspace.view.method;
@@ -130,7 +130,7 @@ pub(super) fn pick(app: &mut SolveApp, target: Target) {
 
 /// Runtime requests use the same expected digest in Check and Start. Embedded resources
 /// remain usable with temporary body bindings without ever reconstructing an external path.
-pub(super) fn request(app: &SolveApp, target: Target) -> Result<Value, String> {
+pub(super) fn request(app: &SketApp, target: Target) -> Result<Value, String> {
     match input(app, target) {
         Input::FileCaptured { path, metadata } if valid_path(path) => {
             let mut value = json!({"path":path,"expected_sha256":metadata.sha256});
@@ -153,7 +153,7 @@ pub(super) fn request(app: &SolveApp, target: Target) -> Result<Value, String> {
     }
 }
 
-pub(super) fn metadata(app: &SolveApp, target: Target) -> Option<Metadata> {
+pub(super) fn metadata(app: &SketApp, target: Target) -> Option<Metadata> {
     match input(app, target) {
         Input::FileCaptured { metadata, .. } => Some(*metadata),
         Input::EmbeddedResource { resource } => {
@@ -165,7 +165,7 @@ pub(super) fn metadata(app: &SolveApp, target: Target) -> Option<Metadata> {
     }
 }
 
-pub(super) fn controls(app: &mut SolveApp, ui: &mut egui::Ui, target: Target) {
+pub(super) fn controls(app: &mut SketApp, ui: &mut egui::Ui, target: Target) {
     if input(app, target).embedded() {
         ui_kit::text(ui, app.tr("render.hdr_embedded_help"), ui_kit::Text::Note("render.hdr_embedded_help"));
         if ui_kit::button(ui, app.tr("render.environment.choose"), ui_kit::Button::Normal).clicked() {

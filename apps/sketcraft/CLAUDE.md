@@ -1,9 +1,9 @@
 # CLAUDE.md — sketcraft (desktop app)
 
 The desktop binary for Windows, macOS and Linux. It starts eframe with the shared
-`sketcraft_ui_egui::SolveApp` and adds what only a native host has: the window and graphics
-backend choice, native menus (macOS), the loopback control server, crash capture, 3D mouse
-readers, window placement and the settings writer. Apps are exempt from `cargo xtask layers`.
+`sketcraft_ui_egui::SketApp` and adds what only a native host has: the window and graphics
+backend choice, native menus (macOS), the loopback control server, crash capture,
+window placement and the settings writer. Apps are exempt from `cargo xtask layers`.
 See the root CLAUDE.md and AGENTS.md.
 
 ## Commands
@@ -28,9 +28,6 @@ Driving the running app: `skills/sketcraft-agent-tools/SKILL.md`.
 - `src/startup.rs`: getting the window open whatever state settings or the GPU are in (checks
   eframe's `app.ron` with `ron`).
 - `src/control_server.rs`: loopback JSON-lines control server. Requests go to `sketcraft_ui_egui::control`.
-- `src/nav_bridge.rs`: loopback bridge that lets a device's own driver program move the view.
-- `src/space_mouse.rs` + `src/space_mouse/`: 3D mouse readers (`hidraw.rs`, `spacenavd.rs` on Linux,
-  `windows_hid.rs` on Windows, hidapi; macOS also uses `sketcraft-3dx-client`).
 - `src/device_lost.rs`, `src/window_fit.rs`, `src/come_forward.rs`: GPU loss, keeping the window
   on screen, raising the window on close prompts.
 - Windows: `native_crash.rs`, `native_frame.rs`. macOS: `native_crash_macos.rs`, `native_menu.rs`,
@@ -47,8 +44,8 @@ Driving the running app: `skills/sketcraft-agent-tools/SKILL.md`.
 
 - Keep the app thin: behaviour belongs in commands (`crates/engine`) and UI in `crates/ui-egui`.
 - `unsafe_code` is `deny`, not `forbid`. Only these files may `#[allow(unsafe_code)]`:
-  `open_documents.rs`, `native_crash.rs`, `native_crash_macos.rs`, `native_frame.rs`,
-  `space_mouse/windows_hid.rs`. Add no new unsafe without a case that has no safe API
+  `open_documents.rs`, `native_crash.rs`, `native_crash_macos.rs`, `native_frame.rs`.
+  Add no new unsafe without a case that has no safe API
   (`skills/sketcraft-crash-safety/SKILL.md`). `Cargo.toml` copies the workspace lints: keep them in sync.
 - Gate platform code with `cfg(target_os = ...)`; every platform must still build.
 - Preferences must survive an immediate restart: change `Prefs` so `PrefsWriter::store` writes

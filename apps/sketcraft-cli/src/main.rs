@@ -66,7 +66,8 @@ const USAGE_RUN: &str = "  sketcraft-cli run <script.json|design.sc|part.step> [
 /// `eval`'s lines in the usage.
 const USAGE_EVAL: &str = "  sketcraft-cli eval <script.json|design.sc|part.step> [--in design.sc|part.step] [--json-out FILE] [--profile] [--profile-out trace.json] [--validation each_step|each_feature|off]     (alias: inspect)\n  sketcraft-cli eval --in <script.json|design.sc|part.step> [--json-out FILE]\n      (with both inputs, runs the positional script on --in before measuring; does not automatically save the modified design)\n      (--json-out FILE writes the JSON that run (with --results, else the measurement) and eval print to FILE instead of stdout,\n       as plain UTF-8: a shell's > can re-encode it, e.g. Windows PowerShell adds a byte-order mark)\n      (--profile, --profile-out and --validation as for run)\n";
 /// `script`'s lines in the usage.
-const USAGE_SCRIPT: &str = "  sketcraft-cli script <design.sc|script.json> [--out script.json]\n      (the design's history as a command script that eval and run replay)\n";
+const USAGE_SCRIPT: &str =
+    "  sketcraft-cli script <design.sc|script.json> [--out script.json]\n      (the design's history as a command script that eval and run replay)\n";
 /// `bench-open`'s lines in the usage.
 const USAGE_BENCH_OPEN: &str = "  sketcraft-cli bench-open <design.sc | part.step> [--parse-only] [--save OUT.sc] [--display LEVEL [--edit NAME EXPR]] [--ops script.json] [--profile] [--profile-out trace.json]\n      (--profile and --profile-out as for run)\n      (--ops: after opening, run each command of the script and undo it, timing the command, the\n       evaluations it caused and the view it leaves: placing and meshing what changed)\n";
 /// `bench-agent`'s lines in the usage.
@@ -86,7 +87,7 @@ const USAGE_RECIPE: &str = "  sketcraft-cli recipe <recipe.json>\n";
 /// `oracle`'s lines in the usage.
 const USAGE_ORACLE: &str = "  sketcraft-cli oracle <case-dir>... [--json]\n";
 /// `kernel-cases`'s lines in the usage.
-const USAGE_KERNEL_CASES: &str = "  sketcraft-cli kernel-cases <case-dir>... [--json] [--dumps=DIR] [--export=DIR] [--validation=each_step|each_feature|off]\n      (the kernel regression rig, tests/kernel-cases, on SMLib; --dumps: each case's\n       failing SMLib calls leave their inputs for replay in DIR/<area>-<case>; --export: each case's\n       kernel operations, input records and expected values for solidcore's rig, in DIR/<area>/<case>.json; --validation: when SMLib's\n       full check runs (diagnostics.validation), default each_feature)\n";
+const USAGE_KERNEL_CASES: &str = "  sketcraft-cli kernel-cases <case-dir>... [--json] [--dumps=DIR] [--export=DIR] [--validation=each_step|each_feature|off]\n      (the kernel regression rig, tests/kernel-cases, on SMLib; --dumps: each case's\n       failing SMLib calls leave their inputs for replay in DIR/<area>-<case>; --export: each case's\n       kernel operations, input records and expected values for sketcore's rig, in DIR/<area>/<case>.json; --validation: when SMLib's\n       full check runs (diagnostics.validation), default each_feature)\n";
 /// `fuzz`'s lines in the usage.
 const USAGE_FUZZ: &str =
     "  sketcraft-cli fuzz [--from N] [--count N] [--jobs J] [--timeout S] [--steps N] [--minimise] [--out DIR] [--report FILE]\n";
@@ -374,9 +375,7 @@ fn parse_param_check(cmd: &str, args: &[String]) -> Result<sketcraft_engine::sch
     match flag(args, "--param-check") {
         None if args.iter().any(|a| a == "--param-check") => Err(format!("{cmd}: --param-check wants off, warn or strict")),
         None => Ok(sketcraft_engine::schema::ParamCheck::Off),
-        Some(v) => {
-            sketcraft_engine::schema::ParamCheck::parse(v).ok_or_else(|| format!("{cmd}: --param-check wants off, warn or strict, not `{v}`"))
-        }
+        Some(v) => sketcraft_engine::schema::ParamCheck::parse(v).ok_or_else(|| format!("{cmd}: --param-check wants off, warn or strict, not `{v}`")),
     }
 }
 

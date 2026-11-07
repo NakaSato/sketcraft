@@ -365,7 +365,7 @@ mod tests {
     #![allow(clippy::unwrap_used, clippy::panic)]
     use super::*;
     use serde_json::json;
-    use solidcore_record::{Plane, Vec2};
+    use sketcore_record::{Plane, Vec2};
     use sketcraft_sketch::{Sketch, find_profiles, solve};
 
     fn rounded_source(sketch: &mut Sketch, radius: f64) -> Vec<(String, bool)> {

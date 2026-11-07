@@ -127,10 +127,7 @@ pub struct NewerDrawing {
 impl NewerDrawing {
     /// What to tell the user.
     pub fn notice(&self) -> String {
-        format!(
-            "Saved by a newer SketCraft (format {}, this version reads up to {}). If something's missing, update.",
-            self.format, self.reads_up_to
-        )
+        format!("Saved by a newer SketCraft (format {}, this version reads up to {}). If something's missing, update.", self.format, self.reads_up_to)
     }
 
     fn restore(&self, value: &mut Value) {

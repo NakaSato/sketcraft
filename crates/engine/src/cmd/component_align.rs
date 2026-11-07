@@ -3,7 +3,7 @@
 //! without modifying shared component geometry across other instances.
 
 use serde_json::{Value, json};
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 use sketcraft_doc::{IDENTITY, mat_inverse, mat_mul, rigid};
 use sketcraft_geom::prelude::*;
 

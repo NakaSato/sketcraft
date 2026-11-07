@@ -13,12 +13,12 @@ use std::cell::RefCell;
 use std::sync::Arc;
 
 use egui::{Pos2, Stroke};
-use solidcore_record::{Plane, Vec2, Vec3};
+use sketcore_record::{Plane, Vec2, Vec3};
 use sketcraft_engine::Sel;
 use sketcraft_engine::doc::ModelState;
 use sketcraft_engine::geom::{Mesh, prelude::*};
 
-use crate::SolveApp;
+use crate::SketApp;
 use crate::dialogs::{Dialog, Kind};
 use crate::theme::Tokens;
 use crate::viewport::Proj;
@@ -130,7 +130,7 @@ fn bounds_2d(plane: &Plane, points: impl IntoIterator<Item = Vec3>) -> Option<(V
 }
 
 /// What the extrude starts from, as world points: its profiles' outlines, or its faces' points.
-fn footprint(app: &SolveApp, d: &Dialog, faces: &[FlatFace]) -> Vec<Vec3> {
+fn footprint(app: &SketApp, d: &Dialog, faces: &[FlatFace]) -> Vec<Vec3> {
     let Ok(st) = app.session.world_state() else { return Vec::new() };
     let mut out = Vec::new();
     for item in d.inputs.first().map(|i| i.items.as_slice()).unwrap_or_default() {
@@ -154,7 +154,7 @@ fn footprint(app: &SolveApp, d: &Dialog, faces: &[FlatFace]) -> Vec<Vec3> {
 
 /// The faces the open extrude's arrow (from `base` along `n`) can stop at: flat faces of shown
 /// bodies, parallel to the arrow, off the base's own plane, over the footprint.
-pub(crate) fn stops(app: &SolveApp, d: &Dialog, base: Vec3, n: Vec3) -> Vec<Stop> {
+pub(crate) fn stops(app: &SketApp, d: &Dialog, base: Vec3, n: Vec3) -> Vec<Stop> {
     if !app.preferences.extrude_arrow_face_stops || !matches!(d.kind, Kind::Extrude { .. }) {
         return Vec::new();
     }
@@ -194,7 +194,7 @@ pub(crate) fn nearest<'a>(proj: &Proj, base: Vec3, n: Vec3, along: f64, stops: &
 }
 
 /// Outlines the face the arrow stopped at, as a hovered face's edges are drawn.
-pub(crate) fn outline(app: &SolveApp, painter: &egui::Painter, proj: &Proj, stop: &Stop) {
+pub(crate) fn outline(app: &SketApp, painter: &egui::Painter, proj: &Proj, stop: &Stop) {
     let Ok(st) = app.session.world_state() else { return };
     let Some(b) = st.body(&stop.body) else { return };
     let m = b.mesh();

@@ -1113,8 +1113,8 @@ fn the_sections_messages_are_in_every_catalog() {
     }
 }
 
-fn app() -> crate::SolveApp {
-    crate::SolveApp::new(sketcraft_engine::Session::default(), crate::Services::default())
+fn app() -> crate::SketApp {
+    crate::SketApp::new(sketcraft_engine::Session::default(), crate::Services::default())
 }
 
 #[test]
@@ -1314,7 +1314,7 @@ fn random_values_never_panic_and_only_the_four_ids_are_taken() {
 #[test]
 fn cancel_puts_the_mode_back_ok_keeps_it_and_restore_defaults_resets_interface_only() {
     let mut app = app();
-    let control = |app: &mut crate::SolveApp, p: serde_json::Value| crate::prefs::control(app, &p).unwrap();
+    let control = |app: &mut crate::SketApp, p: serde_json::Value| crate::prefs::control(app, &p).unwrap();
     control(&mut app, json!({"open": "Interface"}));
     control(&mut app, json!({"color_vision": "protan"}));
     assert_eq!(app.preferences.color_vision, ColorVision::Protan);

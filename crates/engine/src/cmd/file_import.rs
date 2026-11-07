@@ -10,7 +10,7 @@ use std::collections::HashMap;
 use std::hash::{Hash, Hasher};
 
 use serde_json::{Value, json};
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 use sketcraft_doc::joints::{Joint, JointKind, JointOrigin, Snap};
 use sketcraft_doc::kernel::{StepImport, StepNode};
 use sketcraft_doc::{FeatureKind, IDENTITY, Mat};

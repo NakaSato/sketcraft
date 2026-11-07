@@ -36,7 +36,7 @@ use crate::Aabb2;
 use crate::paper::MAX_LINE_MM;
 /// The longest side a custom sheet may have, in millimetres: the paper scene's limit.
 pub use crate::paper::MAX_SIDE_MM;
-use solidcore_record::Vec2;
+use sketcore_record::Vec2;
 
 /// The most fields an equal division may cut each way.
 pub const MAX_EQUAL_FIELDS: u32 = 200;

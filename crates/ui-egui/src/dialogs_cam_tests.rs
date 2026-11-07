@@ -1,5 +1,5 @@
 use serde_json::json;
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 use sketcraft_engine::Session;
 use sketcraft_engine::geom::prelude::*;
 
@@ -10,7 +10,7 @@ use crate::dialogs::{Kind, apply_commands, preview_commands};
 /// A grounded base, a cam (a disc of radius 30 about (10, 0)) turning on a revolute joint about +Z
 /// through the origin, a tappet on a slider along +X, its end on the cam, and a spare part on a
 /// revolute joint of its own.
-fn valve() -> SolveApp {
+fn valve() -> SketApp {
     let mut s = Session::default();
     let mut run = |id: &str, p: Value| s.execute(id, &p).unwrap_or_else(|e| panic!("{id}: {e}"));
     run("component.create", json!({"name": "Base"}));
@@ -30,11 +30,11 @@ fn valve() -> SolveApp {
         let at = |o: &str| json!({"occurrence": o, "point": [0, 0, 2.5], "z": z});
         run("joint.create", json!({"type": kind, "a": at("Base"), "b": at(name), "flip": true, "name": name}));
     }
-    SolveApp::new(s, Services::default())
+    SketApp::new(s, Services::default())
 }
 
 /// A pick of the mesh edge nearest a point.
-fn edge(app: &SolveApp, p: Vec3) -> Sel {
+fn edge(app: &SketApp, p: Vec3) -> Sel {
     let st = app.session.world_state().unwrap();
     let mut best: Option<(f64, Sel)> = None;
     for b in &st.bodies {
@@ -48,7 +48,7 @@ fn edge(app: &SolveApp, p: Vec3) -> Sel {
     best.map(|x| x.1).unwrap()
 }
 
-fn joint(app: &SolveApp, name: &str) -> u64 {
+fn joint(app: &SketApp, name: &str) -> u64 {
     app.session.doc.assembly.joints.iter().find(|j| j.name == name).map(|j| j.id).unwrap_or(0)
 }
 

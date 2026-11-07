@@ -10,7 +10,7 @@ use crate::ui_kit::BackingTooltipExt as _;
 use serde_json::{Value, json};
 use sketcraft_engine::Sel;
 
-use crate::SolveApp;
+use crate::SketApp;
 
 /// Items summed into a total, at most.
 const MAX_SUMMED: usize = 200;
@@ -33,13 +33,13 @@ struct Key {
 
 impl QuickMeasure {
     /// The readout as shown: each line a label and its value.
-    pub(crate) fn lines(&self, app: &SolveApp) -> Vec<(String, String)> {
+    pub(crate) fn lines(&self, app: &SketApp) -> Vec<(String, String)> {
         self.result.as_ref().map(|r| lines(app, r)).unwrap_or_default()
     }
 }
 
 /// Is the readout wanted at all: the preference, a design shown, no Measure tool saying the same.
-fn wanted(app: &SolveApp) -> bool {
+fn wanted(app: &SketApp) -> bool {
     app.preferences.quick_measure
         && !app.home.open
         && !crate::render_workspace::active(app)
@@ -62,7 +62,7 @@ fn measurable(sel: &Sel) -> bool {
 }
 
 /// Each frame: start measuring a selection that changed, take a measurement that is in.
-pub(crate) fn poll(app: &mut SolveApp, ctx: &egui::Context) {
+pub(crate) fn poll(app: &mut SketApp, ctx: &egui::Context) {
     let selection: Vec<Sel> = app.session.selection.iter().filter(|s| measurable(s)).cloned().collect();
     if !wanted(app) || selection.is_empty() || selection.len() != app.session.selection.len() {
         app.quick_measure = QuickMeasure::default();
@@ -85,7 +85,7 @@ pub(crate) fn poll(app: &mut SolveApp, ctx: &egui::Context) {
 }
 
 /// Measure `selection` on a copy of the session, off the window thread.
-fn start(app: &SolveApp, selection: &[Sel]) -> Option<std::sync::mpsc::Receiver<Option<Value>>> {
+fn start(app: &SketApp, selection: &[Sel]) -> Option<std::sync::mpsc::Receiver<Option<Value>>> {
     let session = app.session.scratch();
     let selection = selection.to_vec();
     let (tx, rx) = std::sync::mpsc::channel();
@@ -129,7 +129,7 @@ fn measure(session: &sketcraft_engine::Session, selection: &[Sel]) -> Option<Val
 /// One measured item's rows, each "label  value": Ø, R and the length of a round one (its
 /// circumference, or an arc's length and angle), a slot's sizes, a straight edge's length, a face's
 /// area, a point's position. The Measure tool lists the same.
-pub(crate) fn item_lines(app: &SolveApp, it: &Value) -> Vec<String> {
+pub(crate) fn item_lines(app: &SketApp, it: &Value) -> Vec<String> {
     let tr = crate::i18n::tr;
     let mm = |v: &Value| v.as_f64().map(|x| crate::prefs::show_mm(app, x, 1)).unwrap_or_default();
     let mut lines: Vec<String> = Vec::new();
@@ -185,7 +185,7 @@ pub(crate) fn centre_distance_label(r: &Value) -> &'static str {
 }
 
 /// The readout's rows for a measurement.
-fn lines(app: &SolveApp, r: &Value) -> Vec<(String, String)> {
+fn lines(app: &SketApp, r: &Value) -> Vec<(String, String)> {
     let split = |line: String| match line.split_once("  ") {
         Some((label, value)) => (label.to_string(), value.to_string()),
         None => (String::new(), line),
@@ -218,7 +218,7 @@ fn lines(app: &SolveApp, r: &Value) -> Vec<(String, String)> {
 /// The readout in the bottom right corner of the view, above History, kept clear of `taken` (the
 /// panels and cards over the view, the navigation bar): left of one standing along the right edge,
 /// above any other. Returns where it is.
-pub(crate) fn show(app: &mut SolveApp, ui: &egui::Ui, view: egui::Rect, taken: &[egui::Rect]) -> Option<egui::Rect> {
+pub(crate) fn show(app: &mut SketApp, ui: &egui::Ui, view: egui::Rect, taken: &[egui::Rect]) -> Option<egui::Rect> {
     let rows = app.quick_measure.lines(app);
     if rows.is_empty() || !view.is_finite() || !view.is_positive() {
         return None;

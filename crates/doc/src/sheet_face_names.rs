@@ -5,7 +5,7 @@
 //! neighbouring flange), the rim along the bend there, `<flange>:rim.ext0` and `rim.ext1`. A panel is `base` or a flange's tag (`F<feature>.<k>`), so the names
 //! say what each face is and stay with it when sizes change or other flanges come and go.
 
-use solidcore_record::{Plane, Vec2, Vec3};
+use sketcore_record::{Plane, Vec2, Vec3};
 use sketcraft_geom::prelude::*;
 
 use super::SheetBody;

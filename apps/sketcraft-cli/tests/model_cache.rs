@@ -363,8 +363,8 @@ fn a_design_saved_before_names_were_pinned_opens_pinned_and_unchanged() {
     let unpinned = Session::new(doc);
     let design = unpinned.design();
     let saved = unpinned.model.saved(&design).unwrap();
-    let bytes = sketcraft_engine::io::write_design_container_with_cache(&design, sketcraft_engine::io::DesignCompression::Fast, None, Some(&saved))
-        .unwrap();
+    let bytes =
+        sketcraft_engine::io::write_design_container_with_cache(&design, sketcraft_engine::io::DesignCompression::Fast, None, Some(&saved)).unwrap();
     let path = temp("unpinned");
     std::fs::write(&path, &bytes).unwrap();
     let file = path.to_string_lossy().to_string();

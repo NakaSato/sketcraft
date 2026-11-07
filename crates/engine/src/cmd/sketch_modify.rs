@@ -5,7 +5,7 @@ use sketcraft_geom::prelude::*;
 use std::f64::consts::{FRAC_PI_2, PI, TAU};
 
 use serde_json::{Value, json};
-use solidcore_record::{Plane, Vec2};
+use sketcore_record::{Plane, Vec2};
 use sketcraft_doc::ProfileSel;
 use sketcraft_sketch::{ConstraintKind, Curve, CurveKind, Shape, Sketch, Wire, WireSpace, intersections, intersections_within};
 

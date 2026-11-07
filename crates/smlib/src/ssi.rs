@@ -6,16 +6,16 @@
 //! degrees. Each surface's UV domain is SMLib's natural one ([`Surface::domain`]): (u, v) itself
 //! for planes, the parameterisation of SMLib's internal NURBS form for the other analytic kinds.
 
-use solidcore_record::brep as b;
+use sketcore_record::brep as b;
 
 use std::sync::OnceLock;
 
 use crate::{Error, Result};
 
-/// A surface with its UV domain: the description it was made from, from which solidcore makes its
+/// A surface with its UV domain: the description it was made from, from which sketcore makes its
 /// own ([`crate::core::split`]).
 pub struct Surface {
-    /// solidcore's, made when it is first needed.
+    /// sketcore's, made when it is first needed.
     core: OnceLock<Result<crate::core::split::Tool>>,
     spec: Spec,
 }
@@ -82,7 +82,7 @@ fn knots(k: &[f64], n: usize, p: usize) -> bool {
 
 impl Spec {
     /// The checks each of the C API's constructors makes of its arguments, so that a surface is
-    /// refused before solidcore sees it.
+    /// refused before sketcore sees it.
     fn check(&self) -> Result<()> {
         let whole = |r: &[f64; 2]| range(r, -MAX_COORD, MAX_COORD, 2.0 * MAX_COORD);
         let turn = |r: &[f64; 2]| range(r, -360.0, 360.0, 360.0);
@@ -127,7 +127,7 @@ impl Spec {
 }
 
 impl Surface {
-    /// solidcore's surface, made the first time it is needed.
+    /// sketcore's surface, made the first time it is needed.
     fn core(&self) -> Result<&crate::core::split::Tool> {
         self.core.get_or_init(|| crate::stop::unstoppable(|| crate::core::ssi::surface(&self.spec))).as_ref().map_err(Clone::clone)
     }
@@ -204,8 +204,8 @@ impl Surface {
     /// record's own parameters: radians for angles), with the record's parameterisation and
     /// normal. A spline is taken over its whole knot domain. A cone only as a whole turn, widening
     /// along its axis; a revolution not at all ([`Error::Unsupported`]).
-    pub fn from_record(surface: &solidcore_record::brep::Surface, domain: [[f64; 2]; 2]) -> Result<Surface> {
-        use solidcore_record::brep::Surface as S;
+    pub fn from_record(surface: &sketcore_record::brep::Surface, domain: [[f64; 2]; 2]) -> Result<Surface> {
+        use sketcore_record::brep::Surface as S;
         let [u, v] = domain;
         let deg = |r: [f64; 2]| r.map(f64::to_degrees);
         let sub = |a: [f64; 3], b: [f64; 3]| [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
@@ -370,7 +370,7 @@ pub fn intersect(a: &Surface, b: &Surface, method: Method, approx_tol: f64) -> R
 mod tests {
     use super::*;
 
-    /// Refused here, before solidcore sees the surface.
+    /// Refused here, before sketcore sees the surface.
     #[test]
     fn bad_input_is_an_argument_error() {
         let (x, y) = ([1.0, 0.0, 0.0], [0.0, 1.0, 0.0]);

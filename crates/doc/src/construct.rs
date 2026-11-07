@@ -10,7 +10,7 @@ use sketcraft_geom::prelude::*;
 use std::collections::BTreeMap;
 
 use serde::{Deserialize, Serialize};
-use solidcore_record::{Plane, Vec2, Vec3};
+use sketcore_record::{Plane, Vec2, Vec3};
 use sketcraft_kernel::{self as kernel, FaceSurface};
 
 use crate::eval::{ModelBody, ModelState};
@@ -460,7 +460,7 @@ fn path_segs(ctx: &Ctx, g: &GeoRef) -> Result<Vec<kernel::PathSeg>> {
         GeoRef::Edge { at, name } => {
             let (b, i, pts) = edge_pick(ctx.st, *at, name)?;
             let procedural =
-                b.body.record().edges.get(i).is_some_and(|e| matches!(e.parameters(), solidcore_record::brep::Curve::SurfaceIntersection { .. }));
+                b.body.record().edges.get(i).is_some_and(|e| matches!(e.parameters(), sketcore_record::brep::Curve::SurfaceIntersection { .. }));
             if procedural {
                 return Ok(lines(&pts));
             }

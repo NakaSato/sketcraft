@@ -3,7 +3,7 @@ use crate::navigation::NavCaps;
 use crate::navigation_bar::{self, Edge, Idle, Kind, Labels, MenuDisplay, NavigationBar, Position, Size, SlotOptions};
 use crate::navigation_bar_view;
 use crate::ui_kit::BackingTooltipExt as _;
-use crate::{SolveApp, scenario, theme::Tokens, ui_kit};
+use crate::{SketApp, scenario, theme::Tokens, ui_kit};
 use egui::{Rect, Sense, vec2};
 use serde_json::json;
 
@@ -23,7 +23,7 @@ struct Source {
 }
 type Drag = ui_kit::ReorderPayload<Source>;
 
-pub(super) fn show(app: &mut SolveApp, ui: &mut egui::Ui) {
+pub(super) fn show(app: &mut SketApp, ui: &mut egui::Ui) {
     let scroll = app.prefs_window.navbar_scroll;
     let mut state = std::mem::take(&mut app.prefs_window.navbar);
     if state.slots != app.preferences.navigation_bar.slots {
@@ -140,7 +140,7 @@ fn option(ui: &mut egui::Ui, key: &str, selected: &mut usize, options: &[&str], 
     ui_kit::settings_compound_field(ui, label, label, |ui| segment_control(ui, key, selected, options, change));
 }
 
-fn header_actions(app: &mut SolveApp, ui: &mut egui::Ui, state: &mut State) {
+fn header_actions(app: &mut SketApp, ui: &mut egui::Ui, state: &mut State) {
     let t = Tokens::get();
     let label = app.tr("navbar.custom.reset_default");
     let width = ui_kit::ContentWidth::button(ui, label).max(t.control_height);
@@ -174,7 +174,7 @@ fn header_actions(app: &mut SolveApp, ui: &mut egui::Ui, state: &mut State) {
     }
 }
 
-fn preview(app: &mut SolveApp, ui: &mut egui::Ui, state: &mut State, width: f32) {
+fn preview(app: &mut SketApp, ui: &mut egui::Ui, state: &mut State, width: f32) {
     let t = Tokens::get();
     let stage = ui_kit::navigation_stage(ui, width);
     scenario::publish_target("prefs:navbar:stage", stage);
@@ -225,7 +225,7 @@ fn preview(app: &mut SolveApp, ui: &mut egui::Ui, state: &mut State, width: f32)
 }
 
 /// The slot count sits in the stage on the side of the bar facing the middle of the view, aligned with the bar.
-fn slot_count(app: &SolveApp, ui: &mut egui::Ui, stage: Rect, bar: Rect) {
+fn slot_count(app: &SketApp, ui: &mut egui::Ui, stage: Rect, bar: Rect) {
     let t = Tokens::get();
     let view = Tokens::view();
     let text = crate::i18n::format(
@@ -250,7 +250,7 @@ fn slot_count(app: &SolveApp, ui: &mut egui::Ui, stage: Rect, bar: Rect) {
     scenario::publish_rect("prefs:navbar:count", rect);
 }
 
-fn drop_on_preview(app: &mut SolveApp, ui: &mut egui::Ui, state: &mut State, target: Rect, cells: &[(usize, Rect)], marker_y: f32) {
+fn drop_on_preview(app: &mut SketApp, ui: &mut egui::Ui, state: &mut State, target: Rect, cells: &[(usize, Rect)], marker_y: f32) {
     let Some(payload) = egui::DragAndDrop::payload::<Drag>(ui.ctx()) else { return };
     let Some(pointer) = ui.input(|i| i.pointer.interact_pos()) else { return };
     let over = target.contains(pointer) && ui.rect_contains_pointer(target);
@@ -299,7 +299,7 @@ fn drop_on_preview(app: &mut SolveApp, ui: &mut egui::Ui, state: &mut State, tar
     state.notice = result.err();
 }
 
-fn edit(app: &mut SolveApp, state: &mut State, index: usize, action: &str) {
+fn edit(app: &mut SketApp, state: &mut State, index: usize, action: &str) {
     let bar = &mut app.preferences.navigation_bar;
     let result = match action {
         "left" if index > 0 => bar.move_to(index, index - 1).map(|to| state.selected = Some(to)),
@@ -310,7 +310,7 @@ fn edit(app: &mut SolveApp, state: &mut State, index: usize, action: &str) {
     state.notice = result.err();
 }
 
-fn inspector(app: &mut SolveApp, ui: &mut egui::Ui, state: &mut State) {
+fn inspector(app: &mut SketApp, ui: &mut egui::Ui, state: &mut State) {
     let Some((index, slot)) = state
         .selected
         .and_then(|index| app.preferences.navigation_bar.slots.get(index).and_then(|id| navigation_bar::find(id)).map(|slot| (index, slot)))
@@ -348,7 +348,7 @@ pub(super) fn inspector_header_layout(bounds: Rect, remove_width: f32, t: &Token
     (name, buttons, compact)
 }
 
-fn inspector_header(app: &mut SolveApp, ui: &mut egui::Ui, state: &mut State, index: usize, slot: &navigation_bar::Slot) {
+fn inspector_header(app: &mut SketApp, ui: &mut egui::Ui, state: &mut State, index: usize, slot: &navigation_bar::Slot) {
     let t = Tokens::get();
     let remove = app.tr_label(app.tr("navbar.custom.remove"));
     let remove_width = ui.painter().layout_no_wrap(remove.to_owned(), egui::FontId::proportional(t.font_label), t.form_ink).size().x.ceil()
@@ -401,7 +401,7 @@ fn inspector_header(app: &mut SolveApp, ui: &mut egui::Ui, state: &mut State, in
     }
 }
 
-fn available(app: &mut SolveApp, ui: &mut egui::Ui, state: &mut State) {
+fn available(app: &mut SketApp, ui: &mut egui::Ui, state: &mut State) {
     ui.scope(|ui| {
         ui.spacing_mut().item_spacing.y = Tokens::get().space_6;
         let caption = crate::i18n::format("navbar.custom.available", &[("available", app.tr("ui.workspace_available"))]);
@@ -545,7 +545,7 @@ fn anchor_option(bar: &mut NavigationBar, ui: &mut egui::Ui) {
     }
 }
 
-fn appearance(app: &mut SolveApp, ui: &mut egui::Ui) {
+fn appearance(app: &mut SketApp, ui: &mut egui::Ui) {
     let t = Tokens::get();
     let bar = &mut app.preferences.navigation_bar;
     let anchor_size = ui_kit::navigation_anchor_size();

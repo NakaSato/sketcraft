@@ -36,18 +36,14 @@ impl Class {
 /// prefix.
 pub const TABLE: &[(&str, Class)] = &[
     ("geom", Class::Layer(0)),
-    // 3D mouse descriptors and reports (no workspace dependencies; the apps read the device)
-    ("space-mouse", Class::Layer(0)),
     // the derive macros (proc-macro, no workspace dependencies)
     ("derive", Class::Standalone),
-    // the 3Dconnexion driver's client API on macOS (no workspace dependencies)
-    ("3dx-client", Class::Standalone),
     // the profiler: timed spans for every layer, the kernel's calls to commands (no workspace dependencies)
     ("profile", Class::Standalone),
     // the SketchUp reader: vendored C++ parser and its faces (no workspace dependencies)
     ("skp", Class::Standalone),
     ("sketch", Class::Layer(1)),
-    // the B-rep kernel, solidcore (the Rust port of NVIDIA's SMLib, ADR 0002); only the kernel uses it
+    // the B-rep kernel, sketcore (the Rust port of NVIDIA's SMLib, ADR 0002); only the kernel uses it
     ("smlib", Class::Layer(1)),
     // STEP (ISO 10303) exchange structure and geometry, no modelling backend
     ("step", Class::Layer(1)),

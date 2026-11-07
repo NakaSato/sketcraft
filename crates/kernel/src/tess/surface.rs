@@ -7,8 +7,8 @@
 //! record's angle u; the generator's parameter is −v on a line and, on an arc, the rational
 //! parameter of the record's angle v (closed form, [`Arc::param`]).
 
-use solidcore_record::Vec3;
-use solidcore_record::brep::{self, Frame};
+use sketcore_record::Vec3;
+use sketcore_record::brep::{self, Frame};
 use sketcraft_geom::brep::eval::SurfaceEval;
 use sketcraft_geom::prelude::*;
 use sketcraft_geom::tess::{EvalCurve, EvalSurface};

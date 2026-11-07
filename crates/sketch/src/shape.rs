@@ -3,7 +3,7 @@
 use sketcraft_geom::prelude::*;
 use std::f64::consts::TAU;
 
-use solidcore_record::{Seg2, Vec2};
+use sketcore_record::{Seg2, Vec2};
 
 use crate::model::{CurveKind, Sketch};
 

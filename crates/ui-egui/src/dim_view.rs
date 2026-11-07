@@ -21,13 +21,13 @@ use std::sync::Arc;
 
 use egui::{FontId, Pos2, Rect, Shape, Stroke, vec2};
 use serde_json::json;
-use solidcore_record::Vec2;
+use sketcore_record::Vec2;
 use sketcraft_engine::Sel;
 use sketcraft_engine::sketch::{
     ConstraintKind, DimFrame, chain_centres, default_text, default_text_offset, dim_frame, dim_layout_reaching, dim_reach,
 };
 
-use crate::SolveApp;
+use crate::SketApp;
 use crate::theme::Tokens;
 use crate::viewport::Proj;
 
@@ -120,7 +120,7 @@ struct DimensionDraft {
 }
 
 impl DimensionDraft {
-    fn valid(&self, app: &SolveApp) -> bool {
+    fn valid(&self, app: &SketApp) -> bool {
         Arc::ptr_eq(&self.baseline, &app.session.doc)
             && app.session.active_sketch == Some(self.sketch)
             && app.session.active_component == self.component
@@ -138,7 +138,7 @@ impl DimensionDraft {
         ellipse_as_before(self.half_axes, &mut params);
         params
     }
-    fn evaluate(&self, app: &SolveApp, expr: &str) -> Result<sketcraft_engine::Session, String> {
+    fn evaluate(&self, app: &SketApp, expr: &str) -> Result<sketcraft_engine::Session, String> {
         let mut scratch = app.session.scratch();
         let params = self.params(expr);
         let result = scratch.execute("sketch.dimension", &params).map_err(|e| shown_error("sketch.dimension", &e.to_string()))?;
@@ -217,7 +217,7 @@ fn remember_axis(sketch: u64, entities: &[String], params: &serde_json::Value, r
 /// Infer the measured value through the same command as scripts, without creating a real
 /// parameter or an undo entry. Only accepting the editor executes the command on the design.
 /// A driven dimension has no value to accept, so it is added at once.
-pub fn begin_dimension(app: &mut SolveApp, entities: Vec<String>, at: Vec2) -> Result<(), String> {
+pub fn begin_dimension(app: &mut SketApp, entities: Vec<String>, at: Vec2) -> Result<(), String> {
     let (param, expr, draft) = dimension_draft(app, entities, Some(at))?;
     if draft.driven {
         PLACEMENT.with(|preview| *preview.borrow_mut() = None);
@@ -255,7 +255,7 @@ pub fn begin_dimension(app: &mut SolveApp, entities: Vec<String>, at: Vec2) -> R
 /// once (D, click a line, type). The text follows the pointer; a click pins it, Enter places
 /// it. Midpoint pairs and dimensions that would only be driven keep the place-first flow:
 /// the pointer chooses the orientation, and a click places the text before entering a value.
-pub fn begin_live(app: &mut SolveApp, entities: Vec<String>, pointer: Option<Pos2>) -> Result<bool, String> {
+pub fn begin_live(app: &mut SketApp, entities: Vec<String>, pointer: Option<Pos2>) -> Result<bool, String> {
     // The value window opens on placed text (`window`): a window following the pointer could
     // not be reached.
     if window::on(app) {
@@ -298,7 +298,7 @@ pub fn live() -> Option<bool> {
 
 /// A click while the type-first value is open places its text there; the value keeps the
 /// keyboard (and what was typed).
-pub fn pin(app: &SolveApp, at: Vec2) {
+pub fn pin(app: &SketApp, at: Vec2) {
     EDIT.with(|edit| {
         let mut edit = edit.borrow_mut();
         let Some(e) = edit.as_mut() else { return };
@@ -315,7 +315,7 @@ pub fn pin(app: &SolveApp, at: Vec2) {
 /// end up or down the horizontal one, sideways the vertical one), so a value nothing was typed into yet
 /// becomes what the new dimension measures; carrying the old one over would preview, and on
 /// Enter apply, the aligned length as a horizontal or vertical span, moving the picked points.
-fn move_text(app: &SolveApp, e: &mut Edit, at: Vec2) {
+fn move_text(app: &SketApp, e: &mut Edit, at: Vec2) {
     let typed = e.live.is_none_or(|l| l.typed);
     let Some(draft) = e.draft.as_mut() else { return };
     if !typed
@@ -335,7 +335,7 @@ fn move_text(app: &SolveApp, e: &mut Edit, at: Vec2) {
     reevaluate(app, draft, &expr);
 }
 
-fn reevaluate(app: &SolveApp, draft: &mut DimensionDraft, expr: &str) {
+fn reevaluate(app: &SketApp, draft: &mut DimensionDraft, expr: &str) {
     draft.checked_expr = expr.to_string();
     match draft.evaluate(app, expr) {
         Ok(scratch) => {
@@ -360,7 +360,7 @@ fn entities_value(entities: &[String]) -> serde_json::Value {
     )
 }
 
-fn dimension_draft(app: &SolveApp, entities: Vec<String>, at: Option<Vec2>) -> Result<(String, String, DimensionDraft), String> {
+fn dimension_draft(app: &SketApp, entities: Vec<String>, at: Option<Vec2>) -> Result<(String, String, DimensionDraft), String> {
     let sketch = app.session.active_sketch.ok_or("Edit a sketch to add a dimension")?;
     if entities.is_empty() || entities.len() > 2 || at.is_some_and(|at| !at.x.is_finite() || !at.y.is_finite()) {
         return Err("Pick one edge or two endpoints, then place the dimension".into());
@@ -372,7 +372,7 @@ fn dimension_draft(app: &SolveApp, entities: Vec<String>, at: Option<Vec2>) -> R
 
 /// The draft of one dimension: its parameter (for a driven one, its constraint id, since it
 /// has no parameter), the parameter's expression, and the scratch session it was added in.
-fn draft_of(app: &SolveApp, sketch: u64, entities: &[String], at: Option<Vec2>, driven: bool) -> Result<(String, String, DimensionDraft), String> {
+fn draft_of(app: &SketApp, sketch: u64, entities: &[String], at: Option<Vec2>, driven: bool) -> Result<(String, String, DimensionDraft), String> {
     let mut scratch = app.session.scratch();
     let mut params = json!({"entities": entities_value(entities), "driven": driven});
     if let Some(at) = at {
@@ -429,7 +429,7 @@ struct Placement {
     draft: Option<(String, DimensionDraft)>,
 }
 
-fn placement_preview(app: &SolveApp) -> Option<(String, DimensionDraft)> {
+fn placement_preview(app: &SketApp) -> Option<(String, DimensionDraft)> {
     let tool = app.tool.as_ref().filter(|t| t.kind == crate::tools::Kind::Dimension && !t.picks.is_empty())?;
     let at = tool.hover.as_ref()?.0;
     PLACEMENT.with(|preview| {
@@ -504,7 +504,7 @@ pub fn model_drawn() -> Vec<(u64, String, Pos2)> {
 /// A double-click on a finished sketch's shown dimension (outside sketch editing) opens its value
 /// in the same inline editor, without editing the sketch or moving the view (true: it was on one).
 /// Enter changes the dimension's own expression through `parameters.change`, one undo step.
-pub fn model_double_click(app: &mut SolveApp, pos: Pos2) -> bool {
+pub fn model_double_click(app: &mut SketApp, pos: Pos2) -> bool {
     if app.session.active_sketch.is_some() {
         return false;
     }
@@ -565,7 +565,7 @@ pub fn hit(pos: Pos2) -> Option<String> {
 }
 
 /// The selected dimensions (constraint ids; they are in the session's selection).
-pub fn selected(app: &SolveApp) -> Vec<String> {
+pub fn selected(app: &SketApp) -> Vec<String> {
     let dims: Vec<String> = DRAWN.with(|d| d.borrow().iter().map(|x| x.id.clone()).collect());
     app.session
         .selection
@@ -587,19 +587,19 @@ pub fn text_rects() -> Vec<(String, Rect)> {
 }
 
 /// A double-click on a dimension opens its value for editing (true: it was on one).
-pub fn double_click(app: &mut SolveApp, pos: Pos2) -> bool {
+pub fn double_click(app: &mut SketApp, pos: Pos2) -> bool {
     open_editor(app, hit(pos))
 }
 
 /// A click of the Dimension tool on an existing dimension opens its value for editing, as a
 /// double-click does without a tool (true: it was on one). Its text wins; its lines only off
 /// sketch geometry (`on_geometry`), which the click picks for a new dimension instead.
-pub fn tool_click(app: &mut SolveApp, pos: Pos2, on_geometry: bool) -> bool {
+pub fn tool_click(app: &mut SketApp, pos: Pos2, on_geometry: bool) -> bool {
     open_editor(app, hit_text(pos).or_else(|| if on_geometry { None } else { hit(pos) }))
 }
 
 /// Open the inline editor on the drawn dimension `id` (true: there was one to act on).
-fn open_editor(app: &mut SolveApp, id: Option<String>) -> bool {
+fn open_editor(app: &mut SketApp, id: Option<String>) -> bool {
     let Some(d) = id.and_then(|id| DRAWN.with(|d| d.borrow().iter().find(|x| x.id == id).cloned())) else {
         return false;
     };
@@ -641,7 +641,7 @@ fn open_editor(app: &mut SolveApp, id: Option<String>) -> bool {
 /// held its circle and left driven when the Tangent was deleted (#10018): the parameter it gets
 /// as a driving one and its measured value, from making it driving on a scratch copy. None
 /// while something still fixes what it measures (it can only measure).
-fn freed(app: &SolveApp, constraint: &str) -> Option<(String, String)> {
+fn freed(app: &SketApp, constraint: &str) -> Option<(String, String)> {
     let sketch = app.session.active_sketch?;
     let mut scratch = app.session.scratch();
     scratch.execute("sketch.toggle_driven", &json!({"constraint": constraint, "driven": false})).ok()?;
@@ -653,7 +653,7 @@ fn freed(app: &SolveApp, constraint: &str) -> Option<(String, String)> {
 /// The value typed for a driven dimension (`freed`): it becomes driving at its measured value
 /// (`sketch.toggle_driven`), then takes the value (`parameters.change`), in one undo step. When
 /// the value is refused the design goes back to the checkpoint taken first, so it stays driven.
-fn make_driving(app: &mut SolveApp, constraint: &str, typed: &str) -> Result<serde_json::Value, String> {
+fn make_driving(app: &mut SketApp, constraint: &str, typed: &str) -> Result<serde_json::Value, String> {
     let depth = app.session.undo.len();
     let checkpoint = app.run("edit.checkpoint", json!({}))?["checkpoint"].clone();
     let result = app
@@ -676,7 +676,7 @@ fn make_driving(app: &mut SolveApp, constraint: &str, typed: &str) -> Result<ser
 }
 
 /// Set dimension parameter `param` to the expression typed for it, in the parameter's unit.
-fn change_value(app: &mut SolveApp, param: &str, typed: &str) -> Result<serde_json::Value, String> {
+fn change_value(app: &mut SketApp, param: &str, typed: &str) -> Result<serde_json::Value, String> {
     let kind = app
         .session
         .doc
@@ -690,7 +690,7 @@ fn change_value(app: &mut SolveApp, param: &str, typed: &str) -> Result<serde_js
 
 /// Start dragging the text of the dimension under `press` (true: a dimension took the drag).
 /// Its lines take it only off sketch geometry (`on_geometry`: a point or curve is under `press`).
-pub fn drag_start(app: &SolveApp, press: Pos2, press_sketch: Vec2, on_geometry: bool) -> bool {
+pub fn drag_start(app: &SketApp, press: Pos2, press_sketch: Vec2, on_geometry: bool) -> bool {
     let Some(d) = DRAWN.with(|d| {
         let id = hit_text(press).or_else(|| if on_geometry { None } else { hit(press) })?;
         d.borrow().iter().find(|x| x.id == id).cloned()
@@ -708,7 +708,7 @@ pub fn dragging() -> bool {
 
 /// Move the dragged text so it follows the pointer (at `to`, sketch coordinates); one undo
 /// step for the whole drag.
-pub fn drag_to(app: &mut SolveApp, to: Vec2) {
+pub fn drag_to(app: &mut SketApp, to: Vec2) {
     let Some((id, depth, off)) = DRAG.with(|g| g.borrow().clone()) else { return };
     let at = to + off;
     if app.session.execute("sketch.dimension_text", &json!({"dimension": id, "at": [at.x, at.y]})).is_ok() {
@@ -760,7 +760,7 @@ fn label_marked(k: &ConstraintKind, radius_mark: bool, expr: Option<&str>, drive
 }
 
 /// Draw the active sketch's dimensions and remember where they are for picking.
-pub fn show(app: &mut SolveApp, ui: &egui::Ui, painter: &egui::Painter, proj: &Proj) {
+pub fn show(app: &mut SketApp, ui: &egui::Ui, painter: &egui::Painter, proj: &Proj) {
     let mut drawn = Vec::new();
     let editor_draft = EDIT.with(|edit| {
         let mut edit = edit.borrow_mut();
@@ -977,7 +977,7 @@ fn pos2_mid_top(r: Rect) -> Pos2 {
 /// The inline value editor: Enter applies, Esc (or a click elsewhere) cancels.
 /// Edit a dimension's value in place by its parameter (a new dimension from the Dimension tool:
 /// its value is selected, so typing replaces it).
-pub fn edit_param(app: &SolveApp, param: &str) {
+pub fn edit_param(app: &SketApp, param: &str) {
     let expr = app.session.doc.param(param).map(|p| p.expr.clone()).unwrap_or_default();
     EDIT.with(|e| {
         *e.borrow_mut() = Some(Edit {
@@ -1051,7 +1051,7 @@ fn insert_reference(ctx: &egui::Context, edit: &mut Edit, name: &str) {
 /// Consume dimension clicks while editing: a click on another driving dimension inserts its
 /// name at the cursor (replacing selected text), keeping what was typed. The second click of a
 /// double-click on the same dimension does not insert it again.
-pub fn pick_reference(app: &SolveApp, ctx: &egui::Context, pos: Pos2, double: bool) -> bool {
+pub fn pick_reference(app: &SketApp, ctx: &egui::Context, pos: Pos2, double: bool) -> bool {
     EDIT.with(|editor| {
         let mut editor = editor.borrow_mut();
         let Some(edit) = editor.as_mut() else { return false };
@@ -1108,7 +1108,7 @@ fn edit_anchor(at: Pos2, live: bool, drawable: Option<egui::Rect>, popup_width: 
     anchor
 }
 
-fn edit_box(app: &mut SolveApp, ctx: &egui::Context) {
+fn edit_box(app: &mut SketApp, ctx: &egui::Context) {
     let Some(mut e) = EDIT.with(|x| x.borrow_mut().take()) else { return };
     if e.at.is_none() {
         e.at = DRAWN.with(|d| d.borrow().iter().find(|x| x.param.as_deref() == Some(e.param.as_str())).map(|x| x.text.center()));
@@ -1212,7 +1212,7 @@ fn edit_box(app: &mut SolveApp, ctx: &egui::Context) {
 
 /// Apply or drop the edit as the box or the window answered (`done`: Some(true) applies, Some(false)
 /// drops it, and `escaped` the Dimension tool's picks with it), or keep it open.
-fn settle(app: &mut SolveApp, mut e: Edit, done: Option<bool>, escaped: bool) {
+fn settle(app: &mut SketApp, mut e: Edit, done: Option<bool>, escaped: bool) {
     e.fresh = e.fresh.saturating_sub(1);
     match done {
         Some(true) => {
@@ -1256,7 +1256,7 @@ fn settle(app: &mut SolveApp, mut e: Edit, done: Option<bool>, escaped: bool) {
 }
 
 /// The Dimension tool starts over (its picks became a dimension, or were cancelled).
-fn clear_picks(app: &mut SolveApp) {
+fn clear_picks(app: &mut SketApp) {
     AXIS.with(|axis| *axis.borrow_mut() = None);
     if let Some(tool) = app.tool.as_mut().filter(|t| t.kind == crate::tools::Kind::Dimension) {
         tool.picks.clear();
@@ -1266,7 +1266,7 @@ fn clear_picks(app: &mut SolveApp) {
 
 /// While a new dimension's value is typed: the design solved with that value (the last value
 /// that solved), so the open sketch is drawn as Enter would leave it. None otherwise.
-pub fn preview_world(app: &SolveApp) -> Option<Arc<sketcraft_engine::doc::ModelState>> {
+pub fn preview_world(app: &SketApp) -> Option<Arc<sketcraft_engine::doc::ModelState>> {
     EDIT.with(|e| e.try_borrow().ok()?.as_ref().filter(|e| e.typed)?.draft.as_ref().filter(|d| !d.driven && d.valid(app)).map(|d| d.preview.clone()))
 }
 
@@ -1280,13 +1280,13 @@ fn next_solve() -> u64 {
 }
 
 /// Which solve [`preview_world`] is, while there is one.
-pub fn preview_solve(app: &SolveApp) -> Option<u64> {
+pub fn preview_solve(app: &SketApp) -> Option<u64> {
     EDIT.with(|e| e.try_borrow().ok()?.as_ref().filter(|e| e.typed)?.draft.as_ref().filter(|d| !d.driven && d.valid(app)).map(|d| d.solve))
 }
 
 /// The sketch drawn at a typed value (the open one), while there is one: its design curves are
 /// not where they are drawn, the other sketches' are.
-pub fn previewed_sketch(app: &SolveApp) -> Option<u64> {
+pub fn previewed_sketch(app: &SketApp) -> Option<u64> {
     preview_solve(app).and(app.session.active_sketch)
 }
 
@@ -1307,7 +1307,7 @@ pub fn solved_for() -> Option<(String, String)> {
 
 /// Solve the open draft again for `expr`, as a typed value or a moved text does (tests).
 #[cfg(test)]
-pub fn resolve(app: &SolveApp, expr: &str) {
+pub fn resolve(app: &SketApp, expr: &str) {
     EDIT.with(|edit| {
         if let Some(draft) = edit.borrow_mut().as_mut().and_then(|e| e.draft.as_mut()) {
             reevaluate(app, draft, expr);
@@ -1330,7 +1330,7 @@ pub fn draft_preview() -> Option<(String, sketcraft_engine::sketch::Constraint, 
 
 /// A place-first draft, including a driven dimension, for creation tests.
 #[cfg(test)]
-pub fn placement_dimension_preview(app: &SolveApp) -> Option<sketcraft_engine::sketch::Constraint> {
+pub fn placement_dimension_preview(app: &SketApp) -> Option<sketcraft_engine::sketch::Constraint> {
     let (id, draft) = placement_preview(app)?;
     draft
         .preview
@@ -1800,7 +1800,7 @@ mod tests {
         h.app.run("sketch.dimension", json!({"entities":["l2"],"text_at":[10,20]})).unwrap();
         h.call("ui.view", json!({"view":"top"}));
         h.app.cam.distance = 90.;
-        h.app.cam.target = solidcore_record::Vec3::new(10., 10., 0.);
+        h.app.cam.target = sketcore_record::Vec3::new(10., 10., 0.);
         h.settle();
         let rects = crate::dim_view::text_rects();
         assert_eq!(rects.len(), 2, "{rects:?}");
@@ -1821,7 +1821,7 @@ mod tests {
         let param = h.app.run("sketch.dimension", json!({"entities":["l1"],"text_at":[10,25]})).unwrap()["param"].as_str().unwrap().to_string();
         h.call("ui.view", json!({"view":"top"}));
         h.app.cam.distance = 120.;
-        h.app.cam.target = solidcore_record::Vec3::new(10., 12., 0.);
+        h.app.cam.target = sketcore_record::Vec3::new(10., 12., 0.);
         h.settle();
         h.app.run("parameters.change", json!({"name":param,"expression":"30"})).unwrap();
         h.settle();

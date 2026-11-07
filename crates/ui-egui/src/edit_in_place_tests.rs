@@ -13,13 +13,13 @@ fn volume_of(session: &Session, prefix: &str) -> f64 {
         .sum()
 }
 
-fn volume(app: &SolveApp) -> f64 {
+fn volume(app: &SketApp) -> f64 {
     volume_of(&app.session, "")
 }
 
 /// Ticks the window's background work, at least one frame's worth, until it is done: opens,
 /// saves, Update Links and the assembly refresh of an edit in place.
-fn settle(app: &mut SolveApp) {
+fn settle(app: &mut SketApp) {
     let ctx = egui::Context::default();
     let began = std::time::Instant::now();
     loop {
@@ -46,7 +46,7 @@ fn save_box(path: &std::path::Path, size: [f64; 3], extra: bool) {
 }
 
 struct Fixture {
-    app: SolveApp,
+    app: SketApp,
     folder: std::path::PathBuf,
     plate: u64,
     plate_file: std::path::PathBuf,
@@ -68,7 +68,7 @@ fn assembly(name: &str) -> Fixture {
     let (plate_file, post_file) = (folder.join("plate.sketcraft"), folder.join("post.sketcraft"));
     save_box(&plate_file, [10.0, 20.0, 30.0], false);
     save_box(&post_file, [10.0, 10.0, 10.0], false);
-    let mut app = SolveApp::new(Session::default(), Default::default());
+    let mut app = SketApp::new(Session::default(), Default::default());
     let plate = app.run("component.insert_design", json!({"path": plate_file, "translate": [50, 0, 0]})).unwrap()["component"].as_u64().unwrap();
     app.run("component.insert_design", json!({"path": post_file, "translate": [-100, 0, 0]})).unwrap();
     app.run("file.save", json!({"path": folder.join("case.sketcraft")})).unwrap();
@@ -76,11 +76,11 @@ fn assembly(name: &str) -> Fixture {
     Fixture { app, folder, plate, plate_file, post_file }
 }
 
-fn showing(app: &SolveApp, file: &std::path::Path) -> bool {
+fn showing(app: &SketApp, file: &std::path::Path) -> bool {
     app.session.path.as_deref().is_some_and(|p| crate::documents::same_path(p, &file.to_string_lossy()))
 }
 
-fn context(app: &SolveApp) -> PartContext {
+fn context(app: &SketApp) -> PartContext {
     app.edit_in_place.active.clone().expect("a part is edited in place")
 }
 
@@ -155,10 +155,10 @@ fn update_links_run_as_a_command_in_the_part_refreshes_the_assembly_too() {
     settle(&mut f.app);
     save_box(&f.post_file, [10.0, 10.0, 10.0], true);
     let mut h = crate::scenario::Harness::new();
-    h.app = std::mem::replace(&mut f.app, SolveApp::new(Session::default(), Default::default()));
+    h.app = std::mem::replace(&mut f.app, SketApp::new(Session::default(), Default::default()));
     // In any spelling the engine takes; the call may take the refresh up before it answers
     h.call("engine.execute", json!({"command": "Component.Update_Links"}));
-    f.app = std::mem::replace(&mut h.app, SolveApp::new(Session::default(), Default::default()));
+    f.app = std::mem::replace(&mut h.app, SketApp::new(Session::default(), Default::default()));
     settle(&mut f.app);
     assert!(showing(&f.app, &f.plate_file));
     let after = context(&f.app);
@@ -359,7 +359,7 @@ fn double_clicking_a_body_of_this_design_or_with_the_preference_off_does_nothing
 fn a_linked_components_menu_starts_with_what_a_double_click_does() {
     use crate::context_menu::{self, Target};
     let mut f = assembly("menu-order");
-    let ids = |app: &SolveApp| context_menu::items(app, &Target::Component { id: f.plate }).into_iter().take(3).map(|i| i.id).collect::<Vec<_>>();
+    let ids = |app: &SketApp| context_menu::items(app, &Target::Component { id: f.plate }).into_iter().take(3).map(|i| i.id).collect::<Vec<_>>();
     assert_eq!(ids(&f.app), ["ui.editInPlace", "ui.openLinkedDesign", "ui.activate"]);
     f.app.preferences.double_click_components = false;
     assert_eq!(ids(&f.app), ["ui.activate", "ui.editInPlace", "ui.openLinkedDesign"]);
@@ -372,7 +372,7 @@ fn activate_only_activates_and_edit_in_place_opens_the_placement_right_clicked()
     let inserted = f.app.run("component.insert_design", json!({"path": f.plate_file, "translate": [0, 100, 0], "reuse": true})).unwrap();
     let second = inserted["occurrence"].as_u64().unwrap();
     f.app.run("file.save", json!({})).unwrap();
-    let item = |app: &SolveApp, target: Target, id: &str| context_menu::items(app, &target).into_iter().find(|i| i.id == id).unwrap();
+    let item = |app: &SketApp, target: Target, id: &str| context_menu::items(app, &target).into_iter().find(|i| i.id == id).unwrap();
     // Activate: the linked component becomes the active one, nothing opens
     let activate = item(&f.app, Target::Component { id: f.plate }, "ui.activate");
     context_menu::run_item(&mut f.app, &activate, egui::Pos2::ZERO);
@@ -393,7 +393,7 @@ fn activate_only_activates_and_edit_in_place_opens_the_placement_right_clicked()
 fn finish_editing_is_a_model_tab_button_only_while_a_part_is_edited_in_place() {
     let mut f = assembly("ribbon");
     let mut h = crate::scenario::Harness::new();
-    h.app = std::mem::replace(&mut f.app, SolveApp::new(Session::default(), Default::default()));
+    h.app = std::mem::replace(&mut f.app, SketApp::new(Session::default(), Default::default()));
     h.app.home.open = false;
     h.frames(3);
     assert!(crate::scenario::rect_of("panel:MODEL:FINISH EDITING").is_none(), "no edit in place, no button");
@@ -496,7 +496,7 @@ fn finish_editing_as_a_command_opens_nothing_for_a_part_with_changes() {
 fn finish_editing_is_sent_on_its_own_not_in_a_batch_or_script() {
     let mut f = assembly("control");
     let mut h = crate::scenario::Harness::new();
-    h.app = std::mem::replace(&mut f.app, SolveApp::new(Session::default(), Default::default()));
+    h.app = std::mem::replace(&mut f.app, SketApp::new(Session::default(), Default::default()));
     double_click_component(&mut h.app, json!({"component": f.plate}));
     settle(&mut h.app);
     let steps = json!([{"command": "solid.box", "params": {"length": 1, "width": 1, "height": 1}}, {"command": "Component.Finish_Edit"}]);
@@ -517,7 +517,7 @@ fn finish_editing_is_sent_on_its_own_not_in_a_batch_or_script() {
 fn the_mouse_back_button_finishes_the_edit() {
     let mut f = assembly("mouse-back");
     let mut h = crate::scenario::Harness::new();
-    h.app = std::mem::replace(&mut f.app, SolveApp::new(Session::default(), Default::default()));
+    h.app = std::mem::replace(&mut f.app, SketApp::new(Session::default(), Default::default()));
     h.app.home.open = false;
     double_click_component(&mut h.app, json!({"component": f.plate}));
     settle(&mut h.app);
@@ -622,7 +622,7 @@ fn finish_editing_waits_for_the_parts_agent_to_end_its_turn() {
 fn edit_in_place_is_a_command_the_double_click_runs() {
     let mut f = assembly("command-enter");
     let mut h = crate::scenario::Harness::new();
-    h.app = std::mem::replace(&mut f.app, SolveApp::new(Session::default(), Default::default()));
+    h.app = std::mem::replace(&mut f.app, SketApp::new(Session::default(), Default::default()));
     // Not linked, or not a placement of it: refused, nothing opens
     let base = h.app.run("component.create", json!({"name": "Bracket"})).unwrap()["component"].as_u64().unwrap();
     h.app.run("component.activate", json!({"component": "root"})).unwrap();
@@ -704,7 +704,7 @@ fn a_part_saved_while_the_assembly_refreshes_is_read_when_the_edit_finishes() {
 
 #[test]
 fn finish_editing_keeps_its_panel_to_itself() {
-    let mut app = SolveApp::new(Session::default(), Default::default());
+    let mut app = SketApp::new(Session::default(), Default::default());
     let extrude = crate::toolbar_custom::pinned_on(&app, "MODEL", "solid.extrude");
     crate::toolbar_custom::reorder(&mut app, "MODEL", "solid.extrude", "FINISH EDITING", None);
     assert_eq!(crate::toolbar_custom::pinned_on(&app, "MODEL", "solid.extrude"), extrude);
@@ -738,7 +738,7 @@ fn turned_off_or_unsaved_double_clicking_a_linked_component_does_what_it_did() {
     assert_eq!(f.app.docs.count(), 1);
     assert!(f.app.edit_in_place.active.is_none());
     // An assembly never saved has no folder to find its links from: the double-click activates
-    let mut fresh = SolveApp::new(Session::default(), Default::default());
+    let mut fresh = SketApp::new(Session::default(), Default::default());
     let linked = fresh.run("component.insert_design", json!({"path": f.plate_file})).unwrap()["component"].as_u64().unwrap();
     fresh.run("component.activate", json!({"component": "root"})).unwrap();
     double_click_component(&mut fresh, json!({"component": linked}));

@@ -1,4 +1,4 @@
-//! The kernel's side of the portable B-rep record ([`solidcore_record::brep`]): what computes
+//! The kernel's side of the portable B-rep record ([`sketcore_record::brep`]): what computes
 //! from its coordinates. Evaluation ([`eval`]), exact NURBS forms of analytic geometry
 //! ([`form`]), pcurves ([`pcurve`]), the record's geometric checks ([`check`]: frames, planes,
 //! placements; [`geometry`]: that the geometry agrees with the topology), what its labels mean
@@ -6,7 +6,7 @@
 //! ([`split_edges`]). The record itself is data: see SketCraft's docs/native-brep.md.
 
 // `eval` and `form` name the record's geometry through their parent (`super::Curve`).
-use solidcore_record::brep::{Curve, Curve2, Frame, Surface};
+use sketcore_record::brep::{Curve, Curve2, Frame, Surface};
 
 pub mod check;
 pub mod eval;

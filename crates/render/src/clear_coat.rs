@@ -3,7 +3,7 @@
 //! and refraction of substrate directions are omitted. This is a bounded preview
 //! model, not a full layered random walk. See docs/render-clear-coat.md.
 use crate::surface::{MIN_ROUGHNESS, OpaqueSurface, SurfaceError, unit_direction};
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 use sketcraft_geom::prelude::*;
 use std::f64::consts::PI;
 

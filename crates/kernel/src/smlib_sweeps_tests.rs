@@ -4,7 +4,7 @@
 use sketcraft_geom::prelude::*;
 use std::f64::consts::{PI, TAU};
 
-use solidcore_record::{Loop2, Plane, Region2, Seg2, Vec2, Vec3};
+use sketcore_record::{Loop2, Plane, Region2, Seg2, Vec2, Vec3};
 
 use crate::FaceSource;
 use crate::body::Body;

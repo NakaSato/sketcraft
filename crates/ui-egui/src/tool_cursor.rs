@@ -9,7 +9,7 @@
 
 use egui::{Pos2, Rect, Stroke, Vec2, pos2, vec2};
 
-use crate::SolveApp;
+use crate::SketApp;
 use crate::theme::Tokens;
 
 /// The badge's side and the icon inside it, in points.
@@ -34,7 +34,7 @@ pub(crate) fn readout_at(painter: &egui::Painter, view: Rect, point: Pos2) -> Po
 }
 
 /// The command whose tool or dialog is running: the one a click in the viewport goes to.
-pub(crate) fn command(app: &SolveApp) -> Option<&'static str> {
+pub(crate) fn command(app: &SketApp) -> Option<&'static str> {
     match (&app.tool, &app.dialog) {
         (Some(tool), _) => Some(tool.cmd),
         (None, Some(dialog)) => dialog.command(),
@@ -43,7 +43,7 @@ pub(crate) fn command(app: &SolveApp) -> Option<&'static str> {
 }
 
 /// The icon the badge shows: None when it is turned off, nothing runs, or the command has no icon.
-pub(crate) fn icon(app: &SolveApp) -> Option<&'static str> {
+pub(crate) fn icon(app: &SketApp) -> Option<&'static str> {
     if !app.ui.tool_cursor {
         return None;
     }
@@ -65,7 +65,7 @@ fn badge_rect(at: Pos2, bounds: Rect, readout_height: f32) -> Rect {
 }
 
 /// Draw the badge for a pointer at `at` (None: the pointer is not over the model).
-pub(crate) fn show(app: &SolveApp, painter: &egui::Painter, at: Option<Pos2>) {
+pub(crate) fn show(app: &SketApp, painter: &egui::Painter, at: Option<Pos2>) {
     let (Some(at), Some(icon)) = (at, icon(app)) else { return };
     let t = Tokens::get();
     // The readout's line height, as `tools::preview` lays it out.
@@ -123,7 +123,7 @@ mod tests {
         assert!(h.app.ui.tool_cursor);
         h.call("ui.prefs", json!({"button":"ok"}));
 
-        let mut restarted = crate::SolveApp::new(sketcraft_engine::Session::default(), crate::Services::default());
+        let mut restarted = crate::SketApp::new(sketcraft_engine::Session::default(), crate::Services::default());
         restarted.load_prefs(&h.app.prefs());
         assert!(restarted.ui.tool_cursor, "an explicitly enabled tool badge survives a restart");
 
@@ -167,7 +167,7 @@ mod tests {
 
     #[test]
     fn saved_tool_badge_requires_a_boolean_and_old_settings_keep_the_default() {
-        let mut app = crate::SolveApp::new(sketcraft_engine::Session::default(), crate::Services::default());
+        let mut app = crate::SketApp::new(sketcraft_engine::Session::default(), crate::Services::default());
         app.load_prefs("{}");
         assert!(app.ui.tool_cursor, "settings from before the option was saved keep the default (on)");
         for enabled in [true, false] {

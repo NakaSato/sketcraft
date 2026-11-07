@@ -4,7 +4,7 @@
 //! normal geometry.
 
 use serde_json::{Value, json};
-use solidcore_record::{Plane, Vec2, Vec3};
+use sketcore_record::{Plane, Vec2, Vec3};
 use sketcraft_doc::project::resolve;
 use sketcraft_doc::{Document, FeatureKind};
 use sketcraft_geom::prelude::*;

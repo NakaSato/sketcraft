@@ -12,7 +12,7 @@
 use sketcraft_geom::prelude::*;
 use std::collections::{BTreeMap, BTreeSet, HashSet, VecDeque};
 
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 use sketcraft_doc::joints::{self, Joint, JointKind};
 use sketcraft_doc::{Document, IDENTITY, MAX_PLACEMENT_DEPTH, MAX_PLACEMENTS, Mat, ModelState, Occurrence, apply_point, mat_inverse, mat_mul};
 use sketcraft_geom::Mesh;

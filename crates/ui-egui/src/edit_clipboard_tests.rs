@@ -1,7 +1,7 @@
 //! Copy and Paste from the keyboard and the context menu (#1480).
 
 use serde_json::{Value, json};
-use solidcore_record::Vec2;
+use sketcore_record::Vec2;
 use sketcraft_engine::geom::prelude::*;
 use sketcraft_engine::{
     Sel,
@@ -315,8 +315,8 @@ impl Drop for ContributionPart {
         let _ = std::fs::remove_file(&self.0);
     }
 }
-fn contribution_saved_part(file: &ContributionPart) -> crate::SolveApp {
-    let mut app = crate::SolveApp::new(sketcraft_engine::Session::default(), crate::Services::default());
+fn contribution_saved_part(file: &ContributionPart) -> crate::SketApp {
+    let mut app = crate::SketApp::new(sketcraft_engine::Session::default(), crate::Services::default());
     app.run("solid.box", json!({"length":20,"width":10,"height":5,"body_name":"Plate"})).unwrap();
     app.run("file.save", json!({"path":file.0.to_string_lossy()})).unwrap();
     app.tree.picked_components = vec![0];
@@ -372,7 +372,7 @@ fn contribution_occurrence_move_panel_belongs_to_its_document() {
 
 #[test]
 fn contribution_linked_paste_uses_the_pointer_and_pending_numeric_move() {
-    use solidcore_record::Vec3;
+    use sketcore_record::Vec3;
     let file = ContributionPart::new();
     let mut h = crate::scenario::Harness::new();
     h.app = contribution_saved_part(&file);
@@ -415,7 +415,7 @@ fn contribution_linked_paste_uses_the_pointer_and_pending_numeric_move() {
 
 #[test]
 fn contribution_paste_pointer_uses_parent_coordinates_and_safe_fallbacks() {
-    use solidcore_record::Vec3;
+    use sketcore_record::Vec3;
     use sketcraft_engine::doc;
     let mut h = crate::scenario::Harness::new();
     let parent = h.app.run("component.create", json!({"name":"Parent","grounded":false})).unwrap();
@@ -443,7 +443,7 @@ fn contribution_paste_pointer_uses_parent_coordinates_and_safe_fallbacks() {
 #[test]
 fn contribution_linked_clipboard_refuses_unsaved_dirty_self_and_missing_sources() {
     let file = ContributionPart::new();
-    let mut app = crate::SolveApp::new(sketcraft_engine::Session::default(), crate::Services::default());
+    let mut app = crate::SketApp::new(sketcraft_engine::Session::default(), crate::Services::default());
     assert!(!super::copy_design(&mut app));
     app = contribution_saved_part(&file);
     assert!(super::copy_design(&mut app));
@@ -490,7 +490,7 @@ fn contribution_native_copy_paste_events_insert_the_saved_design_in_another_tab(
 /// what was copied before is not pasted.
 #[test]
 fn a_failed_copy_empties_the_clipboard() {
-    let mut app = crate::SolveApp::new(sketcraft_engine::Session::default(), crate::Services::default());
+    let mut app = crate::SketApp::new(sketcraft_engine::Session::default(), crate::Services::default());
     app.run("solid.box", json!({"length":2,"width":2,"height":2,"body_name":"Cube"})).unwrap();
     app.run("select.set", json!({"items": [{"type": "body", "name": "Cube"}]})).unwrap();
     assert!(super::copy(&mut app));
@@ -507,10 +507,10 @@ fn a_failed_copy_empties_the_clipboard() {
 /// clipboard empties. Esc before that leaves it where it was; a locked body is not cut.
 #[test]
 fn a_cut_body_moves_into_the_component_it_is_pasted_in() {
-    let mut app = crate::SolveApp::new(sketcraft_engine::Session::default(), crate::Services::default());
+    let mut app = crate::SketApp::new(sketcraft_engine::Session::default(), crate::Services::default());
     app.run("solid.box", json!({"length":2,"width":2,"height":2,"body_name":"Cube"})).unwrap();
     let part = app.run("component.create", json!({"name":"Part","activate":false})).unwrap()["component"].as_u64().unwrap();
-    let owner = |app: &crate::SolveApp| {
+    let owner = |app: &crate::SketApp| {
         let state = app.session.model.state();
         app.session.doc.model_body_component(state.body("Cube").unwrap())
     };
@@ -536,8 +536,8 @@ fn a_cut_body_moves_into_the_component_it_is_pasted_in() {
 /// into itself, and an instance (a component placed more than once) isn't cut.
 #[test]
 fn a_cut_component_moves_into_the_component_it_is_pasted_in() {
-    let mut app = crate::SolveApp::new(sketcraft_engine::Session::default(), crate::Services::default());
-    let made = |app: &mut crate::SolveApp, name: &str| {
+    let mut app = crate::SketApp::new(sketcraft_engine::Session::default(), crate::Services::default());
+    let made = |app: &mut crate::SketApp, name: &str| {
         let out = app.run("component.create", json!({"name": name, "activate": false})).unwrap();
         (out["component"].as_u64().unwrap(), out["occurrence"].as_u64().unwrap())
     };
@@ -563,7 +563,7 @@ fn a_cut_component_moves_into_the_component_it_is_pasted_in() {
 /// step.
 #[test]
 fn cut_features_and_their_body_move_in_one_step() {
-    let mut app = crate::SolveApp::new(sketcraft_engine::Session::default(), crate::Services::default());
+    let mut app = crate::SketApp::new(sketcraft_engine::Session::default(), crate::Services::default());
     app.run("sketch.create", json!({"plane": "XY", "name": "S"})).unwrap();
     app.run("sketch.rectangle.two_point", json!({"p0": [0, 0], "p1": [10, 10]})).unwrap();
     app.run("sketch.finish", json!({})).unwrap();
@@ -589,7 +589,7 @@ fn cut_features_and_their_body_move_in_one_step() {
 /// are not outlined and the user need not select them.
 #[test]
 fn a_cut_component_leaves_what_it_holds_unmarked() {
-    let mut app = crate::SolveApp::new(sketcraft_engine::Session::default(), crate::Services::default());
+    let mut app = crate::SketApp::new(sketcraft_engine::Session::default(), crate::Services::default());
     let made = app.run("component.create", json!({"name": "Part"})).unwrap();
     let (part, at) = (made["component"].as_u64().unwrap(), made["occurrence"].as_u64().unwrap());
     app.run("solid.box", json!({"length": 5, "width": 5, "height": 5, "body_name": "Inner", "name": "InnerBox"})).unwrap();
@@ -608,7 +608,7 @@ fn a_cut_component_leaves_what_it_holds_unmarked() {
 /// A paste that can't be done says so and keeps the cut, to paste somewhere else.
 #[test]
 fn a_cut_that_cannot_move_stays_cut() {
-    let mut app = crate::SolveApp::new(sketcraft_engine::Session::default(), crate::Services::default());
+    let mut app = crate::SketApp::new(sketcraft_engine::Session::default(), crate::Services::default());
     app.run("sketch.create", json!({"plane": "XY", "name": "S1"})).unwrap();
     app.run("sketch.rectangle.two_point", json!({"p0": [0, 0], "p1": [20, 20]})).unwrap();
     app.run("sketch.finish", json!({})).unwrap();
@@ -633,12 +633,12 @@ fn a_cut_that_cannot_move_stays_cut() {
 #[test]
 fn a_copied_body_pastes_into_a_bodies_folder() {
     use crate::context_menu::{Target, items, run_item};
-    let mut app = crate::SolveApp::new(sketcraft_engine::Session::default(), crate::Services::default());
+    let mut app = crate::SketApp::new(sketcraft_engine::Session::default(), crate::Services::default());
     app.run("solid.box", json!({"length":2,"width":2,"height":2,"body_name":"Cube"})).unwrap();
     let out = app.run("component.create", json!({"name":"Part","activate":false})).unwrap();
     let (part, at) = (out["component"].as_u64().unwrap(), out["occurrence"].as_u64().unwrap());
     let folder = Target::Folder { component: part, folder: "bodies".into(), scope: format!("o:{at}") };
-    let paste = |app: &crate::SolveApp| items(app, &folder).into_iter().find(|i| i.id == "ui.paste").unwrap();
+    let paste = |app: &crate::SketApp| items(app, &folder).into_iter().find(|i| i.id == "ui.paste").unwrap();
     assert!(!paste(&app).enabled, "nothing copied yet");
     app.run("select.set", json!({"items": [{"type": "body", "name": "Cube"}]})).unwrap();
     assert!(super::copy(&mut app));
@@ -655,14 +655,14 @@ fn a_copied_body_pastes_into_a_bodies_folder() {
 #[test]
 fn a_copied_sketch_pastes_into_a_sketches_folder() {
     use crate::context_menu::{Target, items, run_item};
-    let mut app = crate::SolveApp::new(sketcraft_engine::Session::default(), crate::Services::default());
+    let mut app = crate::SketApp::new(sketcraft_engine::Session::default(), crate::Services::default());
     app.run("sketch.create", json!({"plane": "XY", "name": "S"})).unwrap();
     app.run("sketch.rectangle.two_point", json!({"p0": [0, 0], "p1": [10, 10]})).unwrap();
     app.run("sketch.finish", json!({})).unwrap();
     let out = app.run("component.create", json!({"name":"Part","activate":false})).unwrap();
     let (part, at) = (out["component"].as_u64().unwrap(), out["occurrence"].as_u64().unwrap());
     let folder = Target::Folder { component: part, folder: "sketches".into(), scope: format!("o:{at}") };
-    let paste = |app: &crate::SolveApp| items(app, &folder).into_iter().find(|i| i.id == "ui.paste").unwrap();
+    let paste = |app: &crate::SketApp| items(app, &folder).into_iter().find(|i| i.id == "ui.paste").unwrap();
     let id = app.session.doc.find_feature("S").unwrap().id;
     app.run("select.set", json!({"items": [{"type": "feature", "id": id}]})).unwrap();
     assert!(super::copy(&mut app));
@@ -673,11 +673,11 @@ fn a_copied_sketch_pastes_into_a_sketches_folder() {
     assert_eq!(copy.component, part);
 }
 
-fn plain_app() -> crate::SolveApp {
-    crate::SolveApp::new(sketcraft_engine::Session::default(), crate::Services::default())
+fn plain_app() -> crate::SketApp {
+    crate::SketApp::new(sketcraft_engine::Session::default(), crate::Services::default())
 }
 
-fn select(app: &mut crate::SolveApp, item: Value) {
+fn select(app: &mut crate::SketApp, item: Value) {
     app.run("select.set", json!({"items": [item]})).unwrap();
 }
 
@@ -694,7 +694,7 @@ fn design_with_cube(name: &str) -> sketcraft_engine::Session {
 /// copies with history when it is back.
 #[test]
 fn copied_bodies_paste_into_another_design_as_imported_bodies() {
-    let mut app = crate::SolveApp::new(design_with_cube("Bracket"), crate::Services::default());
+    let mut app = crate::SketApp::new(design_with_cube("Bracket"), crate::Services::default());
     let was = crate::open_meshing::session_world(&app.session).body("Cube").unwrap().mesh().bounds();
     select(&mut app, json!({"type": "body", "name": "Cube"}));
     assert!(super::copy(&mut app));
@@ -715,7 +715,7 @@ fn copied_bodies_paste_into_another_design_as_imported_bodies() {
 /// The last copy in any design is what pastes: a copy in another tab replaces this tab's own.
 #[test]
 fn the_last_copy_in_any_design_is_what_pastes() {
-    let mut app = crate::SolveApp::new(design_with_cube("Bracket"), crate::Services::default());
+    let mut app = crate::SketApp::new(design_with_cube("Bracket"), crate::Services::default());
     select(&mut app, json!({"type": "body", "name": "Cube"}));
     assert!(super::copy(&mut app));
     let mut frame = sketcraft_engine::Session::default();
@@ -740,7 +740,7 @@ fn the_last_copy_in_any_design_is_what_pastes() {
 /// leaves nothing to paste anywhere.
 #[test]
 fn bodies_cut_in_another_design_paste_as_copies() {
-    let mut app = crate::SolveApp::new(design_with_cube("Bracket"), crate::Services::default());
+    let mut app = crate::SketApp::new(design_with_cube("Bracket"), crate::Services::default());
     select(&mut app, json!({"type": "body", "name": "Cube"}));
     assert!(super::cut(&mut app));
     crate::documents::open_tab(&mut app, sketcraft_engine::Session::default()).unwrap();
@@ -757,7 +757,7 @@ fn bodies_cut_in_another_design_paste_as_copies() {
 /// while its own design still pastes it.
 #[test]
 fn a_cut_with_a_feature_leaves_another_design_nothing_to_paste() {
-    let mut app = crate::SolveApp::new(design_with_cube("Bracket"), crate::Services::default());
+    let mut app = crate::SketApp::new(design_with_cube("Bracket"), crate::Services::default());
     app.run("solid.box", json!({"length":1,"width":1,"height":1,"body_name":"Pin","operation":"new_body","translate":[10,0,0]})).unwrap();
     let first = app.session.doc.features[0].id;
     app.run("select.set", json!({"items": [Sel::Feature { id: first }, Sel::Body { name: "Pin".into() }]})).unwrap();
@@ -830,12 +830,12 @@ fn pasting_on_a_group_puts_the_copy_in_it() {
     app.run("sketch.finish", json!({})).unwrap();
     let bodies = app.run("browser.group", json!({"folder": "bodies", "name": "Kept"})).unwrap()["group"].as_u64().unwrap();
     let sketches = app.run("browser.group", json!({"folder": "sketches", "name": "Drawn"})).unwrap()["group"].as_u64().unwrap();
-    let paste_on = |app: &mut crate::SolveApp, group: u64| {
+    let paste_on = |app: &mut crate::SketApp, group: u64| {
         let item = items(app, &Target::Group { id: group, scope: "c0".into() }).into_iter().find(|i| i.id == "ui.paste").unwrap();
         assert!(item.enabled);
         run_item(app, &item, egui::Pos2::ZERO);
     };
-    let holds = |app: &crate::SolveApp, group: u64, key: &str| app.session.doc.browser_groups.iter().any(|g| g.id == group && g.has_item(key));
+    let holds = |app: &crate::SketApp, group: u64, key: &str| app.session.doc.browser_groups.iter().any(|g| g.id == group && g.has_item(key));
     select(&mut app, json!({"type": "body", "name": "Cube"}));
     assert!(super::copy(&mut app));
     paste_on(&mut app, bodies);
@@ -890,7 +890,7 @@ fn paste_new_into_selected_parent_keeps_child_face_attachment() {
         .faces(0.01)
         .unwrap()
         .into_iter()
-        .find(|face| body.body.face_plane(face.index).is_some_and(|plane| plane.normal().dot(solidcore_record::Vec3::Z) > 0.999))
+        .find(|face| body.body.face_plane(face.index).is_some_and(|plane| plane.normal().dot(sketcore_record::Vec3::Z) > 0.999))
         .unwrap();
     let uncut_volume = app.run("inspect.measure", json!({"bodies":[body_name]})).unwrap()["total"]["volume_mm3"].as_f64().unwrap();
     app.run("sketch.create", json!({"plane":{"body":body_name,"face":face.centroid,"index":face.index,"path":source_path},"name":"Sketch2"}))

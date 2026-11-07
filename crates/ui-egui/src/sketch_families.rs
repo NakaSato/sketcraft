@@ -140,7 +140,7 @@ mod tests {
         assert_eq!(h.app.preferences.sketch_variants.resolve("sketch.circle.center"), "sketch.circle.center");
         assert_eq!(h.app.preferences.sketch_variants.resolve("sketch.rectangle.center"), "sketch.rectangle.center");
         // A new design keeps it; so does a restart.
-        let mut restored = crate::SolveApp::new(Default::default(), Default::default());
+        let mut restored = crate::SketApp::new(Default::default(), Default::default());
         restored.load_prefs(&h.app.prefs());
         assert_eq!(restored.preferences.sketch_variants.resolve("sketch.rectangle.two_point"), "sketch.rectangle.three_point");
     }
@@ -177,7 +177,7 @@ mod tests {
 
     #[test]
     fn old_or_damaged_prefs_fall_back_to_each_familys_first_variant() {
-        let mut app = crate::SolveApp::new(Default::default(), Default::default());
+        let mut app = crate::SketApp::new(Default::default(), Default::default());
         app.load_prefs(r#"{"preferences":{"save_mesh_format":"3mf"}}"#);
         assert_eq!(app.preferences.sketch_variants.resolve("sketch.rectangle.two_point"), "sketch.rectangle.two_point");
         app.load_prefs(r#"{"preferences":{"sketch_variants":{"Rectangle":"sketch.circle.center","Gone":"x"}}}"#);

@@ -1,5 +1,5 @@
 //! Structured configuration rule editing and non-mutating row preview.
-use crate::SolveApp;
+use crate::SketApp;
 use crate::ui_kit;
 use crate::ui_kit::BackingTooltipExt as _;
 use egui::Ui;
@@ -76,7 +76,7 @@ fn expression(ui: &mut Ui, label: &str, value: &mut String) {
     });
 }
 
-pub(super) fn show(ui: &mut Ui, app: &mut SolveApp, error: &mut Option<String>, editor: &mut Editor) {
+pub(super) fn show(ui: &mut Ui, app: &mut SketApp, error: &mut Option<String>, editor: &mut Editor) {
     if editor.preview_revision != app.session.revision {
         editor.preview = None;
     }

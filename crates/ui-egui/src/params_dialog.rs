@@ -18,7 +18,7 @@ use std::sync::Arc;
 
 use serde_json::{Value, json};
 
-use crate::SolveApp;
+use crate::SketApp;
 use crate::ui_kit::{self, Column};
 
 /// What Import reads. The picker must list them: on macOS, files of a type no filter names
@@ -123,7 +123,7 @@ impl Row {
     }
 }
 
-fn rows(app: &mut SolveApp) -> Vec<Row> {
+fn rows(app: &mut SketApp) -> Vec<Row> {
     let list = app.session.execute("parameters.list", &json!({})).unwrap_or_default();
     // Sketch dimension parameters: the sketch that owns each.
     let mut owner: std::collections::BTreeMap<String, String> = Default::default();
@@ -176,7 +176,7 @@ fn show_value(r: &Row) -> String {
 }
 
 /// Open the dialog (Change Parameters on the toolbar).
-pub fn open(app: &mut SolveApp) {
+pub fn open(app: &mut SketApp) {
     let mut dialog = ParamsDialog::new();
     let unit = crate::length_input::unit(&app.session.doc);
     dialog.new_unit = UNITS.iter().position(|u| *u == unit).unwrap_or(0);
@@ -185,7 +185,7 @@ pub fn open(app: &mut SolveApp) {
 
 /// Cancel before drawing the editors: egui has already blurred the focused TextEdit on Esc,
 /// and drawing it would apply its pending value through `lost_focus`.
-pub(crate) fn cancel_on_escape(app: &mut SolveApp, ctx: &egui::Context) -> bool {
+pub(crate) fn cancel_on_escape(app: &mut SketApp, ctx: &egui::Context) -> bool {
     if app.home.open || app.params.is_none() || !ctx.input_mut(|i| i.consume_key(egui::Modifiers::NONE, egui::Key::Escape)) {
         return false;
     }
@@ -199,7 +199,7 @@ pub(crate) fn cancel_on_escape(app: &mut SolveApp, ctx: &egui::Context) -> bool 
 }
 
 /// Draw the dialog when it is open. Called once per frame.
-pub fn show(app: &mut SolveApp, ctx: &egui::Context) {
+pub fn show(app: &mut SketApp, ctx: &egui::Context) {
     // Completions are offered only under a focused text box; gathering them evaluates every
     // parameter, so a design changing command after command (an agent building over MCP)
     // does not pay for it on every change while nobody is typing.
@@ -404,7 +404,7 @@ fn sections<'a>(visible: &[&'a Row], sort: ui_kit::Sort) -> Sections<'a> {
     Sections { favorites, users, groups }
 }
 
-fn model_group(app: &mut SolveApp, ui: &mut egui::Ui, d: &mut ParamsDialog, group: &str, rows: &[&Row], name_floor: f32) {
+fn model_group(app: &mut SketApp, ui: &mut egui::Ui, d: &mut ParamsDialog, group: &str, rows: &[&Row], name_floor: f32) {
     // Focused editors and pending drafts must still receive focus-loss/commit events after
     // scrolling away. The measured size is used only while the group is idle.
     let active = ui.ctx().egui_wants_keyboard_input()
@@ -430,7 +430,7 @@ fn model_group(app: &mut SolveApp, ui: &mut egui::Ui, d: &mut ParamsDialog, grou
 }
 
 /// Live check of an expression typed for a parameter of this unit: Ok(shown value) or the message.
-fn check(app: &mut SolveApp, e: &str, unit: &str) -> Result<String, String> {
+fn check(app: &mut SketApp, e: &str, unit: &str) -> Result<String, String> {
     let r = app.session.execute("expr.evaluate", &json!({"expression": e, "unit": unit})).map_err(|e| e.to_string())?;
     if let Some(text) = r["text"].as_str() {
         return Ok(text.to_string());
@@ -444,7 +444,7 @@ fn check(app: &mut SolveApp, e: &str, unit: &str) -> Result<String, String> {
 }
 
 /// The add row's check of its expression, kept until the design, unit or text changes.
-fn new_check(app: &mut SolveApp, d: &mut ParamsDialog, unit: &str) -> Result<String, String> {
+fn new_check(app: &mut SketApp, d: &mut ParamsDialog, unit: &str) -> Result<String, String> {
     let key = (app.session.revision, unit.to_string(), d.new_expr.clone());
     if let Some((k, r)) = &d.new_check
         && *k == key
@@ -457,7 +457,7 @@ fn new_check(app: &mut SolveApp, d: &mut ParamsDialog, unit: &str) -> Result<Str
     r
 }
 
-fn table(app: &mut SolveApp, ui: &mut egui::Ui, d: &mut ParamsDialog, rows: &[&Row], salt: &str, name_floor: f32) {
+fn table(app: &mut SketApp, ui: &mut egui::Ui, d: &mut ParamsDialog, rows: &[&Row], salt: &str, name_floor: f32) {
     let units: Vec<_> = UNITS.iter().map(|unit| unit_label(unit)).collect();
     // Name keeps a larger share and a shared content floor so long identifiers stay readable
     // and every section's columns line up (#8533, #8551 review). Full window/column resize is #5097.
@@ -680,7 +680,7 @@ fn held_status(count: usize) -> Option<String> {
 /// Set the edits waiting for Apply together: one `parameters.change`, so the design rebuilds once
 /// and one undo takes them all back. A single edit goes as `name, expression`, which can also
 /// rename (`new = …`). False, with the error shown and the edits kept, when it is refused.
-fn apply_held(app: &mut SolveApp, d: &mut ParamsDialog, rows: &[Row]) -> bool {
+fn apply_held(app: &mut SketApp, d: &mut ParamsDialog, rows: &[Row]) -> bool {
     let changes = held(d, rows);
     let params = match changes.iter().next() {
         None => return true,
@@ -699,7 +699,7 @@ fn apply_held(app: &mut SolveApp, d: &mut ParamsDialog, rows: &[Row]) -> bool {
 
 /// "Apply each change as you leave its field", remembered across sessions (#9279). Turning it
 /// back on applies what was waiting.
-fn apply_live_checkbox(app: &mut SolveApp, ui: &mut egui::Ui, d: &mut ParamsDialog, rows: &[Row]) {
+fn apply_live_checkbox(app: &mut SketApp, ui: &mut egui::Ui, d: &mut ParamsDialog, rows: &[Row]) {
     let response = ui_kit::checkbox(ui, crate::i18n::tr("parameters.apply_live"), &mut app.preferences.parameters_apply_live)
         .backing_on_hover_text(crate::i18n::tr("parameters.apply_live_tip"));
     crate::scenario::publish_handle("params:apply_live", response.rect.center());
@@ -709,7 +709,7 @@ fn apply_live_checkbox(app: &mut SolveApp, ui: &mut egui::Ui, d: &mut ParamsDial
 }
 
 /// The add row, one cell per column of the user table it ends.
-fn add_row(app: &mut SolveApp, ui: &mut egui::Ui, table: &mut ui_kit::Table<'_>, d: &mut ParamsDialog, right: f32) {
+fn add_row(app: &mut SketApp, ui: &mut egui::Ui, table: &mut ui_kit::Table<'_>, d: &mut ParamsDialog, right: f32) {
     let name_id = ui.make_persistent_id("pnew_name");
     let expr_id = ui.make_persistent_id("pnew_expr");
     let comment_id = ui.make_persistent_id("pnew_comment");
@@ -867,7 +867,7 @@ fn cache_id() -> egui::Id {
 
 /// Keep the completion list (parameters, functions, constants, units) for this revision of the
 /// design where expression boxes can reach it. Called once per frame.
-pub fn publish(app: &mut SolveApp, ctx: &egui::Context) {
+pub fn publish(app: &mut SketApp, ctx: &egui::Context) {
     let rev = app.session.revision;
     let every =
         usize::from(app.preferences.parameter_list_rows.clamp(*crate::prefs::PARAMETER_LIST_ROWS.start(), *crate::prefs::PARAMETER_LIST_ROWS.end()));
@@ -1309,7 +1309,7 @@ mod tests {
         assert_eq!(word_before("1 + ", 4), (4, String::new()));
         assert_eq!(word_before("ü", 9), (0, "ü".to_string()));
         let ctx = crate::fonts::test_context();
-        let mut app = SolveApp::new(sketcraft_engine::Session::default(), Default::default());
+        let mut app = SketApp::new(sketcraft_engine::Session::default(), Default::default());
         let _ = app.run("parameters.add", json!({"name": "width", "expression": "40 mm"}));
         let _ = app.run("parameters.add", json!({"name": "radius", "expression": "10 mm"}));
         let _ = app.run("parameters.add", json!({"name": "rounding", "expression": "3 mm"}));
@@ -1345,7 +1345,7 @@ mod tests {
     #[test]
     fn a_parameter_is_offered_for_any_part_of_its_name() {
         let ctx = egui::Context::default();
-        let mut app = SolveApp::new(sketcraft_engine::Session::default(), Default::default());
+        let mut app = SketApp::new(sketcraft_engine::Session::default(), Default::default());
         for (name, e) in [("cab_side_thickness", "18 mm"), ("sides", "4")] {
             let _ = app.run("parameters.add", json!({"name": name, "expression": e}));
         }

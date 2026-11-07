@@ -10,8 +10,8 @@
 use sketcraft_geom::prelude::*;
 use std::collections::BTreeSet;
 
-use solidcore_record::Vec3;
-use solidcore_record::brep::{Brep, Curve, Loop, OrientedEdge, Shell, Surface};
+use sketcore_record::Vec3;
+use sketcore_record::brep::{Brep, Curve, Loop, OrientedEdge, Shell, Surface};
 use sketcraft_geom::brep::eval::{CurveEval, SurfaceEval};
 
 use crate::body::Body;
@@ -39,7 +39,7 @@ pub fn names_largest_fit(why: &str) -> bool {
 }
 
 /// `why` with the largest size that fits it names ([`largest_fit_note`]) replaced by `largest`:
-/// solidcore names the size less a margin (34.99 where 35 builds), a feature's search the
+/// sketcore names the size less a margin (34.99 where 35 builds), a feature's search the
 /// largest it built. `why` itself where it names none.
 pub fn with_fit_note(why: &str, size: &str, largest: f64) -> String {
     let Some(start) = why.find("the largest ") else { return why.to_owned() };
@@ -1158,7 +1158,7 @@ pub(crate) fn with_continuation(e: KernelError, next: Option<Vec3>) -> KernelErr
 #[allow(clippy::unwrap_used, clippy::expect_used)]
 mod tests {
     use super::*;
-    use solidcore_record::{Loop2, Plane, Region2, Vec2};
+    use sketcore_record::{Loop2, Plane, Region2, Vec2};
 
     /// A round (`round`) or an equal-distance chamfer of the edges nearest `pts`.
     fn blend(body: &Body, pts: &[Vec3], size: f64, round: bool) -> Result<Body> {

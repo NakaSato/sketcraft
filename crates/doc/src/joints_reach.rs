@@ -6,7 +6,7 @@ use sketcraft_geom::prelude::*;
 use std::cell::Cell;
 use std::collections::BTreeSet;
 
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 use sketcraft_sketch::linalg;
 
 use super::{

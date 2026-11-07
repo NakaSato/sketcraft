@@ -5,7 +5,7 @@
 //! six terms for usize::MAX faces need fewer than728 bits, so12 limbs suffice.
 //! This fixed continuation state has no heap, tolerance or floating accumulation.
 use crate::job::{self, ErrorCode, JobError};
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 fn invalid() -> JobError {
     JobError::new(ErrorCode::InvalidScene, "CPU exact glass volume exceeds its dyadic certificate domain")
 }

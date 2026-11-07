@@ -1,7 +1,7 @@
 //! Modelling-tool preferences composed from shared controls and canonical figures.
 use super::*;
 
-pub(super) fn show(app: &mut SolveApp, ui: &mut egui::Ui) {
+pub(super) fn show(app: &mut SketApp, ui: &mut egui::Ui) {
     let t = Tokens::get();
     ui_kit::settings_page(ui, |ui| {
         ui_kit::settings_heading(ui, app.tr("prefs.structure.tools"), app.tr("prefs.structure.tools_note"));
@@ -10,7 +10,7 @@ pub(super) fn show(app: &mut SolveApp, ui: &mut egui::Ui) {
                 create_row(ui, app.tr("ui.hole"), &["hole"], true, |ui| {
                     for (setting, help, key, legacy) in [
                         (
-                            setting::hole_snaps as fn(&mut SolveApp, &mut egui::Ui) -> egui::Response,
+                            setting::hole_snaps as fn(&mut SketApp, &mut egui::Ui) -> egui::Response,
                             "prefs.design_tools.hole_snaps_help",
                             "hole_snaps",
                             "Snap to face and edge centres",
@@ -30,7 +30,7 @@ pub(super) fn show(app: &mut SolveApp, ui: &mut egui::Ui) {
                 create_row(ui, app.tr_label("Extrude"), &["extrude"], false, |ui| {
                     for (setting, help, key) in [
                         (
-                            setting::extrude_auto_to_object as fn(&mut SolveApp, &mut egui::Ui) -> egui::Response,
+                            setting::extrude_auto_to_object as fn(&mut SketApp, &mut egui::Ui) -> egui::Response,
                             "ui.extrude_auto_to_object_tip",
                             "extrude_auto_to_object",
                         ),

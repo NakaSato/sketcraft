@@ -100,10 +100,10 @@ fn the_viewport_keeps_the_grid_plane_between_frames() {
 #[test]
 fn create_sketch_previews_the_plane_under_the_pointer_on_the_grid() {
     let rect = Rect::from_min_size(Pos2::ZERO, egui::vec2(800.0, 600.0));
-    let mut app = SolveApp::new(sketcraft_engine::Session::default(), crate::Services::default());
+    let mut app = SketApp::new(sketcraft_engine::Session::default(), crate::Services::default());
     app.ui.show_grid = true;
     app.preferences.grid_follows_view = false;
-    let grid = |app: &SolveApp| -> Vec<[f32; 3]> {
+    let grid = |app: &SketApp| -> Vec<[f32; 3]> {
         build_sketch_scene(app, &projection(app, rect))
             .under
             .as_chunks::<32>()
@@ -114,7 +114,7 @@ fn create_sketch_previews_the_plane_under_the_pointer_on_the_grid() {
             .collect()
     };
     // Every grid point has coordinate `axis` 0: the grid lies on that origin plane.
-    let on = |app: &SolveApp, axis: usize| {
+    let on = |app: &SketApp, axis: usize| {
         let points = grid(app);
         !points.is_empty() && points.iter().all(|p| p[axis].abs() < 1e-3)
     };
@@ -145,7 +145,7 @@ fn a_selected_plane_previews_on_the_grid_before_create_sketch() {
     let mut app = crate::test_support::classic_app(sketcraft_engine::Session::default());
     app.ui.show_grid = true;
     app.preferences.grid_follows_view = false;
-    let on = |app: &SolveApp, axis: usize| {
+    let on = |app: &SketApp, axis: usize| {
         let points: Vec<[f32; 3]> = build_sketch_scene(app, &projection(app, rect))
             .under
             .as_chunks::<32>()
@@ -239,7 +239,7 @@ fn grazing_ground_grid_keeps_the_point_under_the_target_visible() {
 #[test]
 fn the_grid_covers_the_middle_of_the_view_when_the_target_is_off_the_ground() {
     let rect = Rect::from_min_size(Pos2::ZERO, egui::vec2(1280.0, 720.0));
-    let mut app = SolveApp::new(sketcraft_engine::Session::default(), crate::Services::default());
+    let mut app = SketApp::new(sketcraft_engine::Session::default(), crate::Services::default());
     app.ui.show_grid = true;
     app.ui.perspective = false;
     // The camera of the report.
@@ -258,9 +258,8 @@ fn the_grid_covers_the_middle_of_the_view_when_the_target_is_off_the_ground() {
         .flat_map(|l| [&l[0..12], &l[12..24]])
         .map(|b| [0, 4, 8].map(|i| f32::from_le_bytes(b[i..i + 4].try_into().unwrap())))
         .collect();
-    let (lo, hi) = points
-        .iter()
-        .fold(([f32::MAX; 2], [f32::MIN; 2]), |(lo, hi), p| ([lo[0].min(p[0]), lo[1].min(p[1])], [hi[0].max(p[0]), hi[1].max(p[1])]));
+    let (lo, hi) =
+        points.iter().fold(([f32::MAX; 2], [f32::MIN; 2]), |(lo, hi), p| ([lo[0].min(p[0]), lo[1].min(p[1])], [hi[0].max(p[0]), hi[1].max(p[1])]));
     let (x, y) = (mid.x as f32, mid.y as f32);
     assert!(x > lo[0] && x < hi[0] && y > lo[1] && y < hi[1], "the grid spans {lo:?}..{hi:?}, the middle of the view is at {mid:?}");
 }
@@ -272,7 +271,7 @@ fn the_grid_covers_the_middle_of_the_view_when_the_target_is_off_the_ground() {
 #[test]
 fn the_grid_fades_out_with_the_distance_from_the_middle_of_the_view() {
     let rect = Rect::from_min_size(Pos2::ZERO, egui::vec2(800.0, 600.0));
-    let mut app = SolveApp::new(sketcraft_engine::Session::default(), crate::Services::default());
+    let mut app = SketApp::new(sketcraft_engine::Session::default(), crate::Services::default());
     app.ui.show_grid = true;
     app.ui.perspective = false;
     // A top view: the ground is the XY plane, and the grid is centred on the target.
@@ -328,7 +327,7 @@ fn the_grid_draws_both_levels_at_a_switch_of_its_spacing() {
     let rect = Rect::from_min_size(Pos2::ZERO, egui::vec2(800.0, 600.0));
     // The strongest alpha a line across X at `x` is drawn with, at a half height of `hh`.
     let alpha_at = |hh: f64, x: f32| {
-        let mut app = SolveApp::new(sketcraft_engine::Session::default(), crate::Services::default());
+        let mut app = SketApp::new(sketcraft_engine::Session::default(), crate::Services::default());
         app.ui.show_grid = true;
         app.ui.perspective = false;
         app.cam.pitch = std::f64::consts::FRAC_PI_2;
@@ -373,7 +372,7 @@ fn the_grid_draws_both_levels_at_a_switch_of_its_spacing() {
 #[test]
 fn the_picture_and_the_window_draw_the_same_grid_on_a_sketch_plane() {
     let rect = Rect::from_min_size(Pos2::ZERO, egui::vec2(800.0, 600.0));
-    let mut app = SolveApp::new(sketcraft_engine::Session::default(), crate::Services::default());
+    let mut app = SketApp::new(sketcraft_engine::Session::default(), crate::Services::default());
     app.run("sketch.create", json!({"plane": "XY"})).unwrap();
     app.ui.perspective = false;
     app.cam.fov = 0.0;
@@ -416,7 +415,7 @@ fn the_picture_and_the_window_draw_the_same_grid_on_a_sketch_plane() {
 fn the_grid_fades_out_in_the_picture_instead_of_ending_in_a_cut() {
     const SIZE: u32 = 512;
     let rect = Rect::from_min_size(Pos2::ZERO, egui::vec2(SIZE as f32, SIZE as f32));
-    let mut app = SolveApp::new(sketcraft_engine::Session::default(), crate::Services::default());
+    let mut app = SketApp::new(sketcraft_engine::Session::default(), crate::Services::default());
     app.ui.show_grid = true;
     app.ui.perspective = true;
     // A low view of the ground: the far ground is in the picture, where the grid used to end
@@ -486,10 +485,7 @@ fn the_grid_fades_out_in_the_picture_instead_of_ending_in_a_cut() {
     let faded_ink: u64 = band.clone().map(|y| faded_rows[y]).sum();
     let full_ink: u64 = band.map(|y| full_rows[y]).sum();
     assert!(full_ink > 0, "the grid shows up to the far plane");
-    assert!(
-        faded_ink * 4 < full_ink,
-        "the grid still shows at full strength where the far plane cuts the ground: {faded_ink} against {full_ink}"
-    );
+    assert!(faded_ink * 4 < full_ink, "the grid still shows at full strength where the far plane cuts the ground: {faded_ink} against {full_ink}");
 }
 
 /// An open sketch has its grid, on its own plane, whatever the Grid switch and the
@@ -497,9 +493,9 @@ fn the_grid_fades_out_in_the_picture_instead_of_ending_in_a_cut() {
 #[test]
 fn an_open_sketch_always_shows_a_grid_on_its_plane() {
     let rect = Rect::from_min_size(Pos2::ZERO, egui::vec2(800.0, 600.0));
-    let mut app = SolveApp::new(sketcraft_engine::Session::default(), crate::Services::default());
+    let mut app = SketApp::new(sketcraft_engine::Session::default(), crate::Services::default());
     app.ui.show_grid = false;
-    let grid = |app: &SolveApp| build_sketch_scene(app, &projection(app, rect)).under;
+    let grid = |app: &SketApp| build_sketch_scene(app, &projection(app, rect)).under;
     assert!(grid(&app).is_empty(), "no grid outside a sketch with the switch off");
     app.run("sketch.create", json!({"plane": "XZ"})).unwrap();
     for follows in [false, true] {
@@ -521,9 +517,9 @@ fn an_open_sketch_always_shows_a_grid_on_its_plane() {
 #[test]
 fn the_sketch_grid_option_turns_the_open_sketchs_grid_off() {
     let rect = Rect::from_min_size(Pos2::ZERO, egui::vec2(800.0, 600.0));
-    let grid = |app: &SolveApp| !build_sketch_scene(app, &projection(app, rect)).under.is_empty();
+    let grid = |app: &SketApp| !build_sketch_scene(app, &projection(app, rect)).under.is_empty();
     for switch in [false, true] {
-        let mut app = SolveApp::new(sketcraft_engine::Session::default(), crate::Services::default());
+        let mut app = SketApp::new(sketcraft_engine::Session::default(), crate::Services::default());
         app.ui.show_grid = switch;
         app.run("sketch.create", json!({"plane": "XY"})).unwrap();
         assert!(grid(&app) && crate::control::window_guides(&app).grid, "switch {switch}: the sketch's grid shows");
@@ -591,7 +587,7 @@ fn imported_scene_projection_toggle_keeps_front_components_in_clip_range() {
 #[test]
 fn an_open_sketch_is_drawn_orthographic() {
     let rect = Rect::from_min_size(Pos2::ZERO, egui::vec2(800.0, 600.0));
-    let mut app = SolveApp::new(sketcraft_engine::Session::default(), crate::Services::default());
+    let mut app = SketApp::new(sketcraft_engine::Session::default(), crate::Services::default());
     app.ui.perspective = true;
     assert!(projection(&app, rect).cam.fov > 0.0);
     app.run("sketch.create", json!({"plane": "XZ"})).unwrap();
@@ -623,7 +619,7 @@ fn auto_ortho_faces_follows_camera_alignment() {
     assert_eq!(projection(&app, rect).cam.fov, 0.0);
     // The preference round-trips through the saved prefs.
     let saved = app.prefs();
-    let mut fresh = SolveApp::new(sketcraft_engine::Session::default(), crate::Services::default());
+    let mut fresh = SketApp::new(sketcraft_engine::Session::default(), crate::Services::default());
     fresh.load_prefs(&saved);
     assert!(fresh.ui.auto_ortho_faces, "the option is kept between runs");
     // With the mode off, the manual preference rules again (orthographic in the classic view).
@@ -717,7 +713,7 @@ fn create_sketch_shows_the_origin_planes_through_the_model() {
 /// plane's browser row under the pointer lights it the same way.
 #[test]
 fn create_sketch_lights_the_plane_under_the_pointer_or_its_browser_row() {
-    let mut app = SolveApp::new(sketcraft_engine::Session::default(), crate::Services::default());
+    let mut app = SketApp::new(sketcraft_engine::Session::default(), crate::Services::default());
     app.start("sketch.create");
     let plain = build_highlight(&app).xray;
     app.viewport.hover = Some(Hit::Plane { name: "XZ".into(), point: Vec3::ZERO });
@@ -760,7 +756,7 @@ fn create_sketch_previews_the_hovered_plane_and_a_click_sketches_on_it() {
 #[test]
 fn the_preference_draws_finished_sketches_through_bodies() {
     let rect = Rect::from_min_size(Pos2::ZERO, egui::vec2(800.0, 600.0));
-    let mut app = SolveApp::new(sketcraft_engine::Session::default(), crate::Services::default());
+    let mut app = SketApp::new(sketcraft_engine::Session::default(), crate::Services::default());
     app.run("sketch.create", json!({"plane": "XY"})).unwrap();
     app.run("sketch.rectangle.two_point", json!({"p0": [-10, -10], "p1": [10, 10]})).unwrap();
     app.run("sketch.finish", json!({})).unwrap();
@@ -779,7 +775,7 @@ fn the_preference_draws_finished_sketches_through_bodies() {
 /// objects it doesn't.
 #[test]
 fn a_dialog_picking_a_plane_shows_the_origin_planes() {
-    let mut app = SolveApp::new(sketcraft_engine::Session::default(), crate::Services::default());
+    let mut app = SketApp::new(sketcraft_engine::Session::default(), crate::Services::default());
     app.run("solid.box", json!({"length":40,"width":40,"height":40})).unwrap();
     app.set_origin_shown(false);
     app.start("solid.mirror");
@@ -799,7 +795,7 @@ fn a_dialog_picking_a_plane_shows_the_origin_planes() {
 /// as today; other dialogs that pick a plane keep the reveal (#2581).
 #[test]
 fn project_leaves_hidden_origin_planes_hidden() {
-    let mut app = SolveApp::new(sketcraft_engine::Session::default(), crate::Services::default());
+    let mut app = SketApp::new(sketcraft_engine::Session::default(), crate::Services::default());
     app.run("solid.box", json!({"length":40,"width":40,"height":40})).unwrap();
     app.run("sketch.create", json!({"plane": "XY"})).unwrap();
     app.set_origin_shown(false);
@@ -826,7 +822,7 @@ fn preview_rollback_stays_off_while_manipulator_dragging() {
     s.execute("sketch.create", &json!({"plane": "xy"})).unwrap();
     s.execute("sketch.line", &json!({"points": [[0, 0], [20, 0]]})).unwrap();
     s.execute("sketch.finish", &json!({})).unwrap();
-    let mut app = SolveApp::new(s, crate::Services::default());
+    let mut app = SketApp::new(s, crate::Services::default());
     app.dialog = crate::dialogs::Dialog::for_command(&app, "solid.extrude");
     assert!(app.dialog.as_ref().is_some_and(|d| d.previews()), "extrude opens a preview dialog");
     app.preview.active = true;

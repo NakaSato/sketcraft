@@ -10,7 +10,7 @@
 //! without moved components).
 
 use serde_json::{Map, Value};
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 use sketcraft_doc::{Mat, apply_point, apply_vector, is_identity, map_point_expr, map_vector_expr, mat_inverse};
 use sketcraft_geom::prelude::*;
 

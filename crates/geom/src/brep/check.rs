@@ -4,9 +4,9 @@
 //! axis under a non-singular placement. [`validate`] and [`validate_built`] are the record's
 //! validation and these together: what a record must pass before the kernel takes it.
 use crate::prelude::*;
-use solidcore_record::brep::{Brep, Curve, Frame, Result, Surface, require};
+use sketcore_record::brep::{Brep, Curve, Frame, Result, Surface, require};
 
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 
 /// [`Brep::validate`] (a record from outside the kernel), then [`geometry`].
 pub fn validate(b: &Brep) -> Result<()> {

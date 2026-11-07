@@ -2,7 +2,7 @@
 //! must stay responsive through every phase of opening a design. `SKETCRAFT_PROFILE_FRAMES=1`
 //! logs every frame slower than [`SLOW_MS`] with its phase; tests read [`Watch::slowest`].
 
-use crate::SolveApp;
+use crate::SketApp;
 
 /// A frame slower than this is logged (ms).
 pub(crate) const SLOW_MS: f64 = 50.0;
@@ -27,7 +27,7 @@ impl Watch {
 }
 
 /// What the app is doing this frame, as far as opening a design goes.
-pub(crate) fn phase(app: &SolveApp) -> &'static str {
+pub(crate) fn phase(app: &SketApp) -> &'static str {
     if let Some(p) = crate::file_load::phase(app) {
         return p;
     }
@@ -35,7 +35,7 @@ pub(crate) fn phase(app: &SolveApp) -> &'static str {
 }
 
 /// The frame starts (before any of its work).
-pub(crate) fn begin(app: &mut SolveApp) {
+pub(crate) fn begin(app: &mut SketApp) {
     let now = crate::now_ms();
     app.frame_watch.began = Some(now);
     app.frame_watch.last = now;
@@ -44,7 +44,7 @@ pub(crate) fn begin(app: &mut SolveApp) {
 }
 
 /// A named step of this frame's work ended: a slow frame is logged with them.
-pub(crate) fn step(app: &mut SolveApp, name: &'static str) {
+pub(crate) fn step(app: &mut SketApp, name: &'static str) {
     let now = crate::now_ms();
     let w = &mut app.frame_watch;
     if w.began.is_some() && w.steps.len() < 32 {
@@ -54,7 +54,7 @@ pub(crate) fn step(app: &mut SolveApp, name: &'static str) {
 }
 
 /// The frame's work is done.
-pub(crate) fn end(app: &mut SolveApp) {
+pub(crate) fn end(app: &mut SketApp) {
     step(app, "the rest of the frame");
     let Some(began) = app.frame_watch.began.take() else { return };
     let ms = crate::now_ms() - began;

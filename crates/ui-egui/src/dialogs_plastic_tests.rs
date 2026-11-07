@@ -6,12 +6,12 @@ use super::*;
 use crate::Services;
 use crate::dialogs::{apply_commands, face_sel, for_feature as edit_dialog};
 
-fn app_with(cmds: &[(&str, Value)]) -> SolveApp {
+fn app_with(cmds: &[(&str, Value)]) -> SketApp {
     let mut s = Session::default();
     for (id, p) in cmds {
         s.execute(id, p).unwrap();
     }
-    SolveApp::new(s, Services::default())
+    SketApp::new(s, Services::default())
 }
 
 /// A face pick places a boss; optional values left empty take the rule; ribs only with a count;
@@ -132,7 +132,7 @@ fn bare_numbers_show_their_units() {
     assert_eq!(c[0].1["params"]["draft"], "1 deg");
     assert_eq!(c[0].1["params"]["ribs"], "4");
     // Re-applying the dialog redefines the features in place (no new ones, no errors).
-    let count = |app: &SolveApp| app.session.doc.features.len();
+    let count = |app: &SketApp| app.session.doc.features.len();
     let n = count(&app);
     run_all(&mut app, c);
     run_all(&mut app, before);

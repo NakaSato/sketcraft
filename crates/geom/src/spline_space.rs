@@ -18,7 +18,7 @@
 //! function here panics.
 
 use crate::bspline::{HPoint, MAX_SPLINE_DEGREE, Side, SplineError, SplineResult, check_knots, find_span, insert_knot, invalid, local_basis};
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 
 /// Most basis functions a space used for interpolation may have (its systems are solved densely).
 pub const MAX_SPACE_DIMENSION: usize = 2048;

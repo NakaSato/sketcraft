@@ -17,7 +17,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::path::Path;
 
 use serde_json::{Value, json};
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 use sketcraft_doc::{DesignLink, Document, FeatureKind, ModelBody, ModelState};
 
 use super::{absolute, component_key, file_sha256, inherit_properties, reply, resolve, session_bodies, stored};

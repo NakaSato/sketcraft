@@ -3,7 +3,7 @@
 //! rate in inverse millimetres, not an invented density or surface-opacity hack.
 use super::TransmissionError;
 use serde::{Deserialize, Serialize};
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 use sketcraft_geom::prelude::*;
 
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]

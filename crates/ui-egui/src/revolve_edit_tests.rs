@@ -1,7 +1,7 @@
 use crate::dialogs::{Dialog, Kind, apply_commands};
 use crate::scenario::Harness;
 use serde_json::{Value, json};
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 use sketcraft_engine::Sel;
 use sketcraft_engine::doc::{AxisRef, FeatureKind};
 use sketcraft_engine::geom::prelude::*;
@@ -65,11 +65,11 @@ fn to_object_noop_preserves_cut_targets_and_untargeted_body() {
     assert!((before_a - (2000.0 - removed)).abs() < 0.2, "cut results {:?}: {before_a}", state.bodies.iter().map(|b| &b.name).collect::<Vec<_>>());
     let in_cut_stock =
         |p| state.bodies.iter().filter(|b| b.name != "B").any(|b| b.body.classify_point(p).unwrap() == sketcraft_engine::kernel::PointClass::Inside);
-    assert!(in_cut_stock(solidcore_record::Vec3::new(2.0, 2.0, 2.0)));
-    assert!(in_cut_stock(solidcore_record::Vec3::new(18.0, 2.0, 18.0)));
-    assert!(!in_cut_stock(solidcore_record::Vec3::new(9.0, 2.0, 9.0)));
+    assert!(in_cut_stock(sketcore_record::Vec3::new(2.0, 2.0, 2.0)));
+    assert!(in_cut_stock(sketcore_record::Vec3::new(18.0, 2.0, 18.0)));
+    assert!(!in_cut_stock(sketcore_record::Vec3::new(9.0, 2.0, 9.0)));
     assert_eq!(
-        state.body("B").unwrap().body.classify_point(solidcore_record::Vec3::new(9.0, 2.0, 9.0)).unwrap(),
+        state.body("B").unwrap().body.classify_point(sketcore_record::Vec3::new(9.0, 2.0, 9.0)).unwrap(),
         sketcraft_engine::kernel::PointClass::Inside
     );
     let before_bounds: Vec<_> = state.bodies.iter().map(|b| (b.name.clone(), b.mesh().bounds())).collect();
@@ -124,7 +124,7 @@ fn second_active_occurrence_noop_preserves_definition_axis_target_and_instances(
     h.app.run("component.activate", json!({"component":owner["component"],"occurrence":second,"path":[second]})).unwrap();
     let original = serde_json::to_value(&h.app.session.doc.find_feature("Turn").unwrap().kind).unwrap();
     let frame = h.app.session.active_component_frame();
-    let expected_origin = sketcraft_engine::doc::apply_point(&frame, solidcore_record::Vec3::ZERO);
+    let expected_origin = sketcraft_engine::doc::apply_point(&frame, sketcore_record::Vec3::ZERO);
     let before: Vec<_> = h.app.session.world_state().unwrap().bodies.iter().map(|b| (b.name.clone(), b.mesh().bounds())).collect();
     open(&mut h);
     let (origin, _) = crate::canvas::revolve_axis(&h.app, h.app.dialog.as_ref().unwrap()).unwrap();
@@ -358,7 +358,7 @@ fn xy_rectangle(h: &mut Harness, name: &str, p0: [f64; 2], p1: [f64; 2]) -> u64 
     h.app.session.doc.find_feature(name).unwrap().id
 }
 
-fn revolve_dialog(app: &crate::SolveApp, profiles: Vec<Sel>, axis: Sel) -> Dialog {
+fn revolve_dialog(app: &crate::SketApp, profiles: Vec<Sel>, axis: Sel) -> Dialog {
     let mut d = Dialog::for_command(app, "solid.revolve").unwrap();
     d.inputs[0].items = profiles;
     d.inputs[1].items = vec![axis];
@@ -369,7 +369,7 @@ fn revolve_dialog(app: &crate::SolveApp, profiles: Vec<Sel>, axis: Sel) -> Dialo
     d
 }
 
-fn vertical_id(app: &crate::SolveApp, sketch: u64, x: f64) -> String {
+fn vertical_id(app: &crate::SketApp, sketch: u64, x: f64) -> String {
     let st = app.session.world_state().unwrap();
     let ss = st.sketch(sketch).unwrap();
     ss.sketch
@@ -383,7 +383,7 @@ fn vertical_id(app: &crate::SolveApp, sketch: u64, x: f64) -> String {
         .unwrap_or_else(|| panic!("no vertical line at x={x}"))
 }
 
-fn segment(app: &crate::SolveApp, sketch: u64, id: &str) -> (Vec3, Vec3) {
+fn segment(app: &crate::SketApp, sketch: u64, id: &str) -> (Vec3, Vec3) {
     let st = app.session.world_state().unwrap();
     let ss = st.sketch(sketch).unwrap();
     let i = ss.sketch.curve_index(id).unwrap_or_else(|| panic!("no curve {id}"));
@@ -478,7 +478,7 @@ fn dialog_revolve_follows_the_highlighted_edge_when_the_curve_id_collides() {
     assert!((cmds[0].1["axis"]["origin"][0].as_f64().unwrap() - 10.0).abs() < 1e-6, "{}", cmds[0].1["axis"]);
 }
 
-fn linked_span(app: &crate::SolveApp, sketch: u64) -> (f64, f64, f64, f64) {
+fn linked_span(app: &crate::SketApp, sketch: u64) -> (f64, f64, f64, f64) {
     let st = app.session.world_state().unwrap();
     let ss = st.sketch(sketch).unwrap();
     let mut xs = Vec::new();

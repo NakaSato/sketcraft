@@ -19,7 +19,7 @@
 use serde_json::json;
 use sketcraft_engine::geom::prelude::*;
 
-use crate::SolveApp;
+use crate::SketApp;
 use crate::prefs::StandUpUnknown;
 use crate::ui_kit;
 
@@ -57,7 +57,7 @@ pub enum Upright {
 /// The flat area of `mesh` facing down Z, facing down Y and facing up Y, looking at no more than
 /// `budget` triangles.
 pub fn flat_areas(mesh: &sketcraft_engine::geom::Mesh, budget: usize) -> [f64; 3] {
-    use solidcore_record::Vec3;
+    use sketcore_record::Vec3;
     struct Face {
         first: Vec3,
         area: f64,
@@ -128,7 +128,7 @@ pub fn upright(z_down: f64, y_either: f64, size: [f64; 3]) -> Upright {
 
 /// Which axis the bodies named `bodies` in the current design seem to have up. Looks at most
 /// `MAX_BODIES` bodies and `MAX_TRIANGLES` triangles; a body that can't be meshed adds nothing.
-pub fn estimate(app: &SolveApp, bodies: &[String]) -> Upright {
+pub fn estimate(app: &SketApp, bodies: &[String]) -> Upright {
     let world = crate::open_meshing::session_world(&app.session);
     let mut areas = [0.0_f64; 3];
     let mut bounds = sketcraft_engine::geom::Aabb3::EMPTY;
@@ -150,7 +150,7 @@ pub fn estimate(app: &SolveApp, bodies: &[String]) -> Upright {
 /// The bodies a just-opened file brought (`before`: body names before it opened, none for a
 /// new design), and the import's component placement from the command's `result`: offer to
 /// stand them up.
-pub fn offer(app: &mut SolveApp, path: &str, before: &[String], result: Option<&serde_json::Value>) {
+pub fn offer(app: &mut SketApp, path: &str, before: &[String], result: Option<&serde_json::Value>) {
     let io = &sketcraft_engine::io::is_step_path;
     if !(io(path) || sketcraft_engine::io::is_iges_path(path)) || app.preferences.up_axis != "z" {
         return;
@@ -192,7 +192,7 @@ pub fn offer(app: &mut SolveApp, path: &str, before: &[String], result: Option<&
 }
 
 /// Turn the offered bodies a quarter turn about X (Y up becomes Z up).
-pub fn stand_up(app: &mut SolveApp) -> Result<(), String> {
+pub fn stand_up(app: &mut SketApp) -> Result<(), String> {
     app.stand_up_reason = false;
     app.stand_up_assembly = false;
     app.stand_up_note = false;
@@ -213,7 +213,7 @@ pub fn stand_up(app: &mut SolveApp) -> Result<(), String> {
 
 /// Dismiss the offer and keep the file as it opened ("Leave it", or the note's Close); the
 /// preference stays on.
-pub fn leave(app: &mut SolveApp) {
+pub fn leave(app: &mut SketApp) {
     app.stand_up = None;
     app.stand_up_reason = false;
     app.stand_up_occurrence = None;
@@ -223,14 +223,14 @@ pub fn leave(app: &mut SolveApp) {
 }
 
 /// The offer is waiting as the note (drawn by the shared toast). No side effects.
-pub(crate) fn note_pending(app: &SolveApp) -> bool {
+pub(crate) fn note_pending(app: &SketApp) -> bool {
     app.stand_up_note && app.stand_up.is_some()
 }
 
 /// The note due this frame, as its text, for the shared toast (`viewport::transient_messages`) to
 /// draw with the buttons `note_labels`. Its clock starts the first frame it is drawn; after
 /// `NOTE_SECONDS` without the pointer on it (`note_keep`) it goes, leaving the file as it opened.
-pub(crate) fn note_due(app: &mut SolveApp, ctx: &egui::Context) -> Option<String> {
+pub(crate) fn note_due(app: &mut SketApp, ctx: &egui::Context) -> Option<String> {
     if !note_pending(app) {
         return None;
     }
@@ -261,20 +261,20 @@ pub(crate) fn note_labels() -> [String; 2] {
 
 /// The share of the note's time left now, 1 to 0, for the countdown ring around its close (×).
 /// Pointing at it (`note_keep`) starts its time again, so the ring is full while it is pointed at.
-pub(crate) fn note_left(app: &SolveApp, ctx: &egui::Context) -> f32 {
+pub(crate) fn note_left(app: &SketApp, ctx: &egui::Context) -> f32 {
     let now = ctx.input(|i| i.time);
     app.stand_up_note_since.map_or(1.0, |since| crate::viewport::countdown_left(since, now, NOTE_SECONDS))
 }
 
 /// The note was drawn at `rect`: a pointer on it keeps it from going.
-pub(crate) fn note_keep(app: &mut SolveApp, ctx: &egui::Context, rect: egui::Rect) {
+pub(crate) fn note_keep(app: &mut SketApp, ctx: &egui::Context, rect: egui::Rect) {
     if ctx.input(|i| i.pointer.hover_pos()).is_some_and(|pos| rect.contains(pos)) {
         app.stand_up_note_since = Some(ctx.input(|i| i.time));
     }
 }
 
 /// The note's button `index` (of `NOTE_HANDLES`) was clicked.
-pub(crate) fn note_act(app: &mut SolveApp, index: usize) {
+pub(crate) fn note_act(app: &mut SketApp, index: usize) {
     match index {
         0 => {
             if let Err(e) = stand_up(app) {
@@ -291,7 +291,7 @@ pub(crate) fn note_act(app: &mut SolveApp, index: usize) {
 }
 
 /// The offer, under the toolbar, unless it is the note.
-pub fn show(app: &mut SolveApp, ctx: &egui::Context) {
+pub fn show(app: &mut SketApp, ctx: &egui::Context) {
     if app.stand_up.is_none() || app.stand_up_note {
         return;
     }

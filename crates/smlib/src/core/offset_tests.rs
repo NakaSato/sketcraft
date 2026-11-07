@@ -1,20 +1,20 @@
-//! Shells, face offsets, thickening, sheet offsets and drafts on solidcore, against closed forms:
+//! Shells, face offsets, thickening, sheet offsets and drafts on sketcore, against closed forms:
 //! every result exports to a record that validates.
 //!
-//! The bodies are solidcore's own boxes, cylinders and linear sweeps (and booleans of them).
+//! The bodies are sketcore's own boxes, cylinders and linear sweeps (and booleans of them).
 
 use std::collections::BTreeMap;
 use std::f64::consts::PI;
 use std::sync::mpsc;
 use std::time::Duration;
 
-use solidcore::curve::curve::Curve;
-use solidcore::curve::ellipse::Ellipse;
-use solidcore::geom::axis2_placement::Axis2Placement;
-use solidcore::geom::extent1d::Extent1d;
-use solidcore::geom::vector3d::Vec3;
-use solidcore::primitive::api_curves::create_line_segment;
-use solidcore::sweep::api_brep::create_linear_sweep;
+use sketcore::curve::curve::Curve;
+use sketcore::curve::ellipse::Ellipse;
+use sketcore::geom::axis2_placement::Axis2Placement;
+use sketcore::geom::extent1d::Extent1d;
+use sketcore::geom::vector3d::Vec3;
+use sketcore::primitive::api_curves::create_line_segment;
+use sketcore::sweep::api_brep::create_linear_sweep;
 
 use super::offset::{draft, mark_moved, moved_faces, offset_faces, offset_sheet, shell, thicken};
 use super::{Body, area, bounds, counts, make_box, make_cylinder, make_sphere, run, to_arrays, volume};
@@ -249,7 +249,7 @@ struct Measured {
     kinds: BTreeMap<String, usize>,
 }
 
-fn kinds(rec: &solidcore_record::brep::Brep) -> BTreeMap<String, usize> {
+fn kinds(rec: &sketcore_record::brep::Brep) -> BTreeMap<String, usize> {
     let mut out = BTreeMap::new();
     for f in &rec.faces {
         let v = serde_json::to_value(&f.surface).unwrap();
@@ -285,7 +285,7 @@ fn timed<T: Send + 'static>(name: &str, f: impl FnOnce() -> T + Send + 'static) 
             Err(p) => std::panic::resume_unwind(p),
             Ok(()) => panic!("{name}: no result"),
         },
-        Err(mpsc::RecvTimeoutError::Timeout) => panic!("{name}: solidcore hung (no result after {TIMEOUT:?})"),
+        Err(mpsc::RecvTimeoutError::Timeout) => panic!("{name}: sketcore hung (no result after {TIMEOUT:?})"),
     }
 }
 
@@ -319,7 +319,7 @@ fn judge(name: &str, who: &str, expect: &Expect, got: Got) -> Got {
     got
 }
 
-fn solidcore_case(name: &'static str) -> Got {
+fn sketcore_case(name: &'static str) -> Got {
     timed(name, move || {
         let c = case(name);
         let sheet = is_sheet(&c.expect);
@@ -331,7 +331,7 @@ fn solidcore_case(name: &'static str) -> Got {
             let bx = bounds(&body).unwrap();
             Measured { size, bounds: bx, counts: n, kinds: kinds(&rec) }
         });
-        judge(name, "solidcore", &c.expect, got)
+        judge(name, "sketcore", &c.expect, got)
     })
 }
 
@@ -340,8 +340,8 @@ macro_rules! cases {
         mod $m {
             #[test]
             $(#[$ign])?
-            fn solidcore_matches_the_closed_form() {
-                let _ = super::solidcore_case(stringify!($m));
+            fn sketcore_matches_the_closed_form() {
+                let _ = super::sketcore_case(stringify!($m));
             }
         }
     )*};
@@ -410,18 +410,18 @@ fn the_body_stays_as_it_was() {
 
 /// The distance from `p` to each face of `b` (`SmApiFaceClosestPoint`), under `identity`.
 fn face_distances(
-    k: &mut solidcore::kernel::Kernel,
-    b: &mut solidcore::topology::Brep,
-    identity: &solidcore::query::brep::BrepIdentity<'_>,
+    k: &mut sketcore::kernel::Kernel,
+    b: &mut sketcore::topology::Brep,
+    identity: &sketcore::query::brep::BrepIdentity<'_>,
     p: Vec3,
-) -> solidcore::Result<Vec<(f64, Vec3)>> {
-    use solidcore::geom::object::Shape as Sh;
-    use solidcore::query::api_queries::face_closest_point_in_shape;
-    use solidcore::query::brep::LiveBrepObjects;
-    use solidcore::topology::BrepId;
+) -> sketcore::Result<Vec<(f64, Vec3)>> {
+    use sketcore::geom::object::Shape as Sh;
+    use sketcore::query::api_queries::face_closest_point_in_shape;
+    use sketcore::query::brep::LiveBrepObjects;
+    use sketcore::topology::BrepId;
     let one = BrepId::from_index(0);
     let mut out = Vec::new();
-    for f in solidcore::topology::brep::p1::faces(b, None)? {
+    for f in sketcore::topology::brep::p1::faces(b, None)? {
         let shape = Sh::new(k, &(one, &*b), &[], &[(one, f)], &[], &[])?;
         let objects = LiveBrepObjects::new(b, identity, None)?;
         let c = face_closest_point_in_shape(k, &shape, &objects, (one, f), p)?;
@@ -442,17 +442,17 @@ fn box_face_distances_are_exact(what: &str, d: &[(f64, Vec3)]) {
     assert!((top.x - 15.0).abs() < 1e-9 && (top.y - 10.0).abs() < 1e-9 && (top.z - 10.0).abs() < 1e-9, "{what}: top {top:?}");
 }
 
-/// Picking faces on a solidcore box: on the body itself, on the working copy every operation
-/// makes (`brep_copy`), and by solidcore's recommended usage, each face's distance is the closed
+/// Picking faces on a sketcore box: on the body itself, on the working copy every operation
+/// makes (`brep_copy`), and by sketcore's recommended usage, each face's distance is the closed
 /// form and the top face is picked.
 #[test]
 fn faces_are_picked_on_the_box_and_on_its_working_copy() {
-    use solidcore::query::brep::{BrepIdentity, BrepQuery};
+    use sketcore::query::brep::{BrepIdentity, BrepQuery};
     let p = Vec3::new(15.0, 10.0, 20.0);
     let on_top = [[15.0, 10.0, 10.0]];
     run("pick", |k| {
-        let mut b = solidcore::primitive::api_primitives::create_box(k, Vec3::new(0.0, 0.0, 0.0), 30.0, 20.0, 10.0)?;
-        let mut w = solidcore::topology::brep::p3::brep_copy(k, &b)?;
+        let mut b = sketcore::primitive::api_primitives::create_box(k, Vec3::new(0.0, 0.0, 0.0), 30.0, 20.0, 10.0)?;
+        let mut w = sketcore::topology::brep::p3::brep_copy(k, &b)?;
         let mut faces = Vec::new();
         for (what, x) in [("the body", &mut b), ("its copy", &mut w)] {
             let query = BrepQuery::of_brep(x);
@@ -475,12 +475,12 @@ fn faces_are_picked_on_the_box_and_on_its_working_copy() {
 }
 
 /// A pick skips an entity whose query returns an SMLib status, as the capi skips any status
-/// other than `SM_SUCCESS`; any other solidcore error fails the pick.
+/// other than `SM_SUCCESS`; any other sketcore error fails the pick.
 #[test]
-fn a_solidcore_error_in_a_pick_is_an_error() {
+fn a_sketcore_error_in_a_pick_is_an_error() {
     use super::answer;
     use super::blend::pick;
-    use solidcore::SolidError;
+    use sketcore::SolidError;
     let all = [0usize, 1];
     let points = [[0.0; 3]];
     let status = pick(&all, &points, 1.0, 1e-6, |i, _| answer(if i == 0 { Err(SolidError::sm_err("q")) } else { Ok(0.5) }));
@@ -547,7 +547,7 @@ fn offset_faces_close_a_step_wall() {
 /// together and follow it. From height 0 the outline is the 34 x 24 top moved out by the round's
 /// w(z) = sqrt(9 - (z - axis)^2), or 3 below the axis. With the fork's values at +19, and bodies
 /// whose rounds go all the way down from -7 and are cut short from -7.5 (solidcore#2027). At -9
-/// solidcore refuses to put the rounds back (solidcore#2020, open): SketCraft says it does not
+/// sketcore refuses to put the rounds back (solidcore#2020, open): SketCraft says it does not
 /// make that move.
 #[test]
 fn mitred_rounds_follow_a_moved_top() {
@@ -586,7 +586,7 @@ fn mitred_rounds_follow_a_moved_top() {
 }
 
 /// `moved_faces`: drafts so small they leave a plane or cylinder where it was still moved a face
-/// (solidcore's mark stays on it), and an angle that brings a wall onto the plane of the wall above
+/// (sketcore's mark stays on it), and an angle that brings a wall onto the plane of the wall above
 /// it leaves the two faces apart: every draft here builds, none is "no effect".
 #[test]
 fn a_draft_moves_a_face() {
@@ -643,7 +643,7 @@ fn an_l_sheet_thickens() {
 
 /// solidcore#2350's parabolic sheet: the quadratic Bézier (-10, 0), (0, 10), (10, 0) lofted 20
 /// along z, a B-spline face whose radius of curvature at its apex is 10. Thickened 11 towards
-/// its centre of curvature its offset folds there: solidcore's one construction refuses it
+/// its centre of curvature its offset folds there: sketcore's one construction refuses it
 /// naming 10, the largest wall that works (`fixes.shell_one_construction`); 2 builds.
 #[test]
 fn a_wall_thicker_than_its_face_curves_is_refused_naming_the_largest() {

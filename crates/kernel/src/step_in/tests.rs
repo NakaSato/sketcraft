@@ -1,4 +1,4 @@
-use solidcore_record::{Loop2, Plane, Region2, Vec2, Vec3};
+use sketcore_record::{Loop2, Plane, Region2, Vec2, Vec3};
 use sketcraft_geom::prelude::*;
 
 use super::*;
@@ -452,7 +452,7 @@ fn shelled_three_quarter_tube_round_trips() {
 /// which SMLib does not take for a torus: the part came in as a mesh of its faces.
 #[test]
 fn half_tube_a_hair_off_its_torus_imports_as_a_solid() {
-    use solidcore_record::Seg2;
+    use sketcore_record::Seg2;
     use std::f64::consts::PI;
     let (major, minor) = (10.75, 1.25);
     let d = Loop2 {
@@ -1443,7 +1443,7 @@ fn glued_halves_export_as_whole_faces() {
 /// Read back, the part has its exact volume.
 #[test]
 fn rounded_slot_exports_cylinders() {
-    use solidcore_record::Seg2;
+    use sketcore_record::Seg2;
     use std::f64::consts::{FRAC_PI_2, PI};
     let outer = Loop2 {
         segs: vec![
@@ -1478,7 +1478,7 @@ fn rounded_slot_exports_cylinders() {
 /// by its surfaces saw a 60 mm part as 130 mm long), and the part reads back whole.
 #[test]
 fn ramp_cut_slot_exports_sheets_bounded_by_their_faces() {
-    use solidcore_record::Seg2;
+    use sketcore_record::Seg2;
     use std::f64::consts::{FRAC_PI_2, PI};
     let outer = Loop2 {
         segs: vec![
@@ -2336,7 +2336,7 @@ fn a_refused_solid_comes_in_as_a_surface_body_of_the_faces_that_read() {
         .shells
         .iter()
         .flat_map(|s| match s {
-            solidcore_record::brep::Shell::Faces { faces, .. } => faces.iter().filter(|f| f.face as usize == bottom).map(|f| f.forward).collect(),
+            sketcore_record::brep::Shell::Faces { faces, .. } => faces.iter().filter(|f| f.face as usize == bottom).map(|f| f.forward).collect(),
             _ => Vec::new(),
         })
         .collect();
@@ -2489,7 +2489,7 @@ fn a_round_face_off_its_frames_quarter_lines_is_formed_within_one_turn() {
         let b = &imp.bodies[0];
         assert!(b.closed && b.refused.is_none(), "{start} {sweep}: {:?} {:?}", b.refused, imp.warnings);
         let wall = b.face_origin.iter().position(|f| *f == 53).unwrap();
-        let Some(solidcore_record::brep::Surface::RationalSpline { u_knots, .. }) = &b.body.record().faces[wall].nurbs else {
+        let Some(sketcore_record::brep::Surface::RationalSpline { u_knots, .. }) = &b.body.record().faces[wall].nurbs else {
             panic!("the wall's form")
         };
         assert!(u_knots[u_knots.len() - 1] - u_knots[0] <= 4.0, "{start}: the wall's form spans {u_knots:?}");
@@ -2605,7 +2605,7 @@ fn a_balls_halves_with_seams_off_each_others_quarter_lines_each_form_within_one_
         let meshed = b.body.faces(0.005).unwrap();
         for half in [56, 66] {
             let fi = b.face_origin.iter().position(|f| *f == half).unwrap();
-            let Some(solidcore_record::brep::Surface::RationalSpline { u_knots, .. }) = &b.body.record().faces[fi].nurbs else {
+            let Some(sketcore_record::brep::Surface::RationalSpline { u_knots, .. }) = &b.body.record().faces[fi].nurbs else {
                 panic!("the half's form")
             };
             assert!(u_knots[u_knots.len() - 1] - u_knots[0] <= 4.0, "{lower_first}: face #{half}'s form spans {u_knots:?}");
@@ -2844,7 +2844,7 @@ fn a_torus_face_round_most_of_its_tube_is_formed_within_one_turn_of_it() {
         assert!(b.closed && b.refused.is_none(), "{tube:?}: {:?} {:?}", b.refused, imp.warnings);
         let face = b.face_origin.iter().position(|f| *f == 53).unwrap();
         let record = b.body.record();
-        let Some(solidcore_record::brep::Surface::RationalSpline { v_knots, .. }) = &record.faces[face].nurbs else { panic!("the tube's form") };
+        let Some(sketcore_record::brep::Surface::RationalSpline { v_knots, .. }) = &record.faces[face].nurbs else { panic!("the tube's form") };
         assert!(v_knots[v_knots.len() - 1] - v_knots[0] <= 4.0, "{tube:?}: the tube's form spans {v_knots:?}");
         let m = measure(&b.body).unwrap();
         let (volume, area) = match tube {

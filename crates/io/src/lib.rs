@@ -56,7 +56,7 @@ pub use threemf::{
 };
 pub use urdf::{UrdfOptions, UrdfPackage, urdf};
 
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 use sketcraft_doc::{Document, Metadata, ModelState};
 use sketcraft_geom::prelude::*;
 use sketcraft_geom::{MassProperties, Mesh};
@@ -1014,7 +1014,7 @@ pub const MAX_STL_TRIANGLES: usize = 20_000_000;
 #[cfg(test)]
 mod tests {
     use super::*;
-    use solidcore_record::Vec3;
+    use sketcore_record::Vec3;
     use sketcraft_doc::{FeatureKind, Model, Operation, point_expr};
 
     fn model() -> (Document, Model) {
@@ -1324,10 +1324,10 @@ mod tests {
         assert!(Format::from_name("a.dwg").is_err());
         // Compatibility shim: the legacy design extensions are still designs.
         assert_eq!(Format::from_name("old.solvecraft").unwrap(), Format::Design);
-        assert_eq!(Format::from_name("older.sketcraft").unwrap(), Format::Design);
+        assert_eq!(Format::from_name("old.sketcraft").unwrap(), Format::Design);
         assert_eq!(Format::from_name("new.sc").unwrap(), Format::Design);
         assert_eq!(Format::from_name("NEW.SC").unwrap(), Format::Design);
-        assert!(is_design_path("/d/old.SOLVECRAFT") && is_design_path("older.sketcraft") && is_design_path("new.sc") && !is_design_path("a.step"));
+        assert!(is_design_path("/d/old.SOLVECRAFT") && is_design_path("old.sketcraft") && is_design_path("new.sc") && !is_design_path("a.step"));
         assert_eq!(DESIGN_EXT, "sc");
         assert_eq!(DESIGN_EXTS, ["sc", "sketcraft", "solvecraft"], "new extension first, then every older one");
         assert!(read_stl(&[0u8; 10]).is_err());

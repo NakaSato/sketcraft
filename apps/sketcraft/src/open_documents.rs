@@ -107,11 +107,8 @@ mod tests {
     #[test]
     fn opened_files_wait_for_the_ui() {
         let web = NSURL::URLWithString(&NSString::from_str("https://example.com/a.sketcraft")).unwrap();
-        let urls = NSArray::from_retained_slice(&[
-            NSURL::from_file_path("/tmp/a b.sketcraft").unwrap(),
-            web,
-            NSURL::from_file_path("/tmp/c.step").unwrap(),
-        ]);
+        let urls =
+            NSArray::from_retained_slice(&[NSURL::from_file_path("/tmp/a b.sketcraft").unwrap(), web, NSURL::from_file_path("/tmp/c.step").unwrap()]);
         let any = NSObject::new();
         open_urls(&any, sel!(application:openURLs:), &any, &urls);
         assert_eq!(take(), ["/tmp/a b.sketcraft", "/tmp/c.step"]);

@@ -1,5 +1,5 @@
-use solidcore_record::Vec3;
-use solidcore_record::brep as b;
+use sketcore_record::Vec3;
+use sketcore_record::brep as b;
 use sketcraft_geom::prelude::*;
 
 use crate::*;

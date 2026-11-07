@@ -17,14 +17,14 @@ Whenever the user asks to push a new version tag:
 
 1. Prepare user-facing release notes for the new version in `assets/release-notes.json` first, using the changes since the previous release. Keep releases newest first, preserve older entries, and include the version, release date, title, and categorized changes. This file powers Help → Release notes and the GitHub Release description.
 2. Update the workspace version and lockfile as needed. Check release metadata with `python3 scripts/desktop_release.py version --tag vX.Y.Z`, and preview the published text with `python3 scripts/desktop_release.py notes --tag vX.Y.Z`.
-3. Do not start local builds, compilation commands, tests, packaging-helper tests, or benchmarks for a deploy request. This includes `cargo build`, `cargo run`, `cargo check`, `cargo test`, and `trunk build`. Desktop and browser builds, tests, and packaging belong in GitHub Actions, using `.github/workflows/build.yml` and `.github/workflows/pages.yml`.
+3. Do not start local builds, compilation commands, tests, packaging-helper tests, or benchmarks for a deploy request. This includes `cargo build`, `cargo run`, `cargo check`, `cargo test`, and `scripts/build_web.py`. Desktop and browser builds, tests, and packaging belong in GitHub Actions, using `.github/workflows/build.yml` and `.github/workflows/pages.yml`.
 4. Refresh the README screenshot by starting an existing desktop executable directly, without compiling it. Use `python3 -B scripts/capture_readme_desktop.py` (or pass `--binary /path/to/sketcraft`). Capture the example project as a 1920 × 1080 JPEG and update the README image before committing. Do not require a Web build or use a build command as a screenshot fallback. If no desktop executable or capture support is available, report the screenshot prerequisite without starting a build or tests.
 5. Commit and push the updated screenshot and README, release notes, version changes, and other changes intended for that release. Deployment sends these changes to GitHub; it must not start another local build or test run.
 6. After the release files and screenshot changes have been pushed successfully, create and push the matching version tag. Never push the tag before its release notes and release changes. Report the GitHub Actions status; CI performs the release builds and tests before publishing desktop packages and deploying the website.
 
 # Compilation checks
 
-Trunk output is saved to `/tmp/ketchup-trunk.log` (started with `trunk serve 2>&1 | tee /tmp/ketchup-trunk.log`). Read this file for the compilation check.
+Browser build output is saved to `/tmp/sketcraft-web.log` (started from `apps/sketcraft-web` with `trunk serve 2>&1 | tee /tmp/sketcraft-web.log`). Read this file for the compilation check.
 
 Only at the end of each change, immediately before reporting completion, check the currently running SketCraft process, if one exists, and its associated compiler or development-server output for new compilation errors. Perform this check once per fix, not during intermediate edits. Use the existing process and logs; do not start a new build just for this check. If the output is unavailable, report that the check could not be completed.
 

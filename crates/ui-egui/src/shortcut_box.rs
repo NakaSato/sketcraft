@@ -7,7 +7,7 @@ use serde_json::{Value, json};
 use sketcraft_engine::command_specs;
 
 use crate::theme::Tokens;
-use crate::{SolveApp, ui_kit};
+use crate::{SketApp, ui_kit};
 
 /// How many recent commands are kept.
 const RECENT: usize = 12;
@@ -71,7 +71,7 @@ impl Reveal {
 
 /// Shows the hovered result's place in the ribbon (#7287): its tab, then its button or its
 /// section drop-down row. `None` ends a preview and goes back to the tab the user was on.
-fn preview(app: &mut SolveApp, now: f64, id: Option<&'static str>) {
+fn preview(app: &mut SketApp, now: f64, id: Option<&'static str>) {
     let Some(id) = id else {
         end_preview(app);
         return;
@@ -90,7 +90,7 @@ fn preview(app: &mut SolveApp, now: f64, id: Option<&'static str>) {
     app.sbox.reveal = Some(Reveal { id, since: now, preview: true, back });
 }
 
-fn end_preview(app: &mut SolveApp) {
+fn end_preview(app: &mut SketApp) {
     if let Some(r) = app.sbox.reveal.take_if(|r| r.preview) {
         app.ui.tab = r.back;
     }
@@ -199,7 +199,7 @@ pub type Row = (&'static str, &'static str, &'static str, Option<(&'static str, 
 ///
 /// The query matches the label, tab and panel in the current language and in English, and the
 /// id, so a name typed in either language, or an id, finds the command in every language.
-pub fn search(app: &SolveApp, q: &str) -> Vec<Row> {
+pub fn search(app: &SketApp, q: &str) -> Vec<Row> {
     let q = q.trim().to_lowercase();
     let mut v: Vec<(u32, Row)> = command_specs()
         .into_iter()
@@ -245,7 +245,7 @@ fn bounded(text: &str) -> String {
     text.chars().take(MAX_QUERY).collect()
 }
 
-fn design_rows(app: &mut SolveApp, query: &str) -> Vec<DesignRow> {
+fn design_rows(app: &mut SketApp, query: &str) -> Vec<DesignRow> {
     if app.sbox.design.as_ref().is_none_or(|(revision, _)| *revision != app.session.revision) {
         let doc = &app.session.doc;
         let params = doc.param_rows();
@@ -337,7 +337,7 @@ fn closest(query: &str) -> Option<&'static str> {
 }
 
 /// Open the box at a point (the cursor), or at the middle of the window.
-pub fn open(app: &mut SolveApp, at: Option<Pos2>) {
+pub fn open(app: &mut SketApp, at: Option<Pos2>) {
     app.ui.palette_open = true;
     app.sbox.at = at;
     app.sbox.index = 0;
@@ -349,7 +349,7 @@ pub fn open(app: &mut SolveApp, at: Option<Pos2>) {
 
 /// A line typed as `command.id {"param": value}`: the command runs at once with those parameters
 /// (the same entry the bottom command line used to take).
-fn run_typed(app: &mut SolveApp, line: &str) {
+fn run_typed(app: &mut SketApp, line: &str) {
     if let Some((id, result)) = typed(line) {
         match result {
             Ok(params) => {
@@ -362,14 +362,14 @@ fn run_typed(app: &mut SolveApp, line: &str) {
     close(app);
 }
 
-fn close(app: &mut SolveApp) {
+fn close(app: &mut SketApp) {
     end_preview(app);
     app.ui.palette_open = false;
     app.sbox.at = None;
     app.sbox.text.clear();
 }
 
-pub fn show(app: &mut SolveApp, ctx: &egui::Context) {
+pub fn show(app: &mut SketApp, ctx: &egui::Context) {
     let t = Tokens::get();
     let screen = ctx.content_rect();
     let open = app.ui.palette_open;
@@ -718,7 +718,7 @@ mod tests {
         assert_eq!(score("xyz", "Extrude"), 0);
     }
 
-    fn frame(app: &mut SolveApp, ctx: &egui::Context) {
+    fn frame(app: &mut SketApp, ctx: &egui::Context) {
         let raw = egui::RawInput { screen_rect: Some(egui::Rect::from_min_size(Pos2::ZERO, vec2(800.0, 600.0))), ..Default::default() };
         let mut out = ctx.run_ui(raw, |ui| show(app, ui.ctx()));
         out.textures_delta.clear();
@@ -728,7 +728,7 @@ mod tests {
     /// every frame restarts the text edit's held key, which kept a Wayland key repeat running (#724).
     #[test]
     fn the_search_field_asks_for_focus_once_per_opening() {
-        let mut app = SolveApp::new(sketcraft_engine::Session::default(), Default::default());
+        let mut app = SketApp::new(sketcraft_engine::Session::default(), Default::default());
         let ctx = crate::fonts::test_context();
         let field = egui::Id::unique("sc_sbox_text");
         open(&mut app, None);
@@ -869,7 +869,7 @@ mod tests {
 
     #[test]
     fn search_finds_by_name_id_and_panel_and_puts_recent_first() {
-        let mut app = SolveApp::new(sketcraft_engine::Session::default(), Default::default());
+        let mut app = SketApp::new(sketcraft_engine::Session::default(), Default::default());
         assert_eq!(search(&app, "extr").first().map(|x| x.0), Some("solid.extrude"));
         assert_eq!(search(&app, "solid.fil").first().map(|x| x.0), Some("solid.fillet"));
         assert!(search(&app, "constrain").iter().any(|x| x.0 == "sketch.constraint.parallel"), "by panel");
@@ -878,14 +878,14 @@ mod tests {
         let all = search(&app, "");
         assert_eq!((all[0].0, all[1].0), ("solid.revolve", "solid.shell"));
         app.sbox.toggle_pin("solid.extrude");
-        let mut other = SolveApp::new(sketcraft_engine::Session::default(), Default::default());
+        let mut other = SketApp::new(sketcraft_engine::Session::default(), Default::default());
         other.sbox.load(&app.sbox.prefs());
         assert_eq!((other.sbox.pinned.clone(), other.sbox.recent.len()), (vec!["solid.extrude".to_string()], 2));
     }
 
     #[test]
     fn solve_sketch_is_not_offered_but_the_command_remains() {
-        let app = SolveApp::new(sketcraft_engine::Session::default(), Default::default());
+        let app = SketApp::new(sketcraft_engine::Session::default(), Default::default());
         for q in ["solve", "sketch.solve", ""] {
             assert!(!search(&app, q).iter().any(|x| x.0 == "sketch.solve"), "{q:?}");
         }
@@ -896,7 +896,7 @@ mod tests {
     /// typed in that language, in English, or an id (#2544).
     #[test]
     fn search_shows_and_matches_the_current_language() {
-        let app = SolveApp::new(sketcraft_engine::Session::default(), Default::default());
+        let app = SketApp::new(sketcraft_engine::Session::default(), Default::default());
         let _ja = crate::i18n::scope("ja");
         let ja = crate::i18n::Locale::for_language("ja");
         let name = ja.text("cmd.sketch_rectangle_center");
@@ -929,7 +929,7 @@ mod tests {
 
     #[test]
     fn a_line_typed_with_json_parameters_runs_the_command() {
-        let mut app = SolveApp::new(sketcraft_engine::Session::default(), Default::default());
+        let mut app = SketApp::new(sketcraft_engine::Session::default(), Default::default());
         let before = app.session.doc.features.len();
         app.ui.palette_open = true;
         app.sbox.text = r#"solid.box {"length": 10, "width": 10, "height": 10}"#.into();

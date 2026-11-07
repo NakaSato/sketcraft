@@ -4,14 +4,14 @@
 use crate::dialogs::put;
 use crate::ui_kit::{choice_row, expr_row, hint_row};
 use serde_json::{Map, Value, json};
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 use sketcraft_engine::Sel;
 use sketcraft_engine::doc::FeatureKind;
 use sketcraft_engine::doc::expr::Kind as ValueKind;
 use sketcraft_engine::doc::plastic::PlasticRule;
 use sketcraft_engine::geom::prelude::*;
 
-use crate::SolveApp;
+use crate::SketApp;
 use crate::dialogs::{Kind, combo, face_sel, field, form_row, shown_expr};
 use crate::selection::{BODIES, FACES, PLANAR_FACES, SelInput, SelectionExt as _, point_value as pt};
 
@@ -98,7 +98,7 @@ impl Pl {
     }
 }
 
-fn snap_fit(app: &SolveApp) -> Pl {
+fn snap_fit(app: &SketApp) -> Pl {
     Pl::SnapFit {
         hook: 0,
         length: crate::dialogs::length_default(&app.session, "10"),
@@ -112,7 +112,7 @@ fn snap_fit(app: &SolveApp) -> Pl {
 }
 
 /// The dialog for a plastic command.
-pub fn start(app: &SolveApp, id: &str) -> Option<(Kind, Vec<SelInput>)> {
+pub fn start(app: &SketApp, id: &str) -> Option<(Kind, Vec<SelInput>)> {
     let (pl, inputs) = match id {
         "plastic.snap_fit" => (snap_fit(app), vec![SelInput::new("Position", PLANAR_FACES, false)]),
         "plastic.manage_rules" => {
@@ -153,7 +153,7 @@ pub fn hook_dirs(n: Vec3) -> Vec<(String, Vec3)> {
     [u, -u, v, -v].into_iter().map(|d| (name(d), d)).collect()
 }
 
-fn face_normal(app: &SolveApp, inputs: &[SelInput]) -> Option<Vec3> {
+fn face_normal(app: &SketApp, inputs: &[SelInput]) -> Option<Vec3> {
     match inputs.first()?.items.first()? {
         Sel::Face { body, index, .. } => crate::dialogs::planar_face(&app.session, body, *index).map(|(_, n)| n),
         _ => None,
@@ -161,7 +161,7 @@ fn face_normal(app: &SolveApp, inputs: &[SelInput]) -> Option<Vec3> {
 }
 
 /// The dialog's own rows (after the selection inputs); true when Enter was pressed in a value.
-pub fn rows(app: &mut SolveApp, ui: &mut egui::Ui, k: &mut Pl, inputs: &[SelInput]) -> bool {
+pub fn rows(app: &mut SketApp, ui: &mut egui::Ui, k: &mut Pl, inputs: &[SelInput]) -> bool {
     let mut enter = false;
     match k {
         Pl::Boss { diameter, height, hole_diameter, hole_depth, draft, fillet, ribs, rib_thickness, rib_length, rib_offset } => {
@@ -290,7 +290,7 @@ fn label_of(key: &str) -> String {
 }
 
 /// The commands the dialog's OK runs (`extra`: parameters kept from the feature being edited).
-pub fn commands(app: &SolveApp, k: &Pl, inputs: &[SelInput], extra: &Map<String, Value>) -> Result<Vec<(String, Value)>, String> {
+pub fn commands(app: &SketApp, k: &Pl, inputs: &[SelInput], extra: &Map<String, Value>) -> Result<Vec<(String, Value)>, String> {
     let face = inputs
         .first()
         .and_then(|i| i.items.first())
@@ -372,7 +372,7 @@ fn s(o: &Option<sketcraft_engine::doc::Expr>) -> String {
 }
 
 /// The dialog editing a plastic feature, filled from it.
-pub fn for_feature(app: &SolveApp, kind: &FeatureKind) -> Option<(Kind, Vec<SelInput>, Map<String, Value>)> {
+pub fn for_feature(app: &SketApp, kind: &FeatureKind) -> Option<(Kind, Vec<SelInput>, Map<String, Value>)> {
     let ss = &app.session;
     let mut extra = Map::new();
     let (pl, id, at): (Pl, &str, Vec3) = match kind {
@@ -437,7 +437,7 @@ pub fn for_feature(app: &SolveApp, kind: &FeatureKind) -> Option<(Kind, Vec<SelI
 /// The placement handles' frame for a feature placed through its first input (a face place): the
 /// picked point and the direction the feature grows, the picked face's normal, else the stored
 /// `direction`.
-pub(crate) fn handle_frame(app: &SolveApp, d: &crate::dialogs::Dialog) -> Option<(Vec3, Vec3)> {
+pub(crate) fn handle_frame(app: &SketApp, d: &crate::dialogs::Dialog) -> Option<(Vec3, Vec3)> {
     let Sel::Face { body, index, point } = d.inputs.first()?.items.first()? else { return None };
     let n = crate::dialogs::planar_face(&app.session, body, *index)
         .map(|(_, n)| n)
@@ -450,7 +450,7 @@ pub(crate) fn handle_frame(app: &SolveApp, d: &crate::dialogs::Dialog) -> Option
 /// click at `pos` would (snapped to a sketch point as a click is when the input takes points), with
 /// the stored `direction` and in-face `along` carried onto the new face. False when nothing there
 /// can take it.
-pub(crate) fn handle_move(app: &SolveApp, d: &mut crate::dialogs::Dialog, proj: &crate::viewport::Proj, pos: egui::Pos2) -> bool {
+pub(crate) fn handle_move(app: &SketApp, d: &mut crate::dialogs::Dialog, proj: &crate::viewport::Proj, pos: egui::Pos2) -> bool {
     use crate::place_gizmo::{angle_of, dir_at};
     let s = &app.session;
     let turned = handle_frame(app, d).and_then(|(_, n)| d.extra.get("along").and_then(crate::dialogs::vec3_of).map(|a| angle_of(a, n)));

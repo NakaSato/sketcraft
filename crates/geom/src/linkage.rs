@@ -35,7 +35,7 @@
 use crate::brep::eval::SurfaceEval;
 use crate::prelude::*;
 use crate::tess::partials::{MAX_PARTIAL_ORDER, Partials};
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 
 /// The highest continuity order handled: G4, the highest order of the surfaces' exact partials.
 pub const MAX_CONTINUITY: usize = MAX_PARTIAL_ORDER;

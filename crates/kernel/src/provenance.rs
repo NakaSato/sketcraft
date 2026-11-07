@@ -11,7 +11,7 @@
 use sketcraft_geom::prelude::*;
 use std::collections::BTreeSet;
 
-use solidcore_record::{Plane, Region2, Seg2, Vec2, Vec3};
+use sketcore_record::{Plane, Region2, Seg2, Vec2, Vec3};
 use sketcraft_geom::{Aabb3, Mesh};
 
 use crate::Result;
@@ -378,7 +378,7 @@ pub fn compose(prov: &mut History, operand: usize, tool: &[FaceOrigin]) {
 
 #[cfg(test)]
 mod tests {
-    use solidcore_record::Vec3;
+    use sketcore_record::Vec3;
     use sketcraft_geom::prelude::*;
 
     use super::{Change, FaceOrigin, trace};
@@ -440,7 +440,7 @@ mod tests {
 
     #[test]
     fn provenance_of_sweeps_blends_and_shells() {
-        use solidcore_record::{Loop2, Plane, Region2, Vec2};
+        use sketcore_record::{Loop2, Plane, Region2, Vec2};
 
         use super::{History, blend_origins, compose, extrude_origins, offset_origins, revolve_origins};
         let plane = Plane::named("XY").unwrap();

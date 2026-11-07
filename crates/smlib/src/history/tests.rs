@@ -1,6 +1,6 @@
 use super::*;
 use crate::Error;
-use solidcore_record::brep::history::{Change, EdgeOrigin, EdgeProv, FaceOrigin, FaceProv, History};
+use sketcore_record::brep::history::{Change, EdgeOrigin, EdgeProv, FaceOrigin, FaceProv, History};
 
 fn face(operand: usize, face: usize) -> FaceOrigin {
     FaceOrigin::Face { operand, face }

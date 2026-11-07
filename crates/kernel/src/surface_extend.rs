@@ -32,8 +32,8 @@
 use sketcraft_geom::prelude::*;
 use std::collections::{BTreeMap, BTreeSet};
 
-use solidcore_record::Vec3;
-use solidcore_record::brep::{self};
+use sketcore_record::Vec3;
+use sketcore_record::brep::{self};
 use sketcraft_geom::brep::eval::CurveEval;
 use sketcraft_smlib::trim::Continuation;
 
@@ -397,7 +397,7 @@ fn failed(what: &str, e: impl crate::Cause) -> KernelError {
 mod tests {
     use super::*;
     use crate::{measure, patch_region};
-    use solidcore_record::{Loop2, Plane, Region2, Seg2, Vec2};
+    use sketcore_record::{Loop2, Plane, Region2, Seg2, Vec2};
     use std::f64::consts::{FRAC_PI_2, FRAC_PI_4, PI};
 
     fn rel(a: f64, b: f64) -> f64 {

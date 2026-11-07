@@ -6,7 +6,7 @@
 use serde_json::{Value, json};
 use sketcraft_engine::render::UpAxis;
 
-use crate::SolveApp;
+use crate::SketApp;
 use crate::viewport::{Hit, Proj};
 
 /// SketchUp's modelling tools on its tab. SketchUp has no sketch to finish, so choosing one in a
@@ -15,19 +15,17 @@ pub(crate) const MODEL_TOOLS: &[&str] = &["solid.press_pull", "solid.offset_face
 
 /// Whether starting `id` now finishes the open sketch first: one of [`MODEL_TOOLS`], in a sketch
 /// begun from the SketchUp tab.
-pub(crate) fn finishes_sketch_for(app: &SolveApp, id: &str) -> bool {
-    app.session.active_sketch.is_some()
-        && app.ui.sketch_return_tab.as_deref() == Some(crate::workspace::SKETCHUP_TAB)
-        && MODEL_TOOLS.contains(&id)
+pub(crate) fn finishes_sketch_for(app: &SketApp, id: &str) -> bool {
+    app.session.active_sketch.is_some() && app.ui.sketch_return_tab.as_deref() == Some(crate::workspace::SKETCHUP_TAB) && MODEL_TOOLS.contains(&id)
 }
 
 /// The drawing tool waiting for its first click, if any.
-pub(crate) fn pending(app: &SolveApp) -> Option<&'static str> {
+pub(crate) fn pending(app: &SketApp) -> Option<&'static str> {
     app.ui.draw_on_click
 }
 
 /// Get `tool` ready: it starts on the next click in the view.
-pub(crate) fn begin(app: &mut SolveApp, tool: &'static str) {
+pub(crate) fn begin(app: &mut SketApp, tool: &'static str) {
     if app.dialog.is_some() {
         crate::dialogs::cancel(app);
     }
@@ -39,7 +37,7 @@ pub(crate) fn begin(app: &mut SolveApp, tool: &'static str) {
 }
 
 /// Stop waiting (Escape, or another command started). Whether a tool was waiting.
-pub(crate) fn cancel(app: &mut SolveApp) -> bool {
+pub(crate) fn cancel(app: &mut SketApp) -> bool {
     let was = app.ui.draw_on_click.take().is_some();
     if was {
         app.set_status(String::new(), false);
@@ -49,7 +47,7 @@ pub(crate) fn cancel(app: &mut SolveApp) -> bool {
 
 /// The plane a click on `hits` (front first) draws on: the first flat face or shown plane under
 /// the pointer, else the ground (XY, or XZ when Y is up).
-fn plane_at(app: &SolveApp, hits: &[Hit]) -> Value {
+fn plane_at(app: &SketApp, hits: &[Hit]) -> Value {
     for hit in hits {
         match hit {
             Hit::Face { .. } => {
@@ -71,7 +69,7 @@ fn plane_at(app: &SolveApp, hits: &[Hit]) -> Value {
 
 /// A click at `pos` in the view while a tool waits: make the sketch on the plane there, start
 /// the tool in it and give it this click as its first point. Whether the click was taken.
-pub(crate) fn click(app: &mut SolveApp, proj: &Proj, pos: egui::Pos2, hits: &[Hit], shift: bool) -> bool {
+pub(crate) fn click(app: &mut SketApp, proj: &Proj, pos: egui::Pos2, hits: &[Hit], shift: bool) -> bool {
     let Some(tool) = app.ui.draw_on_click.take() else { return false };
     let params = plane_at(app, hits);
     let on_face = params["plane"].is_object();

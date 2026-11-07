@@ -1,8 +1,8 @@
-//! `kernel-cases --export=DIR`: one kernel rig case as a corpus entry for solidcore's rig. The
+//! `kernel-cases --export=DIR`: one kernel rig case as a corpus entry for sketcore's rig. The
 //! case's commands run as the rig runs them while the kernel's operations are traced
 //! (`smlib_trace`); the entry holds every operation in execution order, including discarded
 //! tool construction and handled refusals, each operand that came in as a record (the
-//! B-rep record, solidcore-record's JSON), the fix set, the case's expected values and the rig's
+//! B-rep record, sketcore-record's JSON), the fix set, the case's expected values and the rig's
 //! own result. A case whose result no kernel operation alone accounts for is written too, with
 //! the reasons, so nothing is dropped silently.
 //!
@@ -19,7 +19,7 @@ use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::path::{Path, PathBuf};
 
 use serde_json::{Value, json};
-use solidcore_record::brep::Brep;
+use sketcore_record::brep::Brep;
 use sketcraft_engine::kernel::smlib_trace::{self, Event};
 
 use crate::read_json;

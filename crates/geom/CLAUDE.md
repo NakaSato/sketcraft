@@ -20,7 +20,7 @@ files next to their module.
 
 ## Layout
 
-- `src/lib.rs`: module list, re-exports, `prelude` (geometry traits on `solidcore_record` types),
+- `src/lib.rs`: module list, re-exports, `prelude` (geometry traits on `sketcore_record` types),
   `EPS`, `LINEAR_TOL`, `finite_or`.
 - `vec.rs`, `unit_vec3.rs`, `plane.rs`, `aabb2.rs`: vector, plane and 2D box helpers as traits
   (`Vec3Geom`, `PlaneGeom`, …) on the record's plain data.
@@ -30,7 +30,7 @@ files next to their module.
   meshes, measures, spatial index, distances, display LOD.
 - `bspline.rs`, `spline_space.rs`, `fill*.rs`, `network.rs`, `linkage.rs`, `blend.rs`,
   `catmull_rom.rs`, `tspline/`: freeform curves and surfaces.
-- `brep.rs` + `brep/`: evaluation and checks on the portable B-rep record (`solidcore_record::brep`).
+- `brep.rs` + `brep/`: evaluation and checks on the portable B-rep record (`sketcore_record::brep`).
 - `tess.rs` + `tess/`: display tessellation plans. `hlr/`: hidden-line removal. `section.rs`.
 - `drawing_sheet.rs`, `drawing_view.rs`, `title_block.rs`, `cell.rs`, `paper.rs`: drawing data in
   sheet millimetres (no drawing or file writing here).
@@ -40,7 +40,7 @@ files next to their module.
 
 ## Rules
 
-- Dependencies: only `solidcore-record`, `serde`, `thiserror`. No workspace crate. `cargo xtask layers`
+- Dependencies: only `sketcore-record`, `serde`, `thiserror`. No workspace crate. `cargo xtask layers`
   enforces this.
 - No egui/wgpu/winit/rfd, no `unsafe` (`#![forbid(unsafe_code)]`).
 - The crate root denies `unwrap`, `expect`, `panic!`, `todo!`, `unreachable!`. Input is hostile:

@@ -4,7 +4,7 @@
 use sketcraft_geom::prelude::*;
 use std::f64::consts::{FRAC_PI_2, PI};
 
-use solidcore_record::{Loop2, Plane, Region2, Vec2, Vec3};
+use sketcore_record::{Loop2, Plane, Region2, Vec2, Vec3};
 
 use crate::*;
 

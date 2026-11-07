@@ -1,16 +1,16 @@
-//! `.smb` files on solidcore (`smlib_brep_read`, `smlib_brep_write`): the B-rep's contents through
+//! `.smb` files on sketcore (`smlib_brep_read`, `smlib_brep_write`): the B-rep's contents through
 //! `SmApiReadBrepFromFile` and `SmApiWriteBrepToFile`, the file itself read and written here (the
 //! library touches no files, so that it builds for the browser).
 
 use std::path::Path;
 
-use solidcore::geom::attribute::{AttributeStore, ObjectKey};
-use solidcore::kernel::Kernel;
-use solidcore::topology::api_files::{read_brep_from_file, write_brep_to_file};
-use solidcore::topology::brep::p10::TopologyEnv;
-use solidcore::topology::brep_data_write::FromBrepEnv;
-use solidcore::topology::topology::NotifyRecords;
-use solidcore::topology::{Brep, EdgeId, EdgeuseId, FaceId};
+use sketcore::geom::attribute::{AttributeStore, ObjectKey};
+use sketcore::kernel::Kernel;
+use sketcore::topology::api_files::{read_brep_from_file, write_brep_to_file};
+use sketcore::topology::brep::p10::TopologyEnv;
+use sketcore::topology::brep_data_write::FromBrepEnv;
+use sketcore::topology::topology::NotifyRecords;
+use sketcore::topology::{Brep, EdgeId, EdgeuseId, FaceId};
 
 use super::convert::key_of;
 use super::{Body, run, with_body};
@@ -20,7 +20,7 @@ use crate::{Error, Result};
 const FILE_KEYS: u64 = 1 << 50;
 
 fn io(what: &str, path: &Path, e: &std::io::Error) -> Error {
-    Error::Solidcore(format!("{what} {}: {e}", path.display()))
+    Error::Sketcore(format!("{what} {}: {e}", path.display()))
 }
 
 /// The body in the file at `path`, ASCII or binary. Its UV trims are checked, not rebuilt, as the
@@ -39,7 +39,7 @@ pub(crate) fn read(path: &Path, ascii: bool) -> Result<Body> {
 }
 
 /// `b` as the contents of a `.smb` file, ASCII or binary.
-pub(super) fn bytes(k: &Kernel, b: &Brep, ascii: bool) -> solidcore::Result<Vec<u8>> {
+pub(super) fn bytes(k: &Kernel, b: &Brep, ascii: bool) -> sketcore::Result<Vec<u8>> {
     let store = AttributeStore::default();
     let records = NotifyRecords::new();
     let env = FromBrepEnv {

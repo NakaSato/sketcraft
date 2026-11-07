@@ -320,9 +320,9 @@ fn a_fillet_keeps_the_dimensions_of_its_corner_on_a_virtual_sharp() {
     // The virtual corner sits where the corner was, and the part keeps its size.
     let k = sk(&s);
     let vc = k.point(k.point_index(&corner).unwrap()).unwrap();
-    assert!(vc.dist(solidcore_record::Vec2::new(0.0, 100.0)) < 1e-6, "{vc:?}");
+    assert!(vc.dist(sketcore_record::Vec2::new(0.0, 100.0)) < 1e-6, "{vc:?}");
     let top_end = k.point(k.resolve_point("top.end").unwrap()).unwrap();
-    assert!(top_end.dist(solidcore_record::Vec2::new(-80.0, 100.0)) < 1e-6, "{top_end:?}");
+    assert!(top_end.dist(sketcore_record::Vec2::new(-80.0, 100.0)) < 1e-6, "{top_end:?}");
     let (lo, hi) = k.bounds().unwrap();
     assert!((hi.x - lo.x - 80.0).abs() < 1e-6 && (hi.y - lo.y - 100.0).abs() < 1e-6, "{lo:?} {hi:?}");
     // It is drawn with extension lines from both lines' ends to it.
@@ -378,7 +378,7 @@ fn a_fillet_of_a_nearly_straight_or_folded_corner_with_dimensions_does_not_panic
 /// by other geometry and a dimensioned length are refused, and change nothing.
 #[test]
 fn a_fillet_or_chamfer_brings_two_separate_lines_to_where_they_meet() {
-    use solidcore_record::Vec2;
+    use sketcore_record::Vec2;
     use sketcraft_sketch::CurveKind;
     let lines = |s: &mut Session, a: [[f64; 2]; 2], b: [[f64; 2]; 2]| {
         let la = curves(&run(s, "sketch.line", json!({"points": a, "connect": false})))[0].clone();

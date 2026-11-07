@@ -2,7 +2,7 @@
 //! Keep wire details here until the CPU contract is published. Never save them.
 use crate::{Result, params::bad};
 use serde::Deserialize;
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 use sketcraft_render::{
     ProductScene,
     surface::{OpaqueSurface, srgb8_to_linear},

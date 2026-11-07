@@ -4,8 +4,8 @@
 //! every other edge kept by a point at its middle).
 use super::Body;
 use crate::{KernelError, Result, guard};
-use solidcore_record::Vec3;
-use solidcore_record::brep::{self};
+use sketcore_record::Vec3;
+use sketcore_record::brep::{self};
 use sketcraft_geom::brep::eval::CurveEval;
 use std::sync::Arc;
 

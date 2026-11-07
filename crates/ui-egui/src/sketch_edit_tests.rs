@@ -1,10 +1,10 @@
 //! Regression tests: editing a sketch from the Browser or timeline can always be left again.
 
-use crate::SolveApp;
+use crate::SketApp;
 use crate::test_support::sample_app;
 use sketcraft_engine::doc::FeatureKind;
 
-fn first_sketch(app: &SolveApp) -> u64 {
+fn first_sketch(app: &SketApp) -> u64 {
     app.session.doc.features.iter().find(|f| matches!(f.kind, FeatureKind::Sketch { .. })).map(|f| f.id).unwrap()
 }
 
@@ -677,7 +677,7 @@ fn a_sketch_opened_inside_a_component_gives_the_active_component_back() {
     let path = app.session.doc.first_path(comp);
     let sketch = app.session.doc.features.iter().find(|f| f.component == comp && matches!(f.kind, FeatureKind::Sketch { .. })).map(|f| f.id).unwrap();
     let marker = app.session.doc.marker;
-    for leave in [SolveApp::finish_sketch as fn(&mut SolveApp), SolveApp::cancel_sketch] {
+    for leave in [SketApp::finish_sketch as fn(&mut SketApp), SketApp::cancel_sketch] {
         app.edit_sketch_in(sketch, Some((comp, &path)));
         assert_eq!(
             (app.session.active_sketch, app.session.active_component),

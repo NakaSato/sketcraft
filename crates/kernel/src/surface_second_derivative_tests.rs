@@ -3,8 +3,8 @@
 //! every curvature the kernel reads (continuity, the G2 fill's frames) comes from them (#763: a G2
 //! boundary surface once measured half the cylinder's curvature it does carry).
 
-use solidcore_record::Vec3;
-use solidcore_record::brep::Surface;
+use sketcore_record::Vec3;
+use sketcore_record::brep::Surface;
 use sketcraft_geom::brep::eval::SurfaceEval;
 use sketcraft_geom::prelude::*;
 

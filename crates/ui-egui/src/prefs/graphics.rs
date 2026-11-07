@@ -2,7 +2,7 @@
 use super::*;
 use ui_kit::PreferenceFigure;
 
-pub(super) fn show(app: &mut SolveApp, ui: &mut egui::Ui) {
+pub(super) fn show(app: &mut SketApp, ui: &mut egui::Ui) {
     let t = Tokens::get();
     let help_label_width = ["prefs.graphics_page.supersampling", "prefs.graphics_card", "ui.window_system"]
         .into_iter()
@@ -238,11 +238,7 @@ pub(super) fn show(app: &mut SolveApp, ui: &mut egui::Ui) {
                             ui,
                             &mut app.preferences.solar_time_hours,
                             0.0..=24.0,
-                            ui_kit::Slider {
-                                step: Some(0.25),
-                                format: format_solar_time,
-                                ..Default::default()
-                            },
+                            ui_kit::Slider { step: Some(0.25), format: format_solar_time, ..Default::default() },
                         )
                     });
                     let mut day_f64 = app.preferences.solar_day_of_year as f64;
@@ -251,11 +247,7 @@ pub(super) fn show(app: &mut SolveApp, ui: &mut egui::Ui) {
                             ui,
                             &mut day_f64,
                             1.0..=365.0,
-                            ui_kit::Slider {
-                                step: Some(1.0),
-                                format: format_solar_date,
-                                ..Default::default()
-                            },
+                            ui_kit::Slider { step: Some(1.0), format: format_solar_date, ..Default::default() },
                         );
                         if resp.changed() {
                             app.preferences.solar_day_of_year = day_f64.round() as u32;
@@ -267,11 +259,7 @@ pub(super) fn show(app: &mut SolveApp, ui: &mut egui::Ui) {
                             ui,
                             &mut app.preferences.solar_latitude_deg,
                             -90.0..=90.0,
-                            ui_kit::Slider {
-                                step: Some(0.5),
-                                format: format_solar_latitude,
-                                ..Default::default()
-                            },
+                            ui_kit::Slider { step: Some(0.5), format: format_solar_latitude, ..Default::default() },
                         )
                     });
                 });
@@ -504,7 +492,7 @@ fn computer_card(ui: &mut egui::Ui, add: impl FnOnce(&mut egui::Ui)) {
 }
 
 /// The device line: a tile with a monitor, the adapter's name, its backend and renderer, and a badge.
-fn computer_header(app: &SolveApp, ui: &mut egui::Ui) {
+fn computer_header(app: &SketApp, ui: &mut egui::Ui) {
     let t = Tokens::get();
     let adapter = app.viewport.adapter.as_str();
     let (backend, name) = adapter.split_once(" · ").unwrap_or(("", adapter));
@@ -540,7 +528,7 @@ fn computer_header(app: &SolveApp, ui: &mut egui::Ui) {
 }
 
 /// The saved adapter picker retains validation, persistence and all fallback notices.
-fn graphics_card_row(app: &mut SolveApp, ui: &mut egui::Ui, label_width: f32) {
+fn graphics_card_row(app: &mut SketApp, ui: &mut egui::Ui, label_width: f32) {
     let t = Tokens::get();
     let selected = app.services.graphics_adapters.iter().position(|(name, _)| *name == app.preferences.graphics_adapter);
     let missing = !app.preferences.graphics_adapter.is_empty() && selected.is_none();
@@ -593,7 +581,7 @@ fn graphics_card_row(app: &mut SolveApp, ui: &mut egui::Ui, label_width: f32) {
 /// Perspective view's Field of view (#5364): the kit slider in degrees, typed or dragged, kept to
 /// whole degrees and written back in radians. No step on the slider itself: it would round the
 /// default 0.6 (34.4°) just by being drawn, so an untouched angle stays exactly as saved.
-fn field_of_view_row(app: &mut SolveApp, ui: &mut egui::Ui) {
+fn field_of_view_row(app: &mut SketApp, ui: &mut egui::Ui) {
     let mut degrees = perspective_fov(&app.preferences).to_degrees();
     ui_kit::row(ui, app.tr("prefs.perspective_fov"), |ui| {
         let response = ui_kit::slider(ui, &mut degrees, 15.0..=90.0, ui_kit::Slider { format: |v| format!("{v:.0}°"), ..Default::default() });
@@ -620,9 +608,18 @@ fn format_solar_time(hours: f64) -> String {
 fn format_solar_date(day: f64) -> String {
     let day = (day as u32).clamp(1, 365);
     let months = [
-        ("Jan", 31), ("Feb", 28), ("Mar", 31), ("Apr", 30),
-        ("May", 31), ("Jun", 30), ("Jul", 31), ("Aug", 31),
-        ("Sep", 30), ("Oct", 31), ("Nov", 30), ("Dec", 31),
+        ("Jan", 31),
+        ("Feb", 28),
+        ("Mar", 31),
+        ("Apr", 30),
+        ("May", 31),
+        ("Jun", 30),
+        ("Jul", 31),
+        ("Aug", 31),
+        ("Sep", 30),
+        ("Oct", 31),
+        ("Nov", 30),
+        ("Dec", 31),
     ];
     let mut rem = day;
     let mut month_str = "Dec";

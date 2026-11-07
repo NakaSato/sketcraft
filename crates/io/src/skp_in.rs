@@ -1,7 +1,7 @@
 //! SketchUp (.skp) mesh importer.
 use std::collections::{BTreeMap, HashMap};
 
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 
 use crate::threemf::{MeshObject, weld};
 use crate::{IoError, Result};
@@ -9,8 +9,7 @@ use crate::{IoError, Result};
 /// Read SketchUp (.skp) bytes into one or more named mesh objects.
 pub fn read_skp(bytes: &[u8], default_name: &str) -> Result<(Vec<MeshObject>, Vec<String>)> {
     let _span = sketcraft_profile::span("import", "read_skp");
-    let model = sketcraft_skp::import_skp(bytes, default_name)
-        .map_err(IoError::Invalid)?;
+    let model = sketcraft_skp::import_skp(bytes, default_name).map_err(IoError::Invalid)?;
 
     let warnings = Vec::new();
     if model.faces.is_empty() {
@@ -100,13 +99,7 @@ pub fn read_skp(bytes: &[u8], default_name: &str) -> Result<(Vec<MeshObject>, Ve
             Some([sum[0] / n, sum[1] / n, sum[2] / n])
         };
 
-        objects.push(MeshObject {
-            name: name.to_string(),
-            positions,
-            triangles,
-            color,
-            ..Default::default()
-        });
+        objects.push(MeshObject { name: name.to_string(), positions, triangles, color, ..Default::default() });
     }
 
     if objects.is_empty() {
@@ -137,4 +130,3 @@ mod tests {
         assert!(!feature.body_names.is_empty());
     }
 }
-

@@ -1,9 +1,9 @@
 //! Export the camera at the instant Export is pressed, with a remembered hidden-edge choice.
 use crate::dialogs::form_row;
-use crate::{SolveApp, dialogs::Kind, selection::SelInput};
+use crate::{SketApp, dialogs::Kind, selection::SelInput};
 use serde_json::json;
 
-pub fn start(app: &SolveApp, id: &str) -> Option<(Kind, Vec<SelInput>)> {
+pub fn start(app: &SketApp, id: &str) -> Option<(Kind, Vec<SelInput>)> {
     (id == "file.export_view_dxf").then(|| {
         let tolerance = app.preferences.view_dxf_tolerance;
         let tolerance = if tolerance.is_finite() && (0.0001..=1.0).contains(&tolerance) { tolerance } else { 0.01 };
@@ -11,7 +11,7 @@ pub fn start(app: &SolveApp, id: &str) -> Option<(Kind, Vec<SelInput>)> {
     })
 }
 
-pub fn rows(app: &SolveApp, ui: &mut egui::Ui, dashed: &mut bool, tolerance: &mut f64) {
+pub fn rows(app: &SketApp, ui: &mut egui::Ui, dashed: &mut bool, tolerance: &mut f64) {
     crate::ui_kit::text(ui, app.tr_label("Hidden edges"), crate::ui_kit::Text::Note("hidden"));
     for (value, key, label) in [(false, "omit", "Do not export hidden edges"), (true, "dashed", "Export hidden edges as dashed lines")] {
         let r = crate::ui_kit::list_picker(ui, key, app.tr_label(label), *dashed == value);
@@ -32,7 +32,7 @@ pub fn rows(app: &SolveApp, ui: &mut egui::Ui, dashed: &mut bool, tolerance: &mu
     crate::ui_kit::text(ui, app.tr_label("dxf.tolerance_help"), crate::ui_kit::Text::Note("tolerance"));
 }
 
-pub fn run(app: &mut SolveApp, dashed: bool, tolerance: f64) -> Result<(), String> {
+pub fn run(app: &mut SketApp, dashed: bool, tolerance: f64) -> Result<(), String> {
     if crate::viewport::section_plane(app).is_some() {
         return Err(app.tr_label("Turn off section analysis before exporting the view.").into());
     }
@@ -101,7 +101,7 @@ mod tests {
         assert!(text.contains("LWPOLYLINE") && text.contains("HIDDEN"));
         assert!(h.app.dialog.is_none() && h.app.preferences.view_dxf_dashed);
         let saved = h.app.prefs();
-        let mut restored = SolveApp::new(Default::default(), Default::default());
+        let mut restored = SketApp::new(Default::default(), Default::default());
         restored.load_prefs(&saved);
         assert!(restored.preferences.view_dxf_dashed);
         assert_eq!(restored.preferences.view_dxf_tolerance, 0.1);

@@ -14,8 +14,8 @@ use sketcraft_geom::prelude::*;
 use std::collections::HashMap;
 use std::sync::Arc;
 
-use solidcore_record::Vec3;
-use solidcore_record::brep::{self as b, Curve2};
+use sketcore_record::Vec3;
+use sketcore_record::brep::{self as b, Curve2};
 use sketcraft_geom::Ring;
 use sketcraft_geom::brep::eval::{SurfaceEval, face_flux};
 use sketcraft_geom::brep::pcurve;

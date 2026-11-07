@@ -1,34 +1,34 @@
 //! Headless test fixtures. Callers retain frame counts, input and command parameters.
-use crate::{Services, SolveApp, scenario::Harness};
+use crate::{Services, SketApp, scenario::Harness};
 use egui::{Event, FullOutput, RawInput, Shape, Ui};
 use serde_json::{Value, json};
 use sketcraft_engine::{Sel, Session};
 
-pub(crate) fn app_with_script(script: Value) -> SolveApp {
+pub(crate) fn app_with_script(script: Value) -> SketApp {
     let mut session = Session::default();
     session.run_script(&script).unwrap();
-    SolveApp::new(session, Services::default())
+    SketApp::new(session, Services::default())
 }
 
-pub(crate) fn sample_app() -> SolveApp {
+pub(crate) fn sample_app() -> SketApp {
     app_with_script(sketcraft_engine::sample::script())
 }
 
 /// The classic view the tests were written for, as `Harness::new` pins it
 /// ([`crate::scenario::classic_view`]). The app itself opens on SketchUp's model screen (no grid,
-/// perspective, no navigation bar), which a test building `SolveApp::new` sees otherwise.
-pub(crate) fn classic_view(app: &mut SolveApp) {
+/// perspective, no navigation bar), which a test building `SketApp::new` sees otherwise.
+pub(crate) fn classic_view(app: &mut SketApp) {
     crate::scenario::classic_view(app);
 }
 
-/// `SolveApp::new` with [`classic_view`].
-pub(crate) fn classic_app(session: Session) -> SolveApp {
-    let mut app = SolveApp::new(session, Services::default());
+/// `SketApp::new` with [`classic_view`].
+pub(crate) fn classic_app(session: Session) -> SketApp {
+    let mut app = SketApp::new(session, Services::default());
     classic_view(&mut app);
     app
 }
 
-pub(crate) fn run_all(app: &mut SolveApp, commands: Vec<(String, Value)>) {
+pub(crate) fn run_all(app: &mut SketApp, commands: Vec<(String, Value)>) {
     for (id, params) in commands {
         app.run(&id, params).unwrap();
     }

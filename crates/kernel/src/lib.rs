@@ -259,7 +259,7 @@ pub enum KernelError {
 
 pub type Result<T> = std::result::Result<T, KernelError>;
 
-/// Why a kernel step failed: a message, or an error of the solidcore wrapper, which may be a
+/// Why a kernel step failed: a message, or an error of the sketcore wrapper, which may be a
 /// panic the wrapper caught ([`sketcraft_smlib::Error::Internal`]).
 pub(crate) trait Cause: std::fmt::Display {
     /// The panic's message, when the cause is one.
@@ -281,7 +281,7 @@ impl Cause for str {}
 impl Cause for String {}
 impl Cause for sketcraft_smlib::CheckReport {}
 impl Cause for sketcraft_smlib::export::ExportError {}
-impl Cause for solidcore_record::brep::history::Failed {}
+impl Cause for sketcore_record::brep::history::Failed {}
 impl Cause for sketcraft_geom::brep::pcurve::Error {}
 impl<T: Cause + ?Sized> Cause for &T {
     fn panic(&self) -> Option<&str> {
@@ -290,7 +290,7 @@ impl<T: Cause + ?Sized> Cause for &T {
 }
 
 impl KernelError {
-    /// A kernel step's failure, `context` before its cause: a panic the solidcore wrapper caught
+    /// A kernel step's failure, `context` before its cause: a panic the sketcore wrapper caught
     /// (its kernel replaced by a fresh one) stays an internal error ([`KernelError::Internal`]),
     /// so the engine reports it as one; any other cause is the operation's failure.
     pub(crate) fn smlib(context: impl std::fmt::Display, e: impl Cause) -> KernelError {
@@ -316,7 +316,7 @@ pub fn guarded() -> bool {
     GUARDED.with(std::cell::Cell::get) > 0 || sketcraft_smlib::in_call()
 }
 
-/// A panic inside a solidcore call, caught there and reported as the kernel's internal error
+/// A panic inside a sketcore call, caught there and reported as the kernel's internal error
 /// ([`KernelError::Internal`]): the crash-report check (`diagnostics.crash_test`'s kernel mode).
 pub fn crash_test() -> Result<()> {
     sketcraft_smlib::crash_test().map_err(|e| KernelError::smlib("crash test", e))

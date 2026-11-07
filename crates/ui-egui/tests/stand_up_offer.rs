@@ -179,7 +179,7 @@ fn old_preferences_files_still_load() {
     assert!(empty.offer_stand_up);
 }
 
-type V3 = solidcore_record::Vec3;
+type V3 = sketcore_record::Vec3;
 
 /// A stood-up SolidWorks file (its component still the active one), a sketch started by
 /// `start`, a rectangle far from the part at x 200..220, y 0..10 on it, extruded 15 mm: the

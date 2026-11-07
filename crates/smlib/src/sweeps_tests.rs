@@ -63,7 +63,7 @@ fn a_horn_torus_comes_out_as_its_nurbs() {
     assert_close(solid_volume(&b, "horn torus"), want, 1e-6, "horn torus");
     let record = b.to_native().unwrap();
     sketcraft_geom::brep::check::validate(&record).unwrap();
-    assert!(record.faces.iter().all(|f| !matches!(f.surface, solidcore_record::brep::Surface::Torus { .. })), "a torus label on a horn torus");
+    assert!(record.faces.iter().all(|f| !matches!(f.surface, sketcore_record::brep::Surface::Torus { .. })), "a torus label on a horn torus");
 }
 
 #[test]

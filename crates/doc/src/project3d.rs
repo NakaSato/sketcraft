@@ -1,7 +1,7 @@
 //! 3D sketch curves from the model: curves projected onto faces (on their display meshes), the
 //! sides an intersection curve is taken on (bodies, faces and other sketches' curves), and spun profiles.
 
-use solidcore_record::{Plane, Seg2, Vec2, Vec3};
+use sketcore_record::{Plane, Seg2, Vec2, Vec3};
 use sketcraft_geom::Mesh;
 use sketcraft_geom::prelude::*;
 use sketcraft_sketch::{LinkSource, WireCurve};
@@ -29,7 +29,7 @@ fn part_of<'a>(st: &'a ModelState, src: &LinkSource) -> Option<(&'a crate::Model
 /// plane, a fillet or any other analytic face is the face alone, as are faces whose seams cannot
 /// be measured.
 fn smooth_patch(body: &crate::kernel::Body, face: usize) -> Vec<usize> {
-    use solidcore_record::brep::Surface;
+    use sketcore_record::brep::Surface;
     let r = body.record();
     let freeform = |f: usize| r.faces.get(f).is_some_and(|f| matches!(f.surface, Surface::Spline { .. } | Surface::RationalSpline { .. }));
     if !freeform(face) {
@@ -212,7 +212,7 @@ fn join_meeting(edges: Vec<crate::kernel::MeetingEdge>, tol: f64) -> Vec<(Vec<Ve
 /// `w` run the other way: the same points, its parameter reversed (record curves have no
 /// direction flag, so the curve itself is rewritten).
 fn reversed(w: &WireCurve) -> WireCurve {
-    use solidcore_record::brep::Curve;
+    use sketcore_record::brep::Curve;
     let [t0, t1] = w.interval;
     let mirror = |knots: &[f64]| {
         let (a, b) = (knots.first().copied().unwrap_or(0.0), knots.last().copied().unwrap_or(0.0));
@@ -243,9 +243,9 @@ fn reversed(w: &WireCurve) -> WireCurve {
 }
 
 /// `f` with its y axis turned over, so a circle or ellipse on it runs the other way.
-fn flipped(f: &solidcore_record::brep::Frame) -> solidcore_record::brep::Frame {
+fn flipped(f: &sketcore_record::brep::Frame) -> sketcore_record::brep::Frame {
     let [x, y, z] = f.y_axis;
-    solidcore_record::brep::Frame { origin: f.origin, x_axis: f.x_axis, y_axis: [-x, -y, -z] }
+    sketcore_record::brep::Frame { origin: f.origin, x_axis: f.x_axis, y_axis: [-x, -y, -z] }
 }
 
 fn dist_to(m: &Mesh, p: Vec3) -> f64 {

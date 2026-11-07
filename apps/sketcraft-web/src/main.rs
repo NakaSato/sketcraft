@@ -1,8 +1,8 @@
 //! SketCraft in the browser.
 //!
-//! Runs the same [`sketcraft_ui_egui::SolveApp`] as the desktop app through eframe's web runner
-//! (wgpu: WebGPU where available, WebGL2 otherwise). Build with `trunk build --release` from this
-//! directory (output in `dist/web`). URL flags: `?webgl` forces WebGL2 (remembered until
+//! Runs the same [`sketcraft_ui_egui::SketApp`] as the desktop app through eframe's web runner
+//! (wgpu: WebGPU where available, WebGL2 otherwise). Build with `python3 scripts/build_web.py` from
+//! the repo root (output in `dist/web`). URL flags: `?webgl` forces WebGL2 (remembered until
 //! `?webgpu`), `?sample` opens the sample part, `?embed=editor` runs it as an editing embed in a
 //! host page (no application bar or start page; nothing kept in the browser; #8517).
 #![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic, clippy::unimplemented, clippy::todo, clippy::unreachable)]
@@ -23,8 +23,6 @@ mod install;
 mod keep;
 #[cfg(target_arch = "wasm32")]
 mod linked;
-#[cfg(any(target_arch = "wasm32", test))]
-mod space_mouse;
 
 /// The browser switches tabs with Ctrl+Tab and Ctrl+Shift+Tab, so the page leaves those keys to
 /// it (#5227); plain Tab and Shift+Tab still move between the app's fields. (Ctrl+PageUp and
@@ -180,14 +178,13 @@ mod web {
     use sketcraft_engine::Session;
     use sketcraft_engine::io::vfs;
     use sketcraft_ui_egui::ui_kit::BackingTooltipExt as _;
-    use sketcraft_ui_egui::{Services, SolveApp, ui_kit};
+    use sketcraft_ui_egui::{Services, SketApp, ui_kit};
     use wasm_bindgen::JsCast as _;
 
     use crate::api::Api;
     use crate::disk::{self, SaveTarget};
     use crate::files::{self, Files, Intent};
     use crate::keep;
-    use crate::space_mouse::SpaceMouse;
 
     const CANVAS_ID: &str = "sketcraft_canvas";
     const LOADING_ID: &str = "sketcraft_loading";
@@ -344,7 +341,7 @@ mod web {
     type FontLoadResult = Rc<std::cell::RefCell<Option<Result<(String, Vec<u8>), String>>>>;
 
     struct Shell {
-        app: SolveApp,
+        app: SketApp,
         launch: crate::Launch,
         linked: crate::linked::Download,
         full_url: Option<String>,
@@ -372,7 +369,6 @@ mod web {
         font_fetch_kind: Option<&'static str>,
         /// The language the fonts were last set up for (a CJK UI leads with the CJK face).
         font_language: String,
-        space_mouse: SpaceMouse,
         wheel_gestures: sketcraft_ui_egui::WebWheelGestures,
         /// The settings this tab wrote or loaded last, and those another tab wrote since (#8644).
         prefs_writer: crate::PrefsWriter,
@@ -1050,7 +1046,6 @@ mod web {
             self.tick_font(ctx);
             self.app.logic(ctx);
             self.api.poll();
-            self.space_mouse.logic(&mut self.app, ctx);
             self.files_tick(ctx);
             UNSAVED.with(|u| u.set(self.asks_before_unload()));
             DESIGN_SHOWN.with(|d| d.set(sketcraft_ui_egui::toolbar::design_shown(&self.app)));
@@ -1066,8 +1061,6 @@ mod web {
             } else {
                 raw.dropped_files.clear();
             }
-            // Before the app's own hook, which adds the control channel's events.
-            self.space_mouse.raw_input_hook(ctx, self.app.preferences.space_mouse_enabled, raw);
             self.app.raw_input_hook(raw);
         }
         fn ui(&mut self, ui: &mut egui::Ui, _frame: &mut eframe::Frame) {
@@ -1225,7 +1218,7 @@ mod web {
                         // Thumbnails of saves and start-page cards.
                         sketcraft_ui_egui::gpu::install_cpu_picture_renderer();
                         let (sender, receiver) = std::sync::mpsc::channel();
-                        let mut app = SolveApp::new(Session::default(), services).with_control(receiver);
+                        let mut app = SketApp::new(Session::default(), services).with_control(receiver);
                         app.embedded = launch.embed;
                         app.embed_editor = launch.editor;
                         // Listening before reading: settings another tab writes from now on are
@@ -1278,7 +1271,6 @@ mod web {
                             chinese_kind: None,
                             font_fetch_kind: None,
                             font_language,
-                            space_mouse: SpaceMouse::default(),
                             wheel_gestures: sketcraft_ui_egui::WebWheelGestures::default(),
                             prefs_writer: crate::PrefsWriter::default(),
                             other_tab_prefs,
@@ -1313,7 +1305,7 @@ fn main() {
 
 #[cfg(not(target_arch = "wasm32"))]
 fn main() {
-    eprintln!("sketcraft-web only runs in the browser: build it with `trunk build --release` in apps/sketcraft-web");
+    eprintln!("sketcraft-web only runs in the browser: build it with `python3 scripts/build_web.py`");
 }
 
 #[cfg(test)]
