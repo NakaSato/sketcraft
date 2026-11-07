@@ -14,6 +14,20 @@ pub(crate) fn sample_app() -> SolveApp {
     app_with_script(sketcraft_engine::sample::script())
 }
 
+/// The classic view the tests were written for, as `Harness::new` pins it
+/// ([`crate::scenario::classic_view`]). The app itself opens on SketchUp's model screen (no grid,
+/// perspective, no navigation bar), which a test building `SolveApp::new` sees otherwise.
+pub(crate) fn classic_view(app: &mut SolveApp) {
+    crate::scenario::classic_view(app);
+}
+
+/// `SolveApp::new` with [`classic_view`].
+pub(crate) fn classic_app(session: Session) -> SolveApp {
+    let mut app = SolveApp::new(session, Services::default());
+    classic_view(&mut app);
+    app
+}
+
 pub(crate) fn run_all(app: &mut SolveApp, commands: Vec<(String, Value)>) {
     for (id, params) in commands {
         app.run(&id, params).unwrap();

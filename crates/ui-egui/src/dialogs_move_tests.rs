@@ -749,3 +749,31 @@ fn selected_components_are_copied_when_create_copy_is_ticked_after_them() {
     let p = crate::dialogs_move::params(&h.app, h.app.dialog.as_ref().unwrap()).unwrap();
     assert_eq!(p["occurrences"], json!([[first], [second]]));
 }
+
+/// SketchUp's "x5": Create Copy with 3 copies runs 3 moves, each one move further on, and OK
+/// leaves the original and 3 copies.
+#[test]
+fn copies_make_one_move_per_copy_each_one_move_further_on() {
+    let (mut h, _) = click_cube_in_move(false, true);
+    let bodies = |h: &crate::scenario::Harness| h.app.session.world_state().unwrap().bodies.len();
+    let before = bodies(&h);
+    let d = h.app.dialog.as_mut().unwrap();
+    if let crate::dialogs::Kind::Move { x, .. } = &mut d.kind {
+        *x = "30".into();
+    }
+    d.extra.insert("copies".into(), json!("3"));
+    let moves = crate::dialogs_move::commands(&h.app, h.app.dialog.as_ref().unwrap()).unwrap();
+    assert_eq!(moves.len(), 3);
+    let x = |p: &serde_json::Value| p["translate"][0].to_string();
+    for (k, want) in [(1, "60"), (2, "90")] {
+        assert!(x(&moves[k]).contains(want), "copy {}: {}", k + 1, moves[k]);
+    }
+    assert!(moves.iter().all(|p| p["copy"] == json!(true)));
+    // Without Create Copy the count is ignored: one move.
+    h.app.dialog.as_mut().unwrap().extra.insert("copy".into(), json!(false));
+    assert_eq!(crate::dialogs_move::commands(&h.app, h.app.dialog.as_ref().unwrap()).unwrap().len(), 1);
+    h.app.dialog.as_mut().unwrap().extra.insert("copy".into(), json!(true));
+    h.step(&json!({"key": "Enter"})).unwrap();
+    h.settle();
+    assert_eq!(bodies(&h), before + 3, "the original and three copies");
+}

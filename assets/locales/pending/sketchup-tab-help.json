@@ -1,0 +1,94 @@
+{
+  "en": {
+    "help.appearance.paint": "Paints each face or body you click with the chosen color or material look, without changing its weight. Use it to color many faces quickly, one click each.",
+    "help.select.clear": "Clears the selection, so nothing is picked. Use it before picking new items for the next tool.",
+    "help.selection.delete": "Removes the selected items from the design in one step. Use it to delete what you no longer need; Undo brings it back.",
+    "Tags": "Tags"
+  },
+  "ar": {
+    "help.appearance.paint": "يطلي كل وجه أو جسم تنقر عليه باللون أو مظهر المادة المختار، من دون تغيير وزنه. استخدمه لتلوين أوجه كثيرة بسرعة، بنقرة لكل منها.",
+    "help.select.clear": "يمسح التحديد فلا يبقى شيء محددًا. استخدمه قبل تحديد عناصر جديدة للأداة التالية.",
+    "help.selection.delete": "يزيل العناصر المحددة من التصميم في خطوة واحدة. استخدمه لحذف ما لم تعد تحتاج إليه، ويعيده التراجع.",
+    "help.tags.manage": "يفتح لوحة إدارة الوسوم والطبقات لتنظيم الهندسة وإظهار الوسوم أو إخفائها وتعيين وسوم العناصر.",
+    "Tags": "الوسوم"
+  },
+  "he": {
+    "help.appearance.paint": "צביעת כל פאה או גוף שלוחצים עליהם בצבע או במראה החומר שנבחרו, בלי לשנות את משקלם. מתאים לצביעה מהירה של פאות רבות, לחיצה אחת לכל אחת.",
+    "help.select.clear": "ניקוי הבחירה, כך ששום דבר אינו נבחר. מתאים לפני בחירת פריטים חדשים לכלי הבא.",
+    "help.selection.delete": "הסרת הפריטים שנבחרו מהתכן בצעד אחד. מתאים למחיקת מה שאין בו עוד צורך; ביטול הפעולה מחזיר אותו.",
+    "help.tags.manage": "פתיחת חלונית הניהול של תגיות ושכבות לארגון הגאומטריה, להצגה או הסתרה של תגיות ולהקצאת תגיות לישויות.",
+    "Tags": "תגיות"
+  },
+  "ja": {
+    "help.appearance.paint": "クリックした面や立体を、重さを変えずに選んだ色や材質の見た目で塗ります。多くの面を 1 回ずつのクリックで素早く色分けするときに使います。",
+    "help.select.clear": "選択を解除し、何も選ばれていない状態にします。次のツールのために新しく選び直す前に使います。",
+    "help.selection.delete": "選択した項目を 1 回の操作でデザインから削除します。不要になったものを消すときに使います。元に戻すで復元できます。",
+    "help.tags.manage": "タグとレイヤーの管理パネルを開き、ジオメトリの整理、タグの表示切り替え、要素へのタグ割り当てを行います。",
+    "Tags": "タグ"
+  },
+  "vi": {
+    "help.appearance.paint": "Sơn từng mặt hoặc khối bạn nhấp bằng màu hoặc vẻ ngoài vật liệu đã chọn mà không thay đổi khối lượng. Dùng để tô màu nhanh nhiều mặt, mỗi mặt một lần nhấp.",
+    "help.select.clear": "Bỏ chọn mọi thứ để không còn mục nào được chọn. Dùng trước khi chọn các mục mới cho công cụ tiếp theo.",
+    "help.selection.delete": "Xóa các mục đã chọn khỏi thiết kế trong một bước. Dùng để xóa những gì không còn cần; Hoàn tác sẽ khôi phục lại.",
+    "help.tags.manage": "Mở bảng quản lý Thẻ và Lớp để sắp xếp hình học, bật tắt hiển thị thẻ và gán thẻ cho đối tượng.",
+    "Tags": "Thẻ"
+  },
+  "zh": {
+    "help.appearance.paint": "用所选颜色或材质外观涂刷你点击的每个面或实体，不改变其重量。用于逐个点击快速为许多面上色。",
+    "help.select.clear": "清除选择，使任何对象都不处于选中状态。用于为下一个工具重新选择对象之前。",
+    "help.selection.delete": "一步从设计中移除所选项目。用于删除不再需要的内容；撤销可将其恢复。",
+    "help.tags.manage": "打开标签与图层管理面板，用于整理几何、切换标签可见性以及为对象分配标签。",
+    "Tags": "标签"
+  },
+  "de": {
+    "Tags": "Tags"
+  },
+  "fr": {
+    "Tags": "Balises"
+  },
+  "es": {
+    "Tags": "Etiquetas"
+  },
+  "it": {
+    "Tags": "Tag"
+  },
+  "pt-BR": {
+    "Tags": "Etiquetas"
+  },
+  "nl": {
+    "Tags": "Tags"
+  },
+  "ru": {
+    "Tags": "Теги"
+  },
+  "uk": {
+    "Tags": "Теги"
+  },
+  "pl": {
+    "Tags": "Tagi"
+  },
+  "cs": {
+    "Tags": "Štítky"
+  },
+  "ko": {
+    "Tags": "태그"
+  },
+  "zh-TW": {
+    "Tags": "標籤"
+  },
+  "tr": {
+    "Tags": "Etiketler"
+  },
+  "sv": {
+    "Tags": "Taggar"
+  },
+  "da": {
+    "Tags": "Tags"
+  },
+  "nb": {
+    "Tags": "Tagger"
+  },
+  "fi": {
+    "Tags": "Tunnisteet"
+  }
+}

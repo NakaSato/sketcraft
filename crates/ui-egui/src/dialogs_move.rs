@@ -355,6 +355,41 @@ pub fn params(app: &SolveApp, d: &Dialog) -> Result<Value, String> {
     Ok(p)
 }
 
+/// Most copies one Move makes (SketchUp's "x5").
+pub(crate) const MAX_COPIES: i64 = 100;
+
+/// With Create Copy: how many copies OK makes (the Copies row; 1 when it isn't a whole number in
+/// range).
+pub(crate) fn copy_count(doc: &sketcraft_engine::doc::Document, d: &Dialog) -> u32 {
+    if !d.extra.get("copy").and_then(Value::as_bool).unwrap_or(false) {
+        return 1;
+    }
+    let text = d.extra.get("copies").and_then(Value::as_str).unwrap_or("1");
+    match doc.eval(text.trim(), ValueKind::Unitless) {
+        Ok(n) if n.is_finite() && n.fract() == 0.0 && (1.0..=MAX_COPIES as f64).contains(&n) => n as u32,
+        _ => 1,
+    }
+}
+
+/// The solid.move commands OK runs: one, or with Create Copy and several copies, one per copy,
+/// the k-th moved by the move k times over (a turn about a pivot fans the copies round it), as
+/// SketchUp's "x5" after a copy.
+pub fn commands(app: &SolveApp, d: &Dialog) -> Result<Vec<Value>, String> {
+    let p = params(app, d)?;
+    let n = copy_count(&app.session.doc, d);
+    if n <= 1 {
+        return Ok(vec![p]);
+    }
+    let one = transform(app, &p)?;
+    let mut out = vec![p.clone()];
+    let mut m = one;
+    for _ in 1..n {
+        m = mat_mul(&one, &m);
+        out.push(with_transform(p.clone(), &m));
+    }
+    Ok(out)
+}
+
 /// The current type's move, or what it still needs picked.
 enum Step {
     Made(Value),

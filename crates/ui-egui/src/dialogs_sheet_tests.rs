@@ -12,7 +12,8 @@ fn plate(mode: crate::shell::LayoutMode) -> SolveApp {
     s.execute("sketch.create", &json!({"plane": "XY", "name": "Base"})).unwrap();
     s.execute("sketch.rectangle.two_point", &json!({"p0": [0, 0], "p1": [100, 60]})).unwrap();
     s.execute("sketch.finish", &json!({})).unwrap();
-    let mut app = SolveApp::new(s, Services::default());
+    // The classic view, with its navigation bar (the SketchUp screen has none).
+    let mut app = crate::test_support::classic_app(s);
     app.ui.layout = mode;
     app
 }

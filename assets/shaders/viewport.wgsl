@@ -25,6 +25,9 @@ struct U {
     hatch: array<vec4<f32>, 3>,
     product_lights_meta: vec4<f32>, // explicit preview flag and bounded count
     product_lights: array<vec4<f32>,84>, // position/kind, radiance, axis/cone, attenuation
+    // rgb: the colour a face's back side is shaded in (straight sRGB 0..1), a = 1 on (the
+    // SketchUp model screen); a = 0: back sides in the body's colour, as the front
+    back_face: vec4<f32>,
     sky: vec4<f32>,    // xyz = world up; w = 1: shade in linear light with a sky fill (#7974)
 };
 
@@ -279,15 +282,25 @@ fn fs_clip_flat(i: FOut) -> @location(0) vec4<f32> {
 /// is without a section rather than hatched, since there is no cut face to show.
 @fragment
 fn fs_solid_open(i: TOut, @builtin(front_facing) front: bool) -> @location(0) vec4<f32> {
-    let c = solid(i, true);
+    let c = solid(back_side(i, front), true);
     return c;
 }
 
 @fragment
 fn fs_solid_open_flat(i: FOut, @builtin(front_facing) front: bool) -> @location(0) vec4<f32> {
     let t = flat_fragment(i, front);
-    let c = solid(t, true);
+    let c = solid(back_side(t, front), true);
     return c;
+}
+
+/// A face seen from its back side in the back-face colour (`u.back_face`, when it is on), else
+/// as it is.
+fn back_side(i: TOut, front: bool) -> TOut {
+    var o = i;
+    if (!front && u.back_face.a > 0.5) {
+        o.c = vec4<f32>(u.back_face.rgb, i.c.a);
+    }
+    return o;
 }
 
 struct CutOut {
@@ -359,7 +372,8 @@ fn solid(i: TOut, front: bool) -> vec4<f32> {
     if (u.ana.x > 0.5 && length(i.n) > 0.5) {
         return analysis(i, k);
     }
-    let c = lit(i, occlusion(i));
+    // A back side away from the section shows in the back-face colour when it is on.
+    let c = lit(back_side(i, front), occlusion(i));
     // Silhouettes (styles with edges): where a curved surface turns away from the eye, a line
     // about 1.5 px wide, on the visible surface only (depth-correct).
     if (u.screen.w > 0.5 && length(i.n) > 0.5 && fw > 1e-6) {

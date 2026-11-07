@@ -105,12 +105,11 @@ mod tests {
         assert!(h.app.ui.tool_cursor);
         h.call("ui.prefs", json!({"button":"cancel"}));
         assert!(!h.app.ui.tool_cursor);
-        h.app.ui.tool_cursor = true;
         h.call("ui.prefs", json!({"open":"Tools"}));
         h.call("ui.prefs", json!({"button":"defaults"}));
-        assert!(!h.app.ui.tool_cursor);
+        assert!(h.app.ui.tool_cursor, "the badge is on by default");
         h.call("ui.prefs", json!({"button":"cancel"}));
-        assert!(h.app.ui.tool_cursor, "Cancel also restores the value from before Defaults");
+        assert!(!h.app.ui.tool_cursor, "Cancel also restores the value from before Defaults");
     }
 
     #[test]
@@ -152,19 +151,25 @@ mod tests {
         assert_eq!(saved(&h), false, "periodic saves and quit keep the last applied value");
         h.call("ui.prefs", json!({"button":"apply"}));
         assert_eq!(saved(&h), true);
-        h.call("ui.prefs", json!({"button":"defaults"}));
+        h.frames(2);
+        crate::prefs::reveal_preference(&mut h, "view:tool_cursor");
+        h.step(&json!({"click":{"handle":"view:tool_cursor"}})).unwrap();
         assert!(!h.app.ui.tool_cursor);
-        assert_eq!(saved(&h), true, "Restore Defaults also waits for Apply or OK");
-        h.call("ui.prefs", json!({"button":"cancel"}));
+        h.call("ui.prefs", json!({"button":"apply"}));
+        assert_eq!(saved(&h), false);
+        h.call("ui.prefs", json!({"button":"defaults"}));
         assert!(h.app.ui.tool_cursor);
-        assert_eq!(saved(&h), true, "Cancel preserves the applied choice in the settings file");
+        assert_eq!(saved(&h), false, "Restore Defaults also waits for Apply or OK");
+        h.call("ui.prefs", json!({"button":"cancel"}));
+        assert!(!h.app.ui.tool_cursor);
+        assert_eq!(saved(&h), false, "Cancel preserves the applied choice in the settings file");
     }
 
     #[test]
     fn saved_tool_badge_requires_a_boolean_and_old_settings_keep_the_default() {
         let mut app = crate::SolveApp::new(sketcraft_engine::Session::default(), crate::Services::default());
         app.load_prefs("{}");
-        assert!(!app.ui.tool_cursor, "settings from before the option was saved keep it off");
+        assert!(app.ui.tool_cursor, "settings from before the option was saved keep the default (on)");
         for enabled in [true, false] {
             app.load_prefs(&json!({"tool_cursor":enabled}).to_string());
             assert_eq!(app.ui.tool_cursor, enabled);
@@ -179,8 +184,9 @@ mod tests {
     fn badge_shows_the_running_tool_beside_the_pointer() {
         let mut h = Harness::new();
         h.settle();
-        // Off by default: a running tool shows no badge until Tools preferences turn it on.
-        assert!(!h.app.ui.tool_cursor, "the badge is on by default");
+        // Off in the classic setup the Harness pins: a running tool shows no badge until Tools
+        // preferences turn it on.
+        assert!(!h.app.ui.tool_cursor, "the Harness starts with the badge off");
         h.step(&json!({"start": "sketch.create"})).unwrap();
         let (_, badge) = hover_middle(&mut h);
         assert!(badge.is_none(), "off by default, yet a badge is drawn at {badge:?}");

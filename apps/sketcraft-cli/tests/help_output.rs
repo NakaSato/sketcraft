@@ -62,7 +62,7 @@ fn mentioned(text: &str) -> Vec<&str> {
 /// Runs the binary and waits at most `limit` for it to finish. `None` means it was still
 /// running and was killed: the fuzz run `fuzz --help` used to start goes on for minutes.
 fn run_within(limit: Duration, args: &[&str]) -> Option<(Option<i32>, String, String)> {
-    let mut child = Command::new(env!("CARGO_BIN_EXE_solidcraft-cli")).args(args).stdout(Stdio::piped()).stderr(Stdio::piped()).spawn().unwrap();
+    let mut child = Command::new(env!("CARGO_BIN_EXE_sketcraft-cli")).args(args).stdout(Stdio::piped()).stderr(Stdio::piped()).spawn().unwrap();
     let started = Instant::now();
     loop {
         match child.try_wait().unwrap() {
@@ -83,7 +83,7 @@ fn run_within(limit: Duration, args: &[&str]) -> Option<(Option<i32>, String, St
 #[test]
 fn help_prints_usage_and_succeeds() {
     for arg in ["--help", "-h", "help"] {
-        let output = Command::new(env!("CARGO_BIN_EXE_solidcraft-cli")).arg(arg).output().unwrap();
+        let output = Command::new(env!("CARGO_BIN_EXE_sketcraft-cli")).arg(arg).output().unwrap();
         assert!(output.status.success(), "{arg}: {}", String::from_utf8_lossy(&output.stderr));
         let stdout = String::from_utf8_lossy(&output.stdout);
         assert!(stdout.starts_with("usage:"), "{arg}: {stdout}");
@@ -94,7 +94,7 @@ fn help_prints_usage_and_succeeds() {
 
 #[test]
 fn unknown_command_still_fails_with_usage() {
-    let output = Command::new(env!("CARGO_BIN_EXE_solidcraft-cli")).arg("--not-a-command").output().unwrap();
+    let output = Command::new(env!("CARGO_BIN_EXE_sketcraft-cli")).arg("--not-a-command").output().unwrap();
     assert!(!output.status.success());
     assert!(output.stdout.is_empty());
     assert!(String::from_utf8_lossy(&output.stderr).starts_with("error: usage:"));
@@ -104,7 +104,7 @@ fn unknown_command_still_fails_with_usage() {
 fn every_command_prints_its_own_usage() {
     for (cmd, named) in COMMANDS {
         for flag in ["--help", "-h"] {
-            let output = Command::new(env!("CARGO_BIN_EXE_solidcraft-cli")).args([*cmd, flag]).output().unwrap();
+            let output = Command::new(env!("CARGO_BIN_EXE_sketcraft-cli")).args([*cmd, flag]).output().unwrap();
             assert!(output.status.success(), "{cmd} {flag}: {}", String::from_utf8_lossy(&output.stderr));
             let stdout = String::from_utf8_lossy(&output.stdout);
             assert!(stdout.starts_with("usage:"), "{cmd} {flag}: {stdout}");
@@ -116,7 +116,7 @@ fn every_command_prints_its_own_usage() {
 
 #[test]
 fn the_top_level_usage_still_lists_every_command() {
-    let output = Command::new(env!("CARGO_BIN_EXE_solidcraft-cli")).arg("--help").output().unwrap();
+    let output = Command::new(env!("CARGO_BIN_EXE_sketcraft-cli")).arg("--help").output().unwrap();
     let stdout = String::from_utf8_lossy(&output.stdout);
     for cmd in LISTED {
         assert!(stdout.contains(&format!("sketcraft-cli {cmd}")), "{cmd}: {stdout}");
@@ -148,7 +148,7 @@ fn fuzz_refuses_an_argument_it_does_not_take() {
 #[test]
 fn render_help_keeps_the_registered_gpu_request_controls() {
     for args in [vec!["--help"], vec!["render", "--help"]] {
-        let output = Command::new(env!("CARGO_BIN_EXE_solidcraft-cli")).args(&args).output().unwrap();
+        let output = Command::new(env!("CARGO_BIN_EXE_sketcraft-cli")).args(&args).output().unwrap();
         assert!(output.status.success(), "{args:?}: {}", String::from_utf8_lossy(&output.stderr));
         assert!(output.stderr.is_empty());
         let stdout = String::from_utf8_lossy(&output.stdout);
@@ -162,15 +162,15 @@ fn render_help_keeps_the_registered_gpu_request_controls() {
 /// with the reason, and a design over the default limit opens once the flag raises it.
 #[test]
 fn max_file_size_raises_the_limit_and_refuses_bad_sizes() {
-    let output = Command::new(env!("CARGO_BIN_EXE_solidcraft-cli")).arg("--help").output().unwrap();
+    let output = Command::new(env!("CARGO_BIN_EXE_sketcraft-cli")).arg("--help").output().unwrap();
     assert!(String::from_utf8_lossy(&output.stdout).contains("--max-file-size"));
     for size in ["17GB", "2", "lots"] {
-        let output = Command::new(env!("CARGO_BIN_EXE_solidcraft-cli")).args(["--max-file-size", size, "exec", "file.new"]).output().unwrap();
+        let output = Command::new(env!("CARGO_BIN_EXE_sketcraft-cli")).args(["--max-file-size", size, "exec", "file.new"]).output().unwrap();
         assert!(!output.status.success(), "{size} was accepted");
         let stderr = String::from_utf8_lossy(&output.stderr);
         assert!(stderr.starts_with("error: --max-file-size"), "{size}: {stderr}");
     }
-    let output = Command::new(env!("CARGO_BIN_EXE_solidcraft-cli")).args(["exec", "file.new", "--max-file-size=2GB"]).output().unwrap();
+    let output = Command::new(env!("CARGO_BIN_EXE_sketcraft-cli")).args(["exec", "file.new", "--max-file-size=2GB"]).output().unwrap();
     assert!(output.status.success(), "{}", String::from_utf8_lossy(&output.stderr));
 
     // A sparse design file just over the default 256 MB: refused unread, then read with the flag
@@ -180,10 +180,10 @@ fn max_file_size_raises_the_limit_and_refuses_bad_sizes() {
     let path = dir.join("big.solidcraft");
     std::fs::File::create(&path).unwrap().set_len((256 << 20) + 1).unwrap();
     let path = path.to_string_lossy().to_string();
-    let output = Command::new(env!("CARGO_BIN_EXE_solidcraft-cli")).args(["eval", &path]).output().unwrap();
+    let output = Command::new(env!("CARGO_BIN_EXE_sketcraft-cli")).args(["eval", &path]).output().unwrap();
     let stderr = String::from_utf8_lossy(&output.stderr);
     assert!(!output.status.success() && stderr.contains("too large") && stderr.contains("--max-file-size"), "{stderr}");
-    let output = Command::new(env!("CARGO_BIN_EXE_solidcraft-cli")).args(["--max-file-size", "1GB", "eval", &path]).output().unwrap();
+    let output = Command::new(env!("CARGO_BIN_EXE_sketcraft-cli")).args(["--max-file-size", "1GB", "eval", &path]).output().unwrap();
     let stderr = String::from_utf8_lossy(&output.stderr);
     assert!(!output.status.success() && !stderr.contains("too large"), "{stderr}");
     let _ = std::fs::remove_dir_all(&dir);
@@ -196,7 +196,7 @@ fn max_file_size_raises_the_limit_and_refuses_bad_sizes() {
 #[test]
 fn a_closed_stderr_does_not_stop_the_cli() {
     for _ in 0..5 {
-        let mut child = Command::new(env!("CARGO_BIN_EXE_solidcraft-cli"))
+        let mut child = Command::new(env!("CARGO_BIN_EXE_sketcraft-cli"))
             .args(["run", "no-such-script.json"])
             .stdout(Stdio::null())
             .stderr(Stdio::piped())

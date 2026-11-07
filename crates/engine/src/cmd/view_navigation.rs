@@ -9,12 +9,13 @@ use crate::schema::view_navigation::{
     AmbientOcclusionParams, AmbientOcclusionResult, CameraReply, GraphicsPreset, GraphicsPresetParams, GraphicsPresetResult, HistoryDock,
     HistoryLayoutParams, HistoryLayoutResult, LayoutMode, LayoutParams, LayoutResult, NavigateParams, NavigateResult, NavigatorParams,
     NormalToParams, PresetQuality, RenderBrowser, RenderFocus, RenderLive, RenderSelect, RibbonTabsOnly, RibbonTabsOnlyParams, StandardViewParams,
-    TabStep, TabStepParams, ZoomTool,
+    NavToolLatch, TabStep, TabStepParams, ZoomTool,
 };
 use crate::schema::{TypedContract, output_schema_for};
 use crate::{Result, Sel, Session};
 
 const ZOOM_TOOL_CONTRACT: TypedContract<ZoomTool> = TypedContract::new();
+const NAV_TOOL_CONTRACT: TypedContract<NavToolLatch> = TypedContract::new();
 const FOCUS_CONTRACT: TypedContract<RenderFocus> = TypedContract::new();
 const NAVIGATOR_CONTRACT: TypedContract<NavigatorParams> = TypedContract::new();
 const RENDER_LIVE_CONTRACT: TypedContract<RenderLive> = TypedContract::new();
@@ -70,6 +71,14 @@ CommandSpec::new("view.tool.zoom", "Drag to Zoom", crate::checked!("view.tool.zo
     .icon("zoom").noundo().doc_only()
     .contract(&ZOOM_TOOL_CONTRACT).output(output_schema_for::<ZoomTool>)
     .params("on?: bool (omitted: toggle) → on?; latch the Zoom tool for left-button drags. A shortcut assigned in the UI zooms while held"),
+CommandSpec::new("view.tool.orbit", "Orbit", crate::checked!("view.tool.orbit", orbit_tool))
+    .icon("orbit").noundo().doc_only()
+    .contract(&NAV_TOOL_CONTRACT).output(output_schema_for::<NavToolLatch>)
+    .params("on?: bool (omitted: toggle) → on?; latch the Orbit tool for left-button drags"),
+CommandSpec::new("view.tool.pan", "Pan", crate::checked!("view.tool.pan", pan_tool))
+    .icon("pan").noundo().doc_only()
+    .contract(&NAV_TOOL_CONTRACT).output(output_schema_for::<NavToolLatch>)
+    .params("on?: bool (omitted: toggle) → on?; latch the Pan tool for left-button drags"),
 CommandSpec::new("view.spin", "Continuous Orbit", spin)
     .icon("spin").noundo().doc_only().params("on?: bool (omitted: toggle) → on?; continuous orbit until the next click or key"),
 CommandSpec::new("view.visual_style", "Visual Style", visual_style)
@@ -334,6 +343,14 @@ fn view_toggle(p: &Value, cmd: &str, key: &str) -> Result<Value> {
 
 fn zoom_tool(_s: &mut Session, p: &Value) -> Result<Value> {
     view_toggle(p, "view.tool.zoom", "on")
+}
+
+fn orbit_tool(_s: &mut Session, p: &Value) -> Result<Value> {
+    view_toggle(p, "view.tool.orbit", "on")
+}
+
+fn pan_tool(_s: &mut Session, p: &Value) -> Result<Value> {
+    view_toggle(p, "view.tool.pan", "on")
 }
 
 fn spin(_s: &mut Session, p: &Value) -> Result<Value> {
@@ -679,7 +696,7 @@ mod tests {
             }
         }
         for (id, key) in
-            [("view.tool.zoom", "on"), ("view.spin", "on"), ("view.grid", "on"), ("view.ground_shadow", "on"), ("view.navigation_bar", "visible")]
+            [("view.tool.zoom", "on"), ("view.tool.orbit", "on"), ("view.tool.pan", "on"), ("view.spin", "on"), ("view.grid", "on"), ("view.ground_shadow", "on"), ("view.navigation_bar", "visible")]
         {
             assert_eq!(s.execute(id, &json!({})).unwrap(), json!({}));
             assert_eq!(s.execute(id, &Value::Null).unwrap(), json!({}));
@@ -695,6 +712,8 @@ mod tests {
             "view.home",
             "view.tool",
             "view.tool.zoom",
+            "view.tool.orbit",
+            "view.tool.pan",
             "view.spin",
             "view.visual_style",
             "view.grid",

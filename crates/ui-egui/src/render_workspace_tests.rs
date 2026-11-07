@@ -7464,7 +7464,13 @@ fn render_assign_gestures_drag_preview_and_release_use_no_document_draft() {
 #[test]
 fn render_assign_gestures_shortcuts_are_scoped_and_commands_are_not_stubs() {
     let mut h = Harness::new();
-    assert_eq!(crate::keymap::command_for(&h.app, "I"), Some("inspect.measure"));
+    h.app.home.open = false;
+    // Measure is on T outside Render (SketchUp's Tape Measure, `toolbar::shortcuts`); I is free.
+    assert_eq!(crate::keymap::command_for(&h.app, "I"), None);
+    h.step(&json!({"key":"T"})).unwrap();
+    assert!(matches!(h.app.dialog.as_ref().map(|d| &d.kind), Some(crate::dialogs::Kind::Measure { .. })), "T measures");
+    h.step(&json!({"key":"Escape"})).unwrap();
+    assert!(h.app.dialog.is_none());
     enter(&mut h.app, true).unwrap();
     assert_eq!(crate::keymap::command_for(&h.app, "I"), Some("appearance.pick_up"));
     assert_eq!(crate::keymap::command_for(&h.app, "B"), Some("appearance.paint"));

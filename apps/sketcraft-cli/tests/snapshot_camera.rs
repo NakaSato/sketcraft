@@ -89,7 +89,7 @@ impl Scratch {
 
     fn run(&self, script: &Path, out: &str, extra: &[&str]) -> Output {
         let (w, h) = (SIZE.0.to_string(), SIZE.1.to_string());
-        Command::new(env!("CARGO_BIN_EXE_solidcraft-cli"))
+        Command::new(env!("CARGO_BIN_EXE_sketcraft-cli"))
             .arg("snapshot")
             .arg(script)
             .arg("--out")
@@ -308,7 +308,7 @@ fn a_snapshot_shows_the_part_where_the_camera_puts_it() {
 
 /// `snapshot` under a `SKETCRAFT_GPU` policy: its reply and stderr.
 fn snapshot_under(dir: &Scratch, script: &Path, out: &str, policy: &str) -> Output {
-    Command::new(env!("CARGO_BIN_EXE_solidcraft-cli"))
+    Command::new(env!("CARGO_BIN_EXE_sketcraft-cli"))
         .env("SKETCRAFT_GPU", policy)
         .arg("snapshot")
         .arg(script)
@@ -350,7 +350,7 @@ fn a_strict_policy_never_falls_to_the_cpu() {
     let dir = Scratch::new();
     let script = dir.script("part.json", &[]);
     let survey = |policy: &str| {
-        let o = Command::new(env!("CARGO_BIN_EXE_solidcraft-cli")).args(["gpu", "--policy", policy]).output().unwrap();
+        let o = Command::new(env!("CARGO_BIN_EXE_sketcraft-cli")).args(["gpu", "--policy", policy]).output().unwrap();
         (o.status.success(), serde_json::from_slice::<Value>(&o.stdout).unwrap_or(Value::Null))
     };
     for policy in ["hardware", "software"] {
@@ -404,7 +404,7 @@ fn a_view_or_a_camera_that_cannot_be_used_is_an_error_and_writes_nothing() {
 /// The usage text says what the new options do.
 #[test]
 fn the_usage_names_the_camera_and_the_guides() {
-    let output = Command::new(env!("CARGO_BIN_EXE_solidcraft-cli")).arg("snapshot").output().unwrap();
+    let output = Command::new(env!("CARGO_BIN_EXE_sketcraft-cli")).arg("snapshot").output().unwrap();
     let stderr = String::from_utf8_lossy(&output.stderr);
     for word in ["--camera", "--view", "view.save", "--no-grid", "--no-axes"] {
         assert!(stderr.contains(word), "usage lacks {word}: {stderr}");

@@ -92,7 +92,7 @@ fn a_design_naming_a_sketch_and_its_extrude_alike_replays_from_its_script() {
     let dir = std::env::temp_dir().join(format!("sketcraft-shared-names-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     let cli = |args: &[&std::ffi::OsStr]| {
-        let out = std::process::Command::new(env!("CARGO_BIN_EXE_solidcraft-cli")).args(args).output().unwrap();
+        let out = std::process::Command::new(env!("CARGO_BIN_EXE_sketcraft-cli")).args(args).output().unwrap();
         assert!(
             out.status.success(),
             "{}: {}",
@@ -138,7 +138,7 @@ fn script_export_warns_about_omitted_print_faces_on_stderr() {
     let native = std::fs::read(&saved).unwrap();
 
     for to_file in [false, true] {
-        let mut cmd = std::process::Command::new(env!("CARGO_BIN_EXE_solidcraft-cli"));
+        let mut cmd = std::process::Command::new(env!("CARGO_BIN_EXE_sketcraft-cli"));
         cmd.arg("script").arg(&saved);
         if to_file {
             cmd.arg("--out").arg(&exported);

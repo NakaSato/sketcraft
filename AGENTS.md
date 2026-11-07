@@ -2,7 +2,7 @@
 
 Every future user-facing option, setting, tool choice, and expandable section throughout the app must remember its last state across reloads and app restarts. This applies to toolbars, menus, dialogs, and panels as well as the right sidebar. Persistence is part of implementing a control, not a separate follow-up task.
 
-- Put user preferences in the serialized `Prefs` in `crates/ui-egui/src/prefs.rs` (stored under `prefs::STORAGE_KEY`; pages live in `crates/ui-egui/src/prefs/`). Put per-model display options in the serialized `DisplaySettings` in `crates/sketcraft-core/src/display.rs`.
+- Put user preferences in the serialized `Prefs` in `crates/ui-egui/src/prefs.rs` (stored under `prefs::STORAGE_KEY`; pages live in `crates/ui-egui/src/prefs/`).
 - Use the `ui_kit` section helpers in `crates/ui-egui/src/ui_kit/layout.rs` (`section`, `section_count`, `section_method`, `editor_section`, `method_section`) for expandable sections; they keep the open state under the id you pass. For panel headers use `ui_kit::panel::collapsible_header`, and draw disclosures with `ui_kit/disclosure.rs`. Do not add raw `egui::CollapsingHeader`/`CollapsingState` disclosures. Supply a stable, unique id. Ids must not depend on display titles, section order, or docked/floating layout.
 - Keep preference loading compatible with older saved data using defaults for added fields. Preserve existing section order and append new sections.
 - Keep model-specific state, such as tag visibility and entity assignments, in the document; do not apply those values to unrelated projects.

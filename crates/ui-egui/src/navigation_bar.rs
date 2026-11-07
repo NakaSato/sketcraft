@@ -104,6 +104,12 @@ impl Slot {
     }
 }
 
+/// The navigation bar is drawn: switched on, and not on the SketchUp model screen, which has
+/// none (the switch is left as it was saved).
+pub(crate) fn shown(app: &SolveApp) -> bool {
+    app.ui.show_navigation_bar && !crate::sketchup_screen::on(app)
+}
+
 pub(crate) fn canvas_caps(app: &SolveApp) -> NavCaps {
     if crate::dialogs_sheet::flat_active(app) || crate::render_workspace::result_active(app) {
         NavCaps { orbit: false, pick: false }

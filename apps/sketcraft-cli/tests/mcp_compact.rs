@@ -9,7 +9,7 @@ use serde_json::{Value, json};
 /// `inspect_design`'s input schema as `solidcraft-cli mcp` with `args` and `env` lists it, or
 /// the server's stderr when it does not start.
 fn inspect_schema(args: &[&str], env: Option<&str>) -> Result<Value, String> {
-    let mut cmd = Command::new(env!("CARGO_BIN_EXE_solidcraft-cli"));
+    let mut cmd = Command::new(env!("CARGO_BIN_EXE_sketcraft-cli"));
     // --headless: never bridge to (and read the preference of) an app the developer has running.
     cmd.args(["mcp", "--headless", "--allow-any-path"]).args(args).stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::piped());
     match env {

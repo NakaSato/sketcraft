@@ -188,8 +188,8 @@ fn octahedral6(n: [f32; 3]) -> u32 {
 /// The shader's `U`: the view-projection matrix, 10 `vec4`s (the tenth carries the ambient
 /// occlusion radius), the 8 analysis colours, their flags, the depth direction, the model
 /// matrix, the two whole-body highlight colours, then the section hatch colours, the product
-/// lights, and the sky (`uniform_bytes`).
-const UNIFORM_SIZE: u64 = 480 + 16 * sketcraft_render::hatch::HATCH_COLOURS as u64 + 16 + 21 * 64 + 16;
+/// lights, the back-face colour and the sky (`uniform_bytes`).
+const UNIFORM_SIZE: u64 = 480 + 16 * sketcraft_render::hatch::HATCH_COLOURS as u64 + 16 + 21 * 64 + 16 + 16;
 
 /// The identity, column-major: a scene drawn where it was built.
 const IDENTITY: [[f32; 4]; 4] = [[1.0, 0.0, 0.0, 0.0], [0.0, 1.0, 0.0, 0.0], [0.0, 0.0, 1.0, 0.0], [0.0, 0.0, 0.0, 1.0]];
@@ -1070,6 +1070,10 @@ pub struct Frame {
     /// The section hatch colours by part (straight sRGB, 0..1; the first the cap's own): what a
     /// cut body whose palette entries carry a hatch ([`Palette::set_hatch`]) is tinted toward.
     pub hatch: [[f32; 3]; sketcraft_render::hatch::HATCH_COLOURS],
+    /// The colour opaque faces seen from their back side are shaded in (straight sRGB, 0..1),
+    /// as SketchUp shows a face's back; alpha 1 turns it on, 0 shades back sides in the body's
+    /// colour. A section cut's inside keeps its cap look either way.
+    pub back_face: [f32; 4],
     /// The world's up direction and 1 to shade in linear light with a sky fill that follows it
     /// (#7974); 0 shades as before.
     pub sky: [f32; 4],
@@ -3530,6 +3534,7 @@ pub fn frame_key(cb: &Frame) -> u64 {
     cb.hover_tint.map(f32::to_bits).hash(&mut h);
     cb.selection_tint.map(f32::to_bits).hash(&mut h);
     cb.hatch.iter().flatten().for_each(|v| v.to_bits().hash(&mut h));
+    cb.back_face.map(f32::to_bits).hash(&mut h);
     cb.sky.map(f32::to_bits).hash(&mut h);
     cb.outline.hash(&mut h);
     cb.ao_radius.to_bits().hash(&mut h);
@@ -4520,6 +4525,7 @@ fn uniform_bytes_placing(cb: &Frame, w: f32, h: f32, linear: bool, reversed: boo
         let light = cb.product_lights.as_ref().and_then(|lights| lights.get(index)).copied().unwrap_or([0.0; 16]);
         v.extend(light.map(|value| if value.is_finite() { value } else { 0.0 }));
     }
+    v.extend(cb.back_face.map(|value| if value.is_finite() { value } else { 0.0 }));
     v.extend(cb.sky.map(|value| if value.is_finite() { value } else { 0.0 }));
     v.iter().flat_map(|x| x.to_le_bytes()).collect()
 }
@@ -4794,6 +4800,7 @@ mod tests {
             ao_radius: 0.0,
             ao_samples: crate::view::AO_SAMPLES,
             sky: [0.0; 4],
+            back_face: [0.0; 4],
             ssaa: 1.0,
         }
     }
@@ -5273,6 +5280,7 @@ mod glass_tests {
             ao_radius: 0.0,
             ao_samples: crate::view::AO_SAMPLES,
             sky: [0.0; 4],
+            back_face: [0.0; 4],
             ssaa: 1.0,
             hover_tint: [0.0; 3],
             selection_tint: [0.0; 3],
@@ -5476,6 +5484,7 @@ mod glass_tests {
             ao_radius: 0.0,
             ao_samples: crate::view::AO_SAMPLES,
             sky: [0.0; 4],
+            back_face: [0.0; 4],
             ssaa,
         }
     }

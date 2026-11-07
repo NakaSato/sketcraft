@@ -62,6 +62,16 @@ pub struct ZoomTool {
     pub on: Option<bool>,
 }
 
+/// Latch or release the viewport's Orbit or Pan tool for left-button drags (SketchUp's O and
+/// H). With no flag, the UI toggles it.
+#[derive(Debug, Deserialize, Serialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct NavToolLatch {
+    #[serde(default, deserialize_with = "present", skip_serializing_if = "Option::is_none")]
+    #[schemars(with = "bool")]
+    pub on: Option<bool>,
+}
+
 /// Empty input for the read-only viewport effect query.
 #[derive(Debug, Deserialize, Serialize, JsonSchema)]
 #[serde(deny_unknown_fields)]

@@ -4278,7 +4278,7 @@ fn remembered_extra_keys(kind: &Kind) -> &'static [&'static str] {
         Some("solid.align") => &["from_snap", "to_snap"],
         Some("solid.boundary_fill") => &["remove_tools"],
         Some("solid.thread") => &["modeled"],
-        Some("solid.move") => &["copy"],
+        Some("solid.move") => &["copy", "copies"],
         Some("solid.coil") => &["section", "section_position", "start_angle", "clockwise"],
         _ => &[],
     }
@@ -5767,7 +5767,7 @@ fn dialog_commands(app: &SolveApp, d: &Dialog) -> Result<Vec<(String, Value)>, S
             };
             ("inspect.section", json!({"plane": plane, "offset": offset, "flip": flip, "hatch": hatch}))
         }
-        Kind::Move { .. } => return Ok(vec![("solid.move".into(), crate::dialogs_move::params(app, d)?)]),
+        Kind::Move { .. } => return Ok(crate::dialogs_move::commands(app, d)?.into_iter().map(|p| ("solid.move".into(), p)).collect()),
         Kind::Hole { diameter, depth, kind, cb_diameter, cb_depth, cs_diameter, cs_angle, opts } => {
             need(0, if opts.multiple { "sketch points" } else { "a face position" })?;
             let ty = match *kind {

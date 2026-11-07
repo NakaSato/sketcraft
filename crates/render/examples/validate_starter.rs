@@ -481,7 +481,7 @@ fn root() -> Result<PathBuf> {
     Ok(Path::new(env!("CARGO_MANIFEST_DIR")).parent().and_then(Path::parent).ok_or("missing repository root")?.to_path_buf())
 }
 fn run() -> Result<()> {
-    require(std::env::args_os().count() == 1, "usage: cargo run --locked --profile ci -p solidcraft-render --example validate_starter")?;
+    require(std::env::args_os().count() == 1, "usage: cargo run --locked --profile ci -p sketcraft-render --example validate_starter")?;
     let report = validate(&root()?)?;
     println!("{}", serde_json::to_string_pretty(&report)?);
     Ok(())

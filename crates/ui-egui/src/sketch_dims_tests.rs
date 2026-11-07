@@ -63,6 +63,29 @@ fn tabs_cycle_rectangle_dimensions_indefinitely_and_enter_commits_values() {
     }
 }
 
+/// SketchUp's "30,12": a comma moves from the width box to the height box, as Tab does; one
+/// inside brackets stays in the expression.
+#[test]
+fn a_comma_moves_to_the_next_dimension_outside_brackets() {
+    let mut h = drawing("sketch.rectangle.two_point");
+    type_value(&mut h, "30");
+    h.step(&json!({"text": ","})).unwrap();
+    assert_focus(&h, 1);
+    h.step(&json!({"text": "12"})).unwrap();
+    let dims = &h.app.tool.as_ref().unwrap().dims;
+    assert_eq!(dims.iter().map(|d| d.value.as_str()).collect::<Vec<_>>(), ["30", "12"], "no comma typed into either box");
+    h.step(&json!({"key": "Enter"})).unwrap();
+    let state = h.app.session.world_state().unwrap();
+    let sketch = state.sketch(h.app.session.active_sketch.unwrap()).unwrap();
+    assert!((sketch.profiles[0].area - 360.0).abs() < 1e-6, "{}", sketch.profiles[0].area);
+
+    let mut h = drawing("sketch.rectangle.two_point");
+    type_value(&mut h, "max(20");
+    h.step(&json!({"text": ","})).unwrap();
+    assert_focus(&h, 0);
+    assert_eq!(h.app.tool.as_ref().unwrap().dims[0].value, "max(20,", "the comma separates the arguments");
+}
+
 #[test]
 fn line_dimensions_wrap_both_directions_and_enter_uses_length_and_angle() {
     let mut h = drawing("sketch.line");

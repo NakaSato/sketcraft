@@ -35,7 +35,7 @@ sketcraft-3dx-client = { path = "crates/threedx-client" }
 solidcore = { git = "https://github.com/tangency-labs/solidcore", rev = "8ddce901671f1cebd9214a31d21895d725e886c8" }
 solidcore-record = { git = "https://github.com/tangency-labs/solidcore", rev = "f5e8e9a29e0c9b7cf6c4040a5bc8878382b3c62f" }
 sketcraft-testkit = { path = "crates/testkit" }
-sketcraft-core = { path = "crates/sketcraft-core" }
+sketcraft-skp = { path = "crates/skp" }
 
 # foundation
 thiserror = "2"

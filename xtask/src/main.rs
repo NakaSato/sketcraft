@@ -244,7 +244,7 @@ fn cmd_action_matrix(bless: bool, results: Option<&str>, from: Option<&str>) -> 
         let p = std::path::absolute(d).map_err(|e| format!("{d}: {e}"))?;
         c.env("ACTION_MATRIX_MERGE", p);
     }
-    run(c, "cargo test --profile ci -p solidcraft-cli --test action_matrix action_matrix_all")
+    run(c, "cargo test --profile ci -p sketcraft-cli --test action_matrix action_matrix_all")
 }
 
 fn cmd_layers() -> Result<(), String> {

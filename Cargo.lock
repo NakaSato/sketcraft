@@ -4065,18 +4065,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "sketcraft-core"
-version = "0.40.0-rc.2"
-dependencies = [
- "cc",
- "earcutr",
- "glam",
- "serde",
- "serde_json",
- "uuid",
-]
-
-[[package]]
 name = "sketcraft-derive"
 version = "0.40.0-rc.2"
 dependencies = [
@@ -4175,11 +4163,11 @@ dependencies = [
  "serde",
  "serde_json",
  "sha2 0.10.9",
- "sketcraft-core",
  "sketcraft-doc",
  "sketcraft-geom",
  "sketcraft-kernel",
  "sketcraft-profile",
+ "sketcraft-skp",
  "sketcraft-testkit",
  "solidcore-record",
  "thiserror 2.0.21",
@@ -4253,6 +4241,17 @@ dependencies = [
  "thiserror 2.0.21",
  "ttf-parser",
  "unicode-bidi",
+]
+
+[[package]]
+name = "sketcraft-skp"
+version = "0.40.0-rc.2"
+dependencies = [
+ "cc",
+ "earcutr",
+ "glam",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]
@@ -4884,7 +4883,6 @@ version = "1.29.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4a0e2d11620c50695fe12bbbfde96b3477fe606e7284c22d505c12ce51214514"
 dependencies = [
- "getrandom 0.4.3",
  "js-sys",
  "serde_core",
  "wasm-bindgen",

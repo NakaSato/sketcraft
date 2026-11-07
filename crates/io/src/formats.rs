@@ -180,7 +180,7 @@ pub static FORMATS: &[FormatSpec] = &[
     FormatSpec {
         id: "design",
         label: "SketCraft design",
-        extensions: &[crate::DESIGN_EXTS[0], crate::DESIGN_EXTS[1], crate::DESIGN_EXTS[2], "json"],
+        extensions: &[crate::DESIGN_EXTS[0], crate::DESIGN_EXTS[1], crate::DESIGN_EXTS[2], crate::DESIGN_EXTS[3], "json"],
         role: Role::Design,
         import: Some(ImportSpec { target: ImportTarget::Design, options: &[], native_only: false }),
         export: None,

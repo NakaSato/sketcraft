@@ -87,7 +87,7 @@ fn designs() -> Vec<(String, PathBuf)> {
             out.push((format!("{prefix}/{stem}"), p));
         }
     };
-    add("corpus", root.join("apps/solidcraft-cli/tests/corpus"), "sketcraft");
+    add("corpus", root.join("apps/sketcraft-cli/tests/corpus"), "solidcraft");
     add("examples", root.join("examples"), "json");
     add("examples", root.join("examples/acceptance"), "json");
     add("regressions", root.join("examples/regressions"), "json");
@@ -112,7 +112,7 @@ fn load(path: &Path) -> Result<Session, String> {
     }
     let v: Value = serde_json::from_slice(&std::fs::read(path).map_err(|e| e.to_string())?).map_err(|e| e.to_string())?;
     let script = if path.file_name().is_some_and(|n| n == "recipe.json") {
-        let out = Command::new(env!("CARGO_BIN_EXE_solidcraft-cli")).arg("recipe").arg(path).output().map_err(|e| e.to_string())?;
+        let out = Command::new(env!("CARGO_BIN_EXE_sketcraft-cli")).arg("recipe").arg(path).output().map_err(|e| e.to_string())?;
         if !out.status.success() {
             return Err(format!("recipe: {}", String::from_utf8_lossy(&out.stderr).trim()));
         }
@@ -1379,7 +1379,7 @@ fn a_hair_thin_hole_on_a_ledge_beside_a_loft_cut() {
 // through the 2.9 mm wall. A volume out of bounds is measured again finer before it refuses.
 #[test]
 fn a_small_hole_through_the_wall_of_a_plastic_rest() {
-    let mut s = load(&root().join("apps/solidcraft-cli/tests/corpus/modern-plastic.solidcraft")).unwrap();
+    let mut s = load(&root().join("apps/sketcraft-cli/tests/corpus/modern-plastic.solidcraft")).unwrap();
     let volume = |s: &Session| {
         s.model.state().bodies.iter().map(|b| b.body.mesh(&sketcraft_kernel::MeshTolerance::chord(0.002)).unwrap().measure().volume).sum::<f64>()
     };

@@ -1,0 +1,3 @@
+# `cargo xtask <task>` runs the repo tooling in xtask/ (tests, ci, layers, i18n, ...).
+[alias]
+xtask = "run --package xtask --"

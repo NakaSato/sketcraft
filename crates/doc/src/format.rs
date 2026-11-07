@@ -273,24 +273,24 @@ pub struct Family<'a> {
     /// The tag before the number in a file's `format`.
     prefix: &'static str,
     /// The tag files saved before the rename carry: read, never written (docs/compatibility.md).
-    legacy_prefix: Option<&'static str>,
+    legacy_prefixes: &'static [&'static str],
     /// The format of a file that names none: designs saved before format strings are format 1; a
     /// drawing always names its own.
     untagged: Option<u32>,
     formats: Formats<'a>,
 }
 
-/// Designs (`solidcraft/N`): the upgrade steps written out up to format 22, then the change files
+/// Designs (`sketcraft/N`): the upgrade steps written out up to format 22, then the change files
 /// in `src/format/`.
 pub const DESIGN: Family<'static> =
-    Family { noun: "design", prefix: "sketcraft/", legacy_prefix: Some(LEGACY_FORMAT_PREFIX), untagged: Some(1), formats: FORMATS };
+    Family { noun: "design", prefix: "sketcraft/", legacy_prefixes: LEGACY_FORMAT_PREFIXES, untagged: Some(1), formats: FORMATS };
 
-/// Drawings (`solidcraft-drawing/N`, #3890): format 1 is the first drawing record, and every later
+/// Drawings (`sketcraft-drawing/N`, #3890): format 1 is the first drawing record, and every later
 /// change is a file in `src/drawing/format/`.
 pub const DRAWING: Family<'static> = Family {
     noun: "drawing",
     prefix: "sketcraft-drawing/",
-    legacy_prefix: None,
+    legacy_prefixes: &["solidcraft-drawing/"],
     untagged: None,
     formats: Formats { hand: &[], folded: DRAWING_FOLDED, pending: DRAWING_PENDING },
 };
@@ -314,7 +314,7 @@ impl Family<'_> {
     /// The version in one of this family's format tags; `None` for any other tag, another
     /// family's included.
     pub fn version_of(&self, s: &str) -> Option<u32> {
-        s.strip_prefix(self.prefix).or_else(|| self.legacy_prefix.and_then(|p| s.strip_prefix(p)))?.parse().ok()
+        s.strip_prefix(self.prefix).or_else(|| self.legacy_prefixes.iter().find_map(|p| s.strip_prefix(p)))?.parse().ok()
     }
 
     /// Read a file's format and take its `format_pending` out of its JSON, before anything else
@@ -471,11 +471,13 @@ pub fn format_string(n: u32) -> String {
     DESIGN.format_string(n)
 }
 
-/// The format tag of designs saved before the rename. Compatibility shim (docs/compatibility.md):
-/// read, never written.
+/// The oldest format tag of designs saved before the renames. Compatibility shim
+/// (docs/compatibility.md): read, never written.
 pub const LEGACY_FORMAT_PREFIX: &str = "solvecraft/";
+/// Every design tag read but never written: SolidCraft's `solidcraft/N` and the older `solvecraft/N`.
+pub const LEGACY_FORMAT_PREFIXES: &[&str] = &["solidcraft/", LEGACY_FORMAT_PREFIX];
 
-/// The version in a design's format string (`solidcraft/N`, or the legacy `solvecraft/N`).
+/// The version in a design's format string (`sketcraft/N`, or a legacy `solidcraft/N` or `solvecraft/N`).
 pub fn version_of(s: &str) -> Option<u32> {
     DESIGN.version_of(s)
 }
@@ -1591,9 +1593,9 @@ mod tests {
         // The number reads as Rust reads a `u32`, a leading `+` included, as in a design's tag.
         assert_eq!(DRAWING.version_of("sketcraft-drawing/+1"), Some(1));
         let error = DRAWING.take_version(&mut serde_json::json!({"format": format_string(FORMAT)})).unwrap_err().to_string();
-        assert_eq!(error, format!("not a SketCraft drawing (format `solidcraft/{FORMAT}`)"));
+        assert_eq!(error, format!("not a SketCraft drawing (format `sketcraft/{FORMAT}`)"));
         let error = read(&serde_json::json!({"format": DRAWING.format_string(1)}).to_string()).unwrap_err().to_string();
-        assert_eq!(error, "not a SketCraft design (format `solidcraft-drawing/1`)");
+        assert_eq!(error, "not a SketCraft design (format `sketcraft-drawing/1`)");
     }
 
     /// Every refusal names its family: a design's read exactly as they did before drawings had one
@@ -2386,6 +2388,8 @@ mod tests {
         assert_eq!(version_of("sketcraft/x"), None);
         // Compatibility shim: files saved before the rename carry the legacy tag.
         assert_eq!(version_of("solvecraft/13"), Some(13));
+        assert_eq!(version_of("solidcraft/15"), Some(15), "SolidCraft's designs open");
+        assert_eq!(DRAWING.version_of("solidcraft-drawing/1"), Some(1), "and its drawings");
         assert_eq!(version_of("solvecraftx/13"), None);
         let d = Document::new("A");
         assert_eq!(d.format, format_string(FORMAT));

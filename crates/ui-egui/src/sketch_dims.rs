@@ -581,6 +581,9 @@ fn boxes(app: &SolveApp, ui: &mut egui::Ui, proj: &Proj, t: &mut Tool) -> Option
     let px = 2.0 * app.cam.half_height() / f64::from(proj.rect.height().max(1.0));
     let lv = live(app, t, e, px);
     let focus = std::mem::take(&mut t.dims_focus);
+    // SketchUp's "1000,500": a comma typed into a value box goes to the next box, as Tab does.
+    // Not inside brackets, where it separates a function's arguments ("max(a, b)").
+    comma_moves_on(ui, t);
     // Egui processes ordinary Tab navigation before these floating text edits are drawn.
     // Remember the box that owned the keyboard and restore a focus within this tool after
     // drawing, so the last dimension wraps to the first rather than reaching the panels.
@@ -694,6 +697,28 @@ fn boxes(app: &SolveApp, ui: &mut egui::Ui, proj: &Proj, t: &mut Tool) -> Option
 
 /// Stack the polygon inputs beside its screen bounds. Try each side before falling back to
 /// the drawing area's edge when the polygon fills the view; keep the boxes separate even then.
+/// A comma typed into a value box with another box after it becomes a Tab, unless it falls
+/// inside brackets.
+fn comma_moves_on(ui: &egui::Ui, t: &Tool) {
+    if t.dims.len() < 2 {
+        return;
+    }
+    let focused = (0..t.dims.len()).find(|i| ui.ctx().memory(|m| m.has_focus(egui::Id::unique(("sc_dim", *i)))));
+    let Some(text) = focused.and_then(|i| t.dims.get(i)).map(|b| b.value.as_str()) else { return };
+    if text.matches('(').count() > text.matches(')').count() {
+        return;
+    }
+    let tab = egui::Event::Key { key: egui::Key::Tab, physical_key: None, pressed: true, repeat: false, modifiers: egui::Modifiers::NONE };
+    ui.ctx().input_mut(|input| {
+        // The text edit reads the frame's events; the Tab handling below reads the raw ones.
+        for event in input.events.iter_mut().chain(input.raw.events.iter_mut()) {
+            if matches!(event, egui::Event::Text(s) if s == ",") {
+                *event = tab.clone();
+            }
+        }
+    });
+}
+
 fn polygon_input_positions(bounds: egui::Rect, sizes: &[egui::Vec2], view: Option<egui::Rect>, gap: f32) -> Vec<Pos2> {
     let size =
         vec2(sizes.iter().map(|s| s.x).fold(0.0, f32::max), sizes.iter().map(|s| s.y).sum::<f32>() + gap * sizes.len().saturating_sub(1) as f32);

@@ -756,6 +756,7 @@ fn offscreen(
         ao_samples,
         ssaa,
         sky: [0.0; 4],
+        back_face: [0.0; 4],
         hover_tint: [0.0; 3],
         selection_tint: [0.0; 3],
         hatch: Default::default(),

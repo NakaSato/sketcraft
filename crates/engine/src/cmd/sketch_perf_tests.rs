@@ -1,4 +1,4 @@
-//! Timings for large sketches (run with `cargo test -p solidcraft-engine --release sketch_perf -- --ignored --nocapture`;
+//! Timings for large sketches (run with `cargo test -p sketcraft-engine --release sketch_perf -- --ignored --nocapture`;
 //! numbers are recorded in docs/perf.md).
 
 use std::time::Instant;

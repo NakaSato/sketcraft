@@ -996,7 +996,7 @@ pub fn enter(app: &mut SolveApp, render: bool) -> Result<(), String> {
             app.ui.up_axis = camera.up;
             app.ui.perspective = perspective;
         }
-        app.ui.tab = "MODEL".into();
+        app.ui.tab = app.ui.home_tab.into();
         crate::render_ui::reset_shell(app);
     }
     app.viewport.hover = None;
@@ -3268,6 +3268,7 @@ fn paint_product_kind(app: &mut SolveApp, ui: &mut egui::Ui, rect: egui::Rect, c
             ao_radius: 0.0,
             ao_samples: sketcraft_gpu::view::AO_SAMPLES,
             sky: [0.0; 4],
+            back_face: [0.0; 4],
             eye: [eye.x as f32, eye.y as f32, eye.z as f32, if camera.fov > 0.0 { 1.0 } else { 0.0 }],
             ssaa: if width < full.0 { width as f32 / full.0 as f32 } else { 1.0 },
             hover_tint: [f32::from(Tokens::get().hover_face_lift) / 255.0; 3],
@@ -3452,7 +3453,8 @@ pub(crate) fn environment_overlay(app: &mut SolveApp, ui: &mut egui::Ui, viewpor
 pub(crate) fn interactive_command_info(app: &SolveApp, command: &sketcraft_engine::CommandSpec) -> sketcraft_engine::CommandInfo {
     let mut info = ribbon::command_info(app, command);
     // A drawing tool on the SKETCH tab kept shown outside a sketch starts one (#7904).
-    if crate::workspace::starts_a_sketch(app, command.id) {
+    // A SketchUp modelling tool in a sketch begun from its tab finishes the sketch first.
+    if crate::workspace::starts_a_sketch(app, command.id) || crate::sketchup_draw::finishes_sketch_for(app, command.id) {
         info.enabled = true;
         info.disabled_reason = None;
     }

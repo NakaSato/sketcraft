@@ -269,6 +269,10 @@ mod sketch_families;
 #[cfg(test)]
 mod sketch_guidance_ui_tests;
 pub(crate) mod sketch_line_arc;
+pub(crate) mod sketchup_draw;
+pub(crate) mod sketchup_screen;
+#[cfg(test)]
+mod sketchup_draw_tests;
 pub mod sketch_modify_ui;
 #[cfg(test)]
 mod sketch_modify_ui_tests;
@@ -297,7 +301,6 @@ mod status_bar;
 #[cfg(test)]
 mod sweep_dialog_tests;
 pub mod tags_panel;
-pub mod warehouse_panel;
 pub(crate) mod test_boat;
 pub mod theme;
 pub mod theme_files;
@@ -357,6 +360,14 @@ pub struct UiState {
     /// Not saved: it only lives while a sketch is open.
     #[serde(skip)]
     pub sketch_return_tab: Option<String>,
+    /// The tab a new window opens on and the ribbon goes back to when a context ends (a sheet
+    /// metal body left, a hidden tab): SketchUp's tool set. Not saved.
+    #[serde(skip)]
+    pub home_tab: &'static str,
+    /// A SketchUp-tab drawing tool waiting for its first click, which picks its plane
+    /// (`sketchup_draw`). Not saved.
+    #[serde(skip)]
+    pub draw_on_click: Option<&'static str>,
     /// The folded ribbon's panels are open over the view (`ribbon_tabs_only`, #10112). Not saved:
     /// a tab click opens them, and a command starting or the pointer leaving closes them.
     #[serde(skip)]
@@ -391,14 +402,15 @@ pub struct UiState {
     pub lasso_select: bool,
     /// 0: shaded with edges, 1: shaded, 2: wireframe, 3: shaded with hidden edges.
     pub visual_style: u8,
-    /// A soft shadow on the ground under the model (seen from above).
+    /// A soft shadow on the ground under the model (seen from above). Off by default, as in
+    /// SketchUp.
     pub ground_shadow: bool,
     /// The world's up axis (Z or Y; #3): the camera, axis view, home view and ground follow it.
     pub up_axis: sketcraft_engine::render::UpAxis,
     /// The agent cursor: shown, speed, follow camera (#35).
     pub agent_cursor: agent_cursor::Settings,
-    /// The running tool's icon rides beside the pointer in the viewport (View settings; off by
-    /// default).
+    /// The running tool's icon rides beside the pointer in the viewport (View settings; on by
+    /// default, like SketchUp's tool cursors).
     pub tool_cursor: bool,
     /// The colours picked last in any colour picker, newest first (#9234); kept between runs.
     pub recent_colors: Vec<[u8; 3]>,
@@ -420,15 +432,19 @@ impl Default for UiState {
     fn default() -> Self {
         UiState {
             layout: Default::default(),
-            tab: "MODEL".into(),
+            tab: workspace::SKETCHUP_TAB.into(),
             ribbon_context: None,
             sketch_return_tab: None,
+            home_tab: workspace::SKETCHUP_TAB,
+            draw_on_click: None,
             ribbon_open: false,
-            show_browser: true,
-            show_timeline: true,
-            show_grid: true,
+            // SketchUp's model screen: the view on its own, no grid, in perspective. The Browser
+            // and the timeline are a click away (View).
+            show_browser: false,
+            show_timeline: false,
+            show_grid: false,
             show_navigation_bar: true,
-            perspective: false,
+            perspective: true,
             auto_ortho_faces: false,
             view_angles_lock_yaw: false,
             view_angles_lock_pitch: false,
@@ -440,10 +456,10 @@ impl Default for UiState {
             pick_components: false,
             lasso_select: false,
             visual_style: 0,
-            ground_shadow: true,
+            ground_shadow: false,
             up_axis: Default::default(),
             agent_cursor: Default::default(),
-            tool_cursor: false,
+            tool_cursor: true,
             recent_colors: Vec::new(),
         }
     }
@@ -588,8 +604,6 @@ pub struct SolveApp {
     pub bom: Option<bom_panel::BomPanel>,
     /// The Tags & Layers window, when open.
     pub tags_panel: Option<tags_panel::TagsPanel>,
-    /// The 3D Warehouse and model discovery window, when open.
-    pub warehouse_panel: Option<warehouse_panel::WarehousePanel>,
     material_card_review: Option<material_card_review::ReviewWindow>,
     /// Context menus, rename box and Properties window.
     pub menu: context_menu::MenuState,
@@ -871,7 +885,6 @@ impl SolveApp {
             sketch_report: None,
             bom: None,
             tags_panel: None,
-            warehouse_panel: None,
             material_card_review: None,
             menu: context_menu::MenuState::default(),
             gesture: mouse_gesture::State::default(),
@@ -1353,10 +1366,15 @@ impl SolveApp {
                         _ => None,
                     };
                 }
-                "view.tool.zoom" => {
-                    let active = self.viewport.nav == Some(viewport::NavMode::Zoom);
+                "view.tool.zoom" | "view.tool.orbit" | "view.tool.pan" => {
+                    let mode = match id {
+                        "view.tool.orbit" => viewport::NavMode::Orbit,
+                        "view.tool.pan" => viewport::NavMode::Pan,
+                        _ => viewport::NavMode::Zoom,
+                    };
+                    let active = self.viewport.nav == Some(mode);
                     if v.get("on").and_then(Value::as_bool).unwrap_or(!active) {
-                        self.viewport.nav = Some(viewport::NavMode::Zoom);
+                        self.viewport.nav = Some(mode);
                     } else if active {
                         self.viewport.nav = None;
                     }
@@ -1697,10 +1715,49 @@ impl SolveApp {
         self.start_with_variant_memory("inspect.section", true, None, true);
     }
 
+    /// Press Pull: edges get a fillet, a fillet's round face or a chamfer's flat one reopens
+    /// its feature, other curved faces an offset, planar faces and profiles an extrude.
+    fn press_pull(&mut self) {
+        let id = "solid.press_pull";
+        if let Some(pending) = &mut self.pending_feature_edit {
+            pending.then_start(id);
+            return;
+        }
+        if self.session.selection.iter().any(|s| matches!(s, sketcraft_engine::Sel::Edge { .. })) {
+            return self.start("solid.fillet");
+        }
+        let sel = &self.session.selection;
+        let blend = sel.iter().find_map(|s| match s {
+            sketcraft_engine::Sel::Face { body, index, point } => dialogs::blend_feature(&self.session, body, *index).map(|id| (id, *point)),
+            _ => None,
+        });
+        // Its arrow sits on the edge of the face clicked.
+        if let Some((blend, point)) = blend {
+            return self.edit_feature_at(blend, Some(point));
+        }
+        let curved = sel.iter().any(
+            |s| matches!(s, sketcraft_engine::Sel::Face { body, index, .. } if dialogs::planar_face(&self.session, body, *index).is_none()),
+        );
+        if curved {
+            return self.start("solid.offset_face");
+        }
+        let empty = sel.is_empty();
+        self.start("solid.extrude");
+        if empty
+            && let Some(d) = &mut self.dialog
+            && let Some(input) = d.inputs.first_mut()
+        {
+            input.accept |= selection::FACES | selection::EDGES;
+            d.press_pull = true;
+        }
+    }
+
     fn start_with_variant_memory(&mut self, id: &str, remember_variant: bool, opener: Option<egui::Rect>, section_edit: bool) {
         // A tool can be started outside the frame's scope (a direct `start`, a shortcut in
         // `logic`): build its hint in the user's language, not the thread default.
         let _language = crate::i18n::scope(&self.preferences.language);
+        // Another command ends a SketchUp drawing tool still waiting for its first click.
+        sketchup_draw::cancel(self);
         if sketcraft_engine::panels::commands::is_command(id) {
             if let Err(why) = self.run(id, json!({})) {
                 self.set_status(why, true);
@@ -1816,9 +1873,15 @@ impl SolveApp {
         // A drawing tool on the SKETCH tab kept shown outside a sketch (#7904) starts Create
         // Sketch, on the selected plane or planar face or else on the plane picked next, and then
         // the tool, as the tool's shortcut does outside a sketch (`keymap::press`).
+        // On the SketchUp tab there is no Create Sketch step: the tool's first click in the view
+        // picks the plane (`sketchup_draw`).
         if workspace::starts_a_sketch(self, id)
             && let Some(then) = sketcraft_engine::find_command(id).map(|c| c.id)
         {
+            if self.ui.tab == workspace::SKETCHUP_TAB {
+                sketchup_draw::begin(self, then);
+                return;
+            }
             self.start("sketch.create");
             if let Some(d) = self.dialog.as_mut().filter(|d| matches!(d.kind, dialogs::Kind::Sketch)) {
                 d.then_start = Some(then);
@@ -1826,6 +1889,13 @@ impl SolveApp {
             // The ribbon stays on SKETCH while the plane is picked, not on Create Sketch's MODEL.
             self.ui.tab = "SKETCH".into();
             return;
+        }
+        // Push/Pull, Move, Scale… in a sketch begun from the SketchUp tab: finish it first, as
+        // SketchUp has no sketch to leave.
+        if sketchup_draw::finishes_sketch_for(self, id) {
+            self.finish_sketch();
+            // Back on the SketchUp tab before the command picks its tab: it lists the tool.
+            workspace::sync_context(self);
         }
         // A disabled command starts nothing, however it was reached. The toolbar greys its
         // button, but a shortcut, the command palette and the control channel all land here.
@@ -1849,6 +1919,8 @@ impl SolveApp {
             "view.fit"
                 | "view.home"
                 | "view.tool.zoom"
+                | "view.tool.orbit"
+                | "view.tool.pan"
                 | "view.spin"
                 | "view.grid"
                 | "view.ground_shadow"
@@ -2074,10 +2146,6 @@ impl SolveApp {
             tags_panel::open(self);
             return;
         }
-        if id == "warehouse.discover" {
-            warehouse_panel::open(self);
-            return;
-        }
         // Inspect → Measure → Properties: the window, not a reply nobody sees (#8095).
         if matches!(id, "component.properties" | "occurrence.properties") {
             design_properties::open_selected(self);
@@ -2095,40 +2163,14 @@ impl SolveApp {
             self.cancel_sketch();
             return;
         }
-        // Press Pull: edges get a fillet, a fillet's round face or a chamfer's flat one reopens
-        // its feature (its size changes, as `solid.press_pull` does: #1932, #4986), other curved
-        // faces an offset, planar faces and profiles an extrude.
+        // Press Pull (`press_pull`): its size changes, as `solid.press_pull` does (#1932, #4986).
         if id == "solid.press_pull" {
-            if let Some(pending) = &mut self.pending_feature_edit {
-                pending.then_start(id);
-                return;
-            }
-            if self.session.selection.iter().any(|s| matches!(s, sketcraft_engine::Sel::Edge { .. })) {
-                return self.start("solid.fillet");
-            }
-            let sel = &self.session.selection;
-            let blend = sel.iter().find_map(|s| match s {
-                sketcraft_engine::Sel::Face { body, index, point } => dialogs::blend_feature(&self.session, body, *index).map(|id| (id, *point)),
-                _ => None,
-            });
-            // Its arrow sits on the edge of the face clicked.
-            if let Some((blend, point)) = blend {
-                return self.edit_feature_at(blend, Some(point));
-            }
-            let curved = sel.iter().any(
-                |s| matches!(s, sketcraft_engine::Sel::Face { body, index, .. } if dialogs::planar_face(&self.session, body, *index).is_none()),
-            );
-            if curved {
-                return self.start("solid.offset_face");
-            }
-            let empty = sel.is_empty();
-            self.start("solid.extrude");
-            if empty
-                && let Some(d) = &mut self.dialog
-                && let Some(input) = d.inputs.first_mut()
-            {
-                input.accept |= selection::FACES | selection::EDGES;
-                d.press_pull = true;
+            let from = self.ui.tab.clone();
+            self.press_pull();
+            // From the SketchUp tab the ribbon stays there, whatever Push/Pull opens (Extrude,
+            // Fillet, Offset Face), as SketchUp has one tool for them.
+            if from == workspace::SKETCHUP_TAB {
+                self.ui.tab = from;
             }
             return;
         }
@@ -3551,7 +3593,6 @@ impl SolveApp {
         sketch_report::show(self, ui.ctx());
         bom_panel::show(self, ui.ctx());
         tags_panel::show(self, ui.ctx());
-        warehouse_panel::show(self, ui.ctx());
         material_card_review::show(self, ui.ctx());
         recovery_ui::show(self, ui.ctx());
         mesh_units::show(self, ui.ctx());

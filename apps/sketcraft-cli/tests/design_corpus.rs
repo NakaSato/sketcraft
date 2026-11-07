@@ -11,7 +11,7 @@ use sketcraft_engine::Session;
 fn corpus() -> Vec<PathBuf> {
     let dir = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/corpus");
     let mut v: Vec<PathBuf> =
-        std::fs::read_dir(&dir).unwrap().flatten().map(|e| e.path()).filter(|p| p.extension().is_some_and(|x| x == "sketcraft")).collect();
+        std::fs::read_dir(&dir).unwrap().flatten().map(|e| e.path()).filter(|p| p.extension().and_then(|x| x.to_str()).is_some_and(sketcraft_engine::io::is_design_ext)).collect();
     v.sort();
     assert!(v.len() >= 7, "corpus files in {}", dir.display());
     v

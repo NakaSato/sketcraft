@@ -91,6 +91,8 @@ The toolbar is ordered Select, Line, Erase, Orbit, Push/Pull, Scale, Offset, Mov
 
 Hover over a toolbar tool or flyout entry for one second to see its name, keyboard shortcut (when available), and usage instructions.
 
+The ribbon's **SketchUp** tab gathers SketchUp's Large Tool Set in one place: Select (Clear Selection, Delete, Paint Appearance), Create (Line, 3-Point Arc, 2-Point Rectangle, Circle), Modify (Press Pull, Offset Face, Move/Copy, Scale), Measure (Measure, Sketch Dimension, Section Analysis), and Components (New Component, Tags & Layers). Its buttons are shortcuts: every command keeps its place on its own tab. A drawing tool starts a sketch first when none is open, and finishing the sketch returns to the SketchUp tab. Show or hide the tab like any other from the toolbar menu (the plus after the tabs, or right-click a tab) or Preferences → Layout → Toolbar tabs.
+
 The **Union** flyout keeps Flip, Combine, Union, Intersect, Trim, and Split together. Flip mirrors the selection through its bounds center using a colored plane, an inspector axis button, or the X/Y/Z arrow shortcuts. Mirrored component instances retain their links and placement when their definition is edited.
 
 Boolean tools work on closed solid groups/components or separate connected loose bodies. Nested groups and components are combined as volumes, including overlapping child solids. Fill missing faces and remove stray/internal edges first. For Union, Combine, Intersect, or Split, either select two bodies before choosing the tool, or click the first and second body. For Trim, click the cutter first and the target second; the cutter stays. Escape cancels the first-body choice.

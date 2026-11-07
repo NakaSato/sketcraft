@@ -17,7 +17,7 @@ solidcore-record = { workspace = true }
 sketcraft-geom = { workspace = true }
 sketcraft-kernel = { workspace = true }
 sketcraft-doc = { workspace = true }
-sketcraft-core = { workspace = true }
+sketcraft-skp = { workspace = true }
 sketcraft-profile = { workspace = true }
 thiserror = { workspace = true }
 log = { workspace = true }

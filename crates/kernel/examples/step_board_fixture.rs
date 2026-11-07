@@ -3,7 +3,7 @@
 //!
 //! ```sh
 //! SKETCRAFT_STEP_PCB_COMPONENTS=600 SKETCRAFT_STEP_PCB_PINS=15 \
-//!     cargo run --release -p solidcraft-kernel --example step_board_fixture -- board.step
+//!     cargo run --release -p sketcraft-kernel --example step_board_fixture -- board.step
 //! ```
 //!
 //! 600 components of 15 pins give 52 MB. The defaults are 500 and 16; the path defaults to

@@ -277,7 +277,7 @@ fn tooltip(app: &SolveApp, response: egui::Response, slot: &Slot, hidden: Option
 }
 
 pub(crate) fn show(app: &mut SolveApp, ui: &mut egui::Ui, rect: Rect) {
-    if !app.ui.show_navigation_bar {
+    if !navigation_bar::shown(app) {
         return;
     }
     let Some(layout) = app.viewport.layout.as_ref().filter(|l| l.navigation.is_positive()) else { return };

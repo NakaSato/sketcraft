@@ -507,6 +507,15 @@ pub(super) fn layout(app: &mut SolveApp, ui: &mut egui::Ui) {
                 "view_confirm_corner",
             );
         });
+        ui_kit::settings_section(ui, "model_screen", app.tr("prefs.model_screen"), |ui| {
+            layout_check(
+                ui,
+                app.tr("prefs.sketchup_screen"),
+                app.tr("prefs.sketchup_screen_note"),
+                &mut app.preferences.sketchup_screen,
+                "sketchup_screen",
+            );
+        });
         ui_kit::settings_section(ui, "toolbar_tabs", app.tr("prefs.toolbar_tabs"), |ui| {
             ui.horizontal_wrapped(|ui| {
                 for tab in crate::workspace::choosable_tabs() {

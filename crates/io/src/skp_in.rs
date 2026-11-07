@@ -9,7 +9,7 @@ use crate::{IoError, Result};
 /// Read SketchUp (.skp) bytes into one or more named mesh objects.
 pub fn read_skp(bytes: &[u8], default_name: &str) -> Result<(Vec<MeshObject>, Vec<String>)> {
     let _span = sketcraft_profile::span("import", "read_skp");
-    let model = sketcraft_core::skp::import_skp(bytes, default_name)
+    let model = sketcraft_skp::import_skp(bytes, default_name)
         .map_err(IoError::Invalid)?;
 
     let warnings = Vec::new();
@@ -33,7 +33,7 @@ pub fn read_skp(bytes: &[u8], default_name: &str) -> Result<(Vec<MeshObject>, Ve
     }
 
     // Group faces by body name.
-    let mut grouped_faces: BTreeMap<&str, Vec<&sketcraft_core::Face>> = BTreeMap::new();
+    let mut grouped_faces: BTreeMap<&str, Vec<&sketcraft_skp::Face>> = BTreeMap::new();
     for (id, face) in &model.faces {
         if model.is_hidden(*id) {
             continue;
@@ -122,7 +122,7 @@ mod tests {
 
     #[test]
     fn test_read_skp() {
-        let bytes = include_bytes!("../../sketcraft-core/tests/fixtures/placed-window.skp");
+        let bytes = include_bytes!("../../skp/tests/fixtures/placed-window.skp");
         let (objects, warnings) = read_skp(bytes, "Window").expect("read_skp placed-window");
         assert!(!objects.is_empty());
         assert!(warnings.is_empty());
@@ -132,7 +132,7 @@ mod tests {
 
     #[test]
     fn test_mesh_import_skp() {
-        let bytes = include_bytes!("../../sketcraft-core/tests/fixtures/placed-window.skp");
+        let bytes = include_bytes!("../../skp/tests/fixtures/placed-window.skp");
         let feature = crate::mesh_import_feature_in(bytes, "placed-window.skp", 1.0).expect("mesh_import_feature_in skp");
         assert!(!feature.body_names.is_empty());
     }

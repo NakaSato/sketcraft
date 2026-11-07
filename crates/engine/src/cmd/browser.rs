@@ -134,18 +134,9 @@ pub static COMMANDS: &[CommandSpec] = &[
         .noundo()
         .doc_only()
         .params("Open the Tags & Layers manager panel"),
-    CommandSpec::new("warehouse.discover", "3D Warehouse & Model Discovery", warehouse_discover)
-        .icon("library")
-        .noundo()
-        .doc_only()
-        .params("Open 3D Warehouse and architectural model discovery panel"),
 ];
 
 fn tags_manage(_s: &mut Session, _p: &Value) -> Result<Value> {
-    Ok(json!({"open": true}))
-}
-
-fn warehouse_discover(_s: &mut Session, _p: &Value) -> Result<Value> {
     Ok(json!({"open": true}))
 }
 

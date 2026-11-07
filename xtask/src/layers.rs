@@ -44,6 +44,8 @@ pub const TABLE: &[(&str, Class)] = &[
     ("3dx-client", Class::Standalone),
     // the profiler: timed spans for every layer, the kernel's calls to commands (no workspace dependencies)
     ("profile", Class::Standalone),
+    // the SketchUp reader: vendored C++ parser and its faces (no workspace dependencies)
+    ("skp", Class::Standalone),
     ("sketch", Class::Layer(1)),
     // the B-rep kernel, solidcore (the Rust port of NVIDIA's SMLib, ADR 0002); only the kernel uses it
     ("smlib", Class::Layer(1)),

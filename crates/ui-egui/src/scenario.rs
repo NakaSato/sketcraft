@@ -179,6 +179,28 @@ impl Drop for Harness {
     }
 }
 
+/// The classic view scenarios were written for: Browser, timeline and grid shown, orthographic,
+/// the ground shadow on, no tool icon beside the pointer and no SketchUp sky. The app itself
+/// opens on SketchUp's model screen.
+pub(crate) fn classic_view(app: &mut SolveApp) {
+    app.ui.show_browser = true;
+    app.ui.show_timeline = true;
+    app.ui.show_grid = true;
+    app.ui.perspective = false;
+    app.ui.ground_shadow = true;
+    app.ui.tool_cursor = false;
+    app.preferences.sketchup_screen = false;
+}
+
+/// [`classic_view`] in a window that opens on the Model tab with every toolbar tab shown, as the
+/// scenarios were written for; the app opens on SketchUp's tool set with the CAD tabs hidden.
+pub(crate) fn classic_look(app: &mut SolveApp) {
+    app.ui.tab = "MODEL".into();
+    app.ui.home_tab = "MODEL";
+    classic_view(app);
+    app.preferences.hidden_toolbar_tabs.clear();
+}
+
 impl Harness {
     pub fn new() -> Harness {
         crate::i18n::pin_system_language();
@@ -198,6 +220,7 @@ impl Harness {
             size: egui::vec2(1600.0, 1000.0),
             cam_mark: None,
         };
+        classic_look(&mut h.app);
         WIDTHS.with(|m| m.borrow_mut().clear());
         h.install();
         h.ctx.enable_accesskit();
@@ -622,6 +645,8 @@ impl Harness {
                     }
                 }
                 let mut old = std::mem::replace(&mut self.app, SolveApp::new(Session::default(), Services::default()));
+                // The new window is the classic one too; what the old one saved wins below.
+                classic_look(&mut self.app);
                 if how == "close" {
                     crate::recovery_ui::close(&mut old);
                     // The desktop saves its settings on close and loads them on the next start.

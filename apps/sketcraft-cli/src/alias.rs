@@ -11,7 +11,7 @@ use std::process::{Command, ExitCode};
 const TARGET: &str = "sketcraft-cli";
 
 fn main() -> ExitCode {
-    sketcraft_engine::note!("solvecraft-cli is deprecated and will be removed in a later release: use solidcraft-cli");
+    sketcraft_engine::note!("solvecraft-cli is deprecated and will be removed in a later release: use sketcraft-cli");
     let sibling = std::env::current_exe()
         .ok()
         .and_then(|exe| exe.parent().map(|dir| dir.join(format!("{TARGET}{}", std::env::consts::EXE_SUFFIX))))

@@ -8,7 +8,7 @@
 //! SSI_PARITY_RAW=<corpus>/results/raw/gsi_1e-6 \
 //! SSI_PARITY_SCORES=<corpus>/results/score_gsi_1e-6.json \
 //! SSI_PARITY_TOL=1e-6 SSI_SM_MESSAGES=<smlib>/source/SMLib/inc/SmMessages.h \
-//!   cargo test -p solidcraft-smlib --test ssi_corpus -- --ignored --nocapture
+//!   cargo test -p sketcraft-smlib --test ssi_corpus -- --ignored --nocapture
 //! ```
 //!
 //! [`solidcore_global_intersect_at_1e_6`] runs every case through solidcore's

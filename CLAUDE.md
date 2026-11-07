@@ -20,7 +20,7 @@ trunk build --release --locked         # static site in dist/
 
 cargo xtask test                       # every test binary, `ci` profile (much faster to build than --release)
 cargo xtask test -- <filter>           # filter is passed to each test binary
-cargo test -p sketcraft-core <name>    # one test in one crate
+cargo test -p sketcraft-skp <name>     # one test in one crate
 cargo xtask ci                         # pre-commit gate: fmt, lints, clippy -D warnings, tests, wasm
 cargo xtask layers                     # fails if a lower crate depends on a higher one
 cargo xtask known-failing              # checks tests/KNOWN_FAILING_TESTS against actual failures
@@ -44,7 +44,7 @@ L0 geom → L1 sketch, kernel, render → L2 doc → L3 io → L4 engine → L5 
 - Only `ui-egui` and the apps may use egui, eframe, winit, wgpu or rfd. `kernel` wraps the external `solidcore` B-rep kernel (pinned git rev). `step`, `smlib` and `profile` support it.
 - `engine` owns `Session` and the command registry. Every user-visible action is a `CommandSpec` in `crates/engine/src/cmd/`, run through `Session::execute(id, params)`. Toolbar, dialogs, CLI, control channel and MCP (`crates/mcp`) all go through this path. Commands that change the document are undoable by default. Programmatic calls never open dialogs; only `ui.start` begins interactive tools. Details: `skills/solidcraft-commands/SKILL.md`.
 - `ui-egui` is a thin front end. Panels read engine state and act through `app.run(id, params)` / `app.start(id)`. UI scenario tests are JSON files in `crates/ui-egui/tests/scenarios/`.
-- `sketcraft-core` is the SketchUp-style model: `Document`/`Model` with vertices, edges, faces, objects and components, tags, inference/snapping, measurements, camera and display settings. It contains a C++ SKP reader (`skp_native.cpp`, compiled by `build.rs` with `cc`). `crates/io/src/skp_in.rs` uses it for `.skp` import. Model-specific state (tags, entity assignments) is stored in the document.
+- `sketcraft-skp` (`crates/skp`) is the SketchUp reader: the vendored OpenSKP C++ parser (`vendor/skp/native` and `src/skp_native.cpp`, compiled by `build.rs` with `cc`, desktop only) and a small `Model` of faces, groups and hidden state that triangulates faces. `crates/io/src/skp_in.rs` turns it into mesh bodies for `.skp` import.
 - Apps: `apps/sketcraft` is the desktop binary (native menus, control server, crash handling, Velopack updates). `apps/sketcraft-web` is the wasm entry used by `index.html`/Trunk; it reaches the account server through the `/api/` and `/auth/` proxies to `localhost:8081` (see `Trunk.toml`, `.env.example`). `apps/sketcraft-cli` is a headless CLI and MCP server.
 - `xtask` holds the repo tooling: tests, ci, layers, i18n, icons, features, licences, skills, oracle, kernel cases.
 

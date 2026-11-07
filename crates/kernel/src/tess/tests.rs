@@ -175,7 +175,7 @@ fn faces_and_edges_keep_the_body_order() {
 
 /// Side-by-side wireframes, the body's mesh at the chord alone (left) and the plan at the
 /// display angle (right):
-/// `SKETCRAFT_TESS_SVG=<dir> cargo test -p solidcraft-kernel render_wireframes -- --ignored`.
+/// `SKETCRAFT_TESS_SVG=<dir> cargo test -p sketcraft-kernel render_wireframes -- --ignored`.
 #[test]
 #[ignore]
 fn render_wireframes() {

@@ -371,7 +371,7 @@ fn tessellation_without_surfaces_does_not_dispatch() {
 }
 
 /// Display meshing of a 400-hole plate (#303's benchmark): reference mesher, plan, CPU and GPU
-/// evaluation. `cargo test --release -p solidcraft-gpu bench_plate -- --ignored --nocapture`.
+/// evaluation. `cargo test --release -p sketcraft-gpu bench_plate -- --ignored --nocapture`.
 #[test]
 #[ignore]
 fn bench_plate() {

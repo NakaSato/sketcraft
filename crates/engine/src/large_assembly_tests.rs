@@ -4,7 +4,7 @@
 //! that grow with the number of bodies after every feature show up (#255, #662).
 //!
 //! The test keeps it small. The benchmark times the open phases at any size:
-//! `SKETCRAFT_BENCH_PARTS=400 cargo test --release -p solidcraft-engine bench_generated_assembly -- --ignored --nocapture`
+//! `SKETCRAFT_BENCH_PARTS=400 cargo test --release -p sketcraft-engine bench_generated_assembly -- --ignored --nocapture`
 
 use serde_json::json;
 use solidcore_record::Vec3;

@@ -2220,7 +2220,7 @@ fn measure_of_a_body_with_many_faces() {
 }
 
 /// The time it takes (run alone, the suite's other tests share the machine):
-/// `cargo test --release -p solidcraft-kernel perf_measure_5000_faces -- --ignored`.
+/// `cargo test --release -p sketcraft-kernel perf_measure_5000_faces -- --ignored`.
 #[test]
 #[ignore]
 fn perf_measure_5000_faces() {

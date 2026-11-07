@@ -66,9 +66,9 @@ pub const DESIGN_EXT: &str = "sc";
 /// The design extensions of earlier releases, newest first. Compatibility shim
 /// (docs/compatibility.md): such files still open everywhere a design opens, and Save keeps
 /// writing an opened file under its own name; new designs are saved as [`DESIGN_EXT`].
-pub const LEGACY_DESIGN_EXTS: [&str; 2] = ["sketcraft", "solvecraft"];
+pub const LEGACY_DESIGN_EXTS: [&str; 3] = ["sketcraft", "solidcraft", "solvecraft"];
 /// Every extension a design file may have, current first.
-pub const DESIGN_EXTS: [&str; 3] = [DESIGN_EXT, LEGACY_DESIGN_EXTS[0], LEGACY_DESIGN_EXTS[1]];
+pub const DESIGN_EXTS: [&str; 4] = [DESIGN_EXT, LEGACY_DESIGN_EXTS[0], LEGACY_DESIGN_EXTS[1], LEGACY_DESIGN_EXTS[2]];
 
 /// Is this extension (without the dot) one a design file may have (`sc` or a legacy one), any case?
 pub fn is_design_ext(ext: &str) -> bool {

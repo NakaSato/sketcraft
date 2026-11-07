@@ -481,6 +481,11 @@ pub fn press(app: &mut SolveApp, key: &str, repeat: bool) {
         app.start(variant_for_key(app, id));
     } else if let Some(id) = sketch_tool_for(app, key) {
         let then = variant_for_key(app, id);
+        // On the SketchUp tab a drawing tool's first click picks its plane (`sketchup_draw`).
+        if app.ui.tab == crate::workspace::SKETCHUP_TAB && crate::workspace::starts_a_sketch(app, then) {
+            app.start(then);
+            return;
+        }
         app.start("sketch.create");
         if let Some(d) = app.dialog.as_mut().filter(|d| matches!(d.kind, crate::dialogs::Kind::Sketch)) {
             d.then_start = Some(then);
@@ -571,6 +576,42 @@ pub fn reset(app: &mut SolveApp, id: Option<&str>) {
     match id {
         Some(id) => drop(app.keymap.custom.remove(id)),
         None => app.keymap.custom.clear(),
+    }
+}
+
+/// SketchUp's default keys for the tools both apps have. S (Scale) and Q (Rotate) are left out:
+/// S belongs to the S box and there is no Rotate tool of its own yet. L, R, C, T, B and G
+/// already match. P and M are taken from the sketch tools that share them (Project), so in a
+/// sketch they finish it and start Push/Pull or Move, as in SketchUp.
+pub const SKETCHUP_KEYS: &[(&str, &str)] = &[
+    ("solid.press_pull", "P"),
+    ("solid.move", "M"),
+    ("sketch.arc.three_point", "A"),
+    ("selection.delete", "E"),
+    ("sketch.offset", "F"),
+    ("view.tool.orbit", "O"),
+    ("view.tool.pan", "H"),
+    ("view.tool.zoom", "Z"),
+    ("view.fit", "Shift+Z"),
+];
+
+/// Use SketchUp's keys: each tool gets its SketchUp key first, and every other command lets that
+/// key go, a sketch tool's included (SketchUp's A is Arc in the model too, starting a sketch).
+/// Reset puts the default keys back.
+pub fn use_sketchup_keys(app: &mut SolveApp) {
+    for (id, key) in SKETCHUP_KEYS {
+        if sketcraft_engine::find_command(id).is_none() {
+            continue;
+        }
+        for other in commands_for(app, key).into_iter().filter(|o| o != id) {
+            let mut theirs = keys(app, other);
+            theirs.retain(|k| k != key);
+            set_keys(app, other, theirs);
+        }
+        let mut list = vec![key.to_string()];
+        list.extend(keys(app, id).into_iter().filter(|k| k != key));
+        list.truncate(MAX_KEYS);
+        set_keys(app, id, list);
     }
 }
 
@@ -683,6 +724,12 @@ pub fn page(app: &mut SolveApp, ui: &mut egui::Ui) {
                     crate::scenario::publish_target("keymap:import", import.rect);
                     if import.clicked() {
                         action = Some((String::new(), "import"));
+                    }
+                    let sketchup = ui_kit::button(ui, app.tr_label("Use SketchUp Keys"), ui_kit::Button::Normal)
+                        .backing_on_hover_text(app.tr_label("A Arc, E Eraser, F Offset, P Push/Pull, M Move, O Orbit, H Pan, Z Zoom, Shift+Z Zoom Extents"));
+                    crate::scenario::publish_target("keymap:sketchup", sketchup.rect);
+                    if sketchup.clicked() {
+                        action = Some((String::new(), "sketchup"));
                     }
                 }
             });
@@ -804,6 +851,10 @@ pub fn page(app: &mut SolveApp, ui: &mut egui::Ui) {
         Some((id, "clear")) => drop(bind(app, &id, "", false)),
         Some((id, "reset")) => reset(app, Some(&id)),
         Some((_, "done")) => stop_capture(app),
+        Some((_, "sketchup")) => {
+            stop_capture(app);
+            use_sketchup_keys(app);
+        }
         Some((_, "export")) => {
             let text = crate::toolbar_custom::export(app).to_string();
             app.pick_save("SketCraft shortcuts.json", &["json"], move |app, path| {
@@ -1084,6 +1135,36 @@ mod tests {
         reset(&mut h.app, Some("ui.assistant"));
         h.step(&json!({"key":"A", "cmd":true, "shift":true})).unwrap();
         assert!(h.app.agent_chat.open, "reset restores the original shortcut");
+    }
+
+    /// Use SketchUp Keys (Preferences › Shortcuts): each tool runs from its SketchUp key and
+    /// nothing else does; Reset puts the default keys back.
+    #[test]
+    fn sketchup_keys_give_each_tool_its_key_and_reset_restores_the_defaults() {
+        let mut h = crate::scenario::Harness::new();
+        h.app.home.open = false;
+        h.call("ui.prefs", json!({"open":"Shortcuts"}));
+        h.step(&json!({"click":{"handle":"keymap:sketchup"}})).unwrap();
+        for (id, key) in SKETCHUP_KEYS {
+            assert_eq!(effective(&h.app, id).as_deref(), Some(*key), "{id}");
+            assert_eq!(commands_for(&h.app, key), [*id], "{key} runs {id} only");
+        }
+        assert!(keys(&h.app, "solid.extrude").is_empty(), "E is the Eraser");
+        assert_eq!(keys(&h.app, "sketch.offset"), ["F"], "O is Orbit");
+        assert_eq!(keys(&h.app, "view.fit"), ["Shift+Z", "F6"], "F6 still fits the view");
+        assert_eq!(effective(&h.app, "sketch.line").as_deref(), Some("L"), "keys SketchUp shares stay");
+        h.app.prefs_window.open = false;
+        h.frames(2);
+        h.step(&json!({"key":"O"})).unwrap();
+        assert_eq!(h.app.viewport.nav, Some(crate::viewport::NavMode::Orbit), "O latches Orbit");
+        h.step(&json!({"key":"H"})).unwrap();
+        assert_eq!(h.app.viewport.nav, Some(crate::viewport::NavMode::Pan), "H latches Pan");
+        h.step(&json!({"key":"H"})).unwrap();
+        assert_eq!(h.app.viewport.nav, None, "H again releases it");
+        reset(&mut h.app, None);
+        assert_eq!(effective(&h.app, "solid.extrude").as_deref(), Some("E"));
+        assert_eq!(effective(&h.app, "sketch.offset").as_deref(), Some("O"));
+        assert!(effective(&h.app, "view.tool.orbit").is_none());
     }
 
     #[test]

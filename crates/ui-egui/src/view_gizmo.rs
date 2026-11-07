@@ -545,6 +545,12 @@ pub(crate) struct Shown {
     pub home: bool,
 }
 
+/// The view navigator is drawn and takes the pointer: not on the SketchUp model screen, which
+/// has none (the navigator preferences are left as they were saved).
+pub(crate) fn visible(app: &SolveApp) -> bool {
+    !crate::sketchup_screen::on(app)
+}
+
 pub(crate) fn shown(app: &SolveApp) -> Shown {
     let p = &app.preferences;
     match app.dialog.as_ref().map(|d| &d.kind) {

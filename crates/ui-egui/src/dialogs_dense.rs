@@ -1041,6 +1041,12 @@ fn additional_rows(app: &mut SolveApp, d: &mut Dialog, ui: &mut egui::Ui) -> boo
         k @ Kind::Move { .. } => {
             enter |= crate::dialogs_move::rows(ui, k);
             extra_options(ui, "move_options", &mut d.extra, &[("Create Copy", "copy")]);
+            // SketchUp's "x5": with Create Copy, how many copies, each one move further on.
+            if d.extra.get("copy").and_then(Value::as_bool).unwrap_or(false) {
+                let mut copies = d.extra.get("copies").and_then(Value::as_str).unwrap_or("1").to_string();
+                enter |= count_row_to(ui, &app.session.doc, "Copies", &mut copies, crate::dialogs_move::MAX_COPIES);
+                d.extra.insert("copies".into(), json!(copies));
+            }
         }
         Kind::Primitive { cmd, fields, operation, at, .. } => {
             let from_sketch = *cmd == "solid.coil" && d.inputs.first().is_some_and(|i| i.accept & selection::PROFILES != 0 && !i.items.is_empty());

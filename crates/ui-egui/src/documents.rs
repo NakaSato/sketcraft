@@ -110,7 +110,7 @@ fn put_work(app: &mut SolveApp, mut work: DocWork, before: u64) {
         }
         None => {
             app.ui.ribbon_context = None;
-            app.ui.tab = "MODEL".into();
+            app.ui.tab = app.ui.home_tab.into();
         }
     }
     crate::workspace::sync_context(app);
@@ -270,7 +270,6 @@ fn swap_in(app: &mut SolveApp, mut slot: DocSlot) -> DocSlot {
     app.design_properties = None;
     app.bom = None;
     app.tags_panel = None;
-    app.warehouse_panel = None;
     app.cancel_view_animation();
     app.viewport.orbit_free = None;
     app.preview.reset();
@@ -2352,18 +2351,18 @@ mod tests {
         assert!(dialog_picks(&a) == picks && a.ui.tab == "INSPECT");
         switch(&mut a, 1);
         switch(&mut a, 0);
-        assert!(a.dialog.is_none() && a.ui.tab == "MODEL");
+        assert!(a.dialog.is_none() && a.ui.tab == a.ui.home_tab);
     }
 
     /// Without the preference (the default), a switch cancels the dialog and the tool and shows
-    /// MODEL, as before #9360.
+    /// the home tab, as before #9360.
     #[test]
     fn a_tab_switch_cancels_the_dialog_and_tool_by_default() {
         assert!(!crate::prefs::Prefs::default().keep_work_on_tab_switch);
         let (mut a, _) = measuring_and_drawing(false);
         switch(&mut a, 0);
         assert!(a.dialog.is_none() && a.tool.is_none());
-        assert_eq!(a.ui.tab, "MODEL");
+        assert_eq!(a.ui.tab, a.ui.home_tab, "the home tab (SketchUp)");
         switch(&mut a, 1);
         assert!(a.dialog.is_none() && a.tool.is_none());
         // The sketch itself stays open in its design, so its tab is SKETCH.

@@ -15,6 +15,10 @@ pub fn tab_label(tab: &str) -> &str {
 
 /// A tab's registry name in normal word casing: "SHEET METAL" → "Sheet Metal".
 pub fn word_cased(name: &str) -> String {
+    // A brand name keeps its own casing.
+    if name == "SKETCHUP" {
+        return "SketchUp".into();
+    }
     name.split_whitespace()
         .map(|word| {
             let lower = word.to_lowercase();
@@ -32,7 +36,11 @@ pub fn tab_name(tab: &str) -> String {
     crate::i18n::tr_label(&cased).to_string()
 }
 
-pub const TABS: &[&str] = &["MODEL", "SURFACE", "ASSEMBLE", "INSERT", "INSPECT", "MANAGE", "VIEW"];
+pub const TABS: &[&str] = &[SKETCHUP_TAB, "MODEL", "SURFACE", "ASSEMBLE", "INSERT", "INSPECT", "MANAGE", "VIEW"];
+
+/// The SketchUp tab: SketchUp's Large Tool Set in one place. Its buttons are shortcuts to
+/// commands whose home is another tab, so [`destination`] never points at it.
+pub const SKETCHUP_TAB: &str = "SKETCHUP";
 
 /// Reading order of the compact, three-column constraint gallery. Icons come from each spec.
 pub const CONSTRAINT_GALLERY: &[&str] = &[
@@ -325,6 +333,32 @@ pub const SECTIONS: &[Section] = &[
     Section { tab: "WELDMENTS", panel: "SKETCH", promoted: 1, ids: &["sketch.create"] },
     Section { tab: "WELDMENTS", panel: "CREATE", promoted: 1, ids: &["frame.member"] },
     Section { tab: "WELDMENTS", panel: "CONFIGURE", promoted: 2, ids: CONFIGURE },
+    // SketchUp's Large Tool Set, in its groups (`toolbar_custom::SKETCHUP_LARGE_TOOLSET`).
+    Section { tab: SKETCHUP_TAB, panel: "SELECT", promoted: 3, ids: &["select.clear", "selection.delete", "appearance.paint"] },
+    Section {
+        tab: SKETCHUP_TAB,
+        panel: "CREATE",
+        promoted: 4,
+        ids: &[
+            "sketch.line",
+            "sketch.arc.three_point",
+            "sketch.rectangle.two_point",
+            "sketch.circle.center",
+            "sketch.rectangle.three_point",
+            "sketch.polygon.inscribed",
+        ],
+    },
+    // Sweep is SketchUp's Follow Me: a profile carried along a path.
+    Section {
+        tab: SKETCHUP_TAB,
+        panel: "MODIFY",
+        promoted: 4,
+        ids: &["solid.press_pull", "solid.offset_face", "solid.move", "solid.scale", "solid.sweep"],
+    },
+    Section { tab: SKETCHUP_TAB, panel: "MEASURE", promoted: 4, ids: &["inspect.measure", "sketch.dimension", "sketch.text", "inspect.section"] },
+    Section { tab: SKETCHUP_TAB, panel: "COMPONENTS", promoted: 2, ids: &["component.create", "tags.manage"] },
+    // SketchUp's Camera tools: Orbit, Pan, Zoom and Zoom Extents.
+    Section { tab: SKETCHUP_TAB, panel: "VIEW", promoted: 4, ids: &["view.tool.orbit", "view.tool.pan", "view.tool.zoom", "view.fit"] },
 ];
 
 // Migration data only: Render commands remain registered, but have no live ribbon sections.
@@ -406,6 +440,7 @@ pub const RIBBON_LABELS: &[(&str, &str)] = &[
     ("render.settings.apply", "Saved Camera"),
     ("render.preflight", "Check"),
     ("appearance.assign", "Appearance"),
+    ("appearance.paint", "Paint"),
     ("component.capture_position", "Capture Pos."),
     ("component.create", "New Comp."),
     ("component.from_bodies", "From Bodies"),
@@ -438,6 +473,7 @@ pub const RIBBON_LABELS: &[(&str, &str)] = &[
     ("plastic.manage_rules", "Plastic Rules"),
     ("pointcloud.insert", "Point Clouds"),
     ("render.scene", "Scene"),
+    ("select.clear", "Select"),
     ("sheet.export_bend_table", "Bend Table"),
     ("sheet.export_dxf", "Export DXF"),
     ("sheet.flat_pattern", "Flat Pattern"),
@@ -460,6 +496,7 @@ pub const RIBBON_LABELS: &[(&str, &str)] = &[
     ("surface.extrude", "Extrude"),
     ("surface.revolve", "Revolve"),
     ("surface.sweep", "Sweep"),
+    ("tags.manage", "Tags"),
     ("timeline.dependents", "Dependents"),
     ("view.apply", "Restore View"),
     ("view.save", "Save View"),
@@ -525,7 +562,7 @@ pub(crate) fn legacy_render_destination(c: &CommandSpec) -> Option<(&'static str
         _ => None,
     };
     primary
-        .or_else(|| SECTIONS.iter().chain(LEGACY_RENDER_SECTIONS).find(|s| s.ids.contains(&c.id)).map(|s| (s.tab, s.panel)))
+        .or_else(|| SECTIONS.iter().chain(LEGACY_RENDER_SECTIONS).find(|s| s.tab != SKETCHUP_TAB && s.ids.contains(&c.id)).map(|s| (s.tab, s.panel)))
         .or_else(|| PLACEMENTS.iter().find(|(t, p, ..)| *t == c.tab && *p == c.panel).map(|(_, _, t, p)| (*t, *p)))
 }
 
@@ -619,6 +656,10 @@ pub fn frame_body(app: &crate::SolveApp) -> Option<String> {
     matches!(made_by.kind, FeatureKind::FrameMember { .. }).then(|| body.name.clone())
 }
 
+/// Tabs hidden until the person shows them (Settings › Layout › Toolbar tabs, or the ribbon's
+/// plus): the CAD tabs SketchUp has no tools like, so the ribbon starts as SketchUp's.
+pub const HIDDEN_BY_DEFAULT: &[&str] = &["SURFACE", "ASSEMBLE", "SHEET METAL", "WELDMENTS"];
+
 /// The design tabs following the general-purpose tabs in the ribbon.
 pub struct SpecialtyTab {
     pub tab: &'static str,
@@ -639,6 +680,7 @@ pub fn tab_icon(tab: &str) -> &'static str {
         "INSPECT" => "measure",
         "MANAGE" => "params",
         "VIEW" => "camera",
+        SKETCHUP_TAB => "presspull",
         _ => SPECIALTY_TABS.iter().find(|o| o.tab == tab).map_or("", |o| o.icon),
     }
 }
@@ -686,14 +728,14 @@ pub fn visible_tabs(app: &crate::SolveApp) -> Vec<&'static str> {
 /// while Model is hidden; none when every tab is hidden.
 fn home_tab(app: &crate::SolveApp) -> &'static str {
     let tabs = visible_tabs(app);
-    if tabs.contains(&"MODEL") { "MODEL" } else { tabs.first().copied().unwrap_or_default() }
+    [app.ui.home_tab, "MODEL"].into_iter().find(|t| tabs.contains(t)).or_else(|| tabs.first().copied()).unwrap_or_default()
 }
 
 /// With the SKETCH tab kept shown (#7904) and no sketch open: whether `id` is one of the tools in
 /// its CREATE or REFERENCE sections, which then start a sketch first (Create Sketch, then the
 /// tool). Tools that work on a sketch's geometry (modify, pattern, constrain) wait for one.
 pub fn starts_a_sketch(app: &crate::SolveApp, id: &str) -> bool {
-    app.preferences.sketch_tab_always
+    (app.preferences.sketch_tab_always || app.ui.tab == SKETCHUP_TAB)
         && app.session.active_sketch.is_none()
         && sketcraft_engine::find_command(id)
             .and_then(destination)
@@ -1049,7 +1091,7 @@ mod tests {
         h.frames(2);
         assert_eq!(h.app.preferences.hidden_toolbar_tabs, ["MODEL"]);
         assert!(crate::scenario::handle_at("tab:MODEL").is_none());
-        assert_eq!(h.app.ui.tab, "SURFACE", "the first tab still shown is selected");
+        assert_eq!(h.app.ui.tab, SKETCHUP_TAB, "the first tab still shown is selected");
 
         // Settings › Layout lists the standard tabs too.
         h.call("ui.prefs", json!({"open":"Layout"}));
@@ -1060,7 +1102,7 @@ mod tests {
         h.step(&json!({"click":{"handle":"prefs:toolbar_tab:VIEW"}})).unwrap();
         assert_eq!(h.app.preferences.hidden_toolbar_tabs, ["VIEW"]);
         h.call("ui.prefs", json!({"button":"defaults"}));
-        assert!(h.app.preferences.hidden_toolbar_tabs.is_empty(), "the Interface page's defaults show every standard tab");
+        assert_eq!(h.app.preferences.hidden_toolbar_tabs, HIDDEN_BY_DEFAULT, "the Interface page's defaults hide the CAD tabs again");
         h.call("ui.prefs", json!({"button":"ok"}));
 
         // The control channel checks the list, and it is kept with the preferences.
@@ -1113,7 +1155,7 @@ mod tests {
         let rows: Vec<_> = crate::toolbar_custom::toolbar_items(&h.app).into_iter().filter(|i| i.id == "ui.toolbarTab").collect();
         assert_eq!(
             rows.iter().map(|i| i.label.as_str()).collect::<Vec<_>>(),
-            ["Model", "Surface", "Assemble", "Insert", "Inspect", "Manage", "View", "Sheet Metal", "Weldments"]
+            ["SketchUp", "Model", "Surface", "Assemble", "Insert", "Inspect", "Manage", "View", "Sheet Metal", "Weldments"]
         );
         assert!(rows.iter().all(|i| i.shortcut == "current"), "all existing tabs stay on by default");
         h.step(&json!({"click":{"handle":"ribbon:add_tab"}})).unwrap();
@@ -1146,7 +1188,7 @@ mod tests {
         other.run("doc.open", json!({"path":path})).unwrap();
         assert!(!visible_tabs(&other).contains(&"SHEET METAL"), "opening a sheet design respects the saved hiding choice");
         sync_context(&mut other);
-        assert_eq!(other.ui.tab, "MODEL");
+        assert_eq!(other.ui.tab, SKETCHUP_TAB, "a new window's home tab");
         h.app.run("edit.undo", json!({})).unwrap();
         sync_context(&mut h.app);
         assert!(!visible_tabs(&h.app).contains(&"SHEET METAL"));
@@ -1163,7 +1205,7 @@ mod tests {
         other.run("doc.open", json!({"path":path})).unwrap();
         assert!(!visible_tabs(&other).contains(&"WELDMENTS"), "opening a frame design respects the saved hiding choice");
         sync_context(&mut other);
-        assert_eq!(other.ui.tab, "MODEL");
+        assert_eq!(other.ui.tab, SKETCHUP_TAB, "a new window's home tab");
         h.call("ui.prefs", json!({"hidden_toolbar_tabs":choosable_tabs().collect::<Vec<_>>()}));
         h.frames(2);
         assert!(visible_tabs(&h.app).is_empty(), "a design with a frame member can still hide every tab");
@@ -1181,8 +1223,13 @@ mod tests {
         h.call("ui.prefs", json!({"open":"Layout"}));
         h.call("ui.prefs", json!({"button":"defaults"}));
         h.call("ui.prefs", json!({"button":"ok"}));
-        assert!(h.app.preferences.hidden_toolbar_tabs.is_empty());
-        assert_eq!(visible_tabs(&h.app), choosable_tabs().collect::<Vec<_>>(), "defaults restore Sheet Metal and Weldments too");
+        // The defaults are SketchUp's tab row: the CAD tabs hidden, every other tab back.
+        assert_eq!(h.app.preferences.hidden_toolbar_tabs, HIDDEN_BY_DEFAULT);
+        assert_eq!(
+            visible_tabs(&h.app),
+            choosable_tabs().filter(|t| !HIDDEN_BY_DEFAULT.contains(t)).collect::<Vec<_>>(),
+            "defaults restore every tab but the CAD ones"
+        );
     }
 
     /// Parameters and Configurations are on the design tabs they were on before the redesign, and a
@@ -1258,6 +1305,76 @@ mod tests {
         for tab in TABS {
             assert!(crate::scenario::handle_at(&format!("tab:{tab}")).is_some(), "{tab}");
         }
+    }
+
+    /// A new window shows SketchUp's tabs: the CAD tabs with no SketchUp tools are hidden until
+    /// shown, and come back from the preferences.
+    #[test]
+    fn the_cad_tabs_start_hidden() {
+        let mut app = crate::SolveApp::new(sketcraft_engine::Session::default(), Default::default());
+        assert_eq!(app.preferences.hidden_toolbar_tabs, HIDDEN_BY_DEFAULT);
+        let shown = visible_tabs(&app);
+        assert!(HIDDEN_BY_DEFAULT.iter().all(|t| !shown.contains(t)), "{shown:?}");
+        assert!(["MODEL", "INSERT", "INSPECT", "MANAGE", "VIEW"].iter().all(|t| shown.contains(t)), "{shown:?}");
+        set_tab_shown(&mut app, "SURFACE", true);
+        assert!(visible_tabs(&app).contains(&"SURFACE"));
+    }
+
+    /// A new window opens on the SketchUp tab, the first in the row, and comes back to it when
+    /// the tab it was on goes away.
+    #[test]
+    fn the_app_opens_on_the_sketchup_tab() {
+        let mut app = crate::SolveApp::new(sketcraft_engine::Session::default(), Default::default());
+        assert_eq!(app.ui.tab, SKETCHUP_TAB);
+        assert_eq!(TABS.first(), Some(&SKETCHUP_TAB));
+        assert_eq!(home_tab(&app), SKETCHUP_TAB);
+        app.ui.tab = "NO SUCH TAB".into();
+        sync_context(&mut app);
+        assert_eq!(app.ui.tab, SKETCHUP_TAB);
+        set_tab_shown(&mut app, SKETCHUP_TAB, false);
+        assert_eq!(home_tab(&app), "MODEL", "with SketchUp hidden, Model");
+    }
+
+    /// The SketchUp tab holds SketchUp's Large Tool Set, every button a working command, without
+    /// moving any command from its home tab; its drawing tools wait for a click to start a sketch.
+    #[test]
+    fn sketchup_tab_holds_the_large_tool_set() {
+        let mut h = crate::scenario::Harness::new();
+        assert!(visible_tabs(&h.app).contains(&SKETCHUP_TAB));
+        assert_eq!(tab_name(SKETCHUP_TAB), "SketchUp");
+        let specs = sketcraft_engine::command_specs();
+        let mut shown: Vec<&str> = Vec::new();
+        for panel in panels(SKETCHUP_TAB) {
+            let (commands, _) = layout(SKETCHUP_TAB, panel, &specs).unwrap();
+            shown.extend(commands.iter().map(|c| c.id));
+        }
+        let mut want = crate::toolbar_custom::SKETCHUP_LARGE_TOOLSET.to_vec();
+        want.sort_unstable();
+        shown.sort_unstable();
+        assert_eq!(shown, want);
+        for id in crate::toolbar_custom::SKETCHUP_LARGE_TOOLSET {
+            let spec = sketcraft_engine::find_command(id).unwrap_or_else(|| panic!("{id} is a command"));
+            assert_ne!(destination(spec).map(|(tab, _)| tab), Some(SKETCHUP_TAB), "{id} keeps its home tab");
+        }
+        h.app.ui.tab = SKETCHUP_TAB.into();
+        assert!(h.app.session.active_sketch.is_none());
+        assert!(starts_a_sketch(&h.app, "sketch.line"), "Line starts a sketch first");
+        assert!(!starts_a_sketch(&h.app, "solid.press_pull"));
+        h.frames(2);
+        assert!(crate::scenario::handle_at("tab:SKETCHUP").is_some());
+        // Line from the SketchUp tab opens no Create Sketch: it waits for its first click
+        // (`sketchup_draw_tests`), and the ribbon stays on SketchUp.
+        h.step(&json!({"click":{"handle":"button:sketch.line"}})).unwrap();
+        assert!(h.app.dialog.is_none(), "no Create Sketch window");
+        assert_eq!(crate::sketchup_draw::pending(&h.app), Some("sketch.line"));
+        assert_eq!(h.app.ui.tab, SKETCHUP_TAB);
+        h.step(&json!({"key":"Escape"})).unwrap();
+        // A sketch started from the SketchUp tab returns to it when finished.
+        h.app.ui.tab = SKETCHUP_TAB.into();
+        h.app.run("sketch.create", json!({"plane":"XY"})).unwrap();
+        assert_eq!(h.app.ui.tab, "SKETCH");
+        h.app.run("sketch.finish", json!({})).unwrap();
+        assert_eq!(h.app.ui.tab, SKETCHUP_TAB);
     }
 
     #[test]

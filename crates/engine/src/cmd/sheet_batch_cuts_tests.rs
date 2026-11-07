@@ -175,7 +175,7 @@ fn labels_in_one_sketch_and_holes_in_one_feature_match_cutting_them_one_by_one()
 }
 
 /// The full size: a flanged sheet with 10 labels and 50 holes, cut at once and one by one.
-/// `cargo test --release -p solidcraft-engine --lib sheet_many_cuts_benchmark -- --ignored --nocapture`
+/// `cargo test --release -p sketcraft-engine --lib sheet_many_cuts_benchmark -- --ignored --nocapture`
 #[test]
 #[ignore = "benchmark: run with --release --ignored --nocapture"]
 fn sheet_many_cuts_benchmark() {

@@ -73,9 +73,8 @@ fn spline_backspace_removes_pending_points_and_keeps_the_tool_ready() {
 
 #[test]
 fn sketch_keys_outside_a_sketch_sketch_on_the_selected_plane_and_start_their_tool() {
-    for (key, cmd) in
-        [("C", "sketch.circle.center"), ("L", "sketch.line"), ("R", "sketch.rectangle.two_point"), ("D", "sketch.dimension"), ("P", "sketch.project")]
-    {
+    // D and P are SketchUp's Measure and Push/Pull outside a sketch (`toolbar::shortcuts`).
+    for (key, cmd) in [("C", "sketch.circle.center"), ("L", "sketch.line"), ("R", "sketch.rectangle.two_point")] {
         let mut h = Harness::new();
         h.app.session.selection = vec![Sel::Plane { name: "XZ".into() }];
         press(&mut h, key);
@@ -239,12 +238,14 @@ fn sketch_and_model_keys_are_kept_apart() {
     assert_eq!(command_for(&h.app, "F"), None, "no model tool from a key pressed in a sketch");
     press(&mut h, "F");
     assert!(h.app.dialog.is_none() && h.app.session.active_sketch.is_some(), "F left the sketch alone");
-    assert_eq!(command_for(&h.app, "I"), Some("inspect.measure"), "Measure's key works in a sketch too");
     // A sketch command may take a model command's key, but not another sketch command's.
     bind(&mut h.app, "sketch.fillet", "F", false).unwrap();
     assert_eq!(command_for(&h.app, "F"), Some("sketch.fillet"));
     let e = bind(&mut h.app, "sketch.fillet", "L", false).unwrap_err();
     assert!(e.contains("already used"), "{e}");
+    // T is SketchUp's Tape Measure, and measures in a sketch too.
+    press(&mut h, "T");
+    assert!(matches!(h.app.dialog.as_ref().map(|d| &d.kind), Some(crate::dialogs::Kind::Measure { .. })), "T measures in a sketch");
 }
 
 /// #2459: by default a tool's shortcut pressed again starts the tool again, in the mode the key
@@ -333,14 +334,16 @@ fn a_feature_started_in_a_sketch_finishes_the_sketch_and_takes_its_profile() {
     }
 }
 
+/// E is SketchUp's Eraser (`toolbar::shortcuts`), in a sketch too: it opens no Extrude and the
+/// sketch stays open. Extrude from a sketch finishes it (the test above).
 #[test]
-fn the_extrude_key_in_a_sketch_finishes_the_sketch() {
+fn the_eraser_key_in_a_sketch_keeps_the_sketch() {
     let mut h = Harness::new();
     h.app.run("sketch.create", json!({"plane":"XY"})).unwrap();
     h.app.run("sketch.rectangle.two_point", json!({"p0":[0,0],"p1":[20,10]})).unwrap();
     press(&mut h, "E");
-    assert!(h.app.session.active_sketch.is_none());
-    assert!(matches!(h.app.dialog.as_ref().map(|d| &d.kind), Some(crate::dialogs::Kind::Extrude { .. })));
+    assert!(h.app.session.active_sketch.is_some());
+    assert!(!matches!(h.app.dialog.as_ref().map(|d| &d.kind), Some(crate::dialogs::Kind::Extrude { .. })));
 }
 
 /// With Keep model keys out of sketches on, E in a sketch does nothing: the sketch stays open and
@@ -404,7 +407,7 @@ fn the_kept_sketch_tab_sits_after_model_and_its_tools_start_a_sketch() {
     let mut h = Harness::new();
     assert!(!crate::workspace::visible_tabs(&h.app).contains(&"SKETCH"), "off by default");
     h.call("ui.prefs", json!({"sketch_tab_always": true}));
-    assert_eq!(crate::workspace::visible_tabs(&h.app)[..2], ["MODEL", "SKETCH"]);
+    assert_eq!(crate::workspace::visible_tabs(&h.app)[..3], [crate::workspace::SKETCHUP_TAB, "MODEL", "SKETCH"]);
     let info = |h: &Harness, id: &str| crate::render_workspace::interactive_command_info(&h.app, sketcraft_engine::find_command(id).unwrap());
     assert!(info(&h, "sketch.line").enabled && info(&h, "sketch.project").enabled);
     assert!(!info(&h, "sketch.dimension").enabled && !info(&h, "sketch.trim").enabled && !info(&h, "sketch.finish").enabled);
@@ -418,7 +421,7 @@ fn the_kept_sketch_tab_sits_after_model_and_its_tools_start_a_sketch() {
     assert!(normal(&h).y.abs() > 0.999, "on XZ: {:?}", normal(&h));
     assert_eq!(tool(&h), Some("sketch.line"));
     assert!(h.app.dialog.is_none());
-    assert_eq!(crate::workspace::visible_tabs(&h.app)[..2], ["MODEL", "SKETCH"], "the same place while sketching");
+    assert_eq!(crate::workspace::visible_tabs(&h.app)[..3], [crate::workspace::SKETCHUP_TAB, "MODEL", "SKETCH"], "the same place while sketching");
     h.app.start("sketch.finish");
     h.settle();
     assert!(h.app.session.active_sketch.is_none());

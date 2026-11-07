@@ -11,7 +11,7 @@
 //!
 //! Ratchet: cases that fail today are listed in `tests/hole_matrix/known_failures.txt`. A listed
 //! case that passes fails the test (take it off the list), and so does an unlisted one that fails.
-//! `HOLE_MATRIX_BLESS=1 cargo test -p solidcraft-engine hole_matrix` rewrites the list.
+//! `HOLE_MATRIX_BLESS=1 cargo test -p sketcraft-engine hole_matrix` rewrites the list.
 
 use sketcraft_geom::prelude::*;
 use std::f64::consts::PI;
