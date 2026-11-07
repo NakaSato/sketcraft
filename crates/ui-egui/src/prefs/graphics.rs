@@ -207,8 +207,9 @@ pub(super) fn show(app: &mut SolveApp, ui: &mut egui::Ui) {
                 ui_kit::row(ui, app.tr_label("Visual style"), |ui| {
                     let options = crate::navigation_bar::VISUAL_STYLES.map(|(_, label)| crate::i18n::tr_label(label));
                     let choices: Vec<_> =
-                        options.into_iter().zip(["style_shaded_edges", "style_shaded", "style_wireframe", "style_hidden_edges"]).collect();
-                    let mut selected = usize::from(app.ui.visual_style.min(3));
+                        options.into_iter().enumerate().map(|(i, l)| (l, crate::navigation_bar::visual_style_icon(i as u8))).collect();
+                    let max_style = (crate::navigation_bar::VISUAL_STYLES.len().saturating_sub(1)) as u8;
+                    let mut selected = usize::from(app.ui.visual_style.min(max_style));
                     let before = selected;
                     let response = ui
                         .allocate_ui_with_layout(

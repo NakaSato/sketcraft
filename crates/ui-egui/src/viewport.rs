@@ -1133,6 +1133,9 @@ fn face_classes(app: &SolveApp, b: &sketcraft_engine::doc::ModelBody, active_bod
     if body_faded(app, b, active_bodies) {
         return vec![crate::gpu::TriClass::Faded; b.body.face_count()];
     }
+    if app.ui.visual_style == 4 {
+        return vec![crate::gpu::TriClass::Glass; b.body.face_count()];
+    }
     let resolved = resolve_appearance(app, b);
     (0..b.body.face_count())
         .map(|f| {
@@ -1787,7 +1790,7 @@ fn body_scene(
         let col = if faded { c4(base.gamma_multiply(0.35)) } else { c4(base) };
         set_palette_color(&mut arena, &mut sc.palette, slots.body, col);
         // Appearances: the body's opacity, and faces with looks of their own.
-        let opacity = resolved.opacity;
+        let opacity = if app.ui.visual_style == 4 { resolved.opacity.min(0.45) } else { resolved.opacity };
         let face_looks = &resolved.face_looks;
         let faces = b.body.face_count();
         let mut face_colors = Vec::with_capacity(faces);
@@ -1795,10 +1798,10 @@ fn body_scene(
         for f in 0..faces {
             let look = face_looks.get(&f);
             let color = look.map_or(base, |l| Color32::from_rgb(l.color[0], l.color[1], l.color[2]));
-            let opacity = look.map_or(opacity, |l| l.opacity);
+            let opacity = look.map_or(opacity, |l| if app.ui.visual_style == 4 { l.opacity.min(0.45) } else { l.opacity });
             let (rgba, class) = if faded {
                 (c4(color.gamma_multiply(0.35)), crate::gpu::TriClass::Faded)
-            } else if opacity < 0.999 {
+            } else if opacity < 0.999 || app.ui.visual_style == 4 {
                 let mut rgba = c4(color);
                 rgba[3] = (opacity.clamp(0.05, 1.0) * 255.0).round() as u8;
                 (rgba, crate::gpu::TriClass::Glass)
@@ -1812,7 +1815,7 @@ fn body_scene(
         }
         let closed = b.is_closed();
         let class = plan_class(app, &face_classes);
-        let planned = class.and_then(|class| drawn_plan(app, b, true).map(|plan| (plan, class)));
+        let planned = class.and_then(|class| drawn_plan(app, b, class == crate::gpu::TriClass::Opaque).map(|plan| (plan, class)));
         let on_gpu = planned.is_some();
         if let Some((plan, class)) = planned {
             sc.planned.push(crate::gpu::PlannedBody { plan, face_colors: face_colors.clone(), class, closed });
@@ -1821,7 +1824,7 @@ fn body_scene(
         // are built as before).
         let look = if faded {
             crate::gpu::InstanceLook::Faded
-        } else if opacity < 0.999 {
+        } else if opacity < 0.999 || app.ui.visual_style == 4 {
             crate::gpu::InstanceLook::Glass
         } else {
             crate::gpu::InstanceLook::Opaque

@@ -3037,7 +3037,7 @@ mod tests {
         assert!(h.app.viewport.context_menu.is_some());
         let menu = describe(&h.app);
         let labels: Vec<_> = menu["items"].as_array().unwrap().iter().map(|i| i["label"].as_str().unwrap().to_owned()).collect();
-        assert_eq!(labels, ["Shaded with edges", "Shaded", "Wireframe", "Shaded with hidden edges"]);
+        assert_eq!(labels, ["Shaded with edges", "Shaded", "Wireframe", "Shaded with hidden edges", "X-Ray / Translucent"]);
         let rows = items(&h.app, &Target::VisualStyle);
         assert_eq!(rows.iter().filter(|i| i.shortcut == "current").map(|i| i.label.as_str()).collect::<Vec<_>>(), ["Shaded with edges"]);
         h.call("ui.menuPick", json!({"item":"Wireframe"}));

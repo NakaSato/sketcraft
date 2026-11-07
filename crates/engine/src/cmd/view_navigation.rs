@@ -318,7 +318,8 @@ fn visual_style(_s: &mut Session, p: &Value) -> Result<Value> {
         Some("shaded") => 1,
         Some("wireframe") => 2,
         Some("shaded_with_hidden_edges") => 3,
-        _ => return Err(bad(cmd, "style must be shaded_with_edges, shaded, wireframe or shaded_with_hidden_edges")),
+        Some("translucent") => 4,
+        _ => return Err(bad(cmd, "style must be shaded_with_edges, shaded, wireframe, shaded_with_hidden_edges or translucent")),
     };
     Ok(json!({"style": style, "index": index}))
 }
@@ -667,7 +668,7 @@ mod tests {
         for tool in ["orbit", "pan", "zoom", "none"] {
             assert_eq!(s.execute("view.tool", &json!({"tool":tool})).unwrap(), json!({"tool":tool}));
         }
-        for (index, style) in ["shaded_with_edges", "shaded", "wireframe", "shaded_with_hidden_edges"].into_iter().enumerate() {
+        for (index, style) in ["shaded_with_edges", "shaded", "wireframe", "shaded_with_hidden_edges", "translucent"].into_iter().enumerate() {
             assert_eq!(s.execute("view.visual_style", &json!({"style":style})).unwrap(), json!({"style":style,"index":index}));
         }
         for (id, key) in [("view.tool", "tool"), ("view.visual_style", "style")] {

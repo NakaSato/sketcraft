@@ -389,6 +389,7 @@ pub(crate) fn current_style(app: &SolveApp) -> &str {
         1 => "navbar.style.shaded",
         2 => "navbar.style.wireframe",
         3 => "navbar.style.shaded_with_hidden_edges",
+        4 => "navbar.style.translucent",
         _ => "navbar.style.shaded_with_edges",
     })
 }
@@ -524,11 +525,6 @@ fn style_menu(app: &mut SolveApp, ui: &mut egui::Ui) -> bool {
             chosen = true;
         }
     }
-    ui_kit::navigation_menu_separator(ui);
-    let mut later = ui_kit::NavigationMenuRow::new("translucent", app.tr("navbar.translucent"), "style_translucent");
-    later.enabled = false;
-    later.detail = Some(app.tr("navbar.later"));
-    later.show(ui);
     chosen
 }
 

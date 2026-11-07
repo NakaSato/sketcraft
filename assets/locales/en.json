@@ -2372,6 +2372,7 @@
   "navbar.style.shaded": "Shaded",
   "navbar.style.shaded_with_edges": "Shaded with edges",
   "navbar.style.shaded_with_hidden_edges": "Shaded with hidden edges",
+  "navbar.style.translucent": "X-Ray / Translucent",
   "navbar.style.wireframe": "Wireframe",
   "navbar.translucent": "Translucent",
   "navbar.value_tip": "{name} · {value}",
