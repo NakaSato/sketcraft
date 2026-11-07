@@ -6991,4 +6991,25 @@ mod quick_access_tests {
             "the ribbon's Rectangle button still starts its remembered choice"
         );
     }
+
+    #[test]
+    fn sketchup_large_toolset_can_be_loaded_and_cleared() {
+        let mut h = Harness::new();
+        h.app.home.open = false;
+        h.call("ui.resize", json!({"width":1600,"height":1000}));
+        h.frames(3);
+        assert!(h.app.toolbar_custom.quick_access.is_empty());
+
+        // Load SketchUp Large Tool Set
+        crate::toolbar_custom::load_sketchup_toolset(&mut h.app);
+        assert_eq!(h.app.toolbar_custom.quick_access.len(), crate::toolbar_custom::SKETCHUP_LARGE_TOOLSET.len());
+        for id in crate::toolbar_custom::SKETCHUP_LARGE_TOOLSET {
+            assert!(h.app.toolbar_custom.quick_access.contains(&id.to_string()), "contains {id}");
+            assert!(sketcraft_engine::find_command(id).is_some(), "command {id} exists");
+        }
+
+        // Test clear
+        crate::toolbar_custom::clear_quick_access(&mut h.app);
+        assert!(h.app.toolbar_custom.quick_access.is_empty());
+    }
 }

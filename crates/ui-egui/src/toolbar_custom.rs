@@ -353,6 +353,34 @@ pub fn quick_move(app: &mut SolveApp, id: &str, before: Option<&str>) {
     list.insert(at, id.to_string());
 }
 
+/// The default SketchUp Large Tool Set commands for quick access parity.
+pub const SKETCHUP_LARGE_TOOLSET: &[&str] = &[
+    "select.clear",
+    "selection.delete",
+    "sketch.line",
+    "sketch.arc.three_point",
+    "sketch.rectangle.two_point",
+    "sketch.circle.center",
+    "solid.press_pull",
+    "solid.offset_face",
+    "solid.move",
+    "solid.scale",
+    "inspect.measure",
+    "sketch.dimension",
+    "appearance.paint",
+    "component.create",
+];
+
+/// Load SketchUp Large Tool Set into the quick access bar.
+pub fn load_sketchup_toolset(app: &mut SolveApp) {
+    app.toolbar_custom.quick_access = SKETCHUP_LARGE_TOOLSET.iter().map(|s| s.to_string()).collect();
+}
+
+/// Clear the quick access bar.
+pub fn clear_quick_access(app: &mut SolveApp) {
+    app.toolbar_custom.quick_access.clear();
+}
+
 /// Reset Toolbar: a tab's panels back to their defaults.
 pub fn reset(app: &mut SolveApp, tab: &str) {
     let prefix = format!("{WORKSPACE}/{tab}/");
@@ -378,6 +406,11 @@ pub fn command_items(app: &SolveApp, id: &str) -> Vec<Item> {
     } else {
         Item::action("ui.quickAccessAdd", "Add to Quick Access", "plus").with(json!({ "command": id }))
     });
+    v.push(Item::sep());
+    v.push(Item::action("ui.quickAccessLoadSketchUp", "Load SketchUp Large Tool Set", "prefs_layout"));
+    if !app.toolbar_custom.quick_access.is_empty() {
+        v.push(Item::action("ui.quickAccessClear", "Clear Quick Access Bar", "close"));
+    }
     v.push(Item::sep());
     v.push(Item::action("ui.toolbarCustomize", "Customize Toolbar…", "settings"));
     v.push(Item::action("ui.toolbarReset", "Reset Toolbar", "restore").with(json!({ "tab": tab })));
@@ -408,6 +441,11 @@ pub fn toolbar_items(app: &SolveApp) -> Vec<Item> {
         }
         v.push(Item::sep());
     }
+    v.push(Item::action("ui.quickAccessLoadSketchUp", "Load SketchUp Large Tool Set", "prefs_layout"));
+    if !app.toolbar_custom.quick_access.is_empty() {
+        v.push(Item::action("ui.quickAccessClear", "Clear Quick Access Bar", "close"));
+    }
+    v.push(Item::sep());
     v.push(Item::action("ui.toolbarCustomize", "Customize Toolbar…", "settings"));
     v.push(Item::action("ui.toolbarReset", "Reset Toolbar", "restore").with(json!({ "tab": app.ui.tab })));
     v
@@ -434,6 +472,8 @@ pub fn run(app: &mut SolveApp, action: &str, p: &Value) {
             }
         }
         "ui.quickAccessRemove" => quick_remove(app, id),
+        "ui.quickAccessLoadSketchUp" => load_sketchup_toolset(app),
+        "ui.quickAccessClear" => clear_quick_access(app),
         _ => {}
     }
 }

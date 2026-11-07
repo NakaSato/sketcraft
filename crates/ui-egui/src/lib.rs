@@ -1738,7 +1738,7 @@ impl SolveApp {
         }
         // Modify ▸ Delete deletes what is selected, as the Delete key does (#9079); with nothing
         // selected it says what to pick instead of running with no features.
-        if id == "timeline.delete" {
+        if id == "timeline.delete" || id == "selection.delete" {
             if delete::nothing_to_delete(self) && self.tree.picked_timeline_groups.is_empty() {
                 self.set_status(self.tr("ui.delete_select_first"), false);
             } else if !timeline_left::delete_selected_folders(self) {
