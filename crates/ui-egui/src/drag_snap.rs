@@ -7,7 +7,7 @@
 use sketcraft_engine::geom::prelude::*;
 use std::cell::{Cell, RefCell};
 
-use egui::{Align2, FontId, Stroke};
+use egui::{FontId, Stroke};
 use serde_json::{Value, json};
 use solidcore_record::Vec2;
 use sketcraft_engine::sketch::{ConstraintKind, CurveKind, Sketch};
@@ -259,12 +259,26 @@ pub fn show(app: &SolveApp, painter: &egui::Painter, proj: &Proj) {
         }
     }
     let Some(sp) = to(s.at) else { return };
-    painter.circle_stroke(sp, 6.0, Stroke::new(1.5, tk.accent));
-    let label = s.label();
+    let label = match s.label() {
+        "Pt" => "Endpoint",
+        "Mid" => "Midpoint",
+        "On" => "On Edge",
+        other => other,
+    };
+    let (bg_color, stroke_color) = match label {
+        "Endpoint" => (egui::Color32::from_rgb(46, 125, 50), egui::Color32::from_rgb(76, 175, 80)),
+        "Midpoint" => (egui::Color32::from_rgb(0, 131, 143), egui::Color32::from_rgb(0, 188, 212)),
+        "On Edge" => (egui::Color32::from_rgb(21, 101, 192), egui::Color32::from_rgb(33, 150, 243)),
+        _ => (tk.accent_soft, tk.accent),
+    };
+    painter.circle_stroke(sp, 6.0, Stroke::new(1.5, stroke_color));
     if !label.is_empty() {
-        let r = egui::Rect::from_min_size(sp + egui::vec2(12.0, -24.0), egui::vec2(24.0, 14.0));
-        painter.rect_filled(r, tk.radius_sm.saturating_sub(1), tk.accent_soft);
-        painter.text(r.center(), Align2::CENTER_CENTER, label, FontId::proportional(crate::theme::Tokens::get().font_micro), tk.text);
+        let font_id = FontId::proportional(crate::theme::Tokens::get().font_micro);
+        let galley = painter.layout_no_wrap(label.to_string(), font_id, egui::Color32::WHITE);
+        let badge_size = egui::vec2(galley.size().x + 10.0, (galley.size().y + 4.0).max(16.0));
+        let r = egui::Rect::from_min_size(sp + egui::vec2(12.0, -22.0), badge_size);
+        painter.rect_filled(r, tk.radius_sm, bg_color);
+        painter.galley(r.min + egui::vec2(5.0, 2.0), galley, egui::Color32::WHITE);
     }
     crate::scenario::publish_count("drag_guides", s.guides.len() as f64);
 }

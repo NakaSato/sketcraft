@@ -2001,6 +2001,11 @@ fn glyph_anchors(sk: &sketcraft_engine::sketch::Sketch, k: &sketcraft_engine::sk
     }
 }
 
+/// Set an explicit snap hint from tool picking (e.g. hovering on an existing sketch point).
+pub(crate) fn set_snap_hint(label: &'static str, at: Vec2) {
+    SNAP.with(|s| *s.borrow_mut() = Some((label, at)));
+}
+
 /// The inference label next to the snapped cursor (while a tool is active).
 fn snap_hint(app: &SolveApp, painter: &egui::Painter, proj: &Proj) {
     if app.tool.is_none() {
@@ -2017,9 +2022,36 @@ fn snap_hint(app: &SolveApp, painter: &egui::Painter, proj: &Proj) {
         painter.add(egui::Shape::dashed_line(&[from, sp], Stroke::new(1.0, tk.rubber_band), 5.0, 4.0));
     }
     crate::scenario::publish_count("sketch_align_guides", guides.len() as f64);
-    let r = egui::Rect::from_min_size(sp + egui::vec2(12.0, -24.0), egui::vec2(24.0, 14.0));
-    painter.rect_filled(r, tk.radius_sm.saturating_sub(1), tk.accent_soft);
-    painter.text(r.center(), egui::Align2::CENTER_CENTER, label, egui::FontId::proportional(crate::theme::Tokens::get().font_micro), tk.text);
+    let font_id = egui::FontId::proportional(tk.font_micro);
+    let display_label = match label {
+        "Pt" => "Endpoint",
+        "Mid" => "Midpoint",
+        "X" => "Intersection",
+        "On" => "On Edge",
+        "Ctr" => "Center",
+        "//" => "Parallel",
+        "\u{22a5}" => "Perpendicular",
+        "T" => "Tangent",
+        "Ext" => "Extension",
+        other => other,
+    };
+    let galley = painter.layout_no_wrap(display_label.to_string(), font_id, egui::Color32::WHITE);
+    let badge_size = egui::vec2(galley.size().x + 10.0, (galley.size().y + 4.0).max(16.0));
+    let r = egui::Rect::from_min_size(sp + egui::vec2(12.0, -22.0), badge_size);
+
+    let (bg_color, dot_color) = match display_label {
+        "Endpoint" => (egui::Color32::from_rgb(46, 125, 50), egui::Color32::from_rgb(76, 175, 80)),
+        "Midpoint" => (egui::Color32::from_rgb(0, 131, 143), egui::Color32::from_rgb(0, 188, 212)),
+        "Intersection" => (egui::Color32::from_rgb(198, 40, 40), egui::Color32::from_rgb(244, 67, 54)),
+        "On Edge" => (egui::Color32::from_rgb(21, 101, 192), egui::Color32::from_rgb(33, 150, 243)),
+        "Parallel" | "Perpendicular" | "Tangent" => (egui::Color32::from_rgb(106, 27, 154), egui::Color32::from_rgb(156, 39, 176)),
+        _ => (tk.accent_soft, tk.accent),
+    };
+
+    painter.circle_filled(sp, 3.5, dot_color);
+    painter.circle_stroke(sp, 4.5, Stroke::new(1.0, egui::Color32::WHITE));
+    painter.rect_filled(r, tk.radius_sm, bg_color);
+    painter.galley(r.min + egui::vec2(5.0, 2.0), galley, egui::Color32::WHITE);
 }
 
 /// Per frame, after the viewport is drawn: constraint glyphs, snap hints and analysis marks.
