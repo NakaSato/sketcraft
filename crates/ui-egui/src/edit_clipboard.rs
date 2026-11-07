@@ -284,7 +284,9 @@ fn copy_failed(app: &mut SolveApp, why: Option<&str>) -> bool {
 /// Copy the saved root design. The path stays in this app, outside per-document sessions.
 pub fn copy_design(app: &mut SolveApp) -> bool {
     let Some(path) = app.session.path.clone().filter(|_| !app.session.is_dirty()) else {
-        return copy_failed(app, Some("Save this design before copying it as a linked component"));
+        clear_clipboard(app);
+        app.set_status("Save this design before copying it as a linked component", false);
+        return false;
     };
     replace_clipboard(app);
     app.linked_design_clipboard = Some(path);

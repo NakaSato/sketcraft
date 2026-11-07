@@ -297,6 +297,7 @@ mod status_bar;
 #[cfg(test)]
 mod sweep_dialog_tests;
 pub mod tags_panel;
+pub mod warehouse_panel;
 pub(crate) mod test_boat;
 pub mod theme;
 pub mod theme_files;
@@ -587,6 +588,8 @@ pub struct SolveApp {
     pub bom: Option<bom_panel::BomPanel>,
     /// The Tags & Layers window, when open.
     pub tags_panel: Option<tags_panel::TagsPanel>,
+    /// The 3D Warehouse and model discovery window, when open.
+    pub warehouse_panel: Option<warehouse_panel::WarehousePanel>,
     material_card_review: Option<material_card_review::ReviewWindow>,
     /// Context menus, rename box and Properties window.
     pub menu: context_menu::MenuState,
@@ -868,6 +871,7 @@ impl SolveApp {
             sketch_report: None,
             bom: None,
             tags_panel: None,
+            warehouse_panel: None,
             material_card_review: None,
             menu: context_menu::MenuState::default(),
             gesture: mouse_gesture::State::default(),
@@ -2068,6 +2072,10 @@ impl SolveApp {
         }
         if id == "tags.manage" {
             tags_panel::open(self);
+            return;
+        }
+        if id == "warehouse.discover" {
+            warehouse_panel::open(self);
             return;
         }
         // Inspect → Measure → Properties: the window, not a reply nobody sees (#8095).
@@ -3543,6 +3551,7 @@ impl SolveApp {
         sketch_report::show(self, ui.ctx());
         bom_panel::show(self, ui.ctx());
         tags_panel::show(self, ui.ctx());
+        warehouse_panel::show(self, ui.ctx());
         material_card_review::show(self, ui.ctx());
         recovery_ui::show(self, ui.ctx());
         mesh_units::show(self, ui.ctx());

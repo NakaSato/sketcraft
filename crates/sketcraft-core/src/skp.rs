@@ -1,7 +1,7 @@
 //! SketchUp (.skp) import and interchange.
 use crate::{Model};
 
-pub const MAX_SKP_BYTES: usize = 512 * 1024 * 1024;
+pub const MAX_SKP_BYTES: usize = 1024 * 1024 * 1024;
 
 #[cfg(not(target_arch = "wasm32"))]
 pub fn import_skp(bytes: &[u8], name: &str) -> Result<Model, String> {

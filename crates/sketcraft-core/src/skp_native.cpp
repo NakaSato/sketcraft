@@ -23,7 +23,7 @@ struct Import {
     for (const auto& layer:model.layers) if(layer.hidden) hidden_layers.insert(layer.name);
   }
   Id allocate() {
-    if(next>=1000000) throw std::runtime_error("The imported model is too large (one million entities maximum)");
+    if(next>=100000000) throw std::runtime_error("The imported model is too large (100 million entities maximum)");
     return ++next;
   }
   static Json ids(const std::vector<Id>& values) {

@@ -303,13 +303,13 @@ impl Model {
         Some(vertices.fold((first, first), |(lo, hi), p| (lo.min(p), hi.max(p))))
     }
     pub fn validate(&self) -> Result<(), &'static str> {
-        if self.connections.len() > 10000
-            || self.vertices.len() > 1_000_000
-            || self.edges.len() > 1_000_000
-            || self.faces.len() > 1_000_000
-            || self.objects.len() > 1_000_000
-            || self.dimensions.len() > 1_000_000
-            || self.texts.len() > 1_000_000
+        if self.connections.len() > 100_000
+            || self.vertices.len() > 100_000_000
+            || self.edges.len() > 100_000_000
+            || self.faces.len() > 100_000_000
+            || self.objects.len() > 100_000_000
+            || self.dimensions.len() > 10_000_000
+            || self.texts.len() > 10_000_000
         {
             return Err("Model is too large");
         }

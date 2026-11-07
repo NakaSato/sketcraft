@@ -117,7 +117,7 @@ impl Model {
     }
     pub(crate) fn validate_tags(&self) -> Result<(), &'static str> {
         let mut names = BTreeSet::new();
-        if self.tags.len() > 10000
+        if self.tags.len() > 100_000
             || self.tags.iter().any(|(id, tag)| {
                 *id != tag.id
                     || *id == 0

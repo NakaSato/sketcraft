@@ -10,7 +10,7 @@ use crate::{IoError, Result};
 pub fn read_skp(bytes: &[u8], default_name: &str) -> Result<(Vec<MeshObject>, Vec<String>)> {
     let _span = sketcraft_profile::span("import", "read_skp");
     let model = sketcraft_core::skp::import_skp(bytes, default_name)
-        .map_err(|e| IoError::Invalid(format!("could not read SketchUp file: {e}")))?;
+        .map_err(IoError::Invalid)?;
 
     let warnings = Vec::new();
     if model.faces.is_empty() {
@@ -24,7 +24,8 @@ pub fn read_skp(bytes: &[u8], default_name: &str) -> Result<(Vec<MeshObject>, Ve
         if is_root_container(&obj.name) && model.objects.len() > 1 {
             continue;
         }
-        for &ent in &obj.entities {
+        let leaf_entities = model.expand_entities(&obj.entities);
+        for ent in leaf_entities {
             if model.faces.contains_key(&ent) {
                 face_group.entry(ent).or_insert(&obj.name);
             }

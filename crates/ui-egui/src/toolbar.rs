@@ -796,6 +796,10 @@ fn file_menu(app: &mut SolveApp, ctx: &egui::Context) {
                     FileAction::Command("file.insert_mesh").run(app);
                     close = true;
                 }
+                if item_if(ui, "3D Warehouse & Discovery…", "Shift+Cmd+W", "library", shown) {
+                    FileAction::Command("warehouse.discover").run(app);
+                    close = true;
+                }
                 if item_if(ui, "Insert CAD Solid (STEP / DXF)…", "", "import", shown) {
                     FileAction::Command("file.insert_step").run(app);
                     close = true;
@@ -873,6 +877,10 @@ fn file_menu(app: &mut SolveApp, ctx: &egui::Context) {
                 ui.separator();
                 if item_if(ui, "Tags & Layers…", "", "list", shown) {
                     FileAction::Command("tags.manage").run(app);
+                    close = true;
+                }
+                if item_if(ui, "3D Warehouse & Discovery…", "", "library", shown) {
+                    FileAction::Command("warehouse.discover").run(app);
                     close = true;
                 }
                 if item_if(ui, &format!("{}…", app.tr_label("Design Properties")), "", "settings", shown) {

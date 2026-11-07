@@ -371,6 +371,7 @@ pub const SKETCHUP_LARGE_TOOLSET: &[&str] = &[
     "appearance.paint",
     "component.create",
     "tags.manage",
+    "warehouse.discover",
 ];
 
 /// Load SketchUp Large Tool Set into the quick access bar.

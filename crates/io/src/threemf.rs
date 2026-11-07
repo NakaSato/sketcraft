@@ -27,7 +27,7 @@ use solidcore_record::Vec3;
 use crate::{IoError, Result};
 
 /// Largest 3MF file we read.
-pub const MAX_3MF_BYTES: usize = 512 << 20;
+pub const MAX_3MF_BYTES: usize = 1024 << 20;
 /// Largest uncompressed part we read (zip bombs stop here).
 const MAX_PART: u64 = 1 << 30;
 const MAX_ENTRIES: usize = 10_000;
