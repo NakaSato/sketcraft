@@ -403,3 +403,30 @@ fn system_information_opens_from_help_and_copies_the_report() {
         "diagnostics omit document names"
     );
 }
+
+#[test]
+fn large_tool_set_shows_every_tool_without_flyouts_and_view_shortcuts() {
+    let mut h = Harness::new();
+    h.app.large_tool_set = true;
+    let output = h.frame(vec![], egui::Modifiers::NONE);
+    for tool in Tool::ALL {
+        let label = if tool == Tool::TapeMeasure { "Tape" } else { tool.label() };
+        text_position(&output, label);
+    }
+    // Drawing tools are one click away instead of inside the Line flyout.
+    h.click(text_position(&output, "Polygon"));
+    assert_eq!(h.app.tool, Tool::Polygon);
+    let output = h.frame(vec![], egui::Modifiers::NONE);
+    h.click(text_position(&output, "Rotate"));
+    assert_eq!(h.app.tool, Tool::Rotate);
+
+    let cuts = h.app.doc.display.section_cuts;
+    let output = h.frame(vec![], egui::Modifiers::NONE);
+    h.click(text_position(&output, "Sections"));
+    assert_eq!(h.app.doc.display.section_cuts, !cuts);
+
+    h.app.inspector = false;
+    let output = h.frame(vec![], egui::Modifiers::NONE);
+    h.click(text_position(&output, "Tags"));
+    assert!(h.app.inspector, "Tags opens the sidebar");
+}

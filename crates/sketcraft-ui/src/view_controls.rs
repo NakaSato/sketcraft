@@ -70,6 +70,10 @@ impl KetchupApp {
         inspector_section(ui, "Standard views", "view_standard_views", false, |ui| {
             standard_view_picker(ui, &mut self.doc.camera);
         });
+        inspector_section(ui, "Tool rail", "view_tool_rail", false, |ui| {
+            ui.checkbox(&mut self.large_tool_set, "Large Tool Set")
+                .on_hover_text("Show every tool in two columns, without flyouts, plus Section cuts and Tags");
+        });
         if before != self.doc.camera {
             self.changed(ui.ctx());
         }

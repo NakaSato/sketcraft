@@ -317,3 +317,22 @@ fn paint_target_persists_immediately_and_older_preferences_default_to_face() {
     let old: InspectorPreferences = serde_json::from_str("{}").unwrap();
     assert_eq!(old.paint_target, PaintTarget::Face);
 }
+
+#[test]
+fn large_tool_set_saves_immediately_and_defaults_off_for_older_preferences() {
+    let ctx = egui::Context::default();
+    let mut storage = SavedPreferences::default();
+    let mut app = KetchupApp::with_document(Document::default(), None, true);
+    for enabled in [true, false] {
+        app.large_tool_set = enabled;
+        storage.flushed = false;
+        app.persist_inspector_changes(&ctx, Some(&mut storage), false);
+        assert!(storage.flushed);
+        assert!(!app.project.modified);
+        let mut restored = KetchupApp::with_document(Document::default(), None, true);
+        restored.restore_inspector_preferences(&egui::Context::default(), Some(&storage));
+        assert_eq!(restored.large_tool_set, enabled);
+    }
+    let older: InspectorPreferences = serde_json::from_str("{}").unwrap();
+    assert!(!older.large_tool_set);
+}

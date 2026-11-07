@@ -687,6 +687,9 @@ impl KetchupApp {
         self.tool_tooltip(response, tool)
     }
     pub(super) fn tool_rail(&mut self, ui: &mut egui::Ui) {
+        if self.large_tool_set {
+            return self.large_tool_rail(ui);
+        }
         let colors = Palette::for_ui(ui);
         egui::Panel::left("tools")
             .exact_size(76.)

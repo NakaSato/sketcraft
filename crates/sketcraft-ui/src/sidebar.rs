@@ -56,6 +56,7 @@ pub(super) struct InspectorPreferences {
     recent_projects: Vec<projects::RecentProject>,
     import_format: String,
     export_stl: bool,
+    large_tool_set: bool,
     sections: std::collections::BTreeMap<String, bool>,
     section_aliases: std::collections::BTreeMap<String, String>,
     scroll_positions: std::collections::BTreeMap<String, [f32; 2]>,
@@ -95,6 +96,7 @@ impl Default for InspectorPreferences {
             recent_projects: Vec::new(),
             import_format: "skp".into(),
             export_stl: false,
+            large_tool_set: false,
             sections: Default::default(),
             section_aliases: Default::default(),
             scroll_positions: Default::default(),
@@ -452,6 +454,7 @@ impl KetchupApp {
         self.fasteners = preferences.fasteners.clone();
         self.fasteners.sanitize();
         self.project.export_stl = preferences.export_stl;
+        self.large_tool_set = preferences.large_tool_set;
         self.time_estimates = preferences.time_estimates.clone();
         self.time_estimates.sanitize();
         self.finish_product_filters = preferences.finish_product_filters.clone();
@@ -576,6 +579,7 @@ impl KetchupApp {
             recent_projects: self.project.recent.clone(),
             import_format: self.project.import_format.clone(),
             export_stl: self.project.export_stl,
+            large_tool_set: self.large_tool_set,
             section_aliases: ctx.data_mut(|data| {
                 data.get_temp_mut_or_default::<SectionMemory>(section_memory_id())
                     .2

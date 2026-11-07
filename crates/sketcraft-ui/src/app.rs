@@ -61,6 +61,8 @@ mod app_overlay;
 #[cfg(not(target_arch = "wasm32"))]
 #[path = "app_updates.rs"]
 mod app_updates;
+#[path = "app_tool_set.rs"]
+mod app_tool_set;
 #[path = "context_menu.rs"]
 mod context_menu;
 #[path = "currency.rs"]
@@ -357,6 +359,8 @@ pub struct KetchupApp {
     outliner_anchor: Option<u64>,
     outliner_filter: String,
     model_library: model_library::ModelLibrary,
+    /// Two-column rail with every tool (SketchUp's Large Tool Set).
+    large_tool_set: bool,
     outliner_cache: sidebar::OutlinerCache,
     focus_outliner_search: bool,
     line_start: Option<DVec3>,
@@ -526,6 +530,7 @@ impl KetchupApp {
             outliner_anchor: None,
             outliner_filter: String::new(),
             model_library: Default::default(),
+            large_tool_set: false,
             outliner_cache: Default::default(),
             focus_outliner_search: false,
             line_start: None,
