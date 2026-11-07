@@ -1,6 +1,0 @@
-[
- {
-  "source": "tangency-labs/solidcraft#924",
-  "why": "Windows-versus-Linux differences in the robustness goldens; platform float behaviour, no case geometry"
- }
-]

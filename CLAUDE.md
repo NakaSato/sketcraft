@@ -6,48 +6,32 @@ Read `AGENTS.md` too. It holds the project's binding rules: persisted UI state, 
 
 ## What this repository is
 
-KetchUp is a SketchUp-style 3D edge/face editor in Rust that runs natively (Windows/macOS/Linux) and in the browser (WebAssembly via Trunk). It is built on a fork of SolidCraft, a parametric CAD workspace. Crate and binary names still use the `sketcraft-*` prefix, and the contributor skills in `skills/` still say "SolidCraft". Some docs those skills mention (`docs/book/`, `ROADMAP.md`) are not in this tree.
-
-Shared UI building blocks live in `crates/ui-egui/src/ui_kit/`: sections, tables, modals, footers and disclosures. Preferences are in `crates/ui-egui/src/prefs.rs`. Use these before writing new widgets.
+KetchUp is a SketchUp-style 3D edge/face editor in Rust. The same editor runs natively (Windows/macOS/Linux) and in the browser (WebAssembly via Trunk). Crates use the `sketcraft-*` prefix; the product name shown to users is KetchUp.
 
 ## Commands
 
 ```sh
-cargo run -p sketcraft                 # desktop app (needs a C++17 compiler for the native SKP reader)
+cargo run -p sketcraft-ui              # desktop app (binary `sketcraft`; needs a C++17 compiler for the native SKP reader)
 trunk serve                            # browser app at http://127.0.0.1:8080 (needs wasm32-unknown-unknown + trunk)
-cargo build -p sketcraft --release --locked
+cargo build -p sketcraft-ui --release --locked
 trunk build --release --locked         # static site in dist/
 
-cargo xtask test                       # every test binary, `ci` profile (much faster to build than --release)
-cargo xtask test -- <filter>           # filter is passed to each test binary
-cargo test -p sketcraft-core <name>    # one test in one crate
-cargo xtask ci                         # pre-commit gate: fmt, lints, clippy -D warnings, tests, wasm
-cargo xtask layers                     # fails if a lower crate depends on a higher one
-cargo xtask known-failing              # checks tests/KNOWN_FAILING_TESTS against actual failures
-cargo xtask oracle                     # reference tests in tests/oracle/<case>/{recipe,expected}.json
+cargo check --workspace --locked
+cargo check --workspace --target wasm32-unknown-unknown --locked
+cargo test --workspace --locked
+cargo test -p sketcraft-core <name>    # one test in the core
+cargo test -p sketcraft-ui <name>      # one test in the UI
+python3 scripts/run_feature_audit.py   # sequential audit incl. ignored GPU/workload tests
 ```
 
-`SOLIDCRAFT_TEST_JOBS=N` limits how many test commands run at once. A failing test must ship with its fix or get a line in `tests/KNOWN_FAILING_TESTS`.
+GPU comparison and workload benchmarks are `#[ignore]` tests in `sketcraft-ui`. See the README for the exact invocations. Release scripts need Python 3.11+ (`tomllib`).
 
-For deploy requests, follow `AGENTS.md`: no local builds or tests. CI (`.github/workflows/build.yml`, `pages.yml`) builds and publishes on a `v*` tag that matches `[workspace.package].version`. Release notes go in `assets/release-notes.json`, checked with `python3 scripts/desktop_release.py version|notes --tag vX.Y.Z`.
+For deploy requests, follow `AGENTS.md`: no local builds or tests. CI (`.github/workflows/build.yml`, `pages.yml`) builds and publishes on a `v*` tag that matches `[workspace.package].version`, which must be a stable `X.Y.Z`. Release notes go in `assets/release-notes.json`.
 
 ## Architecture
 
-The workspace has `crates/*`, `apps/*` and `xtask`. `vendor/` holds patched `egui-wgpu` and `winit` and is excluded from the workspace. `unsafe_code` is forbidden workspace-wide.
+The workspace has two crates.
 
-`cargo xtask layers` enforces this layering:
-
-```
-L0 geom → L1 sketch, kernel, render → L2 doc → L3 io → L4 engine → L5 ui-egui → apps
-```
-
-- Only `ui-egui` and the apps may use egui, eframe, winit, wgpu or rfd. `kernel` wraps the external `solidcore` B-rep kernel (pinned git rev). `step`, `smlib` and `profile` support it.
-- `engine` owns `Session` and the command registry. Every user-visible action is a `CommandSpec` in `crates/engine/src/cmd/`, run through `Session::execute(id, params)`. Toolbar, dialogs, CLI, control channel and MCP (`crates/mcp`) all go through this path. Commands that change the document are undoable by default. Programmatic calls never open dialogs; only `ui.start` begins interactive tools. Details: `skills/solidcraft-commands/SKILL.md`.
-- `ui-egui` is a thin front end. Panels read engine state and act through `app.run(id, params)` / `app.start(id)`. UI scenario tests are JSON files in `crates/ui-egui/tests/scenarios/`.
-- `sketcraft-core` is the SketchUp-style model: `Document`/`Model` with vertices, edges, faces, objects and components, tags, inference/snapping, measurements, camera and display settings. It contains a C++ SKP reader (`skp_native.cpp`, compiled by `build.rs` with `cc`). `crates/io/src/skp_in.rs` uses it for `.skp` import. Model-specific state (tags, entity assignments) is stored in the document.
-- Apps: `apps/sketcraft` is the desktop binary (native menus, control server, crash handling, Velopack updates). `apps/sketcraft-web` is the wasm entry used by `index.html`/Trunk; it reaches the account server through the `/api/` and `/auth/` proxies to `localhost:8081` (see `Trunk.toml`, `.env.example`). `apps/sketcraft-cli` is a headless CLI and MCP server.
-- `xtask` holds the repo tooling: tests, ci, layers, i18n, icons, features, licences, skills, oracle, kernel cases.
-
-## Where to look
-
-`skills/*/SKILL.md` are short contributor guides, chosen by task: `solidcraft-tests` (test placement and running), `solidcraft-ui` (dialogs, panels, icons), `solidcraft-ui-text` (labels and i18n keys like `cmd.<id>` / `help.<id>`), `solidcraft-file-formats` (saved data and import/export), `solidcraft-preferences`, `solidcraft-crash-safety` (hostile input), `solidcraft-performance` (window thread, wasm). User docs are in `docs/`.
+- `crates/sketcraft-core`: the model, with no GUI or GPU dependencies. `Document`/`Model` holds double-precision vertices and edges, and planar faces are discovered and triangulated from the edge graph. It also has objects (groups/components), tags, inference/snapping, picking, measurements, camera, display settings, units and bounded undo history. `skp.rs` plus `skp_native.cpp` (compiled by `build.rs` with `cc`) read SketchUp `.skp` files natively. Model-specific state such as tag visibility and entity assignments is stored in the document.
+- `crates/sketcraft-ui`: the egui/eframe app. It is a library (`sketcraft_ui::KetchupApp`) plus the `sketcraft` binary (`src/main.rs`, a native and wasm entry point). `app.rs` holds the app state and gesture routing, and each tool has its own module. `sidebar.rs` holds the inspector and shared preferences (`InspectorPreferences`, section persistence, `persist_inspector_changes`), and `modal.rs`, `inspector_table.rs` and `pdf_header.rs` are the shared shells `AGENTS.md` requires. Viewports use a wgpu/WGSL edge renderer (`edges.wgsl`) with CPU projection. Rendering is event-driven, not a continuous loop. Browser-only helpers are the JS files in `src/` (SKP worker, project save, cursor). Desktop updates use Velopack (`updates.rs`), and the version is pinned to match `VPK_VERSION` in CI and `scripts/desktop_release.py`.
+- `index.html` hosts the wasm app (canvas `ketchup-canvas`, browser shortcut guards that must stay in sync with `KetchupApp::keyboard`). `Trunk.toml` proxies `/api/` and `/auth/` to the account server on `localhost:8081`. The account server URL comes from `KETCHUP_SERVER_URL` or `.env`, read in `crates/sketcraft-ui/build.rs`, or from `--server-url` at runtime.

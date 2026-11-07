@@ -32,7 +32,7 @@ For instructions on using KetchUp, see the [user documentation](docs/README.md).
 ## Run on desktop
 
 ```sh
-cargo run -p sketcraft
+cargo run -p sketcraft-ui
 ```
 
 On Linux, register the application launcher and icons once after compiling:
@@ -67,7 +67,7 @@ Development builds use light optimization for application code and stronger opti
 Desktop, on the OS you want to target:
 
 ```sh
-cargo build -p sketcraft --release --locked
+cargo build -p sketcraft-ui --release --locked
 ```
 
 The executable is `target/release/sketcraft` (`sketcraft.exe` on Windows). These commands produce executables, not installers or signed application bundles. Native builds should run on the corresponding OS; this project does not configure cross-linkers or signing identities.
@@ -280,7 +280,7 @@ Verified during implementation: native Linux and browser WASM Cargo checks; core
 ## Layout
 
 - `crates/sketcraft-core`: double-precision document geometry, planar face discovery/triangulation, inference, picking, camera, tool definitions, and bounded history. It has no GUI or GPU dependencies.
-- `crates/ui-egui`: egui workspace, toolbar, timeline, dialogs, local persistence, native/browser launchers, and the GPU viewport renderer. Model coordinates remain independent of GPU resources.
+- `crates/sketcraft-ui`: egui workspace, gesture routing, local persistence, native/browser launchers, and the wgpu/WGSL edge renderer. Model coordinates remain independent of GPU resources.
 - `index.html` and `Trunk.toml`: static browser host and WASM development configuration.
 
 The viewport uses depth-tested filled triangles and antialiased triangle strips for consistent edge widths, CPU projection/clipping, and the same shader and editor behavior on every target. Rendering is event-driven rather than a continuous idle loop.
@@ -293,7 +293,7 @@ configuration and startup instructions.
 
 The account server is deployment configuration, with no address field in the app.
 Launch the desktop app with `sketcraft --server-url https://accounts.example.com`
-or `cargo run -p sketcraft -- --server-url http://localhost:8081`.
+or `cargo run -p sketcraft-ui -- --server-url http://localhost:8081`.
 Both `--server-url URL` and `--server-url=URL` are supported.
 
 Alternatively, copy `.env.example` to `.env` in the workspace root and set
@@ -302,7 +302,7 @@ Trunk; for native-only development, use port 8081. Builds embed this value for d
 causes Cargo to refresh it on the next build. You can also supply it directly:
 
 ```sh
-KETCHUP_SERVER_URL=https://accounts.example.com cargo build -p sketcraft
+KETCHUP_SERVER_URL=https://accounts.example.com cargo build -p sketcraft-ui
 KETCHUP_SERVER_URL=https://accounts.example.com trunk build --release
 ```
 

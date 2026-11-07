@@ -121,11 +121,11 @@ jobs:
           key: desktop-${{ matrix.target }}
 
       - name: Build release executable
-        run: cargo build -p sketcraft --bin sketcraft --release --locked --target "${{ matrix.target }}"
+        run: cargo build -p sketcraft-ui --bin sketcraft --release --locked --target "${{ matrix.target }}"
 
       - name: Test update and restart behavior
         run: |
-          cargo test -p sketcraft-ui-egui --lib --release --locked --target "${{ matrix.target }}" update::
+          cargo test -p sketcraft-ui --lib --release --locked --target "${{ matrix.target }}" updates::
 
       - name: Stage distribution
         run: |

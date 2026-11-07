@@ -16,7 +16,7 @@ import tomllib
 
 ROOT = Path(__file__).resolve().parents[1]
 APP_ID = "io.github.Ketchup3D.Ketchup"
-VPK_VERSION = "1.2.161"  # Must match VPK_VERSION in .github/workflows/build.yml.
+VPK_VERSION = "1.2.161"  # Must match the exact Rust dependency.
 RELEASE_NOTES = ROOT / "assets/release-notes.json"
 STABLE_VERSION = r"(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)"
 PLATFORMS = {
@@ -32,6 +32,11 @@ def version(tag):
         raise ValueError("Desktop releases require a stable version tag such as v0.1.0.")
     if tag != f"v{current}":
         raise ValueError(f"Tag {tag} must match Cargo.toml version v{current}.")
+    dependency = tomllib.loads((ROOT / "crates/sketcraft-ui/Cargo.toml").read_text())["target"][
+        'cfg(not(target_arch = "wasm32"))'
+    ]["dependencies"]["velopack"]
+    if dependency != f"={VPK_VERSION}":
+        raise ValueError("The Rust Velopack dependency and vpk tool versions must match.")
     if os.environ.get("VPK_VERSION", VPK_VERSION) != VPK_VERSION:
         raise ValueError("The workflow vpk version must match the Rust Velopack dependency.")
     release_notes(current)
