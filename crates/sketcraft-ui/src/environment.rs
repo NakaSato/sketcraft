@@ -1,7 +1,7 @@
 use crate::natural_text::TextUi as _;
 use crate::inspector_table::{Column, InspectorTable};
 use eframe::egui::{self, Color32, Rect};
-use ketchup_core::{Camera, DisplaySettings, Projection};
+use sketcraft_core::{Camera, DisplaySettings, Projection};
 
 /// Adapt the default environment without changing saved or custom project colors.
 pub fn for_theme(display: &DisplaySettings, dark: bool) -> DisplaySettings {
@@ -69,12 +69,12 @@ pub fn paint(
 fn sun_center(rect: Rect, camera: &Camera, display: &DisplaySettings) -> Option<egui::Pos2> {
     let angle = display.sun_angle.to_radians();
     let elevation = display.sun_elevation.to_radians();
-    let light = ketchup_core::DVec3::new(
+    let light = sketcraft_core::DVec3::new(
         angle.cos() * elevation.cos(),
         angle.sin() * elevation.cos(),
         elevation.sin(),
     );
-    let forward = ketchup_core::DVec3::new(
+    let forward = sketcraft_core::DVec3::new(
         -camera.pitch.cos() * camera.yaw.cos(),
         -camera.pitch.cos() * camera.yaw.sin(),
         -camera.pitch.sin(),
@@ -260,7 +260,7 @@ pub fn background_control(ui: &mut egui::Ui, display: &mut DisplaySettings) -> e
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ketchup_core::{DVec2, DVec3, Document};
+    use sketcraft_core::{DVec2, DVec3, Document};
 
     #[test]
     fn sun_tracks_light_direction_and_camera_rotation_but_not_pan_or_distance() {
@@ -329,7 +329,7 @@ mod tests {
     fn parallel_backdrop_is_uniform_and_field_of_view_matches_perspective_horizon() {
         let rect = Rect::from_min_size(egui::Pos2::ZERO, egui::vec2(800., 600.));
         let display = DisplaySettings::default();
-        for standard in ketchup_core::StandardView::ALL {
+        for standard in sketcraft_core::StandardView::ALL {
             let mut camera = Camera {
                 projection: Projection::Parallel,
                 ..Camera::default()
@@ -423,7 +423,7 @@ fn sun_hint_position(rect: Rect, camera: &Camera, display: &DisplaySettings) -> 
     }
     let angle = display.sun_angle.to_radians();
     let elevation = display.sun_elevation.to_radians();
-    let light = ketchup_core::DVec3::new(angle.cos() * elevation.cos(), angle.sin() * elevation.cos(), elevation.sin());
+    let light = sketcraft_core::DVec3::new(angle.cos() * elevation.cos(), angle.sin() * elevation.cos(), elevation.sin());
     let mut direction = egui::vec2(light.dot(camera.right()) as f32, -light.dot(camera.up()) as f32);
     if direction.length_sq() < 1e-8 { direction = egui::vec2(0., -1.); }
     direction = direction.normalized();

@@ -518,8 +518,8 @@ fn foreground_edges_clip_annotation_strokes_and_label_footprints() {
 #[test]
 fn dimension_lines_and_ticks_hide_only_behind_foreground_faces() {
     for projection in [
-        ketchup_core::Projection::Perspective,
-        ketchup_core::Projection::Parallel,
+        sketcraft_core::Projection::Perspective,
+        sketcraft_core::Projection::Parallel,
     ] {
         let camera = Camera {
             projection,

@@ -5,7 +5,7 @@ pub(super) fn spacing(camera: &Camera) -> f64 {
     10.0_f64.powf((camera.distance / 15.).log10().floor())
 }
 
-pub(super) fn configured_spacing(camera: &Camera, display: &ketchup_core::DisplaySettings) -> f64 {
+pub(super) fn configured_spacing(camera: &Camera, display: &sketcraft_core::DisplaySettings) -> f64 {
     if display.grid_auto_size {
         spacing(camera)
     } else {
@@ -59,14 +59,14 @@ fn distance_opacity(depth: f64, origin_depth: f64) -> f32 {
 
 pub(super) fn visible_lines(
     camera: &Camera,
-    display: &ketchup_core::DisplaySettings,
+    display: &sketcraft_core::DisplaySettings,
     size: DVec2,
 ) -> Vec<GridLine> {
     if !size.is_finite() || size.min_element() <= 0. {
         return Vec::new();
     }
     let spacing = configured_spacing(camera, display);
-    let perspective = camera.projection == ketchup_core::Projection::Perspective;
+    let perspective = camera.projection == sketcraft_core::Projection::Perspective;
     let eye = camera.eye();
     let forward = (camera.target - eye).normalize();
     let origin_depth = crate::renderer::ReferenceFade::new(camera).origin_depth;
@@ -311,7 +311,7 @@ pub(super) fn snap_with_geometry(
     spacing: f64,
     plane: Option<DVec3>,
     axis: Option<Axis>,
-    model: &ketchup_core::Model,
+    model: &sketcraft_core::Model,
     excluded: Option<&BTreeSet<u64>>,
 ) -> Snap {
     let allowed = |id| !excluded.is_some_and(|ids| ids.contains(&id)) && !model.is_hidden(id);
@@ -346,7 +346,7 @@ pub(super) fn snap_with_geometry(
             if !model.face_contains(face, target.point, true) || !allowed(face.id) {
                 return None;
             }
-            let normal = ketchup_core::faces::plane(model, &face.vertices)?.normal;
+            let normal = sketcraft_core::faces::plane(model, &face.vertices)?.normal;
             let point = if let Some(axis) = axis {
                 let direction = axis.vector();
                 if normal.dot(direction).abs() >= 1e-7 || !line_allowed(direction) {
@@ -400,7 +400,7 @@ pub(super) fn snap_with_geometry(
     }
 }
 
-impl KetchupApp {
+impl SketCraftApp {
     pub(super) fn apply_grid_snap(&mut self) {
         if self.snap_to_grid {
             let plane = self
@@ -462,7 +462,7 @@ mod settings_tests {
     #[test]
     fn fixed_grid_and_snapping_share_spacing_at_every_zoom() {
         let mut camera = Camera::default();
-        let display = ketchup_core::DisplaySettings {
+        let display = sketcraft_core::DisplaySettings {
             grid_auto_size: false,
             grid_spacing: 0.25,
             ..Default::default()

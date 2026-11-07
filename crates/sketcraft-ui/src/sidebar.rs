@@ -1,7 +1,7 @@
 #[cfg(test)]
 use crate::test_ui::ContextExt as _;
 use super::*;
-use ketchup_core::{
+use sketcraft_core::{
     AngleUnit, AreaUnit, DisplaySettings, FaceStyle, LengthUnit, Projection, VolumeUnit,
 };
 
@@ -136,7 +136,7 @@ impl Default for ToolPreferences {
 }
 
 impl ToolPreferences {
-    fn capture(app: &KetchupApp) -> Self {
+    fn capture(app: &SketCraftApp) -> Self {
         Self {
             active: app.tool,
             drawing: app.drawing_tool,
@@ -149,7 +149,7 @@ impl ToolPreferences {
         }
     }
 
-    fn restore(&self, app: &mut KetchupApp) {
+    fn restore(&self, app: &mut SketCraftApp) {
         let defaults = Self::default();
         app.drawing_tool = if self.drawing.is_drawing() {
             self.drawing
@@ -350,7 +350,7 @@ pub(super) fn item_section_key(ctx: &egui::Context, alias: &str) -> String {
         data.get_temp_mut_or_default::<SectionMemory>(section_memory_id())
             .2
             .entry(alias.to_owned())
-            .or_insert_with(|| format!("inspector/item/{}", ketchup_core::MaterialId::new_v4()))
+            .or_insert_with(|| format!("inspector/item/{}", sketcraft_core::MaterialId::new_v4()))
             .clone()
     })
 }
@@ -409,7 +409,7 @@ pub(super) fn set_section_open(ctx: &egui::Context, key: &str, open: bool) {
     });
 }
 
-impl KetchupApp {
+impl SketCraftApp {
     pub(super) fn request_outliner_search(&mut self, ctx: &egui::Context) {
         self.inspector = true;
         self.focus_outliner_search = true;
@@ -1342,7 +1342,7 @@ fn inspector_section_sized<R>(
     response
 }
 
-impl KetchupApp {
+impl SketCraftApp {
     pub(super) fn begin_component_placement(&mut self, id: u64, ctx: &egui::Context) {
         if !self
             .doc
@@ -1463,7 +1463,7 @@ impl KetchupApp {
 
     pub(super) fn unit_settings_contents(
         ui: &mut egui::Ui,
-        units: &mut ketchup_core::UnitSettings,
+        units: &mut sketcraft_core::UnitSettings,
     ) {
         fn precision_picker(
             ui: &mut egui::Ui,
@@ -1475,14 +1475,14 @@ impl KetchupApp {
             let name = |digits: u8| format!("{:.*}", digits as usize, 0.);
             let current = precision
                 .unwrap_or(default)
-                .min(ketchup_core::units::MAX_DECIMAL_PLACES);
+                .min(sketcraft_core::units::MAX_DECIMAL_PLACES);
             crate::inspector_table::inspector_field(ui, id, label, |ui| {
                 egui::ComboBox::from_id_salt(id)
                     .selected_text(name(current))
                     .width(ui.available_width())
                     .truncate()
                     .show_ui(ui, |ui| {
-                        for digits in 0..=ketchup_core::units::MAX_DECIMAL_PLACES {
+                        for digits in 0..=sketcraft_core::units::MAX_DECIMAL_PLACES {
                             if ui
                                 .selectable_label(current == digits, name(digits))
                                 .clicked()
@@ -1663,7 +1663,7 @@ impl KetchupApp {
                             })
                             .response
                     });
-                    let days = ketchup_core::display::days_in_month(d.sun_month.clamp(1, 12));
+                    let days = sketcraft_core::display::days_in_month(d.sun_month.clamp(1, 12));
                     d.sun_day = d.sun_day.clamp(1, days);
                     crate::inspector_table::inspector_field(ui, "sun_day", "Day", |ui| {
                         ui.add(egui::Slider::new(&mut d.sun_day, 1..=days))
@@ -1748,7 +1748,7 @@ impl KetchupApp {
     }
 }
 
-impl KetchupApp {
+impl SketCraftApp {
     fn history_contents(&mut self, ui: &mut egui::Ui) {
 
         let current = self.doc.history.position();
@@ -1839,11 +1839,11 @@ mod face_center_preference_tests {
     fn face_center_toggle_persists_without_an_edit_and_defaults_for_older_settings() {
         let ctx=egui::Context::default();
         let mut storage=SavedPreferences::default();
-        let mut app=KetchupApp::with_document(Document::default(),None,true);
+        let mut app=SketCraftApp::with_document(Document::default(),None,true);
         assert!(app.snap_to_face_center);
         app.snap_to_face_center=false;
         app.persist_inspector_changes(&ctx,Some(&mut storage),false);
-        let mut restored=KetchupApp::with_document(Document::default(),None,true);
+        let mut restored=SketCraftApp::with_document(Document::default(),None,true);
         restored.restore_inspector_preferences(&egui::Context::default(),Some(&storage));
         assert!(!restored.snap_to_face_center);
         let older:SnappingPreferences=serde_json::from_str(r#"{"geometry":true,"faces":false}"#).unwrap();

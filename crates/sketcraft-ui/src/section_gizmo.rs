@@ -23,14 +23,14 @@ struct Handle {
     direction: Vec2,
 }
 
-fn offset(display: &ketchup_core::DisplaySettings, axis: usize) -> f64 {
+fn offset(display: &sketcraft_core::DisplaySettings, axis: usize) -> f64 {
     if axis == 2 {
         display.section_height
     } else {
         display.section_offsets[axis]
     }
 }
-fn set_offset(display: &mut ketchup_core::DisplaySettings, axis: usize, value: f64) {
+fn set_offset(display: &mut sketcraft_core::DisplaySettings, axis: usize, value: f64) {
     if axis == 2 {
         display.section_height = value;
     } else {
@@ -74,7 +74,7 @@ impl SectionDrag {
             })
             .flatten()
             .map(|point| point[axis]);
-        let distance = if camera.projection == ketchup_core::Projection::Parallel {
+        let distance = if camera.projection == sketcraft_core::Projection::Parallel {
             camera.distance
         } else {
             camera.eye().distance(anchor)
@@ -113,7 +113,7 @@ impl SectionDrag {
     }
 }
 
-impl KetchupApp {
+impl SketCraftApp {
     fn move_section_plane(&mut self, ctx: &egui::Context, axis: usize, value: f64) {
         if offset(&self.doc.display, axis) != value {
             set_offset(&mut self.doc.display, axis, value);
@@ -356,10 +356,10 @@ mod tests {
     fn section_drag_is_constrained_and_finite_in_every_standard_projection() {
         let rect = Rect::from_min_size(egui::pos2(400., 30.), egui::vec2(600., 500.));
         for projection in [
-            ketchup_core::Projection::Parallel,
-            ketchup_core::Projection::Perspective,
+            sketcraft_core::Projection::Parallel,
+            sketcraft_core::Projection::Perspective,
         ] {
-            for view in ketchup_core::StandardView::ALL {
+            for view in sketcraft_core::StandardView::ALL {
                 let mut camera = Camera::default();
                 camera.set_standard_view(view);
                 camera.projection = projection;
@@ -371,7 +371,7 @@ mod tests {
                         value.is_finite() && value > 1.,
                         "{projection:?} {view:?} {axis}: {value}"
                     );
-                    let mut display = ketchup_core::DisplaySettings {
+                    let mut display = sketcraft_core::DisplaySettings {
                         section_cuts: true,
                         section_axes: [true; 3],
                         ..Default::default()
@@ -393,7 +393,7 @@ mod tests {
     }
 
     fn frame(
-        app: &mut KetchupApp,
+        app: &mut SketCraftApp,
         ctx: &egui::Context,
         events: Vec<egui::Event>,
     ) -> egui::FullOutput {
@@ -424,7 +424,7 @@ mod tests {
     #[test]
     fn section_handle_routes_drag_to_pressed_view_and_keeps_model_tools_idle() {
         let ctx = egui::Context::default();
-        let mut app = KetchupApp::with_document(Document::default(), None, true);
+        let mut app = SketCraftApp::with_document(Document::default(), None, true);
         app.doc.display.section_planes = true;
         app.doc.display.section_cuts = true;
         app.doc.display.section_axes = [true, false, false];
@@ -436,7 +436,7 @@ mod tests {
         }))
         .unwrap();
         let mut other_camera = Camera::default();
-        other_camera.set_standard_view(ketchup_core::StandardView::Right);
+        other_camera.set_standard_view(sketcraft_core::StandardView::Right);
         let saved =
             std::collections::BTreeMap::from([(0, app.doc.camera.clone()), (1, other_camera)]);
         app.viewports = viewports::Workspace::restore(&preferences, &mut app.doc.camera, &saved);
@@ -486,7 +486,7 @@ mod tests {
     #[test]
     fn escape_restores_offset_and_plane_interior_does_not_claim_input() {
         let ctx = egui::Context::default();
-        let mut app = KetchupApp::with_document(Document::default(), None, true);
+        let mut app = SketCraftApp::with_document(Document::default(), None, true);
         app.doc.display.section_planes = true;
         app.doc.display.section_axes = [false, false, true];
         frame(&mut app, &ctx, vec![]);

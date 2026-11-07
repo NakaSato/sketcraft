@@ -1,5 +1,5 @@
 //! Strict, bounded interchange subset. Coordinates returned in metres, Z up.
-use ketchup_core::{DVec3, Model};
+use sketcraft_core::{DVec3, Model};
 use std::collections::{BTreeMap, BTreeSet};
 const LIMIT: usize = 200_000;
 #[path = "mesh_exchange_3mf.rs"]

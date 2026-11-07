@@ -1,5 +1,5 @@
 use super::*;
-use ketchup_core::{DVec3, Edge, Face, Vertex};
+use sketcraft_core::{DVec3, Edge, Face, Vertex};
 use std::collections::BTreeMap;
 
 pub(crate) fn triangle_grid(count: usize) -> Model {
@@ -262,7 +262,7 @@ fn cached_polygon_queries_keep_holes_and_edge_precedence() {
 
 #[test]
 fn cached_snapping_matches_geometry_locks_visibility_and_editing_contexts() {
-    use ketchup_core::{
+    use sketcraft_core::{
         Axis,
         inference::{FaceQuery, infer_with_face_query, infer_with_snapping},
     };

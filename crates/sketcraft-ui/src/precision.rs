@@ -1,6 +1,6 @@
 //! Typed dimensions are converted to meters before reaching geometry operations.
 use super::*;
-use ketchup_core::LengthUnit;
+use sketcraft_core::LengthUnit;
 
 pub(super) const MAX_INPUT_LEN: usize = 512;
 const FORMULA_EXAMPLE: &str = "Enter a formula such as 60cm - 89mm or (1m + 20cm) / 2";
@@ -227,7 +227,7 @@ pub(super) fn positive_length(input: &str, unit: LengthUnit) -> Result<f64, &'st
 }
 
 /// Bare angles use the display unit; a suffix can override it for the whole formula.
-pub(super) fn angle(input: &str, unit: ketchup_core::AngleUnit) -> Result<f64, &'static str> {
+pub(super) fn angle(input: &str, unit: sketcraft_core::AngleUnit) -> Result<f64, &'static str> {
     let input = input.trim();
     let lower = input.to_ascii_lowercase();
     let (formula, factor) = [
@@ -246,7 +246,7 @@ pub(super) fn angle(input: &str, unit: ketchup_core::AngleUnit) -> Result<f64, &
 pub(super) fn modeling_value_with_units(
     tool: Tool,
     input: &str,
-    units: ketchup_core::UnitSettings,
+    units: sketcraft_core::UnitSettings,
 ) -> Result<f64, &'static str> {
     if tool == Tool::Rotate { angle(input, units.angle) }
     else { modeling_value(tool, input, units.length) }
@@ -258,7 +258,7 @@ pub(super) fn modeling_value(
     unit: LengthUnit,
 ) -> Result<f64, &'static str> {
     if tool == Tool::Rotate {
-        return angle(input, ketchup_core::AngleUnit::Degrees);
+        return angle(input, sketcraft_core::AngleUnit::Degrees);
     }
     if tool != Tool::Scale {
         return length(input, unit);
@@ -266,7 +266,7 @@ pub(super) fn modeling_value(
     Formula::parse(input, false, 1.).map(|value| value.number.abs())
 }
 
-impl KetchupApp {
+impl SketCraftApp {
     pub(super) fn line_preview_snap(&self) -> Option<Snap> {
         let mut snap = self.snap?;
         if self.tool == Tool::Line
@@ -376,7 +376,7 @@ mod tests {
 
     #[test]
     fn rotation_angles_support_display_units_suffixes_and_signed_formulas() {
-        use ketchup_core::AngleUnit;
+        use sketcraft_core::AngleUnit;
         for (input, unit, expected) in [
             ("(45 + 45) / 2", AngleUnit::Degrees, 45.),
             ("-90°", AngleUnit::Radians, -90.),

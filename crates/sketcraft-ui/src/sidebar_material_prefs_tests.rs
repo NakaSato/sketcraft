@@ -9,8 +9,8 @@ fn joinery_preferences_save_without_model_edit_and_restore_legacy_defaults() {
     assert!(display.joinery_preview);
     let ctx=egui::Context::default();
     let mut storage=SavedPreferences::default();
-    let mut app=KetchupApp::with_document(Document::default(),None,true);
-    app.joinery.settings.kind=ketchup_core::joinery::JointKind::Dovetail;
+    let mut app=SketCraftApp::with_document(Document::default(),None,true);
+    app.joinery.settings.kind=sketcraft_core::joinery::JointKind::Dovetail;
     app.joinery.settings.depth_axis=2;
     app.joinery.settings.width_axis=0;
     app.joinery.settings.width_ratio=0.6;
@@ -24,7 +24,7 @@ fn joinery_preferences_save_without_model_edit_and_restore_legacy_defaults() {
     app.joinery.reverse=true;
     app.doc.display.joinery_preview=false;
     app.persist_inspector_changes(&ctx,Some(&mut storage),false);
-    let mut restored=KetchupApp::with_document(Document::default(),None,true);
+    let mut restored=SketCraftApp::with_document(Document::default(),None,true);
     restored.restore_inspector_preferences(&egui::Context::default(),Some(&storage));
     assert_eq!(restored.joinery,app.joinery);
     assert!(!restored.doc.display.joinery_preview);
@@ -38,8 +38,8 @@ fn fastener_preferences_save_immediately_without_model_edit() {
     assert_eq!(defaults.fasteners, fasteners::Preferences::default());
     let ctx = egui::Context::default();
     let mut storage = SavedPreferences::default();
-    let mut app = KetchupApp::with_document(Document::default(), None, true);
-    app.fasteners.settings.pattern = ketchup_core::connections::Pattern::Grid;
+    let mut app = SketCraftApp::with_document(Document::default(), None, true);
+    app.fasteners.settings.pattern = sketcraft_core::connections::Pattern::Grid;
     app.fasteners.settings.spacing = 0.05;
     app.fasteners.open = true;
     app.fasteners.reverse = true;
@@ -48,7 +48,7 @@ fn fastener_preferences_save_immediately_without_model_edit() {
     set_section_open(&ctx, "connections/fasteners", true);
     app.persist_inspector_changes(&ctx, Some(&mut storage), false);
     let restored_ctx = egui::Context::default();
-    let mut restored = KetchupApp::with_document(Document::default(), None, true);
+    let mut restored = SketCraftApp::with_document(Document::default(), None, true);
     restored.restore_inspector_preferences(&restored_ctx, Some(&storage));
     assert_eq!(restored.fasteners, app.fasteners);
     assert!(restored.doc.display.fastener_face_handles);
@@ -61,7 +61,7 @@ fn fastener_preferences_save_immediately_without_model_edit() {
 #[test]
 fn currency_changes_save_immediately_and_apply_after_switching_projects() {
     let ctx = egui::Context::default();
-    let mut app = KetchupApp::with_document(Document::default(), None, true);
+    let mut app = SketCraftApp::with_document(Document::default(), None, true);
     let mut storage = SavedPreferences::default();
     let old: InspectorPreferences = serde_json::from_str("{}").unwrap();
     assert_eq!(old.general.stock.currency, currency::DEFAULT);
@@ -75,7 +75,7 @@ fn currency_changes_save_immediately_and_apply_after_switching_projects() {
         assert!(app.dirty_since.is_none());
 
         let restored_ctx = egui::Context::default();
-        let mut restored = KetchupApp::with_document(Document::default(), None, true);
+        let mut restored = SketCraftApp::with_document(Document::default(), None, true);
         restored.restore_inspector_preferences(&restored_ctx, Some(&storage));
         assert_eq!(restored.general_settings.stock.currency, code);
         restored.replace_project(Document::default(), None, &restored_ctx);
@@ -87,7 +87,7 @@ fn currency_changes_save_immediately_and_apply_after_switching_projects() {
 #[test]
 fn currency_search_saves_immediately_and_restores_without_model_edits() {
     let ctx = egui::Context::default();
-    let mut app = KetchupApp::with_document(Document::default(), None, true);
+    let mut app = SketCraftApp::with_document(Document::default(), None, true);
     let mut storage = SavedPreferences::default();
     let old: InspectorPreferences = serde_json::from_str("{}").unwrap();
     assert!(old.general.stock.currency_filter.is_empty());
@@ -101,7 +101,7 @@ fn currency_search_saves_immediately_and_restores_without_model_edits() {
         assert!(app.dirty_since.is_none());
 
         let restored_ctx = egui::Context::default();
-        let mut restored = KetchupApp::with_document(Document::default(), None, true);
+        let mut restored = SketCraftApp::with_document(Document::default(), None, true);
         restored.restore_inspector_preferences(&restored_ctx, Some(&storage));
         assert_eq!(restored.general_settings.stock.currency_filter, query);
         assert_eq!(restored.general_settings.stock.currency, currency::DEFAULT);
@@ -114,7 +114,7 @@ fn currency_search_saves_immediately_and_restores_without_model_edits() {
 #[test]
 fn wood_types_and_searches_save_immediately_without_model_edits() {
     let ctx = egui::Context::default();
-    let mut app = KetchupApp::with_document(Document::default(), None, true);
+    let mut app = SketCraftApp::with_document(Document::default(), None, true);
     let model = app.doc.model.clone();
     let mut storage = SavedPreferences::default();
     let old: InspectorPreferences = serde_json::from_str("{}").unwrap();
@@ -136,7 +136,7 @@ fn wood_types_and_searches_save_immediately_without_model_edits() {
         assert_eq!(app.doc.model, model);
         assert!(!app.project.modified);
         let restored_ctx = egui::Context::default();
-        let mut restored = KetchupApp::with_document(Document::default(), None, true);
+        let mut restored = SketCraftApp::with_document(Document::default(), None, true);
         restored.restore_inspector_preferences(&restored_ctx, Some(&storage));
         assert_eq!(restored.general_settings.stock.wood[0].wood_type, kind);
         assert_eq!(restored.wood_type_filters[&key], query);
@@ -150,7 +150,7 @@ fn wood_types_and_searches_save_immediately_without_model_edits() {
 #[test]
 fn stock_material_search_saves_immediately_without_model_edits() {
     let ctx = egui::Context::default();
-    let mut app = KetchupApp::with_document(Document::default(), None, true);
+    let mut app = SketCraftApp::with_document(Document::default(), None, true);
     let model = app.doc.model.clone();
     let mut storage = SavedPreferences::default();
     let old: InspectorPreferences = serde_json::from_str("{}").unwrap();
@@ -166,7 +166,7 @@ fn stock_material_search_saves_immediately_without_model_edits() {
         assert!(app.dirty_since.is_none());
 
         let restored_ctx = egui::Context::default();
-        let mut restored = KetchupApp::with_document(Document::default(), None, true);
+        let mut restored = SketCraftApp::with_document(Document::default(), None, true);
         restored.restore_inspector_preferences(&restored_ctx, Some(&storage));
         assert_eq!(restored.stock_material_filter, query);
         restored.replace_project(Document::default(), None, &restored_ctx);
@@ -183,7 +183,7 @@ fn legacy_currency_upgrade_is_saved_without_a_model_edit() {
     old.general.stock.currency = "$".into();
     let mut storage = SavedPreferences::default();
     eframe::set_value(&mut storage, PREFERENCE_KEY, &old);
-    let mut app = KetchupApp::with_document(Document::default(), None, true);
+    let mut app = SketCraftApp::with_document(Document::default(), None, true);
     app.restore_inspector_preferences(&ctx, Some(&storage));
     assert_eq!(app.general_settings.stock.currency, "USD");
     storage.flushed = false;
@@ -191,7 +191,7 @@ fn legacy_currency_upgrade_is_saved_without_a_model_edit() {
     assert!(storage.flushed);
     assert!(!app.project.modified);
     assert!(app.dirty_since.is_none());
-    let mut restored = KetchupApp::with_document(Document::default(), None, true);
+    let mut restored = SketCraftApp::with_document(Document::default(), None, true);
     restored.restore_inspector_preferences(&egui::Context::default(), Some(&storage));
     assert_eq!(restored.general_settings.stock.currency, "USD");
 }
@@ -201,7 +201,7 @@ fn finishing_products_and_disclosure_save_immediately_without_model_edits() {
     use finish_settings::{ContainerUnit, Finish, FinishType};
 
     let ctx = egui::Context::default();
-    let mut app = KetchupApp::with_document(Document::default(), None, true);
+    let mut app = SketCraftApp::with_document(Document::default(), None, true);
     app.general_settings.section = settings::Section::StockPricing;
     app.general_settings.stock.finishes = vec![
         Finish {
@@ -239,7 +239,7 @@ fn finishing_products_and_disclosure_save_immediately_without_model_edits() {
     assert!(app.dirty_since.is_none());
 
     let restored_ctx = egui::Context::default();
-    let mut restored = KetchupApp::with_document(Document::default(), None, true);
+    let mut restored = SketCraftApp::with_document(Document::default(), None, true);
     restored.restore_inspector_preferences(&restored_ctx, Some(&storage));
     assert_eq!(restored.general_settings, app.general_settings);
     let _ = restored_ctx.run_test_ui(Default::default(), |ui| {
@@ -279,7 +279,7 @@ fn finishing_products_and_disclosure_save_immediately_without_model_edits() {
 #[test]
 fn material_project_usage_persists_across_restarts() {
     let ctx = egui::Context::default();
-    let mut app = KetchupApp::with_document(Document::default(), None, true);
+    let mut app = SketCraftApp::with_document(Document::default(), None, true);
     let stock = stock_settings::Stock::default();
     let id = stock.id;
     app.general_settings.stock.wood.push(stock);
@@ -310,7 +310,7 @@ fn material_project_usage_persists_across_restarts() {
     app.replace_project(Document::default(), None, &ctx);
     let mut storage = SavedPreferences::default();
     app.persist_inspector_changes(&ctx, Some(&mut storage), false);
-    let mut restored = KetchupApp::with_document(Document::default(), None, true);
+    let mut restored = SketCraftApp::with_document(Document::default(), None, true);
     restored.restore_inspector_preferences(&egui::Context::default(), Some(&storage));
     assert_eq!(
         restored.general_settings.stock.projects,
@@ -331,12 +331,12 @@ fn old_catalog_ids_are_saved_immediately_without_a_model_edit() {
     let ctx = egui::Context::default();
     let mut old = InspectorPreferences::default();
     old.general.stock.wood.push(stock_settings::Stock {
-        id: ketchup_core::MaterialId::nil(),
+        id: sketcraft_core::MaterialId::nil(),
         ..Default::default()
     });
     let mut storage = SavedPreferences::default();
     eframe::set_value(&mut storage, PREFERENCE_KEY, &old);
-    let mut app = KetchupApp::with_document(Document::default(), None, true);
+    let mut app = SketCraftApp::with_document(Document::default(), None, true);
     app.restore_inspector_preferences(&ctx, Some(&storage));
     let id = app.general_settings.stock.wood[0].id;
     assert!(!id.is_nil());
@@ -344,7 +344,7 @@ fn old_catalog_ids_are_saved_immediately_without_a_model_edit() {
     app.persist_inspector_changes(&ctx, Some(&mut storage), false);
     assert!(storage.flushed);
     assert!(!app.project.modified);
-    let mut restored = KetchupApp::with_document(Document::default(), None, true);
+    let mut restored = SketCraftApp::with_document(Document::default(), None, true);
     restored.restore_inspector_preferences(&egui::Context::default(), Some(&storage));
     assert_eq!(restored.general_settings.stock.wood[0].id, id);
 }
@@ -352,7 +352,7 @@ fn old_catalog_ids_are_saved_immediately_without_a_model_edit() {
 #[test]
 fn removing_stock_persists_without_a_model_edit() {
     let ctx = egui::Context::default();
-    let mut app = KetchupApp::with_document(Document::default(), None, true);
+    let mut app = SketCraftApp::with_document(Document::default(), None, true);
     let mut storage = SavedPreferences::default();
     app.general_settings
         .stock
@@ -365,7 +365,7 @@ fn removing_stock_persists_without_a_model_edit() {
     assert!(storage.flushed);
     assert!(!app.project.modified);
     assert!(app.dirty_since.is_none());
-    let mut restored = KetchupApp::with_document(Document::default(), None, true);
+    let mut restored = SketCraftApp::with_document(Document::default(), None, true);
     restored.restore_inspector_preferences(&egui::Context::default(), Some(&storage));
     assert!(restored.general_settings.stock.wood.is_empty());
 }
@@ -373,7 +373,7 @@ fn removing_stock_persists_without_a_model_edit() {
 #[test]
 fn time_estimate_controls_save_immediately_and_restore_without_a_model_edit() {
     let ctx = egui::Context::default();
-    let mut app = KetchupApp::with_document(Document::default(), None, true);
+    let mut app = SketCraftApp::with_document(Document::default(), None, true);
     let model = app.doc.model.clone();
     app.general_settings.section = settings::Section::SurfaceTreatment;
     app.general_settings.stock.finishes =
@@ -419,7 +419,7 @@ fn time_estimate_controls_save_immediately_and_restore_without_a_model_edit() {
     assert!(!app.project.modified);
     assert_eq!(app.doc.model, model);
     let restored_ctx = egui::Context::default();
-    let mut restored = KetchupApp::with_document(Document::default(), None, true);
+    let mut restored = SketCraftApp::with_document(Document::default(), None, true);
     restored.restore_inspector_preferences(&restored_ctx, Some(&storage));
     assert_eq!(restored.time_estimates, app.time_estimates);
     assert_eq!(
@@ -451,7 +451,7 @@ fn time_estimate_controls_save_immediately_and_restore_without_a_model_edit() {
 #[test]
 fn finishing_product_searches_save_immediately_without_model_edits() {
     let ctx = egui::Context::default();
-    let mut app = KetchupApp::with_document(Document::default(), None, true);
+    let mut app = SketCraftApp::with_document(Document::default(), None, true);
     let model = app.doc.model.clone();
     let old: InspectorPreferences = serde_json::from_str("{}").unwrap();
     assert!(old.finish_product_filters.is_empty());
@@ -477,7 +477,7 @@ fn finishing_product_searches_save_immediately_without_model_edits() {
         assert!(!app.project.modified);
         assert!(app.dirty_since.is_none());
         let restored_ctx = egui::Context::default();
-        let mut restored = KetchupApp::with_document(Document::default(), None, true);
+        let mut restored = SketCraftApp::with_document(Document::default(), None, true);
         restored.restore_inspector_preferences(&restored_ctx, Some(&storage));
         assert_eq!(restored.finish_product_filters, app.finish_product_filters);
         restored.replace_project(Document::default(), None, &restored_ctx);

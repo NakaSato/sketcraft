@@ -1,7 +1,7 @@
-// Convert OpenSKP's raw, inch/Z-up topology into an isolated KetchUp model.
+// Convert OpenSKP's raw, inch/Z-up topology into an isolated SketCraft model.
 // Every placed definition gets its own vertices and editable group.
-function ketchupImport(bytes) {
-    const source = ketchupModules.openskp.parseSkp(bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength));
+function sketcraftImport(bytes) {
+    const source = sketcraftModules.openskp.parseSkp(bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength));
     const model = { vertices: {}, edges: {}, faces: {}, face_colors: {}, objects: {}, hidden: [], next_id: 0 };
     const materials = new Map(source.materials.filter(m => m.id != null).map(m => [m.id, m.color]));
     const hiddenLayers = new Set(source.layers.filter(l => l.hidden).map(l => l.name));

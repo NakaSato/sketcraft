@@ -2,7 +2,7 @@ use super::*;
 
 #[test]
 fn excluded_faces_do_not_hide_other_snap_targets() {
-    use ketchup_core::inference::FaceQuery;
+    use sketcraft_core::inference::FaceQuery;
 
     let mut h = Harness::new();
     let target_face = modeling_rectangle(&mut h);

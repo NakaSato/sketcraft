@@ -3,7 +3,7 @@ use crate::test_ui::ContextExt as _;
 use super::*;
 use crate::project_files::Outcome;
 
-fn deliver(app: &mut KetchupApp, result: Result<Outcome, String>, ctx: &egui::Context) {
+fn deliver(app: &mut SketCraftApp, result: Result<Outcome, String>, ctx: &egui::Context) {
     let (sender, receiver) = std::sync::mpsc::channel();
     app.project.pending = Some(receiver);
     sender.send(result).unwrap();
@@ -18,7 +18,7 @@ fn selection_restores_for_its_project_and_ignores_missing_or_hidden_entities() {
     let hidden = doc.model.add_edge(DVec3::Y, DVec3::Y + DVec3::X).unwrap();
     doc.model.hidden.insert(hidden);
     doc.selection = BTreeSet::from([visible, hidden, u64::MAX]);
-    let mut app = KetchupApp::with_document(doc, None, true);
+    let mut app = SketCraftApp::with_document(doc, None, true);
     assert_eq!(app.selected, BTreeSet::from([visible]));
     assert_eq!(app.doc.selection, app.selected);
 
@@ -56,7 +56,7 @@ fn nested_selection_restores_its_editing_context_and_discards_invalid_contexts()
     doc.selection = BTreeSet::from([edge, outer]);
     doc.selection_context = Some(inner);
     let loaded = Document::from_json(&serde_json::to_string(&doc).unwrap()).unwrap();
-    let app = KetchupApp::with_document(loaded, None, true);
+    let app = SketCraftApp::with_document(loaded, None, true);
     assert_eq!(app.doc.model.edit_path(), vec![outer, inner]);
     assert_eq!(app.selected, BTreeSet::from([edge]));
 
@@ -64,12 +64,12 @@ fn nested_selection_restores_its_editing_context_and_discards_invalid_contexts()
         let mut invalid = doc.clone();
         invalid.selection_context = Some(context);
         invalid.model.locked.insert(outer);
-        let app = KetchupApp::with_document(invalid, None, true);
+        let app = SketCraftApp::with_document(invalid, None, true);
         assert_eq!(app.doc.model.edit_context, None);
         assert_eq!(app.selected, BTreeSet::from([outer]));
     }
     doc.model.hidden.insert(outer);
-    let app = KetchupApp::with_document(doc, None, true);
+    let app = SketCraftApp::with_document(doc, None, true);
     assert_eq!(app.doc.model.edit_context, None);
     assert!(app.selected.is_empty());
 }
@@ -104,7 +104,7 @@ fn selection_changes_save_immediately_without_model_edits_or_preference_storage(
         .make_object(&BTreeSet::from([c]), false, "Group")
         .unwrap();
     let child = *doc.model.objects[&group].entities.first().unwrap();
-    let mut app = KetchupApp::with_document(doc, None, true);
+    let mut app = SketCraftApp::with_document(doc, None, true);
     app.project.modified = false;
     let model = app.doc.model.clone();
     for selection in [
@@ -121,7 +121,7 @@ fn selection_changes_save_immediately_without_model_edits_or_preference_storage(
         assert_eq!(app.doc.model, model);
         let saved = storage::load().unwrap().unwrap();
         assert_eq!(saved.selection, selection);
-        let restarted = KetchupApp::with_document(saved, None, true);
+        let restarted = SketCraftApp::with_document(saved, None, true);
         assert_eq!(restarted.selected, selection);
     }
 
@@ -141,7 +141,7 @@ fn selection_changes_save_immediately_without_model_edits_or_preference_storage(
     assert!(saved.selection.is_empty());
     app.selected.insert(child);
     app.persist_inspector_changes(&ctx, None, false);
-    let restarted = KetchupApp::with_document(storage::load().unwrap().unwrap(), None, true);
+    let restarted = SketCraftApp::with_document(storage::load().unwrap().unwrap(), None, true);
     assert_eq!(restarted.doc.model.edit_context, Some(group));
     assert_eq!(restarted.selected, BTreeSet::from([child]));
     app.close_edit_context(&ctx);
@@ -160,7 +160,7 @@ fn selection_changes_save_immediately_without_model_edits_or_preference_storage(
 #[test]
 fn new_project_clears_geometry_history_and_previous_file() {
     let ctx = egui::Context::default();
-    let mut app = KetchupApp::with_document(Document::default(), None, true);
+    let mut app = SketCraftApp::with_document(Document::default(), None, true);
     let before = app.doc.model.clone();
     let edge = app.doc.model.add_edge(DVec3::ZERO, DVec3::X).unwrap();
     app.doc.history.record("Line", before, &app.doc.model);
@@ -195,7 +195,7 @@ fn opening_a_saved_project_restores_undo_and_redo_in_the_app() {
     }
     assert!(doc.history.undo(&mut doc.model));
     let bytes = serde_json::to_vec(&doc).unwrap();
-    let mut app = KetchupApp::with_document(Document::default(), None, true);
+    let mut app = SketCraftApp::with_document(Document::default(), None, true);
     app.replace_project(crate::project_files::decode(&bytes).unwrap(), None, &ctx);
     assert_eq!(app.doc.history.undo_label(), Some("First line"));
     assert_eq!(app.doc.history.redo_label(), Some("Second line"));
@@ -209,7 +209,7 @@ fn opening_a_saved_project_restores_undo_and_redo_in_the_app() {
 #[test]
 fn opening_project_replaces_state_and_resets_history() {
     let ctx = egui::Context::default();
-    let mut app = KetchupApp::with_document(Document::default(), None, true);
+    let mut app = SketCraftApp::with_document(Document::default(), None, true);
     let before = app.doc.model.clone();
     let edge = app.doc.model.add_edge(DVec3::ZERO, DVec3::X).unwrap();
     app.doc.history.record("Line", before, &app.doc.model);
@@ -251,7 +251,7 @@ fn opening_legacy_projects_and_creating_projects_preserve_geometry_target_prefer
         (false, false, true),
         (false, false, false),
     ] {
-        let mut app = KetchupApp::with_document(Document::default(), None, true);
+        let mut app = SketCraftApp::with_document(Document::default(), None, true);
         app.snap_to_edge = edges;
         app.snap_to_face = faces;
         app.snap_to_face_center = centers;
@@ -277,7 +277,7 @@ fn opening_legacy_projects_and_creating_projects_preserve_geometry_target_prefer
 fn failed_or_cancelled_file_operations_keep_current_work_and_cancel_queued_new() {
     for result in [Ok(Outcome::Cancelled), Err("Invalid project".into())] {
         let ctx = egui::Context::default();
-        let mut app = KetchupApp::with_document(Document::default(), None, true);
+        let mut app = SketCraftApp::with_document(Document::default(), None, true);
         app.doc.model.add_edge(DVec3::ZERO, DVec3::X).unwrap();
         app.changed(&ctx);
         let model = app.doc.model.clone();
@@ -300,7 +300,7 @@ fn failed_or_cancelled_file_operations_keep_current_work_and_cancel_queued_new()
 fn successful_save_continues_new_only_when_all_current_changes_were_saved() {
     for edited_during_save in [false, true] {
         let ctx = egui::Context::default();
-        let mut app = KetchupApp::with_document(Document::default(), None, true);
+        let mut app = SketCraftApp::with_document(Document::default(), None, true);
         app.doc.model.add_edge(DVec3::ZERO, DVec3::X).unwrap();
         app.project.snapshot = Some(serde_json::to_string(&app.doc).unwrap());
         app.project.after_save = Some(projects::Action::New);
@@ -324,7 +324,7 @@ fn successful_save_continues_new_only_when_all_current_changes_were_saved() {
 #[test]
 fn save_as_updates_the_name_without_marking_the_project_modified() {
     let ctx = egui::Context::default();
-    let mut app = KetchupApp::with_document(Document::default(), None, true);
+    let mut app = SketCraftApp::with_document(Document::default(), None, true);
     app.project.path = Some("original.ketchup".into());
     app.project.snapshot = Some(serde_json::to_string(&app.doc).unwrap());
     deliver(
@@ -341,7 +341,7 @@ fn save_as_updates_the_name_without_marking_the_project_modified() {
 #[test]
 fn new_shortcut_prompts_for_unsaved_changes_and_escape_cancels() {
     let ctx = egui::Context::default();
-    let mut app = KetchupApp::with_document(Document::default(), None, true);
+    let mut app = SketCraftApp::with_document(Document::default(), None, true);
     app.doc.model.add_edge(DVec3::ZERO, DVec3::X).unwrap();
     app.changed(&ctx);
     let model = app.doc.model.clone();
@@ -376,7 +376,7 @@ fn new_shortcut_prompts_for_unsaved_changes_and_escape_cancels() {
 #[test]
 fn importing_adds_geometry_in_one_undo_step_and_keeps_project_destination() {
     let ctx = egui::Context::default();
-    let mut app = KetchupApp::with_document(Document::default(), None, true);
+    let mut app = SketCraftApp::with_document(Document::default(), None, true);
     let edge = app.doc.model.add_edge(DVec3::ZERO, DVec3::X).unwrap();
     let before = app.doc.model.clone();
     let name = app.doc.name.clone();
@@ -403,7 +403,7 @@ fn importing_adds_geometry_in_one_undo_step_and_keeps_project_destination() {
 fn exporting_does_not_mark_saved_or_change_the_project_destination() {
     for modified in [false, true] {
         let ctx = egui::Context::default();
-        let mut app = KetchupApp::with_document(Document::default(), None, true);
+        let mut app = SketCraftApp::with_document(Document::default(), None, true);
         app.project.path = Some("original.ketchup".into());
         app.project.modified = modified;
         deliver(&mut app, Ok(Outcome::Exported), &ctx);
@@ -415,7 +415,7 @@ fn exporting_does_not_mark_saved_or_change_the_project_destination() {
 #[test]
 fn invalid_import_keeps_current_geometry_selection_and_history() {
     let ctx = egui::Context::default();
-    let mut app = KetchupApp::with_document(Document::default(), None, true);
+    let mut app = SketCraftApp::with_document(Document::default(), None, true);
     let edge = app.doc.model.add_edge(DVec3::ZERO, DVec3::X).unwrap();
     app.selected.insert(edge);
     let before = app.doc.model.clone();
@@ -433,7 +433,7 @@ fn invalid_import_keeps_current_geometry_selection_and_history() {
 #[test]
 fn cutting_plan_defaults_to_selection_and_blocks_other_file_actions_until_cancelled() {
     let ctx = egui::Context::default();
-    let mut app = KetchupApp::with_document(Document::default(), None, true);
+    let mut app = SketCraftApp::with_document(Document::default(), None, true);
     assert!(app.project.cutting_plan_layout.allow_rotation);
     app.prepare_cutting_plan();
     assert_eq!(app.project.cutting_plan_selection, Some(false));
@@ -452,7 +452,7 @@ fn cutting_plan_defaults_to_selection_and_blocks_other_file_actions_until_cancel
 #[test]
 fn cutting_plan_remembers_scope_and_falls_back_when_no_parts_are_selected() {
     let ctx = egui::Context::default();
-    let mut app = KetchupApp::with_document(Document::default(), None, true);
+    let mut app = SketCraftApp::with_document(Document::default(), None, true);
     app.project.cutting_plan_selection_preference = Some(true);
     app.prepare_cutting_plan();
     assert_eq!(app.project.cutting_plan_selection, Some(false));
@@ -474,7 +474,7 @@ fn cutting_plan_remembers_scope_and_falls_back_when_no_parts_are_selected() {
 #[test]
 fn cutting_plan_export_failure_preserves_project_selection_and_history() {
     let ctx = egui::Context::default();
-    let mut app = KetchupApp::with_document(Document::default(), None, true);
+    let mut app = SketCraftApp::with_document(Document::default(), None, true);
     let edge = app.doc.model.add_edge(DVec3::ZERO, DVec3::X).unwrap();
     app.selected.insert(edge);
     app.project.path = Some("original.ketchup".into());
@@ -519,7 +519,7 @@ fn exchange_formats_use_atomic_import_and_undo_redo() {
         ),
     ] {
         let ctx = egui::Context::default();
-        let mut app = KetchupApp::with_document(Document::default(), None, true);
+        let mut app = SketCraftApp::with_document(Document::default(), None, true);
         app.project.import_format = extension.into();
         app.project.path = Some("existing.ketchup".into());
         let before = app.doc.model.clone();
@@ -549,7 +549,7 @@ fn exchange_formats_use_atomic_import_and_undo_redo() {
 #[test]
 fn recent_project_uses_unsaved_changes_protection() {
     let ctx = egui::Context::default();
-    let mut app = KetchupApp::with_document(Document::default(), None, true);
+    let mut app = SketCraftApp::with_document(Document::default(), None, true);
     app.project.path = Some("example.ketchup".into());
     app.remember_recent_project(None);
     app.project.modified = true;

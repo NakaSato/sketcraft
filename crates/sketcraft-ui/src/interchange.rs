@@ -5,17 +5,17 @@ use sketcraft_core::Model;
 // network request, or JavaScript build step in either application.
 #[cfg(target_arch = "wasm32")]
 const SKP_READER: &str = concat!(
-    "var ketchupModules = {};\n",
-    "ketchupModules.fflate = (function() { var exports = {}, module = {exports};\n",
+    "var sketcraftModules = {};\n",
+    "sketcraftModules.fflate = (function() { var exports = {}, module = {exports};\n",
     include_str!("../vendor/skp/fflate.cjs"),
     "\nreturn module.exports; })();\n",
-    "ketchupModules.earcut = (function() { var exports = {}, module = {exports};\n",
+    "sketcraftModules.earcut = (function() { var exports = {}, module = {exports};\n",
     include_str!("../vendor/skp/earcut.cjs"),
     "\nreturn module.exports; })();\n",
-    "ketchupModules.flatbuffers = (function() {\n",
+    "sketcraftModules.flatbuffers = (function() {\n",
     include_str!("../vendor/skp/flatbuffers.js"),
     "\nreturn flatbuffers; })();\n",
-    "ketchupModules.openskp = (function() { var exports = {}, module = {exports}; var require = name => ketchupModules[name];\n",
+    "sketcraftModules.openskp = (function() { var exports = {}, module = {exports}; var require = name => sketcraftModules[name];\n",
     include_str!("../vendor/skp/openskp.cjs"),
     "\nreturn module.exports; })();\n",
     include_str!("skp_adapter.js"),

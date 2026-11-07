@@ -23,7 +23,7 @@ pub(super) fn large_tool_set_items() -> Vec<RailItem> {
         .collect()
 }
 
-impl KetchupApp {
+impl SketCraftApp {
     pub(super) fn large_tool_rail(&mut self, ui: &mut egui::Ui) {
         let colors = Palette::for_ui(ui);
         egui::Panel::left("tools")

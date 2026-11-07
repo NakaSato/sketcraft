@@ -3,8 +3,8 @@ use super::*;
 #[test]
 fn axes_fade_without_changing_projected_depth_or_direction_colors() {
     for projection in [
-        ketchup_core::Projection::Perspective,
-        ketchup_core::Projection::Parallel,
+        sketcraft_core::Projection::Perspective,
+        sketcraft_core::Projection::Parallel,
     ] {
         for distance in [0.1, 15., 1000.] {
             for size in [DVec2::new(1200., 800.), DVec2::new(400., 900.)] {

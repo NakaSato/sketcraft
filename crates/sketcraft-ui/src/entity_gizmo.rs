@@ -70,7 +70,7 @@ fn layout(camera: &Camera, rect: Rect, label_sizes: [Vec2; 3]) -> (Pos2, [GizmoA
     (center, axes)
 }
 
-impl KetchupApp {
+impl SketCraftApp {
     pub(super) fn entity_axis_gizmo(&self, ui: &mut egui::Ui, size: DVec3) {
         let colors = Palette::for_ui(ui);
         ui.text_label(RichText::new("Object lenghts").size(12.));
@@ -171,7 +171,7 @@ impl KetchupApp {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ketchup_core::{Projection, StandardView};
+    use sketcraft_core::{Projection, StandardView};
 
     #[test]
     fn compact_gizmo_shifts_origin_to_fit_the_view() {
@@ -284,11 +284,11 @@ mod tests {
     #[test]
     fn orbit_keeps_measurements_stable_in_the_reserved_label_column() {
         let ctx = egui::Context::default();
-        let mut app = KetchupApp::with_document(Document::default(), None, true);
-        app.doc.display.units.length = ketchup_core::LengthUnit::Millimeters;
+        let mut app = SketCraftApp::with_document(Document::default(), None, true);
+        app.doc.display.units.length = sketcraft_core::LengthUnit::Millimeters;
         app.doc.display.units.precision.length = Some(1);
         let size = DVec3::new(1., 2., 0.);
-        let render = |app: &KetchupApp| {
+        let render = |app: &SketCraftApp| {
             ctx.run_test_ui(egui::RawInput::default(), |ui| {
                 ui.set_max_width(224.);
                 app.entity_axis_gizmo(ui, size);

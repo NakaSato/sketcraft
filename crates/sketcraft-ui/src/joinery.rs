@@ -1,7 +1,7 @@
 use super::*;
 use crate::inspector_table::inspector_field;
-use ketchup_core::connections::{Connection, ConnectionOperation};
-use ketchup_core::joinery::{GeometryEvaluation, JointKind, JointSettings};
+use sketcraft_core::connections::{Connection, ConnectionOperation};
+use sketcraft_core::joinery::{GeometryEvaluation, JointKind, JointSettings};
 use std::collections::BTreeMap;
 
 #[path = "joinery_cards.rs"]
@@ -91,8 +91,8 @@ struct Preview {
 pub(super) struct GeometryCache {
     #[cfg(not(target_arch = "wasm32"))]
     pending: Option<std::thread::JoinHandle<GeometryCache>>,
-    pub prepared_shadows: Option<(ketchup_core::DisplaySettings, crate::shadows::ShadowCache)>,
-    evaluation: ketchup_core::joinery::EvaluationCache,
+    pub prepared_shadows: Option<(sketcraft_core::DisplaySettings, crate::shadows::ShadowCache)>,
+    evaluation: sketcraft_core::joinery::EvaluationCache,
     region_cache: std::collections::BTreeMap<u64, CachedRegion>,
     #[cfg(test)]
     revision: u64,
@@ -108,8 +108,8 @@ pub(super) struct GeometryCache {
 }
 
 struct CachedRegion {
-    source: ketchup_core::joinery::BoardSnapshot,
-    evaluated: ketchup_core::joinery::BoardSnapshot,
+    source: sketcraft_core::joinery::BoardSnapshot,
+    evaluated: sketcraft_core::joinery::BoardSnapshot,
     settings: JointSettings,
     region: highlight::Region,
 }
@@ -127,7 +127,7 @@ impl GeometryCache {
     /// rather than queuing every intermediate position. Exact picking and the
     /// end of a gesture synchronize through update().
     pub fn update_render(&mut self, source: &Model, transient: bool, ctx: &egui::Context,
-        display: &ketchup_core::DisplaySettings, shadows: &crate::shadows::ShadowCache) {
+        display: &sketcraft_core::DisplaySettings, shadows: &crate::shadows::ShadowCache) {
         #[cfg(not(target_arch = "wasm32"))]
         {
             if self.pending.as_ref().is_some_and(|job| job.is_finished()) {
@@ -187,10 +187,10 @@ impl GeometryCache {
     pub fn pick(
         &mut self,
         source: &Model,
-        camera: &ketchup_core::Camera,
-        display: &ketchup_core::DisplaySettings,
-        size: ketchup_core::DVec2,
-        pixel: ketchup_core::DVec2,
+        camera: &sketcraft_core::Camera,
+        display: &sketcraft_core::DisplaySettings,
+        size: sketcraft_core::DVec2,
+        pixel: sketcraft_core::DVec2,
         include_faces: bool,
     ) -> Option<u64> {
         self.update(source);
@@ -250,8 +250,8 @@ impl GeometryCache {
             for (&id, connection) in &viewport_source.connections {
                 let ConnectionOperation::Joinery(settings) = &connection.operation else { continue };
                 if evaluation.errors.iter().any(|(invalid, _)| *invalid == id) { continue; }
-                let stock = ketchup_core::joinery::BoardSnapshot::new(source, connection.members);
-                let machined = ketchup_core::joinery::BoardSnapshot::new(&evaluation.model, connection.members);
+                let stock = sketcraft_core::joinery::BoardSnapshot::new(source, connection.members);
+                let machined = sketcraft_core::joinery::BoardSnapshot::new(&evaluation.model, connection.members);
                 let reusable = self.region_cache.get(&id).is_some_and(|entry|
                     entry.settings == *settings && entry.source.same_geometry(&stock)
                         && entry.evaluated.same_geometry(&machined));
@@ -379,7 +379,7 @@ fn warning(ui: &mut egui::Ui, message: impl Into<String>) {
         ui.add(egui::Label::new(RichText::new(message.into()).color(text)).wrap());
     });
 }
-impl KetchupApp {
+impl SketCraftApp {
     pub(super) fn joinery_edit_members(&self) -> Option<[u64; 2]> {
         if !self.joinery.open || self.history_preview.is_some() { return None; }
         let mut members = self.joinery_dialog.members?;
@@ -686,7 +686,7 @@ impl KetchupApp {
         (preview.source==self.doc.model && preview.settings==self.joinery.settings && preview.result.is_ok())
             .then(||(preview.members,preview.settings.clone()))
     }
-    pub(super) fn paint_joint_highlights(&self,mesh:&mut renderer::Mesh,model:&Model,display:&ketchup_core::DisplaySettings,dark:bool) {
+    pub(super) fn paint_joint_highlights(&self,mesh:&mut renderer::Mesh,model:&Model,display:&sketcraft_core::DisplaySettings,dark:bool) {
         #[cfg(not(target_arch = "wasm32"))]
         let _profile = super::viewport_benchmark::scope("joint_guides");
         if !display.wood_joinery { return; }
@@ -755,7 +755,7 @@ mod tests {
         assert_eq!(cache.result.as_ref().unwrap().model, source.evaluate_joinery().model);
     }
 
-    fn fixture() -> (KetchupApp, egui::Context, [u64; 2]) {
+    fn fixture() -> (SketCraftApp, egui::Context, [u64; 2]) {
         let mut model = Model::default();
         let mut members = [0; 2];
         for (i, member) in members.iter_mut().enumerate() {
@@ -771,14 +771,14 @@ mod tests {
                 body.add_edge(corners[j], corners[(j + 1) % 4]).unwrap();
             }
             let face = *body.faces.keys().next().unwrap();
-            let normal = ketchup_core::faces::plane(&body, &body.faces[&face].vertices)
+            let normal = sketcraft_core::faces::plane(&body, &body.faces[&face].vertices)
                 .unwrap()
                 .normal;
             body.push_pull(face, 0.04 / normal.z).unwrap();
             let ids = model.paste_entities(&body, DVec3::ZERO);
             *member = model.make_object(&ids, false, "Board").unwrap();
         }
-        let mut app = KetchupApp::with_document(
+        let mut app = SketCraftApp::with_document(
             Document {
                 model,
                 ..Default::default()
@@ -797,7 +797,7 @@ mod tests {
         assert!(app.apply_joint_preview(&ctx));
         app.doc.display.wood_joinery = true;
         let rect = Rect::from_min_size(Pos2::ZERO, egui::vec2(800., 600.));
-        let render = |app: &mut KetchupApp| {
+        let render = |app: &mut SketCraftApp| {
             let _ = ctx.run_test_ui(egui::RawInput {
                 screen_rect: Some(Rect::from_min_size(Pos2::ZERO, egui::vec2(1200., 900.))),
                 ..Default::default()

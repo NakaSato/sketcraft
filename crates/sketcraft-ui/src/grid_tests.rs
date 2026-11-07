@@ -1,13 +1,13 @@
 use super::*;
 
 fn projected_grid(camera: &Camera, size: DVec2) -> Vec<grid::GridLine> {
-    grid::visible_lines(camera, &ketchup_core::DisplaySettings::default(), size)
+    grid::visible_lines(camera, &sketcraft_core::DisplaySettings::default(), size)
 }
 
 #[test]
 fn finite_grid_bounds_remain_centered_on_world_origin_during_navigation() {
     let size = DVec2::new(2400., 1800.);
-    let display = ketchup_core::DisplaySettings {
+    let display = sketcraft_core::DisplaySettings {
         grid_infinite: false,
         grid_max_length: 8.,
         grid_auto_size: false,
@@ -15,8 +15,8 @@ fn finite_grid_bounds_remain_centered_on_world_origin_during_navigation() {
         ..Default::default()
     };
     for projection in [
-        ketchup_core::Projection::Perspective,
-        ketchup_core::Projection::Parallel,
+        sketcraft_core::Projection::Perspective,
+        sketcraft_core::Projection::Parallel,
     ] {
         for distance in [30., 60.] {
             for yaw in [0., std::f64::consts::FRAC_PI_4, -0.9] {
@@ -160,8 +160,8 @@ fn horizon_fade_is_uniform_across_the_viewport_and_during_rotation() {
 fn grid_lattice_and_major_indices_stay_anchored_during_orbit_pan_and_zoom() {
     let size = DVec2::new(1200., 900.);
     for projection in [
-        ketchup_core::Projection::Perspective,
-        ketchup_core::Projection::Parallel,
+        sketcraft_core::Projection::Perspective,
+        sketcraft_core::Projection::Parallel,
     ] {
         let mut camera = Camera {
             projection,
@@ -199,7 +199,7 @@ fn grid_lattice_and_major_indices_stay_anchored_during_orbit_pan_and_zoom() {
 #[test]
 fn grid_covers_wide_viewport_without_a_world_rectangle() {
     let mut camera = Camera::default();
-    camera.set_standard_view(ketchup_core::StandardView::Top);
+    camera.set_standard_view(sketcraft_core::StandardView::Top);
     let size = DVec2::new(3000., 600.);
     let lines = projected_grid(&camera, size);
     assert!(!lines.is_empty());
@@ -224,8 +224,8 @@ fn grid_covers_wide_viewport_without_a_world_rectangle() {
 fn grid_projection_is_finite_bounded_and_fades_near_the_horizon() {
     let size = DVec2::new(1200., 900.);
     for projection in [
-        ketchup_core::Projection::Perspective,
-        ketchup_core::Projection::Parallel,
+        sketcraft_core::Projection::Perspective,
+        sketcraft_core::Projection::Parallel,
     ] {
         for pitch in [0., 0.000001, 0.05, 0.62, -0.62, std::f64::consts::FRAC_PI_2] {
             let camera = Camera {
@@ -244,7 +244,7 @@ fn grid_projection_is_finite_bounded_and_fades_near_the_horizon() {
                 assert!(line.opacity.iter().all(|a| (0. ..=1.).contains(a)));
                 assert_ne!(line.opacity, [0., 0.]);
             }
-            if projection == ketchup_core::Projection::Perspective && pitch == 0.05 {
+            if projection == sketcraft_core::Projection::Perspective && pitch == 0.05 {
                 assert!(
                     lines
                         .iter()
@@ -261,7 +261,7 @@ fn fixed_subpixel_grid_is_culled_without_changing_snap_spacing() {
         distance: 1e6,
         ..Default::default()
     };
-    let display = ketchup_core::DisplaySettings {
+    let display = sketcraft_core::DisplaySettings {
         grid_auto_size: false,
         grid_spacing: 0.000001,
         ..Default::default()
@@ -350,7 +350,7 @@ fn grid_snapping_preserves_object_targets_and_off_grid_axis_anchors() {
 
 #[test]
 fn grid_combines_with_every_axis_without_moving_off_grid_anchors() {
-    let model = ketchup_core::Model::default();
+    let model = sketcraft_core::Model::default();
     for axis in [Axis::X, Axis::Y, Axis::Z] {
         let direction = axis.vector();
         let anchor = DVec3::new(0.23, 0.37, 0.41);
@@ -390,7 +390,7 @@ fn grid_combines_edge_face_axis_and_plane_constraints() {
     assert_eq!(quantize(None, Some(Axis::Z)).point, target.point);
     assert!(model.face_contains(&model.faces[&face], quantize(None, None).point, true));
 
-    let mut model = ketchup_core::Model::default();
+    let mut model = sketcraft_core::Model::default();
     let a = DVec3::new(0.23, 0.37, 0.41);
     let direction = DVec3::new(4., 2., 0.);
     let edge = model.add_edge(a, a + direction).unwrap();
@@ -424,7 +424,7 @@ fn grid_combines_edge_face_axis_and_plane_constraints() {
 
 #[test]
 fn combined_grid_snaps_preserve_exact_targets_and_geometry_boundaries() {
-    let mut model = ketchup_core::Model::default();
+    let mut model = sketcraft_core::Model::default();
     let a = DVec3::new(0.1, 0.2, 0.3);
     let b = DVec3::new(0.4, 0.2, 0.3);
     model.add_edge(a, b).unwrap();

@@ -218,7 +218,7 @@ fn offset_then_push_down_previews_and_commits_an_open_recess() {
     h.frame(vec![egui::Event::PointerMoved(end)], egui::Modifiers::NONE);
     let preview = h.app.modeling.as_ref().unwrap().preview.as_ref().unwrap();
     assert!(!preview.faces.contains_key(&inner));
-    let ray = ketchup_core::Ray {
+    let ray = sketcraft_core::Ray {
         origin: DVec3::new(2., 2., 10.),
         direction: -DVec3::Z,
     };

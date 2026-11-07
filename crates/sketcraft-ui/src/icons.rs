@@ -1,5 +1,5 @@
 use eframe::egui::{self, Color32, Pos2, Rect, Stroke};
-use ketchup_core::{Axis, Tool};
+use sketcraft_core::{Axis, Tool};
 
 // Every icon uses the same theme palette in the rail, flyouts, and cursor.
 // Selection is indicated by the button background and label.

@@ -181,7 +181,7 @@ fn every_tool_survives_interrupted_gestures_resize_and_focus_loss() {
 fn display_styles_and_effects_survive_camera_changes_and_round_trip() {
     let mut h = Harness::new();
     ui_solid_pair(&mut h);
-    for style in ketchup_core::FaceStyle::ALL {
+    for style in sketcraft_core::FaceStyle::ALL {
         for effects in [false, true] {
             let d = &mut h.app.doc.display;
             d.face_style = style;
@@ -271,7 +271,7 @@ fn move_workload_benchmark() {
         let start = Instant::now();
         for i in 0..40 {
             std::hint::black_box(
-                KetchupApp::modeling_result(Tool::Move, edit, 0.1 + i as f64 * 0.01).unwrap(),
+                SketCraftApp::modeling_result(Tool::Move, edit, 0.1 + i as f64 * 0.01).unwrap(),
             );
         }
         let transform = start.elapsed() / 40;

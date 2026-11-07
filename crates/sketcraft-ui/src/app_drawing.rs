@@ -1,7 +1,7 @@
 //! Line, shape and freehand drawing: start, axis and plane locks, snapping, commit.
 use super::*;
 
-impl KetchupApp {
+impl SketCraftApp {
     pub(super) fn stop_drawing(&mut self) {
         self.drawing_reference = None;
         self.drawing_guide = None;
@@ -72,7 +72,7 @@ impl KetchupApp {
             .model
             .nearest_face(ray)
             .and_then(|(id, _, _)| {
-                ketchup_core::faces::plane(&self.doc.model, &self.doc.model.faces[&id].vertices)
+                sketcraft_core::faces::plane(&self.doc.model, &self.doc.model.faces[&id].vertices)
             })
             .filter(|plane| (snap.point - plane.origin).dot(plane.normal).abs() < 1e-6);
         let normal = surface.map_or(DVec3::Z, |plane| plane.normal);

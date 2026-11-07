@@ -2,7 +2,7 @@ use super::*;
 use crate::test_ui::ContextExt as _;
 
 struct UiHarness {
-    app: KetchupApp,
+    app: SketCraftApp,
     ctx: egui::Context,
     time: f64,
 }
@@ -11,7 +11,7 @@ impl UiHarness {
         let ctx = egui::Context::default();
         apply(&ctx);
         let mut harness = Self {
-            app: KetchupApp::with_document(Document::default(), None, true),
+            app: SketCraftApp::with_document(Document::default(), None, true),
             ctx,
             time: 0.,
         };

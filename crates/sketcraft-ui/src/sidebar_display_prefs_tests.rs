@@ -5,7 +5,7 @@ use super::*;
 fn group_emphasis_survives_immediate_reload_and_project_changes() {
     let ctx = egui::Context::default();
     let mut storage = SavedPreferences::default();
-    let mut app = KetchupApp::with_document(Document::default(), None, true);
+    let mut app = SketCraftApp::with_document(Document::default(), None, true);
     for enabled in [false, true] {
         app.doc.display.group_emphasis = enabled;
         storage.flushed = false;
@@ -13,7 +13,7 @@ fn group_emphasis_survives_immediate_reload_and_project_changes() {
         assert!(storage.flushed);
         assert!(!app.project.modified);
         assert!(app.dirty_since.is_none());
-        let mut restored = KetchupApp::with_document(Document::default(), None, true);
+        let mut restored = SketCraftApp::with_document(Document::default(), None, true);
         restored.restore_inspector_preferences(&egui::Context::default(), Some(&storage));
         assert_eq!(restored.doc.display.group_emphasis, enabled);
         restored.new_model(&ctx);
@@ -31,7 +31,7 @@ fn group_names_save_without_model_edits_and_default_off() {
     assert!(!old.group_names);
     let ctx = egui::Context::default();
     let mut storage = SavedPreferences::default();
-    let mut app = KetchupApp::with_document(Document::default(), None, true);
+    let mut app = SketCraftApp::with_document(Document::default(), None, true);
     for enabled in [true, false] {
         app.doc.display.group_names = enabled;
         storage.flushed = false;
@@ -39,7 +39,7 @@ fn group_names_save_without_model_edits_and_default_off() {
         assert!(storage.flushed);
         assert!(!app.project.modified);
         assert!(app.dirty_since.is_none());
-        let mut restored = KetchupApp::with_document(Document::default(), None, true);
+        let mut restored = SketCraftApp::with_document(Document::default(), None, true);
         restored.restore_inspector_preferences(&egui::Context::default(), Some(&storage));
         assert_eq!(restored.doc.display.group_names, enabled);
         restored.new_model(&ctx);
@@ -54,7 +54,7 @@ fn grid_and_wood_joinery_save_without_model_edits_and_default_on() {
     assert!(old.wood_joinery);
     let ctx = egui::Context::default();
     let mut storage = SavedPreferences::default();
-    let mut app = KetchupApp::with_document(Document::default(), None, true);
+    let mut app = SketCraftApp::with_document(Document::default(), None, true);
     for enabled in [true, false] {
         app.doc.display.grid = enabled;
         app.doc.display.wood_joinery = enabled;
@@ -63,7 +63,7 @@ fn grid_and_wood_joinery_save_without_model_edits_and_default_on() {
         assert!(storage.flushed);
         assert!(!app.project.modified);
         assert!(app.dirty_since.is_none());
-        let mut restored = KetchupApp::with_document(Document::default(), None, true);
+        let mut restored = SketCraftApp::with_document(Document::default(), None, true);
         restored.restore_inspector_preferences(&egui::Context::default(), Some(&storage));
         assert_eq!(restored.doc.display.grid, enabled);
         assert_eq!(restored.doc.display.wood_joinery, enabled);
@@ -77,7 +77,7 @@ fn grid_and_wood_joinery_save_without_model_edits_and_default_on() {
 fn shadow_antialiasing_saves_immediately_and_defaults_on() {
     let ctx = egui::Context::default();
     let mut storage = SavedPreferences::default();
-    let mut app = KetchupApp::with_document(Document::default(), None, true);
+    let mut app = SketCraftApp::with_document(Document::default(), None, true);
     for enabled in [false, true] {
         app.doc.display.shadow_antialiasing = enabled;
         app.general_settings.section = settings::Section::Rendering;
@@ -86,7 +86,7 @@ fn shadow_antialiasing_saves_immediately_and_defaults_on() {
         assert!(storage.flushed);
         assert!(!app.project.modified);
         assert!(app.dirty_since.is_none());
-        let mut restored = KetchupApp::with_document(Document::default(), None, true);
+        let mut restored = SketCraftApp::with_document(Document::default(), None, true);
         restored.restore_inspector_preferences(&egui::Context::default(), Some(&storage));
         assert_eq!(restored.doc.display.shadow_antialiasing, enabled);
         assert_eq!(restored.general_settings.section, settings::Section::Rendering);
@@ -109,7 +109,7 @@ fn shadow_antialiasing_saves_immediately_and_defaults_on() {
 fn frame_rate_diagnostics_save_immediately_and_default_off() {
     let ctx = egui::Context::default();
     let mut storage = SavedPreferences::default();
-    let mut app = KetchupApp::with_document(Document::default(), None, true);
+    let mut app = SketCraftApp::with_document(Document::default(), None, true);
     for enabled in [true, false] {
         app.general_settings.show_fps = enabled;
         app.general_settings.section = settings::Section::Diagnostics;
@@ -117,7 +117,7 @@ fn frame_rate_diagnostics_save_immediately_and_default_off() {
         app.persist_inspector_changes(&ctx, Some(&mut storage), false);
         assert!(storage.flushed);
         assert!(!app.project.modified);
-        let mut restored = KetchupApp::with_document(Document::default(), None, true);
+        let mut restored = SketCraftApp::with_document(Document::default(), None, true);
         restored.restore_inspector_preferences(&egui::Context::default(), Some(&storage));
         assert_eq!(restored.general_settings.show_fps, enabled);
         assert_eq!(restored.general_settings.section, settings::Section::Diagnostics);
@@ -130,7 +130,7 @@ fn frame_rate_diagnostics_save_immediately_and_default_off() {
 fn solar_date_time_and_latitude_save_immediately_and_restore_the_sun() {
     let ctx = egui::Context::default();
     let mut storage = SavedPreferences::default();
-    let mut app = KetchupApp::with_document(Document::default(), None, true);
+    let mut app = SketCraftApp::with_document(Document::default(), None, true);
     let d = &mut app.doc.display;
     (d.shadows, d.sun_from_time, d.sun_month, d.sun_day, d.sun_minutes, d.sun_latitude) =
         (true, true, 12, 21, 10 * 60 + 30, -33.9);
@@ -139,7 +139,7 @@ fn solar_date_time_and_latitude_save_immediately_and_restore_the_sun() {
     app.persist_inspector_changes(&ctx, Some(&mut storage), false);
     assert!(storage.flushed);
     assert!(!app.project.modified);
-    let mut restored = KetchupApp::with_document(Document::default(), None, true);
+    let mut restored = SketCraftApp::with_document(Document::default(), None, true);
     restored.restore_inspector_preferences(&egui::Context::default(), Some(&storage));
     let r = &restored.doc.display;
     assert!(r.sun_from_time);
@@ -152,14 +152,14 @@ fn solar_date_time_and_latitude_save_immediately_and_restore_the_sun() {
 fn shadows_and_sun_save_together_and_default_off_for_older_preferences() {
     let ctx = egui::Context::default();
     let mut storage = SavedPreferences::default();
-    let mut app = KetchupApp::with_document(Document::default(), None, true);
+    let mut app = SketCraftApp::with_document(Document::default(), None, true);
     for visible in [true, false] {
         app.doc.display.shadows = visible;
         storage.flushed = false;
         app.persist_inspector_changes(&ctx, Some(&mut storage), false);
         assert!(storage.flushed);
         assert!(!app.project.modified);
-        let mut restored = KetchupApp::with_document(Document::default(), None, true);
+        let mut restored = SketCraftApp::with_document(Document::default(), None, true);
         restored.restore_inspector_preferences(&egui::Context::default(), Some(&storage));
         assert_eq!(restored.doc.display.shadows, visible);
         restored.new_model(&ctx);
@@ -171,7 +171,7 @@ fn shadows_and_sun_save_together_and_default_off_for_older_preferences() {
 
 #[test]
 fn each_additional_option_saves_independently_without_a_model_edit() {
-    let options: [(&str, fn(&mut KetchupApp)); 15] = [
+    let options: [(&str, fn(&mut SketCraftApp)); 15] = [
         ("face center snapping", |app| app.snap_to_face_center = false),
         ("axis snapping", |app| app.doc.snap_to_axes = false),
         ("edge snapping", |app| app.snap_to_edge = false),
@@ -208,7 +208,7 @@ fn each_additional_option_saves_independently_without_a_model_edit() {
     for (name, change) in options {
         let ctx = egui::Context::default();
         let mut storage = SavedPreferences::default();
-        let mut app = KetchupApp::with_document(Document::default(), None, true);
+        let mut app = SketCraftApp::with_document(Document::default(), None, true);
         app.persist_inspector_changes(&ctx, Some(&mut storage), false);
         storage.flushed = false;
         change(&mut app);
@@ -218,7 +218,7 @@ fn each_additional_option_saves_independently_without_a_model_edit() {
         assert!(!app.project.modified, "{name}");
         assert!(app.dirty_since.is_none(), "{name}");
         let restored_ctx = egui::Context::default();
-        let mut restored = KetchupApp::with_document(Document::default(), None, true);
+        let mut restored = SketCraftApp::with_document(Document::default(), None, true);
         restored.restore_inspector_preferences(&restored_ctx, Some(&storage));
         assert_eq!(
             restored.current_inspector_preferences(&restored_ctx),
@@ -244,7 +244,7 @@ fn missing_corrupt_or_invalid_preferences_preserve_document_display() {
     let ctx = egui::Context::default();
     let mut doc = Document::default();
     doc.display.axes = false;
-    let mut app = KetchupApp::with_document(doc.clone(), None, true);
+    let mut app = SketCraftApp::with_document(doc.clone(), None, true);
     app.restore_inspector_preferences(&ctx, None);
     assert_eq!(app.doc.display, doc.display);
     let mut storage = SavedPreferences::default();
@@ -279,9 +279,9 @@ fn missing_corrupt_or_invalid_preferences_preserve_document_display() {
 #[test]
 fn unit_choices_and_disclosure_save_immediately_without_a_model_edit() {
     let ctx = egui::Context::default();
-    let mut app = KetchupApp::with_document(Document::default(), None, true);
+    let mut app = SketCraftApp::with_document(Document::default(), None, true);
     let model = app.doc.model.clone();
-    let units = ketchup_core::UnitSettings {
+    let units = sketcraft_core::UnitSettings {
         length: LengthUnit::Inches,
         area: AreaUnit::SquareFeet,
         volume: VolumeUnit::Liters,
@@ -297,7 +297,7 @@ fn unit_choices_and_disclosure_save_immediately_without_a_model_edit() {
     assert_eq!(app.doc.model, model);
 
     let restored_ctx = egui::Context::default();
-    let mut restored = KetchupApp::with_document(Document::default(), None, true);
+    let mut restored = SketCraftApp::with_document(Document::default(), None, true);
     restored.restore_inspector_preferences(&restored_ctx, Some(&storage));
     assert_eq!(restored.doc.display.units, units);
     let id = egui::Id::unique("restored_units");
@@ -322,16 +322,16 @@ fn unit_choices_and_disclosure_save_immediately_without_a_model_edit() {
         serde_json::from_str(r#"{"display":{"axes":false}}"#).unwrap();
     assert_eq!(
         older.display.unwrap().units,
-        ketchup_core::UnitSettings::default()
+        sketcraft_core::UnitSettings::default()
     );
 }
 
 #[test]
 fn precision_preferences_save_without_a_model_edit_and_restore_each_control() {
-    use ketchup_core::UnitPrecision;
+    use sketcraft_core::UnitPrecision;
 
     let ctx = egui::Context::default();
-    let mut app = KetchupApp::with_document(Document::default(), None, true);
+    let mut app = SketCraftApp::with_document(Document::default(), None, true);
     let model = app.doc.model.clone();
     let mut storage = SavedPreferences::default();
     for precision in [
@@ -360,7 +360,7 @@ fn precision_preferences_save_without_a_model_edit_and_restore_each_control() {
         assert_eq!(app.doc.model, model);
 
         let restored_ctx = egui::Context::default();
-        let mut restored = KetchupApp::with_document(Document::default(), None, true);
+        let mut restored = SketCraftApp::with_document(Document::default(), None, true);
         restored.restore_inspector_preferences(&restored_ctx, Some(&storage));
         assert_eq!(restored.doc.display.units.precision, precision);
         assert!(!restored.project.modified);
@@ -370,12 +370,12 @@ fn precision_preferences_save_without_a_model_edit_and_restore_each_control() {
 #[test]
 fn view_preferences_restore_groups_without_copying_another_models_framing() {
     let ctx = egui::Context::default();
-    let mut app = KetchupApp::with_document(Document::default(), None, true);
+    let mut app = SketCraftApp::with_document(Document::default(), None, true);
     app.doc.camera.projection = Projection::Parallel;
     app.doc.camera.fov = 70_f64.to_radians();
     app.doc
         .camera
-        .set_standard_view(ketchup_core::StandardView::Top);
+        .set_standard_view(sketcraft_core::StandardView::Top);
     app.doc.camera.target = DVec3::splat(500.);
     app.doc.camera.distance = 300.;
     for (key, open) in [
@@ -393,7 +393,7 @@ fn view_preferences_restore_groups_without_copying_another_models_framing() {
     doc.camera.target = DVec3::new(1., 2., 3.);
     doc.camera.distance = 42.;
     let refreshed_ctx = egui::Context::default();
-    let mut refreshed = KetchupApp::with_document(doc.clone(), None, true);
+    let mut refreshed = SketCraftApp::with_document(doc.clone(), None, true);
     refreshed.restore_inspector_preferences(&refreshed_ctx, Some(&storage));
     assert_eq!(refreshed.doc.camera.target, doc.camera.target);
     assert_eq!(refreshed.doc.camera.distance, doc.camera.distance);
@@ -425,7 +425,7 @@ fn view_preferences_restore_groups_without_copying_another_models_framing() {
 #[test]
 fn new_projects_keep_preferences_and_opened_projects_use_their_own_display() {
     let ctx = egui::Context::default();
-    let mut app = KetchupApp::with_document(Document::default(), None, true);
+    let mut app = SketCraftApp::with_document(Document::default(), None, true);
     app.doc.display.axes = false;
     app.doc.display.fog = true;
     app.component_filter = "Cabinet".into();
@@ -433,7 +433,7 @@ fn new_projects_keep_preferences_and_opened_projects_use_their_own_display() {
     app.doc.camera.fov = 60_f64.to_radians();
     app.doc
         .camera
-        .set_standard_view(ketchup_core::StandardView::Top);
+        .set_standard_view(sketcraft_core::StandardView::Top);
     app.doc.camera.target = DVec3::splat(100.);
     app.doc.camera.distance = 200.;
     let expected_camera = Camera {

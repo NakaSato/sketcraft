@@ -2,7 +2,7 @@
 use super::*;
 use crate::inspector_table::{Column, InspectorTable};
 
-impl KetchupApp {
+impl SketCraftApp {
     fn set_selection_tag_membership(
         &mut self,
         ctx: &egui::Context,
@@ -338,7 +338,7 @@ mod tests {
     #[test]
     fn tag_checkboxes_assign_and_remove_without_hiding_or_touching_other_tags() {
         let ctx = egui::Context::default();
-        let mut app = KetchupApp::with_document(Document::default(), None, true);
+        let mut app = SketCraftApp::with_document(Document::default(), None, true);
         let a = app.doc.model.add_edge(DVec3::ZERO, DVec3::X).unwrap();
         let b = app
             .doc
@@ -374,7 +374,7 @@ mod tests {
     #[test]
     fn tag_eye_precedes_rename_and_visibility_is_undoable_and_saved() {
         fn frame(
-            app: &mut KetchupApp,
+            app: &mut SketCraftApp,
             ctx: &egui::Context,
             events: Vec<egui::Event>,
         ) -> egui::FullOutput {
@@ -393,7 +393,7 @@ mod tests {
 
         let ctx = egui::Context::default();
         ctx.enable_accesskit();
-        let mut app = KetchupApp::with_document(Document::default(), None, true);
+        let mut app = SketCraftApp::with_document(Document::default(), None, true);
         let edge = app.doc.model.add_edge(DVec3::ZERO, DVec3::X).unwrap();
         let tag = app.doc.model.add_tag("Sample").unwrap();
         let other = app.doc.model.add_tag("Other").unwrap();
@@ -457,7 +457,7 @@ mod tests {
     #[test]
     fn clicking_a_tag_swatch_opens_an_inline_color_editor() {
         let ctx = egui::Context::default();
-        let mut app = KetchupApp::with_document(Document::default(), None, true);
+        let mut app = SketCraftApp::with_document(Document::default(), None, true);
         app.doc.model.add_tag("Sample").unwrap();
         let mut swatch = None;
         let mut labels = Vec::new();

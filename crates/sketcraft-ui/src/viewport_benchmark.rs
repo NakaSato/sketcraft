@@ -65,7 +65,7 @@ pub(super) struct Benchmark {
 }
 
 impl Benchmark {
-    pub(super) fn from_environment(app: &mut KetchupApp) -> Option<Self> {
+    pub(super) fn from_environment(app: &mut SketCraftApp) -> Option<Self> {
         let output = std::env::var_os("KETCHUP_VIEWPORT_BENCHMARK")?;
         let seconds = std::env::var("KETCHUP_BENCH_SECONDS")
             .ok()
@@ -83,7 +83,7 @@ impl Benchmark {
                         .find(|(id, connection)| {
                             matches!(
                                 connection.operation,
-                                ketchup_core::connections::ConnectionOperation::Joinery(_)
+                                sketcraft_core::connections::ConnectionOperation::Joinery(_)
                             ) && (requested == "auto"
                                 || requested.parse::<u64>().ok() == Some(**id))
                         })
@@ -123,7 +123,7 @@ impl Benchmark {
 
     pub(super) fn tick(
         &mut self,
-        app: &mut KetchupApp,
+        app: &mut SketCraftApp,
         ctx: &egui::Context,
         frame: &eframe::Frame,
     ) {
@@ -207,7 +207,7 @@ impl Benchmark {
                     let before = app.doc.model.clone();
                     let original = app.doc.model.connections[&id].clone();
                     let connection = app.doc.model.connections.get_mut(&id).unwrap();
-                    let ketchup_core::connections::ConnectionOperation::Joinery(settings) =
+                    let sketcraft_core::connections::ConnectionOperation::Joinery(settings) =
                         &mut connection.operation
                     else {
                         unreachable!()

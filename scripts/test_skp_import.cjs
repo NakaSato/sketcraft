@@ -9,8 +9,8 @@ const concat = rust.split('const SKP_READER: &str = concat!(')[1].split('\n);')[
 // Read the very same concat/include_str inputs that Rust embeds.
 const source = Array.from(concat.matchAll(/include_str!\("([^"]+)"\)|"(?:\\.|[^"\\])*"/g), m =>
     m[1] ? fs.readFileSync(path.resolve(base, 'src', m[1]), 'utf8') : JSON.parse(m[0])).join('');
-const read = new Function('bytes', source + '\nreturn JSON.parse(ketchupImport(bytes));');
-const modules = new Function(source + '\nreturn ketchupModules;')();
+const read = new Function('bytes', source + '\nreturn JSON.parse(sketcraftImport(bytes));');
+const modules = new Function(source + '\nreturn sketcraftModules;')();
 const sdk = modules.openskp;
 const fixture = path.join(base, 'tests/fixtures/placed-window.skp');
 
@@ -79,7 +79,7 @@ test('invalid and truncated files fail', () => {
 
 test('recursive definitions and missing references fail', () => {
     const adapter=fs.readFileSync(path.join(base,'src/skp_adapter.js'),'utf8');
-    const convert=new Function('source', `const ketchupModules={openskp:{parseSkp:()=>source}};${adapter};return ketchupImport(new Uint8Array(0));`);
+    const convert=new Function('source', `const sketcraftModules={openskp:{parseSkp:()=>source}};${adapter};return sketcraftImport(new Uint8Array(0));`);
     const root={id:1,vertices:[],edges:[],faces:[],instances:[{refIdx:1,matrix:[]}]};
     const source={root,materials:[],layers:[],definitions:new Map([[1,root]])};
     assert.throws(()=>convert(source), /recursive/i);

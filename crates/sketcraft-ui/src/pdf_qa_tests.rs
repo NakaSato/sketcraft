@@ -28,7 +28,7 @@ fn all_pdf_exports_use_the_standard_header_and_keep_content_below_it() {
         ..Default::default()
     })
     .unwrap();
-    let material = ketchup_core::StockMaterial {
+    let material = sketcraft_core::StockMaterial {
         name: "Walnut".into(),
         dimensions: [190, 1400, 24000],
     };

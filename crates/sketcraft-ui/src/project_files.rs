@@ -1,5 +1,5 @@
 //! Portable project files are separate from the local recovery/autosave document.
-use ketchup_core::Document;
+use sketcraft_core::Document;
 use std::{path::PathBuf, sync::mpsc};
 
 #[cfg(all(test, not(target_arch = "wasm32")))]
@@ -12,7 +12,7 @@ pub enum Outcome {
     #[cfg_attr(not(target_arch = "wasm32"), allow(dead_code))]
     BrowserOpened(Box<Document>, String, String),
     Saved(Option<PathBuf>),
-    Imported(Box<ketchup_core::Model>, std::collections::BTreeSet<u64>),
+    Imported(Box<sketcraft_core::Model>, std::collections::BTreeSet<u64>),
     Exported,
     Cancelled,
 }
@@ -449,7 +449,7 @@ pub(crate) fn import_extension(chosen: &str, file_name: &str) -> Result<String, 
 #[cfg(not(target_arch = "wasm32"))]
 pub fn import_path(
     ctx: &eframe::egui::Context,
-    model: ketchup_core::Model,
+    model: sketcraft_core::Model,
     path: PathBuf,
     extension: String,
 ) -> Pending {
@@ -479,7 +479,7 @@ pub fn import_path(
 #[cfg(not(target_arch = "wasm32"))]
 pub fn import(
     _ctx: &eframe::egui::Context,
-    _model: ketchup_core::Model,
+    _model: sketcraft_core::Model,
     _extension: String,
 ) -> Pending {
     let (sender, receiver) = mpsc::channel();
@@ -490,7 +490,7 @@ pub fn import(
 #[cfg(target_arch = "wasm32")]
 pub fn import(
     ctx: &eframe::egui::Context,
-    model: ketchup_core::Model,
+    model: sketcraft_core::Model,
     extension: String,
 ) -> Pending {
     let (sender, receiver) = mpsc::channel();
@@ -596,11 +596,11 @@ pub fn export(ctx: &eframe::egui::Context, name: String, contents: Vec<u8>, stl:
 /// Prepare the complete next document on the file-operation thread on desktop;
 /// committing its result on the UI thread only swaps owned models.
 pub fn prepare_import(
-    mut model: ketchup_core::Model,
-    imported: &ketchup_core::Model,
+    mut model: sketcraft_core::Model,
+    imported: &sketcraft_core::Model,
 ) -> Result<Outcome, String> {
     imported.validate().map_err(str::to_owned)?;
-    let selected = model.paste_entities(imported, ketchup_core::DVec3::ZERO);
+    let selected = model.paste_entities(imported, sketcraft_core::DVec3::ZERO);
     if selected.is_empty() {
         return Err("The imported geometry cannot be inserted in this editing context".into());
     }
@@ -613,7 +613,7 @@ pub fn export_cutting_plan_to_path(
     ctx: &eframe::egui::Context,
     path: PathBuf,
     name: String,
-    model: ketchup_core::Model,
+    model: sketcraft_core::Model,
     selected: std::collections::BTreeSet<u64>,
     layout_settings: crate::cutting_layout::Settings,
 ) -> Pending {
@@ -638,7 +638,7 @@ pub fn export_cutting_plan_to_path(
 pub fn export_cutting_plan(
     ctx: &eframe::egui::Context,
     name: String,
-    model: ketchup_core::Model,
+    model: sketcraft_core::Model,
     selected: std::collections::BTreeSet<u64>,
     layout_settings: crate::cutting_layout::Settings,
 ) -> Pending {
@@ -654,7 +654,7 @@ pub fn export_cutting_plan(
 pub fn export_cutting_plan(
     ctx: &eframe::egui::Context,
     name: String,
-    model: ketchup_core::Model,
+    model: sketcraft_core::Model,
     selected: std::collections::BTreeSet<u64>,
     layout_settings: crate::cutting_layout::Settings,
 ) -> Pending {

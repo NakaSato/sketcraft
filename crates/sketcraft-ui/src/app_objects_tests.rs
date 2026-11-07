@@ -539,7 +539,7 @@ fn library_placement_creates_linked_instance_supports_cancel_and_undo() {
 #[test]
 fn history_navigation_updates_model_and_clears_transient_selection() {
     let ctx = egui::Context::default();
-    let mut app = KetchupApp::with_document(Document::default(), None, true);
+    let mut app = SketCraftApp::with_document(Document::default(), None, true);
     let initial = app.doc.model.clone();
     for y in [0., 1., 2.] {
         let before = app.doc.model.clone();
@@ -568,7 +568,7 @@ fn history_navigation_updates_model_and_clears_transient_selection() {
 #[test]
 fn history_hover_preview_leaves_document_history_and_dirty_state_unchanged() {
     let ctx = egui::Context::default();
-    let mut app = KetchupApp::with_document(Document::default(), None, true);
+    let mut app = SketCraftApp::with_document(Document::default(), None, true);
     let initial = app.doc.model.clone();
     for y in [0., 1.] {
         let before = app.doc.model.clone();

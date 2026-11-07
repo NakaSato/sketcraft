@@ -3,7 +3,7 @@ use super::*;
 use crate::inspector_table::{Column, InspectorTable};
 #[cfg(test)]
 use crate::test_ui::ContextExt as _;
-use ketchup_core::LengthUnit;
+use sketcraft_core::LengthUnit;
 
 /// Purchasing categories; existing stock remains unspecified until classified.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
@@ -52,7 +52,7 @@ impl WoodType {
 #[serde(default)]
 pub(super) struct Stock {
     #[serde(default)]
-    pub id: ketchup_core::MaterialId,
+    pub id: sketcraft_core::MaterialId,
     pub name: String,
     pub wood_type: WoodType,
     pub thickness_mm: f64,
@@ -64,7 +64,7 @@ pub(super) struct Stock {
 impl Default for Stock {
     fn default() -> Self {
         Self {
-            id: ketchup_core::MaterialId::new_v4(),
+            id: sketcraft_core::MaterialId::new_v4(),
             name: "Wood stock".into(),
             wood_type: WoodType::default(),
             thickness_mm: 19.,
@@ -89,10 +89,10 @@ pub(super) struct Settings {
 #[derive(Clone, Debug, Default, PartialEq, serde::Serialize, serde::Deserialize)]
 #[serde(default)]
 pub(super) struct ProjectUsage {
-    pub project_id: Option<ketchup_core::MaterialId>,
+    pub project_id: Option<sketcraft_core::MaterialId>,
     pub name: String,
     pub path: Option<String>,
-    pub materials: std::collections::BTreeMap<ketchup_core::MaterialId, usize>,
+    pub materials: std::collections::BTreeMap<sketcraft_core::MaterialId, usize>,
 }
 
 impl Default for Settings {
@@ -114,7 +114,7 @@ impl Settings {
         let mut used = BTreeSet::new();
         for stock in &mut self.wood {
             if stock.id.is_nil() || !used.insert(stock.id) {
-                stock.id = ketchup_core::MaterialId::new_v4();
+                stock.id = sketcraft_core::MaterialId::new_v4();
                 used.insert(stock.id);
             }
             for dimension in [
@@ -141,7 +141,7 @@ impl Settings {
         &mut self,
         ui: &mut egui::Ui,
         type_filters: &mut std::collections::BTreeMap<String, String>,
-    ) -> Option<ketchup_core::MaterialId> {
+    ) -> Option<sketcraft_core::MaterialId> {
         let mut requested_removal = None;
         ui.text_weak("Save the wood stock and finishing products you can buy, with your supplier’s prices. Use actual dimensions for boards or sheets.");
         ui.horizontal_wrapped(|ui| {
@@ -283,8 +283,8 @@ impl Settings {
 }
 
 impl Stock {
-    pub(super) fn definition(&self) -> ketchup_core::StockMaterial {
-        ketchup_core::StockMaterial {
+    pub(super) fn definition(&self) -> sketcraft_core::StockMaterial {
+        sketcraft_core::StockMaterial {
             name: self.name.clone(),
             dimensions: [self.thickness_mm, self.width_mm, self.length_mm]
                 .map(crate::cutting_layout::tenths),
@@ -306,17 +306,17 @@ struct StockSyncInput {
     settings: Settings,
     assignments: Vec<(
         u64,
-        Option<ketchup_core::MaterialId>,
-        Option<ketchup_core::StockMaterial>,
+        Option<sketcraft_core::MaterialId>,
+        Option<sketcraft_core::StockMaterial>,
     )>,
-    definitions: std::collections::BTreeMap<ketchup_core::MaterialId, ketchup_core::StockMaterial>,
-    project_id: Option<ketchup_core::MaterialId>,
+    definitions: std::collections::BTreeMap<sketcraft_core::MaterialId, sketcraft_core::StockMaterial>,
+    project_id: Option<sketcraft_core::MaterialId>,
     name: String,
     path: Option<std::path::PathBuf>,
 }
 
 impl StockSyncInput {
-    fn matches(&self, app: &KetchupApp) -> bool {
+    fn matches(&self, app: &SketCraftApp) -> bool {
         self.settings == app.general_settings.stock
             && self.definitions == app.doc.model.stock_materials
             && self.project_id == app.doc.project_id
@@ -332,7 +332,7 @@ impl StockSyncInput {
             )
     }
 
-    fn capture(app: &KetchupApp) -> Self {
+    fn capture(app: &SketCraftApp) -> Self {
         Self {
             settings: app.general_settings.stock.clone(),
             assignments: app
@@ -350,7 +350,7 @@ impl StockSyncInput {
     }
 }
 
-impl KetchupApp {
+impl SketCraftApp {
     pub(super) fn sync_stock_materials(&mut self, ctx: &egui::Context) {
         let cache_id = egui::Id::unique("stock_sync_cache");
         if ctx.data_mut(|data| {
@@ -378,7 +378,7 @@ impl KetchupApp {
             }
         }
         if !materials.is_empty() && self.doc.project_id.is_none() {
-            self.doc.project_id = Some(ketchup_core::MaterialId::new_v4());
+            self.doc.project_id = Some(sketcraft_core::MaterialId::new_v4());
             document_changed = true;
         }
         if let Some(id) = self.doc.project_id {
@@ -493,15 +493,15 @@ impl KetchupApp {
 const MATERIAL_RESULTS_SCROLL_KEY: &str = "entity/material/results";
 
 struct MaterialChoice {
-    id: ketchup_core::MaterialId,
+    id: sketcraft_core::MaterialId,
     label: String,
 }
 
 fn material_choices(
     wood: &[Stock],
     project_materials: &std::collections::BTreeMap<
-        ketchup_core::MaterialId,
-        ketchup_core::StockMaterial,
+        sketcraft_core::MaterialId,
+        sketcraft_core::StockMaterial,
     >,
     query: &str,
 ) -> Vec<MaterialChoice> {
@@ -535,11 +535,11 @@ fn material_choices(
 pub(super) fn material_selector(
     ui: &mut egui::Ui,
     selected_label: &str,
-    selected_id: &mut Option<ketchup_core::MaterialId>,
+    selected_id: &mut Option<sketcraft_core::MaterialId>,
     wood: &[Stock],
     project_materials: &std::collections::BTreeMap<
-        ketchup_core::MaterialId,
-        ketchup_core::StockMaterial,
+        sketcraft_core::MaterialId,
+        sketcraft_core::StockMaterial,
     >,
     filter: &mut String,
 ) -> egui::InnerResponse<bool> {

@@ -10,7 +10,7 @@ fn hidden_geometry_objects_and_tag_visibility_remain_independent_in_cache() {
     let edge = *model.edges.keys().next().unwrap();
     model.hidden.insert(object);
     let mut cache = EntityCache::default();
-    let mut d = ketchup_core::DisplaySettings::default();
+    let mut d = sketcraft_core::DisplaySettings::default();
     cache.update(&model);
     assert!(!cache.get(edge).displayed(&d));
     d.hidden_geometry = true;
@@ -41,7 +41,7 @@ fn hidden_geometry_objects_and_tag_visibility_remain_independent_in_cache() {
 fn section_clipping_rejects_geometry_above_plane_and_fog_blends_at_distance() {
     let camera = Camera::default();
     let mut mesh = Mesh::new(&camera, DVec2::new(1000., 800.));
-    let mut d = ketchup_core::DisplaySettings {
+    let mut d = sketcraft_core::DisplaySettings {
         section_cuts: true,
         section_height: 1.,
         ..Default::default()

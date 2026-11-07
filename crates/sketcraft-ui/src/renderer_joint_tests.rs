@@ -129,8 +129,8 @@ fn gpu_cut_guides_match_full_cpu_clipping_for_foreground_faces_outlines_and_dash
         pixels
     };
     for projection in [
-        ketchup_core::Projection::Parallel,
-        ketchup_core::Projection::Perspective,
+        sketcraft_core::Projection::Parallel,
+        sketcraft_core::Projection::Perspective,
     ] {
         let camera = Camera {
             projection,
@@ -317,8 +317,8 @@ fn joint_precision_masks_ignore_own_entities_and_track_foreign_owner_changes() {
 #[test]
 fn joint_surface_candidates_preserve_foreground_faces_and_outlines_and_refresh_after_edits() {
     for projection in [
-        ketchup_core::Projection::Parallel,
-        ketchup_core::Projection::Perspective,
+        sketcraft_core::Projection::Parallel,
+        sketcraft_core::Projection::Perspective,
     ] {
         let camera = Camera {
             projection,
@@ -438,7 +438,7 @@ fn projected_joint_surfaces_reuse_stock_and_invalidate_on_view_geometry_and_sect
     let moved_stock = stock.map(|triangle| triangle.map(|p| p + DVec3::Z * 0.1));
     let moved = next_frame.projected_joint_surface(7, &moved_stock);
     assert!(!Arc::ptr_eq(&first, &moved));
-    let sections = ketchup_core::DisplaySettings {
+    let sections = sketcraft_core::DisplaySettings {
         section_cuts: true,
         section_axes: [false, false, true],
         section_height: 0.,
@@ -579,8 +579,8 @@ fn all_lower_cut_face_edges_render_as_dotted_xray_through_their_own_board() {
         DVec3::new(-0.6, 0.4, -0.5),
     ];
     for projection in [
-        ketchup_core::Projection::Parallel,
-        ketchup_core::Projection::Perspective,
+        sketcraft_core::Projection::Parallel,
+        sketcraft_core::Projection::Perspective,
     ] {
         let camera = Camera {
             projection,
@@ -760,8 +760,8 @@ fn dashed_cut_guides_reach_both_endpoints_including_short_connectors() {
 #[test]
 fn internal_joint_guides_project_to_the_owner_skin_and_hide_only_behind_nearer_faces() {
     for projection in [
-        ketchup_core::Projection::Parallel,
-        ketchup_core::Projection::Perspective,
+        sketcraft_core::Projection::Parallel,
+        sketcraft_core::Projection::Perspective,
     ] {
         let mut camera = Camera::default();
         camera.projection = projection;

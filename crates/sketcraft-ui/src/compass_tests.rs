@@ -1,5 +1,5 @@
 use super::*;
-use ketchup_core::Projection;
+use sketcraft_core::Projection;
 
 #[test]
 fn compass_shift_matches_orbit_pan_and_can_toggle_during_drag() {
@@ -13,7 +13,7 @@ fn compass_shift_matches_orbit_pan_and_can_toggle_during_drag() {
                 h.app.general_settings.orbit_speed = 1.7;
             }
             orbit.app.set_tool(Tool::Orbit);
-            let start = KetchupApp::compass_center(compass.app.viewport).unwrap();
+            let start = SketCraftApp::compass_center(compass.app.viewport).unwrap();
             let orbit_start = orbit.app.viewport.center();
             compass.pointer(start, button, true, true);
             orbit.pointer(orbit_start, button, true, true);
@@ -81,7 +81,7 @@ fn compass_background_only_appears_on_hover_and_axis_has_hand_cursor() {
     for theme in [egui::Theme::Light, egui::Theme::Dark] {
         let mut h = Harness::new();
         h.ctx.set_theme(theme);
-        let center = KetchupApp::compass_center(h.app.viewport).unwrap();
+        let center = SketCraftApp::compass_center(h.app.viewport).unwrap();
         let outside = h.app.viewport.center();
         let output = h.frame(
             vec![egui::Event::PointerMoved(outside)],
@@ -127,7 +127,7 @@ fn compass_background_only_appears_on_hover_and_axis_has_hand_cursor() {
 fn compass_has_six_larger_tips_and_only_connects_positive_axes() {
     let mut h = Harness::new();
     let output = h.frame(vec![], egui::Modifiers::NONE);
-    let center = KetchupApp::compass_center(h.app.viewport).unwrap();
+    let center = SketCraftApp::compass_center(h.app.viewport).unwrap();
     let tips = output.shapes.iter().filter(|shape| {
         matches!(&shape.shape, egui::Shape::Circle(circle)
             if (circle.radius - 9.1).abs() < 1e-5 && circle.center.distance(center) < 40.)
@@ -184,12 +184,12 @@ impl eframe::Storage for PreferencesStorage {
 fn compass_clicks_align_and_persist_without_editing_geometry_or_changing_tools() {
     for tool in [Tool::Select, Tool::Line, Tool::Erase, Tool::Orbit] {
         for (label, view) in [
-            ("X", ketchup_core::StandardView::Right),
-            ("Y", ketchup_core::StandardView::Back),
-            ("Z", ketchup_core::StandardView::Top),
-            ("−X", ketchup_core::StandardView::Left),
-            ("−Y", ketchup_core::StandardView::Front),
-            ("−Z", ketchup_core::StandardView::Bottom),
+            ("X", sketcraft_core::StandardView::Right),
+            ("Y", sketcraft_core::StandardView::Back),
+            ("Z", sketcraft_core::StandardView::Top),
+            ("−X", sketcraft_core::StandardView::Left),
+            ("−Y", sketcraft_core::StandardView::Front),
+            ("−Z", sketcraft_core::StandardView::Bottom),
         ] {
             let mut h = Harness::new();
             let edge = h.app.doc.model.add_edge(DVec3::ZERO, DVec3::X).unwrap();
@@ -199,7 +199,7 @@ fn compass_clicks_align_and_persist_without_editing_geometry_or_changing_tools()
             let model = h.app.doc.model.clone();
             let camera = h.app.doc.camera.clone();
             let output = h.frame(vec![], egui::Modifiers::NONE);
-            let center = KetchupApp::compass_center(h.app.viewport).unwrap();
+            let center = SketCraftApp::compass_center(h.app.viewport).unwrap();
             let letter = axis_position(&output, center, label);
             h.click(letter);
 
@@ -216,7 +216,7 @@ fn compass_clicks_align_and_persist_without_editing_geometry_or_changing_tools()
             let mut storage = PreferencesStorage::default();
             h.app.save_inspector_preferences(&mut storage);
             assert!(storage.flushed);
-            let mut restored = KetchupApp::with_document(Document::default(), None, true);
+            let mut restored = SketCraftApp::with_document(Document::default(), None, true);
             restored.restore_inspector_preferences(&egui::Context::default(), Some(&storage));
             assert_eq!(restored.doc.camera.standard_view(), Some(view));
         }
@@ -225,7 +225,7 @@ fn compass_clicks_align_and_persist_without_editing_geometry_or_changing_tools()
 
 #[test]
 fn positive_axes_win_clicks_when_negative_buttons_overlap() {
-    use ketchup_core::StandardView;
+    use sketcraft_core::StandardView;
     for (initial, expected) in [
         (StandardView::Left, StandardView::Right),
         (StandardView::Front, StandardView::Back),
@@ -234,7 +234,7 @@ fn positive_axes_win_clicks_when_negative_buttons_overlap() {
         let mut h = Harness::new();
         h.app.doc.camera.set_standard_view(initial);
         h.frame(vec![], egui::Modifiers::NONE);
-        let center = KetchupApp::compass_center(h.app.viewport).unwrap();
+        let center = SketCraftApp::compass_center(h.app.viewport).unwrap();
         h.click(center);
         assert_eq!(h.app.doc.camera.standard_view(), Some(expected));
     }
@@ -244,7 +244,7 @@ fn positive_axes_win_clicks_when_negative_buttons_overlap() {
     h.app.doc.camera.yaw = -3. * std::f64::consts::FRAC_PI_4;
     h.app.doc.camera.pitch = 0.;
     let output = h.frame(vec![], egui::Modifiers::NONE);
-    let center = KetchupApp::compass_center(h.app.viewport).unwrap();
+    let center = SketCraftApp::compass_center(h.app.viewport).unwrap();
     h.click(axis_position(&output, center, "X"));
     assert_eq!(h.app.doc.camera.standard_view(), Some(StandardView::Right));
 }
@@ -254,7 +254,7 @@ fn compass_background_click_leaves_camera_and_model_unchanged() {
     let mut h = Harness::new();
     h.app.set_tool(Tool::Line);
     h.frame(vec![], egui::Modifiers::NONE);
-    let center = KetchupApp::compass_center(h.app.viewport).unwrap();
+    let center = SketCraftApp::compass_center(h.app.viewport).unwrap();
     let camera = h.app.doc.camera.clone();
     let model = h.app.doc.model.clone();
     h.click(center + egui::vec2(0., 40.));
@@ -285,7 +285,7 @@ fn compass_drag_orbits_from_background_and_axis_without_editing_the_model() {
         h.app.doc.camera.target = DVec3::new(4., 2., 1.);
         let model = h.app.doc.model.clone();
         let output = h.frame(vec![], egui::Modifiers::NONE);
-        let center = KetchupApp::compass_center(h.app.viewport).unwrap();
+        let center = SketCraftApp::compass_center(h.app.viewport).unwrap();
         let start = label.map_or(center + egui::vec2(0., 40.), |label| {
             axis_position(&output, center, label)
         });
@@ -313,7 +313,7 @@ fn compass_drag_orbits_from_background_and_axis_without_editing_the_model() {
         let mut storage = PreferencesStorage::default();
         h.app.save_inspector_preferences(&mut storage);
         assert!(storage.flushed);
-        let mut restored = KetchupApp::with_document(Document::default(), None, true);
+        let mut restored = SketCraftApp::with_document(Document::default(), None, true);
         restored.restore_inspector_preferences(&egui::Context::default(), Some(&storage));
         assert_eq!(restored.doc.camera.yaw, expected.yaw);
         assert_eq!(restored.doc.camera.pitch, expected.pitch);
@@ -324,7 +324,7 @@ fn compass_drag_orbits_from_background_and_axis_without_editing_the_model() {
 fn compass_drag_returning_to_axis_does_not_align_on_release() {
     let mut h = Harness::new();
     let output = h.frame(vec![], egui::Modifiers::NONE);
-    let center = KetchupApp::compass_center(h.app.viewport).unwrap();
+    let center = SketCraftApp::compass_center(h.app.viewport).unwrap();
     let x = axis_position(&output, center, "X");
     let before = h.app.doc.camera.clone();
     h.pointer(x, egui::PointerButton::Primary, true, false);
@@ -342,7 +342,7 @@ fn compass_drag_returning_to_axis_does_not_align_on_release() {
 #[test]
 fn compass_orbits_when_release_has_no_pointer_motion_event() {
     let mut h = Harness::new();
-    let start = KetchupApp::compass_center(h.app.viewport).unwrap();
+    let start = SketCraftApp::compass_center(h.app.viewport).unwrap();
     let end = start + egui::vec2(-60., -20.);
     let mut expected = h.app.doc.camera.clone();
     expected.orbit_around(dv(end - start), h.app.orbit_center());

@@ -285,7 +285,7 @@ pub(crate) struct Resume {
 
 impl Resume {
     pub fn save(
-        doc: &ketchup_core::Document,
+        doc: &sketcraft_core::Document,
         path: Option<PathBuf>,
         modified: bool,
     ) -> Result<(), String> {
@@ -299,7 +299,7 @@ impl Resume {
         )
     }
 
-    pub fn take(doc: &ketchup_core::Document) -> Result<Option<Self>, String> {
+    pub fn take(doc: &sketcraft_core::Document) -> Result<Option<Self>, String> {
         let file = crate::storage::data_dir()?.join("update-resume.json");
         let bytes = match std::fs::read(&file) {
             Ok(bytes) => bytes,
@@ -351,7 +351,7 @@ mod tests {
         Preferences::default().save().unwrap();
         assert!(Preferences::load().unwrap().automatic_updates);
 
-        let mut doc = ketchup_core::Document::default();
+        let mut doc = sketcraft_core::Document::default();
         let path = Some(PathBuf::from("models/project.ketchup"));
         Resume::save(&doc, path.clone(), true).unwrap();
         let restored = Resume::take(&doc).unwrap().unwrap();

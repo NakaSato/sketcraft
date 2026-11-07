@@ -33,7 +33,7 @@ pub enum FileDialogPayload {
     },
     ExportCuttingPlan {
         name: String,
-        model: Box<ketchup_core::Model>,
+        model: Box<sketcraft_core::Model>,
         selected: std::collections::BTreeSet<u64>,
         layout_settings: crate::cutting_layout::Settings,
     },

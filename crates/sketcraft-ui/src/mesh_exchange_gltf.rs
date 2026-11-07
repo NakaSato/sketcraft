@@ -1,5 +1,5 @@
 //! glTF 2.0 import (.glb, or .gltf with embedded buffers): triangle meshes placed by the
-//! default scene's node transforms. glTF is metres with Y up; KetchUp is metres with Z up.
+//! default scene's node transforms. glTF is metres with Y up; SketCraft is metres with Z up.
 use super::*;
 use glam::{DMat4, DVec4};
 use gltf::buffer::Source;

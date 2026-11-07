@@ -100,7 +100,7 @@ impl Project {
     }
 }
 
-impl KetchupApp {
+impl SketCraftApp {
     pub(super) fn remember_recent_project(&mut self, browser_file: Option<(String, String)>) {
         let path = self.project.path.clone().map(|path| {
             #[cfg(not(target_arch = "wasm32"))]
@@ -720,7 +720,7 @@ mod recent_tests {
 
     #[test]
     fn recent_projects_deduplicate_move_to_front_and_cap_at_ten() {
-        let mut app = KetchupApp::with_document(Document::default(), None, true);
+        let mut app = SketCraftApp::with_document(Document::default(), None, true);
         for index in 0..12 {
             app.project.path = Some(format!("project-{index}.ketchup").into());
             app.remember_recent_project(None);
@@ -735,11 +735,11 @@ mod recent_tests {
 
     #[test]
     fn browser_and_server_sources_are_distinct() {
-        let mut app = KetchupApp::with_document(Document::default(), None, true);
+        let mut app = SketCraftApp::with_document(Document::default(), None, true);
         app.remember_recent_project(Some(("model.ketchup".into(), "model.ketchup:100:1".into())));
         app.remember_recent_project(Some(("model.ketchup".into(), "model.ketchup:100:1".into())));
         assert_eq!(app.project.recent.len(), 1);
-        app.doc.shared_project = Some(ketchup_core::SharedProject {
+        app.doc.shared_project = Some(sketcraft_core::SharedProject {
             server: "https://example.test".into(), id: "project".into(),
             revision: 1, server_updated_at: 0, file_updated_at: 0,
         });

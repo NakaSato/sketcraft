@@ -176,7 +176,7 @@ impl Region {
         source: &Model,
         evaluated: &Model,
         members: [u64; 2],
-        settings: &ketchup_core::joinery::JointSettings,
+        settings: &sketcraft_core::joinery::JointSettings,
     ) -> Self {
         Self::build_cached(
             source,
@@ -191,7 +191,7 @@ impl Region {
         source: &Model,
         evaluated: &Model,
         members: [u64; 2],
-        settings: &ketchup_core::joinery::JointSettings,
+        settings: &sketcraft_core::joinery::JointSettings,
         boards: &mut BoardGeometryCache,
     ) -> Self {
         let mut result = Self {
@@ -329,7 +329,7 @@ impl Region {
         &self,
         mesh: &mut renderer::Mesh,
         model: &Model,
-        display: &ketchup_core::DisplaySettings,
+        display: &sketcraft_core::DisplaySettings,
         dark: bool,
         preview: bool,
         guides: &mut Vec<PreparedGuide>,
@@ -398,7 +398,7 @@ mod tests {
             body.add_edge(corners[i], corners[(i + 1) % 4]).unwrap();
         }
         let face = *body.faces.keys().next().unwrap();
-        let normal = ketchup_core::faces::plane(&body, &body.faces[&face].vertices)
+        let normal = sketcraft_core::faces::plane(&body, &body.faces[&face].vertices)
             .unwrap()
             .normal;
         body.push_pull(face, (hi.z - lo.z) / normal.z).unwrap();
@@ -417,17 +417,17 @@ mod tests {
                 DVec3::new(1.2, 1., 0.1),
             ),
         ];
-        let settings = ketchup_core::joinery::JointSettings {
-            kind: ketchup_core::joinery::JointKind::Finger,
+        let settings = sketcraft_core::joinery::JointSettings {
+            kind: sketcraft_core::joinery::JointKind::Finger,
             fingers: 3,
             clearance: 0.,
             ..Default::default()
         };
         source
-            .add_connection(ketchup_core::connections::Connection {
+            .add_connection(sketcraft_core::connections::Connection {
                 members,
                 entry_face: None,
-                operation: ketchup_core::connections::ConnectionOperation::Joinery(
+                operation: sketcraft_core::connections::ConnectionOperation::Joinery(
                     settings.clone(),
                 ),
             })
@@ -601,16 +601,16 @@ mod tests {
                 DVec3::new(1.2, 1.2, 0.1),
             ),
         ];
-        let settings = ketchup_core::joinery::JointSettings {
-            kind: ketchup_core::joinery::JointKind::HalfLap,
+        let settings = sketcraft_core::joinery::JointSettings {
+            kind: sketcraft_core::joinery::JointKind::HalfLap,
             clearance: 0.001,
             ..Default::default()
         };
         source
-            .add_connection(ketchup_core::connections::Connection {
+            .add_connection(sketcraft_core::connections::Connection {
                 members,
                 entry_face: None,
-                operation: ketchup_core::connections::ConnectionOperation::Joinery(
+                operation: sketcraft_core::connections::ConnectionOperation::Joinery(
                     settings.clone(),
                 ),
             })

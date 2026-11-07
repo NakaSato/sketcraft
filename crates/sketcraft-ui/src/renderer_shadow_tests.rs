@@ -67,14 +67,14 @@ fn shadow_antialiasing_preserves_receiver_silhouette() {
 #[test]
 fn shadow_mask_partitions_include_lit_occluders_at_their_original_depth() {
     for projection in [
-        ketchup_core::Projection::Perspective,
-        ketchup_core::Projection::Parallel,
+        sketcraft_core::Projection::Perspective,
+        sketcraft_core::Projection::Parallel,
     ] {
         let mut camera = Camera {
             projection,
             ..Default::default()
         };
-        camera.set_standard_view(ketchup_core::StandardView::Iso);
+        camera.set_standard_view(sketcraft_core::StandardView::Iso);
         let [a, b, c] = [
             DVec3::new(-2., -2., 0.),
             DVec3::new(2., -2., 0.),
@@ -199,7 +199,7 @@ fn shadow_antialiasing_smooths_shadows_without_smoothing_silhouettes() {
         // of fragments on a sloped receiver, rather than a flat overlay.
         let mut fragmented_mesh = Mesh::new(
             &Camera {
-                projection: ketchup_core::Projection::Parallel,
+                projection: sketcraft_core::Projection::Parallel,
                 ..Default::default()
             },
             DVec2::splat(64.),
@@ -427,7 +427,7 @@ fn shadow_subdivisions_preserve_draw_geometry_and_original_occluders() {
     };
     for section in [false, true] {
         for alpha in [64, 255] {
-            let display = ketchup_core::DisplaySettings {
+            let display = sketcraft_core::DisplaySettings {
                 section_cuts: section,
                 section_height: 0.75,
                 shadow_antialiasing: false,

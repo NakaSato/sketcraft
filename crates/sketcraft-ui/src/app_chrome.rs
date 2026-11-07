@@ -1,7 +1,7 @@
 //! Window chrome: title bar controls, top bar menus, status bar and the tool rail.
 use super::*;
 
-impl KetchupApp {
+impl SketCraftApp {
     pub(super) fn icon_button(
         ui: &mut egui::Ui,
         kind: &str,

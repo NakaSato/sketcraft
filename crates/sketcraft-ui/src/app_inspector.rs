@@ -1,7 +1,7 @@
 //! Inspector panel contents: materials and entity info.
 use super::*;
 
-impl KetchupApp {
+impl SketCraftApp {
     pub(super) fn materials_contents(&mut self, ui: &mut egui::Ui) {
         let objects: Vec<_> = self
             .selected

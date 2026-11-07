@@ -1,6 +1,6 @@
 use super::*;
 
-impl KetchupApp {
+impl SketCraftApp {
     pub(super) fn update_window(&mut self, ctx: &egui::Context) {
         if !self.updates.open {
             return;
@@ -105,7 +105,7 @@ mod tests {
 
     #[test]
     fn restart_is_blocked_during_file_operations_and_unresolved_recovery() {
-        let mut app = KetchupApp::with_document(Document::default(), None, true);
+        let mut app = SketCraftApp::with_document(Document::default(), None, true);
         let (_sender, receiver) = std::sync::mpsc::channel();
         app.project.pending = Some(receiver);
         assert!(app.prepare_update_restart().is_err());
@@ -139,7 +139,7 @@ mod tests {
             return;
         }
         assert!(std::env::var_os("KETCHUP_DATA_DIR").is_some());
-        let mut app = KetchupApp::with_document(Document::default(), None, true);
+        let mut app = SketCraftApp::with_document(Document::default(), None, true);
         app.doc.model.add_edge(DVec3::ZERO, DVec3::X).unwrap();
         let model = app.doc.model.clone();
         assert!(app.prepare_update_restart().is_err());

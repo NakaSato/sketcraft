@@ -1,6 +1,6 @@
 //! Screenshot settings, paper composition and portable image/PDF packaging.
 use image::{DynamicImage, RgbaImage};
-use ketchup_core::{Camera, DVec2, DVec3, Model, Projection, StandardView};
+use sketcraft_core::{Camera, DVec2, DVec3, Model, Projection, StandardView};
 use serde::{Deserialize, Serialize};
 use std::io::{Cursor, Write};
 

@@ -1,4 +1,3 @@
-extern crate sketcraft_core as ketchup_core;
 pub use sketcraft_core;
 
 mod file_dialog;
@@ -35,7 +34,7 @@ mod updates;
 #[cfg(not(target_arch = "wasm32"))]
 pub use updates::initialize as initialize_updater;
 
-pub use app::KetchupApp;
+pub use app::SketCraftApp;
 
 #[cfg(target_arch = "wasm32")]
 mod tool_cursor;

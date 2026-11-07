@@ -30,7 +30,7 @@ fn tab_ids(layout: &Layout) -> Vec<u64> {
 }
 
 struct UiHarness {
-    app: KetchupApp,
+    app: SketCraftApp,
     ctx: egui::Context,
     time: f64,
 }
@@ -39,7 +39,7 @@ impl UiHarness {
         let ctx = egui::Context::default();
         apply(&ctx);
         let mut harness = Self {
-            app: KetchupApp::with_document(Document::default(), None, true),
+            app: SketCraftApp::with_document(Document::default(), None, true),
             ctx,
             time: 0.,
         };
@@ -169,7 +169,7 @@ fn tabs_share_the_existing_toolbar_and_close_only_from_the_context_menu() {
     harness
         .app
         .persist_inspector_changes(&harness.ctx, Some(&mut storage), false);
-    let mut restored = KetchupApp::with_document(Document::default(), None, true);
+    let mut restored = SketCraftApp::with_document(Document::default(), None, true);
     restored.restore_inspector_preferences(&egui::Context::default(), Some(&storage));
     assert_eq!(restored.viewports.layout, Layout::default());
 
@@ -303,7 +303,7 @@ fn nested_splits_moves_and_closes_keep_each_tab_exactly_once() {
 #[test]
 fn camera_switches_share_model_and_history_but_not_orientation_or_zoom() {
     let ctx = egui::Context::default();
-    let mut app = KetchupApp::with_document(Document::default(), None, true);
+    let mut app = SketCraftApp::with_document(Document::default(), None, true);
     let original_camera = app.doc.camera.clone();
     let other = app.viewports.add(0, &original_camera);
     app.activate_viewport(other);
@@ -329,7 +329,7 @@ fn camera_switches_share_model_and_history_but_not_orientation_or_zoom() {
 #[test]
 fn tabs_layout_active_view_and_orientations_save_without_a_model_edit() {
     let ctx = egui::Context::default();
-    let mut app = KetchupApp::with_document(Document::default(), None, true);
+    let mut app = SketCraftApp::with_document(Document::default(), None, true);
     let tab = app.viewports.add(0, &app.doc.camera);
     app.viewports.dock(tab, 0, DropSide::Right);
     app.activate_viewport(tab);
@@ -345,7 +345,7 @@ fn tabs_layout_active_view_and_orientations_save_without_a_model_edit() {
     assert!(app.dirty_since.is_none());
     let expected = app.viewports.capture(&app.doc.camera);
     let restored_ctx = egui::Context::default();
-    let mut restored = KetchupApp::with_document(Document::default(), None, true);
+    let mut restored = SketCraftApp::with_document(Document::default(), None, true);
     restored.restore_inspector_preferences(&restored_ctx, Some(&storage));
     assert_eq!(restored.viewports.capture(&restored.doc.camera), expected);
     assert_eq!(restored.doc.camera.yaw, 1.2);
@@ -360,7 +360,7 @@ fn tabs_layout_active_view_and_orientations_save_without_a_model_edit() {
 #[test]
 fn project_cameras_round_trip_without_leaking_framing_to_other_projects() {
     let ctx = egui::Context::default();
-    let mut app = KetchupApp::with_document(Document::default(), None, true);
+    let mut app = SketCraftApp::with_document(Document::default(), None, true);
     let tab = app.viewports.add(0, &app.doc.camera);
     app.activate_viewport(tab);
     app.doc.camera.target = DVec3::new(100., 200., 30.);
@@ -372,7 +372,7 @@ fn project_cameras_round_trip_without_leaking_framing_to_other_projects() {
     let saved = Document::from_json(&serde_json::to_string(&app.doc).unwrap()).unwrap();
     assert_eq!(saved.viewport_cameras[&tab], other);
     let preferences = app.viewports.capture(&app.doc.camera);
-    let mut loaded = KetchupApp::with_document(saved, None, true);
+    let mut loaded = SketCraftApp::with_document(saved, None, true);
     loaded.viewports = Workspace::restore(
         &preferences,
         &mut loaded.doc.camera,
@@ -473,7 +473,7 @@ fn right_click_renames_a_view_and_saves_without_a_model_edit() {
         .app
         .persist_inspector_changes(&harness.ctx, Some(&mut storage), false);
     assert_eq!(storage.flushes, 1);
-    let mut restored = KetchupApp::with_document(Document::default(), None, true);
+    let mut restored = SketCraftApp::with_document(Document::default(), None, true);
     restored.restore_inspector_preferences(&egui::Context::default(), Some(&storage));
     assert_eq!(restored.viewports.name(1), "Plan");
     assert_eq!(restored.viewports.name(0), "Current");

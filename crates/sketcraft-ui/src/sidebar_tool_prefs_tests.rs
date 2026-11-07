@@ -5,7 +5,7 @@ use super::*;
 fn section_axes_survive_immediate_reload_without_model_edit() {
     let ctx = egui::Context::default();
     let mut storage = SavedPreferences::default();
-    let mut app = KetchupApp::with_document(Document::default(), None, true);
+    let mut app = SketCraftApp::with_document(Document::default(), None, true);
     app.persist_inspector_changes(&ctx, Some(&mut storage), false);
     app.doc.display.section_axes = [true, true, false];
     app.doc.display.section_planes = true;
@@ -14,7 +14,7 @@ fn section_axes_survive_immediate_reload_without_model_edit() {
     app.doc.display.section_cuts = true;
     app.persist_inspector_changes(&ctx, Some(&mut storage), false);
     assert!(!app.project.modified);
-    let mut restored = KetchupApp::with_document(Document::default(), None, true);
+    let mut restored = SketCraftApp::with_document(Document::default(), None, true);
     restored.restore_inspector_preferences(&egui::Context::default(), Some(&storage));
     assert_eq!(restored.doc.display.section_axes, [true, true, false]);
     assert!(restored.doc.display.section_planes);
@@ -27,7 +27,7 @@ fn section_axes_survive_immediate_reload_without_model_edit() {
 fn every_active_tool_persists_immediately_without_a_model_edit() {
     let ctx = egui::Context::default();
     let mut storage = SavedPreferences::default();
-    let mut app = KetchupApp::with_document(Document::default(), None, true);
+    let mut app = SketCraftApp::with_document(Document::default(), None, true);
     app.persist_inspector_changes(&ctx, Some(&mut storage), false);
     // Select also needs to save after another tool, rather than only being
     // restored by the default for an empty preference store.
@@ -36,7 +36,7 @@ fn every_active_tool_persists_immediately_without_a_model_edit() {
         app.set_tool(tool);
         app.persist_inspector_changes(&ctx, Some(&mut storage), false);
         assert!(storage.flushed, "{tool:?}");
-        let mut restored = KetchupApp::with_document(Document::default(), None, true);
+        let mut restored = SketCraftApp::with_document(Document::default(), None, true);
         restored.restore_inspector_preferences(&egui::Context::default(), Some(&storage));
         assert_eq!(restored.tool, tool);
         assert_eq!(
@@ -54,7 +54,7 @@ fn every_active_tool_persists_immediately_without_a_model_edit() {
 fn two_axis_locks_save_without_model_edits_and_restore_older_preferences() {
     let ctx = egui::Context::default();
     let mut storage = SavedPreferences::default();
-    let mut app = KetchupApp::with_document(Document::default(), None, true);
+    let mut app = SketCraftApp::with_document(Document::default(), None, true);
     app.set_tool(Tool::Line);
     app.persist_inspector_changes(&ctx, Some(&mut storage), false);
     for axis in [Axis::X, Axis::Y, Axis::X, Axis::Y] {
@@ -64,7 +64,7 @@ fn two_axis_locks_save_without_model_edits_and_restore_older_preferences() {
         assert!(storage.flushed);
         assert!(!app.project.modified);
         assert!(app.dirty_since.is_none());
-        let mut restored = KetchupApp::with_document(Document::default(), None, true);
+        let mut restored = SketCraftApp::with_document(Document::default(), None, true);
         restored.restore_inspector_preferences(&egui::Context::default(), Some(&storage));
         assert_eq!((restored.lock, restored.second_lock), (app.lock, app.second_lock));
     }
@@ -90,7 +90,7 @@ fn grid_snapping_defaults_off_for_new_and_older_preferences() {
         let preferences: InspectorPreferences = serde_json::from_str(json).unwrap();
         let mut storage = SavedPreferences::default();
         eframe::set_value(&mut storage, PREFERENCE_KEY, &preferences);
-        let mut app = KetchupApp::with_document(Document::default(), None, true);
+        let mut app = SketCraftApp::with_document(Document::default(), None, true);
         assert!(!app.snap_to_grid);
         assert!(app.snap_to_edge);
         assert!(app.snap_to_face);
@@ -111,7 +111,7 @@ fn geometry_targets_restore_every_combination_without_a_model_edit() {
             for centers in [false, true] {
                 let ctx = egui::Context::default();
                 let mut storage = SavedPreferences::default();
-                let mut app = KetchupApp::with_document(Document::default(), None, true);
+                let mut app = SketCraftApp::with_document(Document::default(), None, true);
                 app.persist_inspector_changes(&ctx, Some(&mut storage), false);
                 storage.flushed = false;
                 app.snap_to_edge = edges;
@@ -122,7 +122,7 @@ fn geometry_targets_restore_every_combination_without_a_model_edit() {
                 assert_eq!(storage.flushed, !(edges && faces && centers));
                 assert!(!app.project.modified);
                 assert!(app.dirty_since.is_none());
-                let mut restored = KetchupApp::with_document(Document::default(), None, true);
+                let mut restored = SketCraftApp::with_document(Document::default(), None, true);
                 restored.restore_inspector_preferences(&egui::Context::default(), Some(&storage));
                 assert_eq!(restored.snap_to_edge, edges);
                 assert_eq!(restored.snap_to_face, faces);
@@ -142,7 +142,7 @@ fn legacy_master_off_migrates_to_targets_that_can_be_enabled_independently() {
     .unwrap();
     let mut storage = SavedPreferences::default();
     eframe::set_value(&mut storage, PREFERENCE_KEY, &preferences);
-    let mut app = KetchupApp::with_document(Document::default(), None, true);
+    let mut app = SketCraftApp::with_document(Document::default(), None, true);
     app.restore_inspector_preferences(&ctx, Some(&storage));
     assert!(!app.snap_to_edge);
     assert!(!app.snap_to_face);
@@ -150,7 +150,7 @@ fn legacy_master_off_migrates_to_targets_that_can_be_enabled_independently() {
     app.snap_to_face_center = true;
     app.sync_geometry_snapping();
     app.persist_inspector_changes(&ctx, Some(&mut storage), false);
-    let mut restored = KetchupApp::with_document(Document::default(), None, true);
+    let mut restored = SketCraftApp::with_document(Document::default(), None, true);
     restored.restore_inspector_preferences(&egui::Context::default(), Some(&storage));
     assert!(!restored.snap_to_edge);
     assert!(!restored.snap_to_face);
@@ -161,7 +161,7 @@ fn legacy_master_off_migrates_to_targets_that_can_be_enabled_independently() {
 #[test]
 fn closing_shortcuts_keeps_the_saved_search_filter() {
     let ctx = egui::Context::default();
-    let mut app = KetchupApp::with_document(Document::default(), None, true);
+    let mut app = SketCraftApp::with_document(Document::default(), None, true);
     app.help = true;
     app.shortcut_filter = "Move".into();
     let _ = ctx.run_test_ui(
@@ -181,7 +181,7 @@ fn closing_shortcuts_keeps_the_saved_search_filter() {
     assert_eq!(app.shortcut_filter, "Move");
     let mut storage = SavedPreferences::default();
     app.persist_inspector_changes(&ctx, Some(&mut storage), false);
-    let mut restored = KetchupApp::with_document(Document::default(), None, true);
+    let mut restored = SketCraftApp::with_document(Document::default(), None, true);
     restored.restore_inspector_preferences(&egui::Context::default(), Some(&storage));
     assert_eq!(restored.shortcut_filter, "Move");
 }
@@ -190,14 +190,14 @@ fn closing_shortcuts_keeps_the_saved_search_filter() {
 fn rotate_and_its_locks_restore_after_an_immediate_save_without_a_model_edit() {
     let ctx = egui::Context::default();
     let mut storage = SavedPreferences::default();
-    let mut app = KetchupApp::with_document(Document::default(), None, true);
+    let mut app = SketCraftApp::with_document(Document::default(), None, true);
     app.set_tool(Tool::Rotate);
     app.toggle_axis_lock(Axis::X, &ctx);
     app.toggle_axis_lock(Axis::Y, &ctx);
     app.persist_inspector_changes(&ctx, Some(&mut storage), false);
     assert!(storage.flushed);
     assert!(!app.project.modified);
-    let mut restored = KetchupApp::with_document(Document::default(), None, true);
+    let mut restored = SketCraftApp::with_document(Document::default(), None, true);
     restored.restore_inspector_preferences(&egui::Context::default(), Some(&storage));
     assert_eq!(restored.tool, Tool::Rotate);
     assert_eq!(restored.plane_lock(), Some(Axis::Z));
@@ -212,7 +212,7 @@ fn rotate_and_its_locks_restore_after_an_immediate_save_without_a_model_edit() {
 fn tool_menu_choices_and_options_restore_without_transient_state() {
     let ctx = egui::Context::default();
     let mut storage = SavedPreferences::default();
-    let mut app = KetchupApp::with_document(Document::default(), None, true);
+    let mut app = SketCraftApp::with_document(Document::default(), None, true);
     app.set_tool(Tool::Polygon);
     app.set_tool(Tool::Text);
     app.set_tool(Tool::Trim);
@@ -223,7 +223,7 @@ fn tool_menu_choices_and_options_restore_without_transient_state() {
         app.polygon_sides = sides;
         app.persist_inspector_changes(&ctx, Some(&mut storage), false);
         assert!(storage.flushed);
-        let mut restored = KetchupApp::with_document(Document::default(), None, true);
+        let mut restored = SketCraftApp::with_document(Document::default(), None, true);
         restored.restore_inspector_preferences(&egui::Context::default(), Some(&storage));
         assert_eq!(restored.polygon_sides, sides);
         assert_eq!(restored.drawing_tool, Tool::Polygon);
@@ -242,7 +242,7 @@ fn tool_menu_choices_and_options_restore_without_transient_state() {
     assert!(storage.flushed);
     assert!(!app.project.modified);
     assert!(app.dirty_since.is_none());
-    let mut restored = KetchupApp::with_document(Document::default(), None, true);
+    let mut restored = SketCraftApp::with_document(Document::default(), None, true);
     restored.restore_inspector_preferences(&egui::Context::default(), Some(&storage));
     assert_eq!(restored.tool, Tool::Move);
     assert!(restored.move_copy);
@@ -272,7 +272,7 @@ fn older_tool_preferences_keep_defaults_and_invalid_options_are_normalized() {
         let preferences: InspectorPreferences = serde_json::from_str(json).unwrap();
         let mut storage = SavedPreferences::default();
         eframe::set_value(&mut storage, PREFERENCE_KEY, &preferences);
-        let mut app = KetchupApp::with_document(Document::default(), None, true);
+        let mut app = SketCraftApp::with_document(Document::default(), None, true);
         app.restore_inspector_preferences(&egui::Context::default(), Some(&storage));
         assert_eq!(ToolPreferences::capture(&app), ToolPreferences::default());
     }
@@ -288,7 +288,7 @@ fn older_tool_preferences_keep_defaults_and_invalid_options_are_normalized() {
         };
         let mut storage = SavedPreferences::default();
         eframe::set_value(&mut storage, PREFERENCE_KEY, &preferences);
-        let mut app = KetchupApp::with_document(Document::default(), None, true);
+        let mut app = SketCraftApp::with_document(Document::default(), None, true);
         app.restore_inspector_preferences(&egui::Context::default(), Some(&storage));
         assert_eq!(app.tool, Tool::Polygon);
         assert_eq!(app.drawing_tool, Tool::Polygon);
@@ -302,7 +302,7 @@ fn older_tool_preferences_keep_defaults_and_invalid_options_are_normalized() {
 fn paint_target_persists_immediately_and_older_preferences_default_to_face() {
     let ctx = egui::Context::default();
     let mut storage = SavedPreferences::default();
-    let mut app = KetchupApp::with_document(Document::default(), None, true);
+    let mut app = SketCraftApp::with_document(Document::default(), None, true);
     assert_eq!(app.paint_target, PaintTarget::Face);
     for target in [PaintTarget::Group, PaintTarget::Face] {
         storage.flushed = false;
@@ -310,7 +310,7 @@ fn paint_target_persists_immediately_and_older_preferences_default_to_face() {
         app.persist_inspector_changes(&ctx, Some(&mut storage), false);
         assert!(storage.flushed);
         assert!(!app.project.modified);
-        let mut restored = KetchupApp::with_document(Document::default(), None, true);
+        let mut restored = SketCraftApp::with_document(Document::default(), None, true);
         restored.restore_inspector_preferences(&egui::Context::default(), Some(&storage));
         assert_eq!(restored.paint_target, target);
     }
@@ -322,14 +322,14 @@ fn paint_target_persists_immediately_and_older_preferences_default_to_face() {
 fn large_tool_set_saves_immediately_and_defaults_off_for_older_preferences() {
     let ctx = egui::Context::default();
     let mut storage = SavedPreferences::default();
-    let mut app = KetchupApp::with_document(Document::default(), None, true);
+    let mut app = SketCraftApp::with_document(Document::default(), None, true);
     for enabled in [true, false] {
         app.large_tool_set = enabled;
         storage.flushed = false;
         app.persist_inspector_changes(&ctx, Some(&mut storage), false);
         assert!(storage.flushed);
         assert!(!app.project.modified);
-        let mut restored = KetchupApp::with_document(Document::default(), None, true);
+        let mut restored = SketCraftApp::with_document(Document::default(), None, true);
         restored.restore_inspector_preferences(&egui::Context::default(), Some(&storage));
         assert_eq!(restored.large_tool_set, enabled);
     }

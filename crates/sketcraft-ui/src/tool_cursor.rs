@@ -3,7 +3,7 @@ use eframe::{
     egui,
     wasm_bindgen::{self, prelude::*},
 };
-use ketchup_core::Tool;
+use sketcraft_core::Tool;
 use serde_json::{Value, json};
 
 #[wasm_bindgen(module = "/src/tool_cursor.js")]

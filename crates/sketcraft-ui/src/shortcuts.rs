@@ -71,7 +71,7 @@ impl Section<'_> {
     }
 }
 
-impl KetchupApp {
+impl SketCraftApp {
     pub(super) fn help_window(&mut self, ctx: &egui::Context) {
         let mac = ctx.os() == egui::os::OperatingSystem::Mac;
         let command = if mac { "⌘" } else { "Ctrl" };

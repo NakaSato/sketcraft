@@ -1,7 +1,7 @@
 //! Scale factors come from the same world-space targets as Move.
 use super::*;
 
-impl KetchupApp {
+impl SketCraftApp {
     // A tiny reference amplifies pointer rounding and snap changes. Measure
     // usable handles in pixels so sensitivity stays consistent at every zoom.
     const MIN_SCALE_REFERENCE_PIXELS: f64 = 24.;

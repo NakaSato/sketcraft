@@ -720,7 +720,7 @@ mod tests {
         assert_eq!(cache.summary_builds, 3);
     }
 
-    fn nested_model() -> (KetchupApp, u64, u64, u64) {
+    fn nested_model() -> (SketCraftApp, u64, u64, u64) {
         let mut model = Model::default();
         let edge = model.add_edge(DVec3::ZERO, DVec3::X).unwrap();
         let component = model
@@ -737,7 +737,7 @@ mod tests {
             ..Default::default()
         };
         (
-            KetchupApp::with_document(doc, None, true),
+            SketCraftApp::with_document(doc, None, true),
             group,
             component,
             edge,
@@ -788,11 +788,11 @@ mod tests {
             .unwrap()
             .entities
             .insert(loose_edge);
-        let stock = ketchup_core::StockMaterial {
+        let stock = sketcraft_core::StockMaterial {
             name: "Pine".into(),
             dimensions: [190, 890, 24000],
         };
-        let material_id = ketchup_core::MaterialId::new_v4();
+        let material_id = sketcraft_core::MaterialId::new_v4();
         model.stock_materials.insert(material_id, stock.clone());
         let before = model.clone();
         assert_eq!(
@@ -921,7 +921,7 @@ mod tests {
         let (mut model, group, component) = paintable_model();
         let rgb = [31, 82, 149];
         model.paint_object(group, rgb).unwrap();
-        let mut app = KetchupApp::with_document(
+        let mut app = SketCraftApp::with_document(
             Document {
                 model,
                 ..Default::default()
@@ -997,7 +997,7 @@ mod tests {
 
     #[test]
     fn search_reveals_collapsed_matches_without_changing_disclosure_preferences() {
-        fn labels(app: &mut KetchupApp, ctx: &egui::Context) -> Vec<String> {
+        fn labels(app: &mut SketCraftApp, ctx: &egui::Context) -> Vec<String> {
             fn collect(shape: &egui::Shape, labels: &mut Vec<String>) {
                 match shape {
                     egui::Shape::Text(text) => labels.push(text.galley.job.text.clone()),
@@ -1058,7 +1058,7 @@ mod tests {
 
     #[test]
     fn search_ranges_skip_filtered_out_siblings() {
-        let mut app = KetchupApp::with_document(Document::default(), None, true);
+        let mut app = SketCraftApp::with_document(Document::default(), None, true);
         let ids: Vec<_> = ["Part A", "Other", "Part B"]
             .into_iter()
             .enumerate()
@@ -1176,7 +1176,7 @@ mod tests {
 
     #[test]
     fn tree_ranges_include_offscreen_geometry_in_object_first_order() {
-        let mut app = KetchupApp::with_document(Document::default(), None, true);
+        let mut app = SketCraftApp::with_document(Document::default(), None, true);
         let ctx = egui::Context::default();
         let edges: Vec<_> = (0..100)
             .map(|index| {
@@ -1220,7 +1220,7 @@ mod tests {
 
     #[test]
     fn expanded_geometry_renders_selected_text() {
-        let mut app = KetchupApp::with_document(Document::default(), None, true);
+        let mut app = SketCraftApp::with_document(Document::default(), None, true);
         let id = app.doc.model.add_text(DVec3::ZERO, DVec3::Y, "Beam label").unwrap();
         app.selected.insert(id);
         let ctx = egui::Context::default();
@@ -1275,7 +1275,7 @@ mod tests {
     #[test]
     fn visibility_button_is_right_aligned_and_toggles_only_its_entity_with_undo() {
         fn frame(
-            app: &mut KetchupApp,
+            app: &mut SketCraftApp,
             ctx: &egui::Context,
             events: Vec<egui::Event>,
         ) -> egui::FullOutput {
@@ -1403,7 +1403,7 @@ mod tests {
         let mut search_rect = None;
         for offset in [0., 200.] {
             let ctx = egui::Context::default();
-            let mut app = KetchupApp::with_document(doc.clone(), None, true);
+            let mut app = SketCraftApp::with_document(doc.clone(), None, true);
             remember_scroll(&ctx, "outliner_tree", egui::vec2(0., offset));
             let _ = ctx.run_test_ui(
                 egui::RawInput {
@@ -1430,7 +1430,7 @@ mod tests {
     }
 }
 
-impl KetchupApp {
+impl SketCraftApp {
     pub(in crate::app) fn outliner_contents(&mut self, ui: &mut egui::Ui) {
         use egui::AtomExt as _;
 

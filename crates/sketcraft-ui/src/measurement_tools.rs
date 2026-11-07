@@ -1,5 +1,5 @@
 use super::*;
-use ketchup_core::{Dimension, DimensionAnchor, angle_arc, angle_degrees};
+use sketcraft_core::{Dimension, DimensionAnchor, angle_arc, angle_degrees};
 
 /// Tape Measure rescaling waiting for confirmation: scale by `factor` about `center`.
 pub(super) struct TapeResize {
@@ -17,7 +17,7 @@ pub(super) struct Measurement {
     pub(super) text: String,
 }
 
-impl KetchupApp {
+impl SketCraftApp {
     pub(super) fn measurement_plane(&self) -> Option<(DVec3, DVec3)> {
         let m = self.measurement.as_ref()?;
         if self.tool != Tool::Dimensions && let Some(normal) = self.plane_lock() {
@@ -156,7 +156,7 @@ impl KetchupApp {
             .model
             .nearest_face(self.doc.camera.ray(dv(pos - self.viewport.min), size))
             .and_then(|(id, _, _)| {
-                ketchup_core::faces::plane(&self.doc.model, &self.doc.model.faces[&id].vertices)
+                sketcraft_core::faces::plane(&self.doc.model, &self.doc.model.faces[&id].vertices)
             })
             .map(|p| p.normal)
             .unwrap_or(DVec3::Z);
@@ -554,7 +554,7 @@ fn dimension_shapes(
     model: &Model,
     d: &Dimension,
     color: Color32,
-    units: ketchup_core::UnitSettings,
+    units: sketcraft_core::UnitSettings,
 ) -> Vec<egui::Shape> {
     let points = d.layout(model);
     let size = dv(rect.size());

@@ -481,7 +481,7 @@ fn drop_target(rect: Rect, pos: Pos2) -> (DropSide, Rect) {
     (side, preview)
 }
 
-impl KetchupApp {
+impl SketCraftApp {
     pub(super) fn sync_viewport_cameras(&mut self) {
         self.viewports
             .cameras

@@ -31,7 +31,7 @@ fn retained_mesh_reuses_identical_output_and_keeps_old_frames_alive() {
 #[test]
 fn retained_mesh_compares_indices_draw_ranges_and_normalized_parallel_depth() {
     let camera = Camera {
-        projection: ketchup_core::Projection::Parallel,
+        projection: sketcraft_core::Projection::Parallel,
         ..Default::default()
     };
     let size = DVec2::new(640., 480.);
@@ -121,7 +121,7 @@ fn adjacency_survives_vertex_movement_and_refreshes_after_topology_edits() {
 #[test]
 fn parallel_faces_remain_distinct_after_webgl_depth_conversion() {
     let camera = Camera {
-        projection: ketchup_core::Projection::Parallel,
+        projection: sketcraft_core::Projection::Parallel,
         ..Default::default()
     };
     let mut mesh = Mesh::new(&camera, DVec2::new(640., 480.));
@@ -353,7 +353,7 @@ fn face_batches_exclude_interleaved_strokes_and_clipped_faces() {
     mesh.world_triangle(&camera, triangle, Color32::WHITE);
     line(&mut mesh);
     mesh.world_triangle(&camera, triangle, Color32::WHITE);
-    mesh.set_display(&ketchup_core::DisplaySettings {
+    mesh.set_display(&sketcraft_core::DisplaySettings {
         section_cuts: true,
         section_height: -1.,
         ..Default::default()

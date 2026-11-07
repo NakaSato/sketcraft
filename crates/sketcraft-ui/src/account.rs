@@ -269,7 +269,7 @@ impl Account {
         let mut open = self.menu_open;
         let mut logout = false;
         egui::Popup::menu(avatar)
-            .style(crate::app::KetchupApp::menu_style)
+            .style(crate::app::SketCraftApp::menu_style)
             .id(egui::Id::unique("account_menu"))
             .open_bool(&mut open)
             .close_behavior(egui::PopupCloseBehavior::CloseOnClickOutside)

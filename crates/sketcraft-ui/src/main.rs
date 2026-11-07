@@ -35,7 +35,7 @@ fn main() -> eframe::Result {
     eframe::run_native(
         "SketCraft — 3D workspace",
         options,
-        Box::new(|cc| Ok(Box::new(sketcraft_ui::KetchupApp::new(cc)))),
+        Box::new(|cc| Ok(Box::new(sketcraft_ui::SketCraftApp::new(cc)))),
     )
 }
 
@@ -59,7 +59,7 @@ fn main() {
             .start(
                 canvas,
                 options,
-                Box::new(|cc| Ok(Box::new(sketcraft_ui::KetchupApp::new(cc)))),
+                Box::new(|cc| Ok(Box::new(sketcraft_ui::SketCraftApp::new(cc)))),
             )
             .await;
         if let Some(loading) = document.get_element_by_id("loading") {

@@ -101,7 +101,7 @@ fn scale_axis_and_plane_locks_constrain_pointer_preview_typed_commit_and_history
     ] {
         let mut h = Harness::new();
         // Parallel projection makes a 1.5x world radius a 1.5x screen radius.
-        h.app.doc.camera.projection = ketchup_core::Projection::Parallel;
+        h.app.doc.camera.projection = sketcraft_core::Projection::Parallel;
         let edge = selection(&mut h);
         let before = h.app.doc.model.clone();
         for key in keys {
@@ -177,7 +177,7 @@ fn scale_lock_changes_recompute_preview_at_the_last_pointer() {
 #[test]
 fn uniform_pointer_scale_can_shrink_a_raised_reference_toward_the_center() {
     let mut h = Harness::new();
-    h.app.doc.camera.projection = ketchup_core::Projection::Parallel;
+    h.app.doc.camera.projection = sketcraft_core::Projection::Parallel;
     let edge = selection(&mut h);
     let target = DVec3::ONE * 0.1;
     h.frame(
@@ -198,8 +198,8 @@ fn uniform_pointer_scale_can_shrink_a_raised_reference_toward_the_center() {
 #[test]
 fn unlocked_scale_responds_to_every_pointer_direction_without_a_fixed_reference_axis() {
     for projection in [
-        ketchup_core::Projection::Perspective,
-        ketchup_core::Projection::Parallel,
+        sketcraft_core::Projection::Perspective,
+        sketcraft_core::Projection::Parallel,
     ] {
         let mut h = Harness::new();
         let face = modeling_rectangle(&mut h);

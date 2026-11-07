@@ -7,7 +7,7 @@ pub(super) struct DrawingReference {
     point: DVec3,
 }
 
-impl KetchupApp {
+impl SketCraftApp {
     pub(super) fn active_drawing_projection(&self) -> Option<(DVec3, DVec3)> {
         let projection = self.drawing_projection?;
         let point = if self.tool == Tool::Line {
@@ -77,7 +77,7 @@ impl KetchupApp {
         if self.tool == Tool::Line
             && let Some(start) = self.line_start
         {
-            let inference = ketchup_core::inference::infer_axis_alignment_with_constraint(
+            let inference = sketcraft_core::inference::infer_axis_alignment_with_constraint(
                 &self.doc.model,
                 &self.doc.camera,
                 dv(self.viewport.size()),
@@ -257,7 +257,7 @@ impl KetchupApp {
                 .flatten()
         }));
         let infer = |constraint, plane| {
-            ketchup_core::inference::infer_reference_axis(
+            sketcraft_core::inference::infer_reference_axis(
                 &self.doc.camera,
                 size,
                 dv(pos - self.viewport.min),

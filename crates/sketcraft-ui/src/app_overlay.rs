@@ -1,7 +1,7 @@
 //! Viewport painting: the 3D scene, tool overlays, compass, edit-context bar and viewport panel.
 use super::*;
 
-impl KetchupApp {
+impl SketCraftApp {
     pub(super) fn paint_tool_cursor(&self, ctx: &egui::Context, response: &egui::Response) {
         if response.enabled() && self.joint_marker_under_pointer(ctx, response.rect) {
             ctx.set_cursor_icon(egui::CursorIcon::Default);
@@ -134,8 +134,8 @@ impl KetchupApp {
         let p = ui.painter().with_clip_rect(rect);
         let mut themed_display = display_scene::effective_display(&self.doc.display, model, ui.visuals().dark_mode);
         if joinery_parts.is_some() {
-            if themed_display.face_style == ketchup_core::FaceStyle::Wireframe {
-                themed_display.face_style = ketchup_core::FaceStyle::Shaded;
+            if themed_display.face_style == sketcraft_core::FaceStyle::Wireframe {
+                themed_display.face_style = sketcraft_core::FaceStyle::Shaded;
             }
             themed_display.x_ray = false;
             themed_display.shadows = false;
@@ -273,8 +273,8 @@ impl KetchupApp {
                     && prepared_display.section_limits() == display.section_limits()
                     && prepared_display.hidden_objects == display.hidden_objects
                     && prepared_display.hidden_geometry == display.hidden_geometry
-                    && (prepared_display.face_style == ketchup_core::FaceStyle::Wireframe)
-                        == (display.face_style == ketchup_core::FaceStyle::Wireframe)
+                    && (prepared_display.face_style == sketcraft_core::FaceStyle::Wireframe)
+                        == (display.face_style == sketcraft_core::FaceStyle::Wireframe)
                 {
                     shadows.adopt_revision(self.face_cache.revision());
                     self.shadow_cache = shadows;
@@ -315,7 +315,7 @@ impl KetchupApp {
             let mut face_draws = Vec::new();
             for (face, _) in visible_faces
                 .into_iter()
-                .filter(|_| display.face_style != ketchup_core::FaceStyle::Wireframe)
+                .filter(|_| display.face_style != sketcraft_core::FaceStyle::Wireframe)
             {
                 let entity = entities.get(face.id);
                 let cached = self.face_cache.get(face.id);
@@ -323,15 +323,15 @@ impl KetchupApp {
                 let tag_color = entity.tag_color;
                 let rgb = if display.color_by_tag {
                     tag_color.as_ref()
-                } else if display.face_style == ketchup_core::FaceStyle::Materials {
+                } else if display.face_style == sketcraft_core::FaceStyle::Materials {
                     model.face_colors.get(&face.id)
                 } else {
                     None
                 };
-                let material = if display.face_style == ketchup_core::FaceStyle::HiddenLine {
+                let material = if display.face_style == sketcraft_core::FaceStyle::HiddenLine {
                     let bg = display.background;
                     Color32::from_rgb(bg[0], bg[1], bg[2])
-                } else if display.face_style == ketchup_core::FaceStyle::Monochrome
+                } else if display.face_style == sketcraft_core::FaceStyle::Monochrome
                     && normal.dot(camera.toward_eye(model.vertices[&face.vertices[0]].position))
                         < 0.
                 {
@@ -372,7 +372,7 @@ impl KetchupApp {
                 } else {
                     material
                 };
-                let color = if display.face_style == ketchup_core::FaceStyle::HiddenLine {
+                let color = if display.face_style == sketcraft_core::FaceStyle::HiddenLine {
                     color
                 } else {
                     lighting.shade(color, normal, model.vertices[&face.vertices[0]].position)
@@ -498,8 +498,8 @@ impl KetchupApp {
                         back: display.back_edges || entity.entity_hidden,
                         visible: !entity.entity_hidden && (display.edges || emphasize_group
                             || profiles.contains(&e.id) || active
-                            || display.face_style == ketchup_core::FaceStyle::Wireframe),
-                        overlay: display.x_ray || display.face_style == ketchup_core::FaceStyle::Wireframe,
+                            || display.face_style == sketcraft_core::FaceStyle::Wireframe),
+                        overlay: display.x_ray || display.face_style == sketcraft_core::FaceStyle::Wireframe,
                     });
                 }
                 #[cfg(not(target_arch = "wasm32"))]
@@ -580,7 +580,7 @@ impl KetchupApp {
             let markers = self.group_marker_cache.update(model, model_revision);
             for marker in markers.iter() {
                 let Some(object) = model.objects.get(&marker.id).filter(|object| {
-                    matches!(object.kind, ketchup_core::ObjectKind::Group)
+                    matches!(object.kind, sketcraft_core::ObjectKind::Group)
                         && entities.get(object.id).context == Some(object.id)
                         && !object.name.trim().is_empty()
                         && entities.get(object.id).displayed(display)

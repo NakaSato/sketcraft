@@ -1,7 +1,7 @@
 //! Woodworking cut lists. Geometry is already in world metres, including instances.
 //! Dimensions describe finished blanks, not stock-board nesting or grain direction.
 use crate::cutting_layout::{self, Settings as LayoutSettings};
-use ketchup_core::{DVec3, Model};
+use sketcraft_core::{DVec3, Model};
 use std::collections::{BTreeMap, BTreeSet};
 
 #[cfg(test)]
@@ -9,14 +9,14 @@ use std::collections::{BTreeMap, BTreeSet};
 mod tests;
 
 type MaterialKey = (
-    Option<ketchup_core::MaterialId>,
-    ketchup_core::StockMaterial,
+    Option<sketcraft_core::MaterialId>,
+    sketcraft_core::StockMaterial,
 );
 
 #[derive(Debug)]
 pub(crate) struct CutGroup {
-    pub material: ketchup_core::StockMaterial,
-    pub material_id: Option<ketchup_core::MaterialId>,
+    pub material: sketcraft_core::StockMaterial,
+    pub material_id: Option<sketcraft_core::MaterialId>,
     /// Thickness, width, cut length in tenths of a millimetre. A short cut can
     /// be shorter than its width when aligned with other parts in its group.
     pub dimensions: [u64; 3],
@@ -33,15 +33,15 @@ pub(crate) struct CuttingPlan {
 
 /// Purchasing quantities calculated with the same layout used by the PDF.
 pub(crate) struct MaterialRequirement {
-    pub material_id: Option<ketchup_core::MaterialId>,
-    pub material: ketchup_core::StockMaterial,
+    pub material_id: Option<sketcraft_core::MaterialId>,
+    pub material: sketcraft_core::StockMaterial,
     pub quantity: usize,
     pub excluded: usize,
 }
 
 // Both the estimate and PDF must pack identical marks in identical order.
 fn stock_layout(
-    stock: &ketchup_core::StockMaterial,
+    stock: &sketcraft_core::StockMaterial,
     groups: &[(usize, &CutGroup)],
     settings: LayoutSettings,
 ) -> cutting_layout::Layout {

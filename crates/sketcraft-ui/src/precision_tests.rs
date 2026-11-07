@@ -130,7 +130,7 @@ fn line_units_preserve_direction_and_do_not_trigger_tool_shortcuts() {
 #[test]
 fn bare_line_lengths_use_the_selected_unit_for_preview_and_commit() {
     let mut h = Harness::new();
-    h.app.doc.display.units.length = ketchup_core::LengthUnit::Centimeters;
+    h.app.doc.display.units.length = sketcraft_core::LengthUnit::Centimeters;
     h.key(Key::L);
     h.click(h.at(DVec3::ZERO));
     h.key(Key::ArrowUp);
@@ -149,7 +149,7 @@ fn bare_line_lengths_use_the_selected_unit_for_preview_and_commit() {
 #[test]
 fn display_precision_does_not_round_typed_geometry() {
     let mut h = Harness::new();
-    h.app.doc.display.units.length = ketchup_core::LengthUnit::Centimeters;
+    h.app.doc.display.units.length = sketcraft_core::LengthUnit::Centimeters;
     h.app.doc.display.units.precision.length = Some(0);
     h.key(Key::L);
     h.click(h.at(DVec3::ZERO));

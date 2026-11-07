@@ -87,7 +87,7 @@ impl ContainerUnit {
 #[serde(default)]
 pub(super) struct Finish {
     #[serde(default)]
-    pub id: ketchup_core::MaterialId,
+    pub id: sketcraft_core::MaterialId,
     pub name: String,
     pub finish_type: FinishType,
     pub container_size: f64,
@@ -100,7 +100,7 @@ pub(super) struct Finish {
 impl Default for Finish {
     fn default() -> Self {
         Self {
-            id: ketchup_core::MaterialId::new_v4(),
+            id: sketcraft_core::MaterialId::new_v4(),
             name: "Finishing product".into(),
             finish_type: FinishType::default(),
             container_size: 1.,
@@ -115,7 +115,7 @@ pub(super) fn normalize(finishes: &mut [Finish]) {
     let mut used = BTreeSet::new();
     for finish in finishes {
         if finish.id.is_nil() || !used.insert(finish.id) {
-            finish.id = ketchup_core::MaterialId::new_v4();
+            finish.id = sketcraft_core::MaterialId::new_v4();
             used.insert(finish.id);
         }
         finish.container_size = if finish.container_size.is_finite() {
@@ -137,7 +137,7 @@ pub(super) fn normalize(finishes: &mut [Finish]) {
 pub(super) fn selector(
     ui: &mut egui::Ui,
     key: &str,
-    selected_id: &mut Option<ketchup_core::MaterialId>,
+    selected_id: &mut Option<sketcraft_core::MaterialId>,
     products: &[Finish],
     filter: &mut String,
 ) -> egui::Response {

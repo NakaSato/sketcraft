@@ -3,7 +3,7 @@ use super::*;
 use crate::inspector_table::{Column, InspectorTable, inspector_field};
 #[cfg(test)]
 use crate::test_ui::ContextExt as _;
-use ketchup_core::LengthUnit;
+use sketcraft_core::LengthUnit;
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub(super) enum Section {
@@ -140,7 +140,7 @@ pub(super) struct GeneralSettings {
     pub zoom_speed: f64,
     pub reverse_zoom: bool,
     pub show_fps: bool,
-    pub default_units: ketchup_core::UnitSettings,
+    pub default_units: sketcraft_core::UnitSettings,
     pub tool_keys: Vec<String>,
     /// Older settings saved G for Polygon; once migrated, G makes a component.
     /// Field-level default: settings saved before this flag existed load as `false`.
@@ -232,7 +232,7 @@ impl GeneralSettings {
     }
 }
 
-impl KetchupApp {
+impl SketCraftApp {
     pub(super) fn axis_color(&self, axis: Axis) -> Color32 {
         let index = match axis {
             Axis::X => 0,
@@ -408,7 +408,7 @@ impl KetchupApp {
                 color_row(ui, "On face", &mut d.on_face_color);
                 ui.text_weak("Axis inferences use the corresponding axis color.");
                 if ui.button("Restore default colors").clicked() {
-                    let defaults = ketchup_core::DisplaySettings::default();
+                    let defaults = sketcraft_core::DisplaySettings::default();
                     d.axis_colors = defaults.axis_colors;
                     d.inference_color = defaults.inference_color;
                     d.midpoint_color = defaults.midpoint_color;
@@ -689,7 +689,7 @@ mod tests {
     fn finite_grid_length_control_only_appears_when_infinite_is_disabled() {
         for infinite in [true, false] {
             let ctx = egui::Context::default();
-            let mut app = KetchupApp::with_document(Document::default(), None, true);
+            let mut app = SketCraftApp::with_document(Document::default(), None, true);
             app.general_settings.section = Section::Grid;
             app.doc.display.grid_infinite = infinite;
             let mut output =
@@ -783,7 +783,7 @@ mod tests {
     fn every_settings_section_renders_in_the_shared_modal() {
         for section in Section::ALL {
             let ctx = egui::Context::default();
-            let mut app = KetchupApp::with_document(Document::default(), None, true);
+            let mut app = SketCraftApp::with_document(Document::default(), None, true);
             app.settings_open = true;
             app.general_settings.section = section;
             let mut output = ctx.run_test_ui(

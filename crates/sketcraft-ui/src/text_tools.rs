@@ -1,6 +1,6 @@
 //! Attached leader text: pick geometry, place the label, then enter its contents.
 use super::*;
-use ketchup_core::{DimensionAnchor, TextAnnotation};
+use sketcraft_core::{DimensionAnchor, TextAnnotation};
 
 pub(super) struct TextEditor {
     pub(super) id: Option<u64>,
@@ -9,7 +9,7 @@ pub(super) struct TextEditor {
     pub(super) text: String,
 }
 
-impl KetchupApp {
+impl SketCraftApp {
     pub(super) fn update_text_pointer(&mut self, pos: Pos2) {
         self.prepare_picking();
         let start = self
@@ -45,7 +45,7 @@ impl KetchupApp {
         } else {
             // Text must still attach to geometry when geometry snapping is off.
             if !self.doc.snap_to_geometry {
-                self.snap = ketchup_core::inference::infer_with_targets(
+                self.snap = sketcraft_core::inference::infer_with_targets(
                     &self.doc.model,
                     &self.doc.camera,
                     dv(self.viewport.size()),
@@ -59,7 +59,7 @@ impl KetchupApp {
                             .picking_cache
                             .snap_query(&self.face_cache, &self.entity_cache),
                     ),
-                    ketchup_core::inference::SnapTargets::default(),
+                    sketcraft_core::inference::SnapTargets::default(),
                 );
             }
             // Leader text starts on geometry, not on the drawing plane.

@@ -1,7 +1,7 @@
 use super::*;
 use crate::test_ui::ContextExt as _;
 
-fn frame(ctx: &egui::Context, app: &mut KetchupApp, time: f64) -> Rect {
+fn frame(ctx: &egui::Context, app: &mut SketCraftApp, time: f64) -> Rect {
     let mut selected = egui::Color32::TRANSPARENT;
     let output = ctx.run_test_ui(
         egui::RawInput {
@@ -40,7 +40,7 @@ fn selection_slides_and_settles_without_delaying_tool_activation() {
     let ctx = egui::Context::default();
     apply(&ctx);
     ctx.style_mut_of(ctx.theme(), |s| s.animation_time = 0.14);
-    let mut app = KetchupApp::with_document(Document::default(), None, true);
+    let mut app = SketCraftApp::with_document(Document::default(), None, true);
     let start = frame(&ctx, &mut app, 0.);
     app.set_tool(Tool::PushPull);
     let first = frame(&ctx, &mut app, 0.01);
@@ -67,7 +67,7 @@ fn zero_duration_selection_snaps_and_nested_tools_share_their_slot() {
     let ctx = egui::Context::default();
     apply(&ctx);
     ctx.style_mut_of(ctx.theme(), |s| s.animation_time = 0.);
-    let mut app = KetchupApp::with_document(Document::default(), None, true);
+    let mut app = SketCraftApp::with_document(Document::default(), None, true);
     let start = frame(&ctx, &mut app, 0.);
     app.set_tool(Tool::PushPull);
     let end = frame(&ctx, &mut app, 0.01);

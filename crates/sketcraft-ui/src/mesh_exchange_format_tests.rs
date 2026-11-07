@@ -104,7 +104,7 @@ fn base64_encode(bytes: &[u8]) -> String {
     out
 }
 
-/// One triangle in a node translated 2 m along glTF's −Z, which is KetchUp's +Y.
+/// One triangle in a node translated 2 m along glTF's −Z, which is SketCraft's +Y.
 fn gltf_json(buffer_uri: Option<&str>, byte_length: usize) -> String {
     let uri = buffer_uri.map(|u| format!(r#""uri":"{u}","#)).unwrap_or_default();
     format!(

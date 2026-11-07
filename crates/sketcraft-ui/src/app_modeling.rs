@@ -1,7 +1,7 @@
 //! Modeling tools (Push/Pull, Offset, Move, Rotate, Scale, Paint): anchors, previews, snapping, commit.
 use super::*;
 
-impl KetchupApp {
+impl SketCraftApp {
     // A selected single-face group can be edited without opening its context.
     pub(super) fn selected_modeling_face(&self) -> Option<u64> {
         if !matches!(self.tool, Tool::PushPull | Tool::Offset) || self.selected.len() != 1 {
@@ -48,12 +48,12 @@ impl KetchupApp {
         }
         // Hole boundaries are also valid edge/vertex anchors, though they are
         // excluded from the filled face's interior hit test.
-        let Some(plane) = ketchup_core::faces::plane(model, &face.vertices) else {
+        let Some(plane) = sketcraft_core::faces::plane(model, &face.vertices) else {
             return false;
         };
         (point - plane.origin).dot(plane.normal).abs() < 1e-6
             && face.holes.iter().any(|ring| (0..ring.len()).any(|i| {
-                ketchup_core::selection::distance_to_segment(
+                sketcraft_core::selection::distance_to_segment(
                     plane.project(point),
                     plane.project(model.vertices[&ring[i]].position),
                     plane.project(model.vertices[&ring[(i + 1) % ring.len()]].position),
@@ -87,7 +87,7 @@ impl KetchupApp {
         }).unwrap_or(Snap { point, kind: Inference::Plane });
         let snap = if self.snap_to_grid {
             let face = &self.doc.model.faces[&id];
-            let plane = ketchup_core::faces::plane(&self.doc.model, &face.vertices)?;
+            let plane = sketcraft_core::faces::plane(&self.doc.model, &face.vertices)?;
             let quantized = grid::snap_with_geometry(
                 snap,
                 grid::configured_spacing(&self.doc.camera, &self.doc.display),
@@ -147,7 +147,7 @@ impl KetchupApp {
             face_id = Some(id);
             let point = snap.point;
             let face = &self.doc.model.faces[&id];
-            let plane = ketchup_core::faces::plane(&self.doc.model, &face.vertices).unwrap();
+            let plane = sketcraft_core::faces::plane(&self.doc.model, &face.vertices).unwrap();
             let direction = if self.tool == Tool::PushPull {
                 plane.normal
                     * if plane.normal.dot(self.doc.camera.eye() - point) >= 0. {
@@ -236,15 +236,15 @@ impl KetchupApp {
             move_snap: matches!(self.tool, Tool::Move | Tool::Rotate | Tool::Scale)
                 .then(|| {
                     if self.tool == Tool::Rotate {
-                        ketchup_core::inference::MoveSnapCache::new(&self.doc.model)
+                        sketcraft_core::inference::MoveSnapCache::new(&self.doc.model)
                     } else {
-                        ketchup_core::inference::MoveSnapCache::excluding(&self.doc.model, &snap_excluded)
+                        sketcraft_core::inference::MoveSnapCache::excluding(&self.doc.model, &snap_excluded)
                     }
                 }),
             snap_excluded,
             move_preview: (self.tool == Tool::Move)
                 .then(|| {
-                    ketchup_core::modeling::MovePreview::new(&self.doc.model, &self.selected).ok()
+                    sketcraft_core::modeling::MovePreview::new(&self.doc.model, &self.selected).ok()
                 })
                 .flatten(),
             preview_delta: None,
@@ -288,7 +288,7 @@ impl KetchupApp {
         self.prepare_picking();
         let edit = self.modeling.as_ref()?;
         let face = &edit.base.faces[&edit.face?];
-        let plane = ketchup_core::faces::plane(&edit.base, &face.vertices)?;
+        let plane = sketcraft_core::faces::plane(&edit.base, &face.vertices)?;
         let constraint = self.axis_constraint();
         let snap = self
             .infer_snap(pos, Some(edit.anchor), self.lock, self.doc.snap_to_axes)
@@ -419,7 +419,7 @@ impl KetchupApp {
                     constraint,
                     self.doc.snap_to_geometry,
                     self.doc.snap_to_axes,
-                    ketchup_core::inference::SnapTargets {
+                    sketcraft_core::inference::SnapTargets {
                         edges: self.snap_to_edge,
                         faces: self.snap_to_face,
                         face_centers: self.snap_to_face_center,

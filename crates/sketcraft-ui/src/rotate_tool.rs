@@ -7,15 +7,15 @@ pub(super) struct Rotation {
     pub reference: Option<DVec3>,
 }
 
-impl KetchupApp {
-    pub(super) fn rotation_at(&self, anchor: DVec3, ray: ketchup_core::Ray) -> Rotation {
+impl SketCraftApp {
+    pub(super) fn rotation_at(&self, anchor: DVec3, ray: sketcraft_core::Ray) -> Rotation {
         let surface_normal = self
             .doc
             .model
             .nearest_face(ray)
             .filter(|(_, _, point)| point.distance(anchor) < 1e-5)
             .and_then(|(id, _, _)| {
-                ketchup_core::faces::plane(&self.doc.model, &self.doc.model.faces[&id].vertices)
+                sketcraft_core::faces::plane(&self.doc.model, &self.doc.model.faces[&id].vertices)
             })
             .map_or(DVec3::Z, |plane| plane.normal);
         Rotation {
@@ -69,7 +69,7 @@ impl KetchupApp {
             constraint,
             self.doc.snap_to_geometry,
             self.doc.snap_to_axes,
-            ketchup_core::inference::SnapTargets {
+            sketcraft_core::inference::SnapTargets {
                 edges: self.snap_to_edge,
                 faces: self.snap_to_face,
                 face_centers: self.snap_to_face_center,
@@ -163,7 +163,7 @@ impl KetchupApp {
             return true;
         }
         rotation.reference = Some(edit.direction);
-        edit.move_snap = Some(ketchup_core::inference::MoveSnapCache::excluding(
+        edit.move_snap = Some(sketcraft_core::inference::MoveSnapCache::excluding(
             &edit.base,
             &edit.snap_excluded,
         ));

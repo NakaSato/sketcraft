@@ -416,7 +416,7 @@ impl InspectorLayout {
     }
 }
 
-impl KetchupApp {
+impl SketCraftApp {
     pub(in super::super) fn inspector_contents(&mut self, ui: &mut egui::Ui) {
         let mut layout = std::mem::take(&mut self.inspector_layout);
         let ctx = ui.ctx().clone();
@@ -1025,7 +1025,7 @@ mod tests {
 
     fn ui_frame(
         ctx: &egui::Context,
-        app: &mut KetchupApp,
+        app: &mut SketCraftApp,
         events: Vec<egui::Event>,
     ) -> (egui::FullOutput, Rect) {
         let mut rect = Rect::NOTHING;
@@ -1060,7 +1060,7 @@ mod tests {
             .unwrap_or_else(|| panic!("Missing {label}"))
     }
 
-    fn drag(ctx: &egui::Context, app: &mut KetchupApp, from: Pos2, to: Pos2) {
+    fn drag(ctx: &egui::Context, app: &mut SketCraftApp, from: Pos2, to: Pos2) {
         let button = |pos, pressed| egui::Event::PointerButton {
             pos,
             button: egui::PointerButton::Primary,
@@ -1082,7 +1082,7 @@ mod tests {
         for side in [Side::Top, Side::Right, Side::Bottom, Side::Left] {
             let ctx = egui::Context::default();
             ctx.style_mut_of(ctx.theme(), |style| style.animation_time = 0.);
-            let mut app = KetchupApp::with_document(Document::default(), None, true);
+            let mut app = SketCraftApp::with_document(Document::default(), None, true);
             // Keep all headers visible and their click targets stable.
             for section in InspectorSection::ALL {
                 set_section_open(&ctx, section.id(), false);
@@ -1143,7 +1143,7 @@ mod tests {
     fn escape_and_outside_releases_cancel_without_changing_the_layout() {
         let ctx = egui::Context::default();
         ctx.style_mut_of(ctx.theme(), |style| style.animation_time = 0.);
-        let mut app = KetchupApp::with_document(Document::default(), None, true);
+        let mut app = SketCraftApp::with_document(Document::default(), None, true);
         for section in InspectorSection::ALL {
             set_section_open(&ctx, section.id(), false);
         }
@@ -1223,7 +1223,7 @@ mod tests {
         for side in [Side::Right, Side::Bottom] {
             let ctx = egui::Context::default();
             ctx.style_mut_of(ctx.theme(), |style| style.animation_time = 0.);
-            let mut app = KetchupApp::with_document(Document::default(), None, true);
+            let mut app = SketCraftApp::with_document(Document::default(), None, true);
             for section in InspectorSection::ALL {
                 set_section_open(&ctx, section.id(), false);
             }
@@ -1251,7 +1251,7 @@ mod tests {
             assert!(!app.project.modified);
             let mut storage = Storage::default();
             app.persist_inspector_changes(&ctx, Some(&mut storage), false);
-            let mut restored = KetchupApp::with_document(Document::default(), None, true);
+            let mut restored = SketCraftApp::with_document(Document::default(), None, true);
             restored.restore_inspector_preferences(&egui::Context::default(), Some(&storage));
             assert_eq!(restored.inspector_layout.dock, app.inspector_layout.dock);
         }
@@ -1281,7 +1281,7 @@ mod tests {
     fn tags_render_in_sidebar_and_disclosure_saves_without_model_edits() {
         let ctx = egui::Context::default();
         ctx.style_mut_of(ctx.theme(), |style| style.animation_time = 0.);
-        let mut app = KetchupApp::with_document(Document::default(), None, true);
+        let mut app = SketCraftApp::with_document(Document::default(), None, true);
         app.doc.model.add_tag("Sample").unwrap();
         let model = app.doc.model.clone();
         for section in InspectorSection::ALL {
@@ -1313,7 +1313,7 @@ mod tests {
         assert!(!app.project.modified);
         assert_eq!(app.doc.model, model);
         let restored_ctx = egui::Context::default();
-        let mut restored = KetchupApp::with_document(Document::default(), None, true);
+        let mut restored = SketCraftApp::with_document(Document::default(), None, true);
         restored.restore_inspector_preferences(&restored_ctx, Some(&storage));
         assert_eq!(restored.inspector_order, order);
         assert_eq!(restored.inspector_layout.dock, app.inspector_layout.dock);
@@ -1329,7 +1329,7 @@ mod tests {
     #[test]
     fn docking_ratios_and_disclosures_save_immediately_without_model_edits() {
         let ctx = egui::Context::default();
-        let mut app = KetchupApp::with_document(Document::default(), None, true);
+        let mut app = SketCraftApp::with_document(Document::default(), None, true);
         let model = app.doc.model.clone();
         app.inspector_layout = InspectorLayout::restore(None, &app.inspector_order);
         let mut storage = Storage::default();
@@ -1347,7 +1347,7 @@ mod tests {
         app.persist_inspector_changes(&ctx, Some(&mut storage), false);
         assert!(storage.flushes > flushes);
         let restored_ctx = egui::Context::default();
-        let mut restored = KetchupApp::with_document(Document::default(), None, true);
+        let mut restored = SketCraftApp::with_document(Document::default(), None, true);
         restored.restore_inspector_preferences(&restored_ctx, Some(&storage));
         assert_eq!(restored.inspector_layout.dock, app.inspector_layout.dock);
         assert_eq!(restored.inspector_order, app.inspector_order);
@@ -1358,7 +1358,7 @@ mod tests {
         let flushes = storage.flushes;
         restored.persist_inspector_changes(&restored_ctx, Some(&mut storage), false);
         assert!(storage.flushes > flushes);
-        let mut refreshed = KetchupApp::with_document(Document::default(), None, true);
+        let mut refreshed = SketCraftApp::with_document(Document::default(), None, true);
         refreshed.restore_inspector_preferences(&restored_ctx, Some(&storage));
         assert_eq!(
             refreshed.inspector_layout.dock,

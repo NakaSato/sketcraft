@@ -7,11 +7,11 @@ fn recent_projects_save_immediately_without_model_edit() {
     assert!(defaults.recent_projects.is_empty());
     let ctx = egui::Context::default();
     let mut storage = SavedPreferences::default();
-    let mut app = KetchupApp::with_document(Document::default(), None, true);
+    let mut app = SketCraftApp::with_document(Document::default(), None, true);
     app.project.path = Some("recent.ketchup".into());
     app.remember_recent_project(None);
     app.persist_inspector_changes(&ctx, Some(&mut storage), false);
-    let mut restored = KetchupApp::with_document(Document::default(), None, true);
+    let mut restored = SketCraftApp::with_document(Document::default(), None, true);
     restored.restore_inspector_preferences(&egui::Context::default(), Some(&storage));
     assert_eq!(restored.project.recent, app.project.recent);
     assert!(!restored.project.modified);
@@ -24,13 +24,13 @@ fn sharing_preferences_restore_without_model_edits_and_default_for_old_settings(
     assert!(defaults.sharing.invitation.is_empty());
     let ctx = egui::Context::default();
     let mut storage = SavedPreferences::default();
-    let mut app = KetchupApp::with_document(Document::default(), None, true);
+    let mut app = SketCraftApp::with_document(Document::default(), None, true);
     app.sharing.preferences.open = true;
     app.sharing.preferences.invitation = "a".repeat(48);
     set_section_open(&ctx, "sharing_notifications", true);
     app.persist_inspector_changes(&ctx, Some(&mut storage), false);
     let restored_ctx = egui::Context::default();
-    let mut restored = KetchupApp::with_document(Document::default(), None, true);
+    let mut restored = SketCraftApp::with_document(Document::default(), None, true);
     restored.restore_inspector_preferences(&restored_ctx, Some(&storage));
     assert_eq!(restored.sharing.preferences, app.sharing.preferences);
     let saved: InspectorPreferences = eframe::get_value(&storage, PREFERENCE_KEY).unwrap();
@@ -46,11 +46,11 @@ fn account_preferences_restore_without_a_model_edit() {
     assert!(!serde_json::to_string(&defaults).unwrap().contains("account_server"));
     let ctx = egui::Context::default();
     let mut storage = SavedPreferences::default();
-    let mut app = KetchupApp::with_document(Document::default(), None, true);
+    let mut app = SketCraftApp::with_document(Document::default(), None, true);
     app.account.open = true;
     app.account.menu_open = true;
     app.persist_inspector_changes(&ctx, Some(&mut storage), false);
-    let mut restored = KetchupApp::with_document(Document::default(), None, true);
+    let mut restored = SketCraftApp::with_document(Document::default(), None, true);
     restored.restore_inspector_preferences(&ctx, Some(&storage));
     assert!(!storage.get_string(PREFERENCE_KEY).unwrap().contains("account_server"));
     assert!(restored.account.open);
@@ -62,7 +62,7 @@ fn account_preferences_restore_without_a_model_edit() {
 fn modal_sizes_survive_reload_without_a_model_edit() {
     let ctx = egui::Context::default();
     let mut storage = SavedPreferences::default();
-    let mut app = KetchupApp::with_document(Document::default(), None, true);
+    let mut app = SketCraftApp::with_document(Document::default(), None, true);
     app.persist_inspector_changes(&ctx, Some(&mut storage), false);
     remember_modal_size(&ctx, "general_settings", egui::vec2(820., 560.));
     remember_modal_size(&ctx, "another_dialog", egui::vec2(480., 320.));
@@ -72,7 +72,7 @@ fn modal_sizes_survive_reload_without_a_model_edit() {
     assert!(!app.project.modified);
     assert!(app.dirty_since.is_none());
     let restored_ctx = egui::Context::default();
-    let mut restored = KetchupApp::with_document(Document::default(), None, true);
+    let mut restored = SketCraftApp::with_document(Document::default(), None, true);
     restored.restore_inspector_preferences(&restored_ctx, Some(&storage));
     assert_eq!(
         modal_size(&restored_ctx, "general_settings"),
@@ -101,7 +101,7 @@ fn modal_sizes_survive_reload_without_a_model_edit() {
 fn exchange_choices_survive_reload_without_a_model_edit() {
     let ctx = egui::Context::default();
     let mut storage = SavedPreferences::default();
-    let mut app = KetchupApp::with_document(Document::default(), None, true);
+    let mut app = SketCraftApp::with_document(Document::default(), None, true);
     app.persist_inspector_changes(&ctx, Some(&mut storage), false);
     app.project.import_format = "dxf".into();
     app.project.export_stl = true;
@@ -110,7 +110,7 @@ fn exchange_choices_survive_reload_without_a_model_edit() {
     assert!(storage.flushed);
     assert!(!app.project.modified);
     assert!(app.dirty_since.is_none());
-    let mut restored = KetchupApp::with_document(Document::default(), None, true);
+    let mut restored = SketCraftApp::with_document(Document::default(), None, true);
     restored.restore_inspector_preferences(&egui::Context::default(), Some(&storage));
     assert_eq!(restored.project.import_format, "dxf");
     assert!(restored.project.export_stl);
@@ -180,7 +180,7 @@ fn older_and_invalid_export_preferences_keep_safe_defaults() {
         let mut doc = Document::default();
         doc.snap_to_geometry = false;
         doc.snap_to_axes = false;
-        let mut restored = KetchupApp::with_document(doc, None, true);
+        let mut restored = SketCraftApp::with_document(doc, None, true);
         restored.restore_inspector_preferences(&ctx, Some(&storage));
         assert!(!restored.doc.snap_to_geometry);
         assert!(!restored.doc.snap_to_axes);
@@ -193,7 +193,7 @@ fn older_and_invalid_export_preferences_keep_safe_defaults() {
     preferences.cutting_plan.layout.sheet_width_mm = -1.;
     let mut storage = SavedPreferences::default();
     eframe::set_value(&mut storage, PREFERENCE_KEY, &preferences);
-    let mut restored = KetchupApp::with_document(Document::default(), None, true);
+    let mut restored = SketCraftApp::with_document(Document::default(), None, true);
     restored.restore_inspector_preferences(&ctx, Some(&storage));
     assert_eq!(
         restored.project.cutting_plan_layout,
@@ -205,7 +205,7 @@ fn older_and_invalid_export_preferences_keep_safe_defaults() {
 fn screenshot_options_persist_immediately_without_a_model_edit() {
     let ctx = egui::Context::default();
     let mut storage = SavedPreferences::default();
-    let mut app = KetchupApp::with_document(Document::default(), None, true);
+    let mut app = SketCraftApp::with_document(Document::default(), None, true);
     let settings = crate::screenshots::Settings {
         views: [true, false, false, true, true, false, false, false],
         combined: false,
@@ -217,7 +217,7 @@ fn screenshot_options_persist_immediately_without_a_model_edit() {
     app.screenshot.settings = settings.clone();
     app.persist_inspector_changes(&ctx, Some(&mut storage), false);
     assert!(!app.project.modified);
-    let mut restored = KetchupApp::with_document(Document::default(), None, true);
+    let mut restored = SketCraftApp::with_document(Document::default(), None, true);
     restored.restore_inspector_preferences(&egui::Context::default(), Some(&storage));
     assert_eq!(restored.screenshot.settings, settings);
     let old: InspectorPreferences = serde_json::from_str("{}").unwrap();
@@ -228,13 +228,13 @@ fn screenshot_options_persist_immediately_without_a_model_edit() {
 fn outliner_search_persists_immediately_and_defaults_to_empty() {
     let ctx = egui::Context::default();
     let mut storage = SavedPreferences::default();
-    let mut app = KetchupApp::with_document(Document::default(), None, true);
+    let mut app = SketCraftApp::with_document(Document::default(), None, true);
     app.outliner_filter = "Handle".into();
     app.persist_inspector_changes(&ctx, Some(&mut storage), false);
     assert!(storage.flushed);
     assert!(!app.project.modified);
 
-    let mut restored = KetchupApp::with_document(Document::default(), None, true);
+    let mut restored = SketCraftApp::with_document(Document::default(), None, true);
     restored.restore_inspector_preferences(&egui::Context::default(), Some(&storage));
     assert_eq!(restored.outliner_filter, "Handle");
     let old: InspectorPreferences = serde_json::from_str("{}").unwrap();
@@ -249,7 +249,7 @@ fn outliner_search_persists_immediately_and_defaults_to_empty() {
 #[test]
 fn general_settings_save_immediately_and_restore_without_model_edits() {
     let ctx = egui::Context::default();
-    let mut app = KetchupApp::with_document(Document::default(), None, true);
+    let mut app = SketCraftApp::with_document(Document::default(), None, true);
     app.general_settings.section = settings::Section::StockPricing;
     app.general_settings.orbit_speed = 2.;
     app.general_settings.pan_speed = 0.5;
@@ -260,7 +260,7 @@ fn general_settings_save_immediately_and_restore_without_model_edits() {
     app.general_settings.stock.currency = "CAD".into();
     app.general_settings.stock.units = LengthUnit::Inches;
     app.general_settings.stock.wood.push(stock_settings::Stock {
-        id: ketchup_core::MaterialId::new_v4(),
+        id: sketcraft_core::MaterialId::new_v4(),
         name: "Pine board".into(),
         thickness_mm: 19.,
         width_mm: 89.,
@@ -286,7 +286,7 @@ fn general_settings_save_immediately_and_restore_without_model_edits() {
     assert!(!app.project.modified);
     assert!(app.dirty_since.is_none());
     let restored_ctx = egui::Context::default();
-    let mut restored = KetchupApp::with_document(Document::default(), None, true);
+    let mut restored = SketCraftApp::with_document(Document::default(), None, true);
     restored.restore_inspector_preferences(&restored_ctx, Some(&storage));
     assert_eq!(
         restored.current_inspector_preferences(&restored_ctx),
@@ -313,7 +313,7 @@ fn older_general_preferences_keep_defaults() {
 #[test]
 fn viewed_release_notes_save_immediately_and_restore_for_other_projects() {
     let ctx = egui::Context::default();
-    let mut app = KetchupApp::with_document(Document::default(), None, true);
+    let mut app = SketCraftApp::with_document(Document::default(), None, true);
     let mut storage = SavedPreferences::default();
     // Establish saved preferences first, so only the read state changes.
     app.persist_inspector_changes(&ctx, Some(&mut storage), false);
@@ -336,7 +336,7 @@ fn viewed_release_notes_save_immediately_and_restore_for_other_projects() {
 
     let mut other_doc = Document::default();
     other_doc.name = "Another project".into();
-    let mut refreshed = KetchupApp::with_document(other_doc, None, true);
+    let mut refreshed = SketCraftApp::with_document(other_doc, None, true);
     let refreshed_ctx = egui::Context::default();
     refreshed.restore_inspector_preferences(&refreshed_ctx, Some(&storage));
     refreshed.release_notes.open_if_unread();
@@ -351,7 +351,7 @@ fn viewed_release_notes_save_immediately_and_restore_for_other_projects() {
     let mut older = refreshed.current_inspector_preferences(&refreshed_ctx);
     older.last_seen_release_notes = Some("0.0.0".into());
     eframe::set_value(&mut storage, PREFERENCE_KEY, &older);
-    let mut updated = KetchupApp::with_document(Document::default(), None, true);
+    let mut updated = SketCraftApp::with_document(Document::default(), None, true);
     updated.restore_inspector_preferences(&egui::Context::default(), Some(&storage));
     updated.release_notes.open_if_unread();
     assert!(updated.release_notes.open);
@@ -365,7 +365,7 @@ fn model_library_folder_search_and_format_save_immediately_and_rescan_after_rest
     let folder = tempfile::tempdir().unwrap();
     std::fs::write(folder.path().join("truck.glb"), b"glTF").unwrap();
     std::fs::write(folder.path().join("canopy.skp"), b"skp").unwrap();
-    let mut app = KetchupApp::with_document(Document::default(), None, true);
+    let mut app = SketCraftApp::with_document(Document::default(), None, true);
     app.model_library.prefs = super::super::model_library::Preferences {
         folder: folder.path().to_string_lossy().into_owned(),
         search: "truck".into(),
@@ -375,7 +375,7 @@ fn model_library_folder_search_and_format_save_immediately_and_rescan_after_rest
     assert!(storage.flushed);
     assert!(!app.project.modified);
 
-    let mut restored = KetchupApp::with_document(Document::default(), None, true);
+    let mut restored = SketCraftApp::with_document(Document::default(), None, true);
     restored.restore_inspector_preferences(&egui::Context::default(), Some(&storage));
     assert_eq!(restored.model_library.prefs, app.model_library.prefs);
     assert!(restored.model_library.scanned.is_none(), "the restored folder rescans when shown");

@@ -80,7 +80,7 @@
           }, { capture: true, passive: false });
         }
         window.addEventListener("blur", () => modelTouches.clear());
-        // Keep these in sync with KetchupApp::keyboard in app.rs. eframe only
+        // Keep these in sync with SketCraftApp::keyboard in app.rs. eframe only
         // cancels a subset of browser shortcuts, even with should_prevent_default.
         const commandKeys = new Set(["a", "f", "i", "n", "o", "s", "y", "z"]);
         const canvasKeys = new Set([

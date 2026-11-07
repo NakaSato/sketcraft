@@ -17,7 +17,7 @@ pub(super) struct ScreenshotDialog {
     error: Option<String>,
 }
 
-impl KetchupApp {
+impl SketCraftApp {
     pub(super) fn screenshot_dialog(&mut self, ctx: &egui::Context) {
         if !self.screenshot.open {
             return;
@@ -499,7 +499,7 @@ impl Capture {
         ctx.set_pixels_per_point(scale);
         let source = capture_document(doc, parent.global_style().visuals.dark_mode);
         let current = source.camera.clone();
-        let mut app = KetchupApp::with_document(source, None, true);
+        let mut app = SketCraftApp::with_document(source, None, true);
         app.doc.display.group_emphasis = false;
         let mut views = Vec::new();
         for view in settings.selected() {
@@ -747,7 +747,7 @@ mod tests {
             let p=[min,DVec3::new(max.x,min.y,min.z),DVec3::new(max.x,max.y,min.z),DVec3::new(min.x,max.y,min.z)];
             for i in 0..4 {body.add_edge(p[i],p[(i+1)%4]).unwrap();}
             let face=*body.faces.keys().next().unwrap();
-            let normal=ketchup_core::faces::plane(&body,&body.faces[&face].vertices).unwrap().normal;
+            let normal=sketcraft_core::faces::plane(&body,&body.faces[&face].vertices).unwrap().normal;
             body.push_pull(face,(max.z-min.z)/normal.z).unwrap();
             let ids=doc.model.paste_entities(&body,DVec3::ZERO);
             doc.model.make_object(&ids,false,"Shadow fixture").unwrap();
@@ -804,7 +804,7 @@ mod tests {
                 .unwrap();
         }
         let face = *doc.model.faces.keys().next().unwrap();
-        let normal = ketchup_core::faces::plane(&doc.model, &doc.model.faces[&face].vertices)
+        let normal = sketcraft_core::faces::plane(&doc.model, &doc.model.faces[&face].vertices)
             .unwrap()
             .normal;
         doc.model.push_pull(face, 2. / normal.z).unwrap();

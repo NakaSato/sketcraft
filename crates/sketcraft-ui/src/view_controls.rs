@@ -1,7 +1,7 @@
 use super::*;
-use ketchup_core::StandardView;
+use sketcraft_core::StandardView;
 
-impl KetchupApp {
+impl SketCraftApp {
     pub(super) fn view_contents(&mut self, ui: &mut egui::Ui) {
         let before = self.doc.camera.clone();
         inspector_section(ui, "Camera", "view_camera", false, |ui| {
@@ -240,7 +240,7 @@ fn standard_view_preview(
     ));
 }
 
-impl KetchupApp {
+impl SketCraftApp {
     pub(in crate::app) fn paint_menu(&mut self, ui: &mut egui::Ui) {
         let colors = Palette::for_ui(ui);
         let color = Color32::from_rgb(

@@ -26,7 +26,7 @@ pub(super) enum ContextAction {
     Unlock,
 }
 
-impl KetchupApp {
+impl SketCraftApp {
     pub(super) fn select_context_target(&mut self, id: Option<u64>) {
         if !id.is_some_and(|id| self.selected.contains(&id)) {
             self.selected = id.into_iter().collect();

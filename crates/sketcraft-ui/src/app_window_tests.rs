@@ -305,8 +305,8 @@ fn view_sidebar_buttons_set_projection_and_all_standard_views_without_resizing()
         h.click(text_position(&output, title));
     }
     for (label, projection) in [
-        ("Parallel", ketchup_core::Projection::Parallel),
-        ("Perspective", ketchup_core::Projection::Perspective),
+        ("Parallel", sketcraft_core::Projection::Parallel),
+        ("Perspective", sketcraft_core::Projection::Perspective),
     ] {
         let output = h.frame(vec![], egui::Modifiers::NONE);
         h.click(text_position(&output, label));
@@ -314,7 +314,7 @@ fn view_sidebar_buttons_set_projection_and_all_standard_views_without_resizing()
     }
     let target = h.app.doc.camera.target;
     let distance = h.app.doc.camera.distance;
-    for view in ketchup_core::StandardView::ALL {
+    for view in sketcraft_core::StandardView::ALL {
         let output = h.frame(vec![], egui::Modifiers::NONE);
         h.click(text_position(&output, view.label()));
         assert_eq!(h.app.doc.camera.standard_view(), Some(view));

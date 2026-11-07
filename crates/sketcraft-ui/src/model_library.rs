@@ -117,7 +117,7 @@ impl ModelLibrary {
     }
 }
 
-impl KetchupApp {
+impl SketCraftApp {
     /// Insert a library file through the same import path as File → Import.
     pub(super) fn import_library_file(&mut self, ctx: &egui::Context, path: std::path::PathBuf) {
         if self.project.blocked() {

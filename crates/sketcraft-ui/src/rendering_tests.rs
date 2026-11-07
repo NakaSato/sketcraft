@@ -1,6 +1,6 @@
 use super::*;
 
-fn render(app: &mut KetchupApp, ctx: &egui::Context, rect: Rect) {
+fn render(app: &mut SketCraftApp, ctx: &egui::Context, rect: Rect) {
     let _ = ctx.run_test_ui(
         egui::RawInput {
             screen_rect: Some(Rect::from_min_size(Pos2::ZERO, egui::vec2(1200., 900.))),
@@ -12,12 +12,12 @@ fn render(app: &mut KetchupApp, ctx: &egui::Context, rect: Rect) {
 
 #[test]
 fn source_picking_and_preview_markers_do_not_invalidate_render_or_shadow_geometry() {
-    let mut app = KetchupApp::with_document(Document::default(), None, true);
+    let mut app = SketCraftApp::with_document(Document::default(), None, true);
     let first = ui_solid_box(&mut app.doc.model, DVec3::ZERO, DVec3::new(0.3, 0.1, 0.04));
     let second = ui_solid_box(&mut app.doc.model, DVec3::new(0.25, 0., 0.), DVec3::new(0.55, 0.1, 0.04));
-    app.doc.model.add_connection(ketchup_core::connections::Connection {
+    app.doc.model.add_connection(sketcraft_core::connections::Connection {
         members: [first, second], entry_face: None,
-        operation: ketchup_core::connections::ConnectionOperation::Joinery(Default::default()),
+        operation: sketcraft_core::connections::ConnectionOperation::Joinery(Default::default()),
     }).unwrap();
     let ctx = egui::Context::default();
     let rect = Rect::from_min_size(Pos2::ZERO, egui::vec2(1064., 748.));
@@ -51,7 +51,7 @@ fn source_picking_and_preview_markers_do_not_invalidate_render_or_shadow_geometr
 fn unchanged_views_skip_mesh_builds_and_appearance_changes_invalidate_them() {
     let ctx = egui::Context::default();
     ctx.set_theme(egui::Theme::Light);
-    let mut app = KetchupApp::with_document(Document::default(), None, true);
+    let mut app = SketCraftApp::with_document(Document::default(), None, true);
     let object = ui_solid_box(&mut app.doc.model, DVec3::ZERO, DVec3::splat(2.));
     let rect = Rect::from_min_size(Pos2::ZERO, egui::vec2(800., 600.));
     render(&mut app, &ctx, rect);
@@ -60,7 +60,7 @@ fn unchanged_views_skip_mesh_builds_and_appearance_changes_invalidate_them() {
     render(&mut app, &ctx, rect.translate(egui::vec2(10., 20.)));
     assert_eq!(app.scene_cache.mesh_builds, 1);
 
-    let changes: &[fn(&mut KetchupApp)] = &[
+    let changes: &[fn(&mut SketCraftApp)] = &[
         |app| app.hover = Some(*app.doc.model.objects.keys().next().unwrap()),
         |app| {
             app.selected
@@ -113,7 +113,7 @@ fn unchanged_views_skip_mesh_builds_and_appearance_changes_invalidate_them() {
 #[test]
 fn transient_previews_bypass_reuse_and_return_to_the_static_path_after_cancel() {
     let ctx = egui::Context::default();
-    let mut app = KetchupApp::with_document(Document::default(), None, true);
+    let mut app = SketCraftApp::with_document(Document::default(), None, true);
     ui_solid_box(&mut app.doc.model, DVec3::ZERO, DVec3::splat(2.));
     let rect = Rect::from_min_size(Pos2::ZERO, egui::vec2(800., 600.));
     render(&mut app, &ctx, rect);
@@ -131,21 +131,21 @@ fn transient_previews_bypass_reuse_and_return_to_the_static_path_after_cancel() 
 #[test]
 fn joinery_and_annotations_remain_retained_while_the_outliner_is_open() {
     let ctx = egui::Context::default();
-    let mut app = KetchupApp::with_document(Document::default(), None, true);
+    let mut app = SketCraftApp::with_document(Document::default(), None, true);
     let members = [
         ui_solid_box(&mut app.doc.model, DVec3::ZERO, DVec3::new(0.3, 0.1, 0.04)),
         ui_solid_box(&mut app.doc.model, DVec3::new(0.2, 0., 0.), DVec3::new(0.5, 0.1, 0.04)),
     ];
     app.selected = BTreeSet::from(members);
-    app.doc.model.add_connection(ketchup_core::connections::Connection {
+    app.doc.model.add_connection(sketcraft_core::connections::Connection {
         members, entry_face: None,
-        operation: ketchup_core::connections::ConnectionOperation::Joinery(Default::default()),
+        operation: sketcraft_core::connections::ConnectionOperation::Joinery(Default::default()),
     }).unwrap();
     app.doc.display.wood_joinery = true;
     app.doc.model.add_dimension(DVec3::ZERO, DVec3::X, DVec3::Y).unwrap();
     let text = app.doc.model.add_text(DVec3::ZERO, DVec3::Y, "Board").unwrap();
     let rect = Rect::from_min_size(Pos2::ZERO, egui::vec2(800., 600.));
-    let render_with_outliner = |app: &mut KetchupApp| {
+    let render_with_outliner = |app: &mut SketCraftApp| {
         let _ = ctx.run_test_ui(egui::RawInput::default(), |ui| {
             app.outliner_contents(ui);
             app.paint_scene(ui, rect);

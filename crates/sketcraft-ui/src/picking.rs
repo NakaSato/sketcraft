@@ -1,7 +1,7 @@
 //! Reuse render geometry and a spatial hierarchy for pointer queries. No query
 //! reconstructs face planes or searches every group's membership for each edge.
 use crate::renderer::{EntityCache, FaceCache};
-use ketchup_core::{Camera, DVec2, DVec3, Model, Ray, selection};
+use sketcraft_core::{Camera, DVec2, DVec3, Model, Ray, selection};
 
 #[derive(Clone, Copy)]
 struct Bounds {
@@ -45,7 +45,7 @@ struct Node {
 #[derive(Default)]
 pub struct PickingCache {
     revision: Option<u64>,
-    display: ketchup_core::DisplaySettings,
+    display: sketcraft_core::DisplaySettings,
     items: Vec<Item>,
     nodes: Vec<Node>,
     edges: EdgePickingCache,
@@ -62,7 +62,7 @@ impl<'a> SnapQuery<'a> {
         self
     }
 }
-impl ketchup_core::inference::FaceQuery for SnapQuery<'_> {
+impl sketcraft_core::inference::FaceQuery for SnapQuery<'_> {
     fn nearest(&self, ray: Ray, scoped: bool) -> Option<(u64, f64, DVec3)> {
         self.picking.nearest_matching(
             self.faces, self.entities, ray, false, scoped, &mut 0,
@@ -80,7 +80,7 @@ impl PickingCache {
     pub fn contains_geometry_point(&mut self, model: &Model, faces: &FaceCache,
         entities: &EntityCache, camera: &Camera, size: DVec2, point: DVec3) -> bool
     {
-        let epsilon = ketchup_core::document::EPS;
+        let epsilon = sketcraft_core::document::EPS;
         self.edges.update(model, camera, size);
         if let Some(pixel) = camera.view(size).project(point) {
             for (id, _) in self.edges.candidates(pixel, 0.01, entities) {
@@ -113,7 +113,7 @@ impl PickingCache {
         false
     }
 
-    pub fn set_display(&mut self, display: &ketchup_core::DisplaySettings) {
+    pub fn set_display(&mut self, display: &sketcraft_core::DisplaySettings) {
         self.display = display.clone();
     }
     pub fn snap_query<'a>(
@@ -384,7 +384,7 @@ impl PickingCache {
 #[derive(Default)]
 struct EdgePickingCache {
     view: Option<(Camera, DVec2)>,
-    source_edges: Vec<ketchup_core::Edge>,
+    source_edges: Vec<sketcraft_core::Edge>,
     source_vertices: Vec<(u64, DVec3)>,
     world_edges: Vec<(u64, DVec3, DVec3)>,
     items: Vec<ScreenEdge>,
@@ -579,7 +579,7 @@ mod section_picking_tests {
                 picking.nearest(&faces, &entities, ray, false).unwrap().2[axis],
                 2.
             );
-            let mut display = ketchup_core::DisplaySettings {
+            let mut display = sketcraft_core::DisplaySettings {
                 section_cuts: true,
                 section_axes: [false; 3],
                 ..Default::default()

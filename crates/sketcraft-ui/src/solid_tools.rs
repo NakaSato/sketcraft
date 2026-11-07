@@ -1,5 +1,5 @@
 use super::*;
-use ketchup_core::SolidOperation;
+use sketcraft_core::SolidOperation;
 
 // Solid volume imports and unions object geometry. Reuse both successful and
 // failed measurements across redraws and selection changes. Model collections
@@ -94,7 +94,7 @@ fn operation(tool: Tool) -> Option<SolidOperation> {
         _ => return None,
     })
 }
-impl KetchupApp {
+impl SketCraftApp {
     pub(super) fn start_solid_tool(&mut self, tool: Tool, ctx: &egui::Context) {
         self.set_tool(tool);
         self.notice = None;

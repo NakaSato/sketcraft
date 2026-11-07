@@ -1,7 +1,7 @@
 //! Root drawings own their topology; drawing inside an object edits that object.
 use super::*;
 
-impl KetchupApp {
+impl SketCraftApp {
     pub(super) fn prompt_drawn_group_name(&mut self, ctx: &egui::Context, group: Option<u64>) {
         if let Some(id) = group
             && let Some(object) = self.doc.model.objects.get(&id)
@@ -58,8 +58,8 @@ impl KetchupApp {
 mod tests {
     use super::*;
 
-    fn app(tool: Tool) -> KetchupApp {
-        let mut app = KetchupApp::with_document(Document::default(), None, true);
+    fn app(tool: Tool) -> SketCraftApp {
+        let mut app = SketCraftApp::with_document(Document::default(), None, true);
         app.set_tool(tool);
         app
     }

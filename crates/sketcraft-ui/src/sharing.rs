@@ -48,7 +48,7 @@ struct Remote {
     #[serde(default)]
     locks: Vec<Lease>,
     #[serde(default)]
-    actor: Option<ketchup_core::HistoryAuthor>,
+    actor: Option<sketcraft_core::HistoryAuthor>,
 }
 enum Kind {
     Guest,
@@ -74,7 +74,7 @@ pub(super) struct Sharing {
     notifications: Vec<AccessRequest>,
     socket: Option<crate::realtime::Socket>,
     socket_ready: bool,
-    socket_actor: Option<ketchup_core::HistoryAuthor>,
+    socket_actor: Option<sketcraft_core::HistoryAuthor>,
     access_confirmed: bool,
     ticket_pending: Option<Receiver<Result<ApiReply, String>>>,
     socket_requests:
@@ -113,7 +113,7 @@ impl Default for Sharing {
     fn default() -> Self {
         Self {
             preferences: Default::default(),
-            connection: ketchup_core::MaterialId::new_v4().to_string(),
+            connection: sketcraft_core::MaterialId::new_v4().to_string(),
             guest: None,
             pending: None,
 
@@ -183,13 +183,13 @@ pub(super) fn now_timestamp() -> u64 {
         (js_sys::Date::now() / 1000.) as u64
     }
 }
-impl KetchupApp {
+impl SketCraftApp {
     fn persist_shared_state(&mut self) {
         // UI fixtures must never write personal recovery files.
         #[cfg(not(test))]
         self.persist();
     }
-    pub(super) fn current_history_author(&mut self) -> ketchup_core::HistoryAuthor {
+    pub(super) fn current_history_author(&mut self) -> sketcraft_core::HistoryAuthor {
         if let Some(author) = self
             .sharing
             .remote
@@ -201,7 +201,7 @@ impl KetchupApp {
             return author;
         }
         if let Some(user) = &self.account.user {
-            return ketchup_core::HistoryAuthor {
+            return sketcraft_core::HistoryAuthor {
                 id: format!("user:{}", user.id),
                 name: user.name.clone(),
                 kind: "account".into(),
@@ -210,9 +210,9 @@ impl KetchupApp {
         }
         if self.sharing.preferences.local_author_id.is_empty() {
             self.sharing.preferences.local_author_id =
-                ketchup_core::MaterialId::new_v4().to_string();
+                sketcraft_core::MaterialId::new_v4().to_string();
         }
-        ketchup_core::HistoryAuthor {
+        sketcraft_core::HistoryAuthor {
             id: format!("local:{}", self.sharing.preferences.local_author_id),
             name: "Local session".into(),
             kind: "local".into(),
@@ -286,7 +286,7 @@ impl KetchupApp {
         let project_id = *self
             .doc
             .project_id
-            .get_or_insert_with(ketchup_core::MaterialId::new_v4);
+            .get_or_insert_with(sketcraft_core::MaterialId::new_v4);
         self.persist_shared_state();
         let document = serde_json::to_value(&self.doc).unwrap_or(Value::Null);
         self.sharing_request(
@@ -342,7 +342,7 @@ impl KetchupApp {
         doc.viewport_cameras = self.doc.viewport_cameras.clone();
         doc.selection.clear();
         doc.selection_context = None;
-        doc.shared_project = Some(ketchup_core::SharedProject {
+        doc.shared_project = Some(sketcraft_core::SharedProject {
             server: self.account.server.clone(),
             id: remote.id.clone(),
             revision: remote.revision,
@@ -436,7 +436,7 @@ impl KetchupApp {
         }
         let local = shared_content(&self.doc);
         if matches!(&kind, Kind::Create) && self.doc.shared_project.is_none() {
-            self.doc.shared_project = Some(ketchup_core::SharedProject {
+            self.doc.shared_project = Some(sketcraft_core::SharedProject {
                 server: self.account.server.clone(),
                 id: remote.id.clone(),
                 revision: remote.revision,
@@ -478,7 +478,7 @@ impl KetchupApp {
                     self.apply_shared_remote(ctx, &remote)?;
                 }
                 self.sharing.baseline = Some(incoming);
-                self.doc.shared_project = Some(ketchup_core::SharedProject {
+                self.doc.shared_project = Some(sketcraft_core::SharedProject {
                     server: self.account.server.clone(),
                     id: remote.id.clone(),
                     revision: remote.revision,
@@ -893,7 +893,7 @@ impl KetchupApp {
                         }
                     }
                 } else {
-                    ui.label("Share uploads this project to your configured Ketchup Server. Visitors must request access.");
+                    ui.label("Share uploads this project to your configured SketCraft server. Visitors must request access.");
                     if ui.button("Create invitation link").clicked() { action = Some(("create".into(), String::new())); }
                 }
                 ui.separator();
@@ -981,7 +981,7 @@ impl KetchupApp {
                 }
                 // An empty baseline marks a new invitation, not a conflicting file.
                 self.replace_project(Document::default(), None, ctx);
-                self.doc.shared_project = Some(ketchup_core::SharedProject {
+                self.doc.shared_project = Some(sketcraft_core::SharedProject {
                     server: self.account.server.clone(),
                     id: id.clone(),
                     revision: 0,
@@ -1054,7 +1054,7 @@ impl KetchupApp {
     }
 }
 
-impl KetchupApp {
+impl SketCraftApp {
     pub(super) fn open_shared_startup(&mut self, _ctx: &egui::Context) {
         #[cfg(target_arch = "wasm32")]
         let invitation = js_sys::Function::new_no_args(
@@ -1117,11 +1117,11 @@ impl KetchupApp {
 #[cfg(test)]
 mod tests {
     use super::*;
-    fn app() -> KetchupApp {
-        let mut app = KetchupApp::with_document(Document::default(), None, true);
+    fn app() -> SketCraftApp {
+        let mut app = SketCraftApp::with_document(Document::default(), None, true);
         app.account.server = "https://sharing.example".into();
         app.account.server_reachable = true;
-        app.doc.shared_project = Some(ketchup_core::SharedProject {
+        app.doc.shared_project = Some(sketcraft_core::SharedProject {
             server: app.account.server.clone(),
             id: "a".repeat(48),
             revision: 1,
@@ -1131,7 +1131,7 @@ mod tests {
         app.sharing.active = Some("a".repeat(48));
         app
     }
-    fn remote(app: &KetchupApp, name: &str, revision: u64) -> Remote {
+    fn remote(app: &SketCraftApp, name: &str, revision: u64) -> Remote {
         let mut doc = app.doc.clone();
         doc.name = name.into();
         Remote {
@@ -1406,7 +1406,7 @@ fn presence_anchor(model: &Model, entity: u64) -> Option<DVec3> {
         .fold((first, first), |(lo, hi), p| (lo.min(p), hi.max(p)));
     Some(DVec3::new((lo.x + hi.x) * 0.5, (lo.y + hi.y) * 0.5, hi.z))
 }
-impl KetchupApp {
+impl SketCraftApp {
     fn poll_presence_avatars(&mut self, ctx: &egui::Context, now: f64) {
         let live: BTreeSet<_> = self
             .sharing
@@ -1632,7 +1632,7 @@ mod presence_tests {
     }
     #[test]
     fn one_share_entry_carries_pending_access_notifications() {
-        let mut app = KetchupApp::with_document(Document::default(), None, true);
+        let mut app = SketCraftApp::with_document(Document::default(), None, true);
         assert_eq!(app.share_menu_label(), "Share…");
         app.sharing.notifications.push(AccessRequest {
             id: "request".into(),
@@ -1645,7 +1645,7 @@ mod presence_tests {
     }
 }
 
-impl KetchupApp {
+impl SketCraftApp {
     fn close_realtime(&mut self, reason: &str) {
         self.sharing.socket = None;
         self.sharing.socket_ready = false;
@@ -1756,7 +1756,7 @@ impl KetchupApp {
                     self.sharing.error = Some(error);
                     self.sharing.socket_retry_at = now + 1.;
                     self.sharing.force_read = true;
-                    self.sharing.connection = ketchup_core::MaterialId::new_v4().to_string();
+                    self.sharing.connection = sketcraft_core::MaterialId::new_v4().to_string();
                     break;
                 }
             };
@@ -1808,7 +1808,7 @@ impl KetchupApp {
             self.account.server_reachable = false;
             self.close_realtime("WebSocket connection timed out");
             self.sharing.error = Some("WebSocket connection timed out".into());
-            self.sharing.connection = ketchup_core::MaterialId::new_v4().to_string();
+            self.sharing.connection = sketcraft_core::MaterialId::new_v4().to_string();
             self.sharing.force_read = true;
             self.sharing.socket_retry_at = now + 1.;
         }
@@ -1859,7 +1859,7 @@ mod websocket_state_tests {
     #[test]
     fn switching_projects_cancels_unsent_socket_commands() {
         let ctx = egui::Context::default();
-        let mut app = KetchupApp::with_document(Document::default(), None, true);
+        let mut app = SketCraftApp::with_document(Document::default(), None, true);
         let (sender, receiver) = std::sync::mpsc::channel();
         app.sharing.socket_requests.insert(1, sender);
         app.sharing
@@ -1874,7 +1874,7 @@ mod websocket_state_tests {
     }
     #[test]
     fn disconnect_invalidates_presence_and_pending_replies() {
-        let mut app = KetchupApp::with_document(Document::default(), None, true);
+        let mut app = SketCraftApp::with_document(Document::default(), None, true);
         app.sharing.socket_ready = true;
         app.sharing.last_ack = 123.;
         app.sharing.presence_sample_time = 123.;
@@ -1889,7 +1889,7 @@ mod websocket_state_tests {
     #[test]
     fn remote_changes_preserve_an_unaffected_confirmed_selection() {
         let ctx = egui::Context::default();
-        let mut app = KetchupApp::with_document(Document::default(), None, true);
+        let mut app = SketCraftApp::with_document(Document::default(), None, true);
         let edge = app.doc.model.add_edge(DVec3::ZERO, DVec3::X).unwrap();
         app.sharing.confirmed.insert(edge);
         app.sharing.desired.insert(edge);
@@ -1918,13 +1918,13 @@ mod websocket_state_tests {
 #[cfg(test)]
 mod access_status_tests {
     use super::*;
-    fn app() -> KetchupApp {
-        let mut app = KetchupApp::with_document(Document::default(), None, true);
+    fn app() -> SketCraftApp {
+        let mut app = SketCraftApp::with_document(Document::default(), None, true);
         // Simulate an available server without contacting a personal server.
         // A refresh can only attempt the unused loopback port.
         app.account.server = "http://127.0.0.1:0".into();
         app.account.server_reachable = true;
-        app.doc.shared_project = Some(ketchup_core::SharedProject {
+        app.doc.shared_project = Some(sketcraft_core::SharedProject {
             server: app.account.server.clone(),
             id: "a".repeat(48),
             revision: 1,
@@ -1934,7 +1934,7 @@ mod access_status_tests {
         app.sharing.active = Some("a".repeat(48));
         app
     }
-    fn response(app: &KetchupApp, role: &str) -> Remote {
+    fn response(app: &SketCraftApp, role: &str) -> Remote {
         Remote {
             id: "a".repeat(48),
             role: role.into(),
@@ -1980,7 +1980,7 @@ mod access_status_tests {
     fn recorded_project_author_never_grants_access_to_a_guest() {
         let ctx = egui::Context::default();
         let mut app = app();
-        app.doc.project_author = Some(ketchup_core::HistoryAuthor {
+        app.doc.project_author = Some(sketcraft_core::HistoryAuthor {
             id: "user:owner".into(),
             name: "Original owner".into(),
             kind: "account".into(),
@@ -1988,7 +1988,7 @@ mod access_status_tests {
         });
         let mut remote = response(&app, "none");
         remote.document = None;
-        remote.actor = Some(ketchup_core::HistoryAuthor {
+        remote.actor = Some(sketcraft_core::HistoryAuthor {
             id: "guest:visitor".into(),
             name: "Guest visitor".into(),
             kind: "guest".into(),

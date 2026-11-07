@@ -187,7 +187,7 @@ fn properties_show_edge_lengths_totals_units_and_geometry_changes() {
         .add_edge(DVec3::splat(10.), DVec3::new(10., 12., 10.))
         .unwrap();
     h.app.selected.insert(other);
-    h.app.doc.display.units.length = ketchup_core::LengthUnit::Millimeters;
+    h.app.doc.display.units.length = sketcraft_core::LengthUnit::Millimeters;
     h.app.doc.display.units.precision.length = Some(1);
     let output = properties_output(&mut h);
     text_position(&output, "Total edge length");
@@ -511,13 +511,13 @@ fn dimensions_locked_during_selection_or_placement_keep_three_lines_and_a_label(
                 vec![egui::Event::PointerMoved(placement)],
                 egui::Modifiers::NONE,
             );
-            let dimension = ketchup_core::Dimension {
+            let dimension = sketcraft_core::Dimension {
                 id: 0,
-                start: ketchup_core::DimensionAnchor {
+                start: sketcraft_core::DimensionAnchor {
                     point: a,
                     weights: vec![],
                 },
-                end: ketchup_core::DimensionAnchor {
+                end: sketcraft_core::DimensionAnchor {
                     point: b,
                     weights: vec![],
                 },
@@ -673,7 +673,7 @@ fn dimensions_axis_lock_switches_and_clears_during_placement() {
 
 #[test]
 fn units_section_controls_change_measurements_without_editing_geometry() {
-    use ketchup_core::{AngleUnit, AreaUnit, LengthUnit, UnitSettings, VolumeUnit};
+    use sketcraft_core::{AngleUnit, AreaUnit, LengthUnit, UnitSettings, VolumeUnit};
 
     let mut h = Harness::new();
     h.ctx.style_mut_of(h.ctx.theme(), |s| s.animation_time = 0.);
@@ -766,7 +766,7 @@ fn precision_controls_independently_update_measurement_displays() {
     }
     assert_eq!(
         h.app.doc.display.units.precision,
-        ketchup_core::UnitPrecision {
+        sketcraft_core::UnitPrecision {
             length: Some(0),
             area: Some(1),
             volume: Some(4),
@@ -790,7 +790,7 @@ fn precision_controls_independently_update_measurement_displays() {
     });
     assert_eq!(h.app.measurement_value().as_deref(), Some("1 m"));
     h.app.set_tool(Tool::Protractor);
-    h.app.doc.display.units.angle = ketchup_core::AngleUnit::Radians;
+    h.app.doc.display.units.angle = sketcraft_core::AngleUnit::Radians;
     h.app.measurement = Some(measurement_tools::Measurement {
         points: vec![DVec3::ZERO, DVec3::X, DVec3::Y],
         complete: true,

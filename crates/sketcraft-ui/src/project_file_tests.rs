@@ -1,5 +1,5 @@
 use super::*;
-use ketchup_core::DVec3;
+use sketcraft_core::DVec3;
 
 #[test]
 fn ketchup_files_round_trip_complete_projects_and_replace_existing_files() {

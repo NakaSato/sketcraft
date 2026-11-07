@@ -1,7 +1,7 @@
 // Function body used by the WASM host. Keep lifecycle cleanup on every exit.
 return new Promise((resolve, reject) => {
     const body = source + `\nonmessage = event => {
-        try { postMessage({model: ketchupImport(new Uint8Array(event.data))}); }
+        try { postMessage({model: sketcraftImport(new Uint8Array(event.data))}); }
         catch (error) { postMessage({error: error.message || String(error)}); }
     };`;
     const url = URL.createObjectURL(new Blob([body], {type: 'text/javascript'}));

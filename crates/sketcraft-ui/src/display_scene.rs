@@ -1,12 +1,12 @@
 use super::*;
-use ketchup_core::DisplaySettings;
+use sketcraft_core::DisplaySettings;
 
 /// Resolve scene appearance once for interactive and offscreen viewports.
 pub(super) fn effective_display(display: &DisplaySettings, model: &Model, dark: bool) -> DisplaySettings {
     let mut effective = crate::environment::for_theme(display, dark);
     if display.group_emphasis && model.edit_context.is_some_and(|id| model.contains_entity(&id)) {
-        if effective.face_style == ketchup_core::FaceStyle::Wireframe {
-            effective.face_style = ketchup_core::FaceStyle::Shaded;
+        if effective.face_style == sketcraft_core::FaceStyle::Wireframe {
+            effective.face_style = sketcraft_core::FaceStyle::Shaded;
         }
         effective.x_ray = false;
         effective.shadows = false;
@@ -31,7 +31,7 @@ impl FaceLighting {
         let up = camera.up();
         Self {
             eye,
-            parallel: (camera.projection == ketchup_core::Projection::Parallel)
+            parallel: (camera.projection == sketcraft_core::Projection::Parallel)
                 .then_some(toward_eye),
             direction: (toward_eye * 0.8 - right * 0.45 + up * 0.65).normalize(),
         }
@@ -68,7 +68,7 @@ pub(super) fn profile_edges(
 ) -> BTreeSet<u64> {
     let eye = camera.eye();
     let parallel =
-        (camera.projection == ketchup_core::Projection::Parallel).then_some(eye - camera.target);
+        (camera.projection == sketcraft_core::Projection::Parallel).then_some(eye - camera.target);
     model
         .edges
         .values()
@@ -128,7 +128,7 @@ impl SectionCache {
             geometry: cache.revision(),
             entities: entities.revision(),
             limits: d.section_limits(),
-            fill: d.section_fill && d.face_style != ketchup_core::FaceStyle::Wireframe,
+            fill: d.section_fill && d.face_style != sketcraft_core::FaceStyle::Wireframe,
             hidden_objects: d.hidden_objects,
             hidden_geometry: d.hidden_geometry,
         };
@@ -374,7 +374,7 @@ mod tests {
                     hidden_geometry: show_hidden,
                     ..Default::default()
                 };
-                for view in ketchup_core::StandardView::ALL {
+                for view in sketcraft_core::StandardView::ALL {
                     camera.set_standard_view(view);
                     // Original per-frame adjacency provides an independent
                     // reference for the retained topology classification.

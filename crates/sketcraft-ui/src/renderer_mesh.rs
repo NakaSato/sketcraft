@@ -29,9 +29,9 @@ impl Mesh {
             occlusion: Occlusion::default(),
             size,
             pixels_per_point: 1.,
-            parallel: camera.projection == ketchup_core::Projection::Parallel,
+            parallel: camera.projection == sketcraft_core::Projection::Parallel,
             view: camera.view(size),
-            display: ketchup_core::DisplaySettings::default(),
+            display: sketcraft_core::DisplaySettings::default(),
             buffer_pool: None,
             gpu_pool: Default::default(),
         }
@@ -78,7 +78,7 @@ impl Mesh {
     pub fn enable_gpu_edge_occlusion(&mut self) {
         self.gpu_edge_occlusion = true;
     }
-    pub fn set_display(&mut self, display: &ketchup_core::DisplaySettings) {
+    pub fn set_display(&mut self, display: &sketcraft_core::DisplaySettings) {
         self.display = display.clone();
     }
     pub fn set_annotation_occlusion_enabled(&mut self, enabled: bool) {
@@ -514,7 +514,7 @@ impl Mesh {
     #[cfg(test)]
     pub fn styled_edge(
         &mut self,
-        edge: &ketchup_core::Edge,
+        edge: &sketcraft_core::Edge,
         model: &Model,
         width: f64,
         color: Color32,
@@ -1342,7 +1342,7 @@ impl Mesh {
 
     pub(super) fn project_shadow_triangle(
         view: &CameraView,
-        display: &ketchup_core::DisplaySettings,
+        display: &sketcraft_core::DisplaySettings,
         size: DVec2,
         triangle: [DVec3; 3],
         coverage: [u8; 4],

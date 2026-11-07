@@ -18,18 +18,18 @@ fn catalog() -> Vec<Stock> {
 #[test]
 fn search_matches_names_and_sizes_and_keeps_project_only_materials() {
     let wood = catalog();
-    let project_id = ketchup_core::MaterialId::new_v4();
+    let project_id = sketcraft_core::MaterialId::new_v4();
     let project = std::collections::BTreeMap::from([
         (
             wood[0].id,
-            ketchup_core::StockMaterial {
+            sketcraft_core::StockMaterial {
                 name: "Old catalog name".into(),
                 dimensions: [190, 890, 24400],
             },
         ),
         (
             project_id,
-            ketchup_core::StockMaterial {
+            sketcraft_core::StockMaterial {
                 name: "Walnut offcut".into(),
                 dimensions: [190, 890, 24400],
             },
@@ -54,7 +54,7 @@ fn search_matches_names_and_sizes_and_keeps_project_only_materials() {
 fn frame(
     ctx: &egui::Context,
     wood: &[Stock],
-    selected: &mut Option<ketchup_core::MaterialId>,
+    selected: &mut Option<sketcraft_core::MaterialId>,
     filter: &mut String,
     events: Vec<egui::Event>,
 ) -> (egui::Pos2, bool, Vec<(String, egui::Pos2)>) {
@@ -107,7 +107,7 @@ fn frame(
 fn click(
     ctx: &egui::Context,
     wood: &[Stock],
-    selected: &mut Option<ketchup_core::MaterialId>,
+    selected: &mut Option<sketcraft_core::MaterialId>,
     filter: &mut String,
     pos: egui::Pos2,
 ) -> bool {
@@ -233,7 +233,7 @@ fn clear_keeps_picker_open_and_unassigned_remains_available_with_no_matches() {
 #[test]
 fn stock_sync_reuses_static_catalogs_and_refreshes_assignments_and_project_identity() {
     let ctx = egui::Context::default();
-    let mut app = KetchupApp::with_document(Document::default(), None, true);
+    let mut app = SketCraftApp::with_document(Document::default(), None, true);
     let stock = Stock::default();
     let id = stock.id;
     app.general_settings.stock.wood.push(stock);

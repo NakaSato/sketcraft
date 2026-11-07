@@ -1,7 +1,7 @@
 //! Partition receiving faces into lit/shaded geometry. Drawing each portion
 //! once avoids coplanar shadow overlays fighting with the face depth buffer.
 use crate::renderer::{EntityCache, FaceCache};
-use ketchup_core::{DVec3, DisplaySettings, FaceStyle};
+use sketcraft_core::{DVec3, DisplaySettings, FaceStyle};
 use std::collections::BTreeMap;
 
 type Triangle = [DVec3; 3];
@@ -508,7 +508,7 @@ impl VolumeTree {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ketchup_core::Model;
+    use sketcraft_core::Model;
     use std::collections::BTreeSet;
 
     fn area(triangles: &[Triangle]) -> f64 {
@@ -871,7 +871,7 @@ mod tests {
     fn shadow_workload_benchmark() {
         use crate::renderer::Mesh;
         use eframe::egui::Color32;
-        use ketchup_core::{Camera, DVec2};
+        use sketcraft_core::{Camera, DVec2};
         use std::{hint::black_box, time::Instant};
 
         for count in [256, 1024] {

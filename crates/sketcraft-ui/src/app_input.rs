@@ -1,7 +1,7 @@
 //! Viewport pointer input: picking, snapping, erase sweeps, orbit, pan and zoom.
 use super::*;
 
-impl KetchupApp {
+impl SketCraftApp {
     pub(super) fn erase_target(&mut self, pos: Pos2) -> Option<u64> {
         let pixel = dv(pos - self.viewport.min);
         let size = dv(self.viewport.size());
@@ -68,8 +68,8 @@ impl KetchupApp {
     }
     // Call after prepare_picking so inference shares the viewport's cached
     // planes and spatial hierarchy instead of rebuilding every face per target.
-    pub(super) fn snap_targets(&self) -> ketchup_core::inference::SnapTargets {
-        ketchup_core::inference::SnapTargets {
+    pub(super) fn snap_targets(&self) -> sketcraft_core::inference::SnapTargets {
+        sketcraft_core::inference::SnapTargets {
             edges: self.snap_to_edge,
             faces: self.snap_to_face,
             face_centers: self.snap_to_face_center,
@@ -88,7 +88,7 @@ impl KetchupApp {
         lock: Option<Axis>,
         axes: bool,
     ) -> Option<Snap> {
-        ketchup_core::inference::infer_with_constraint(
+        sketcraft_core::inference::infer_with_constraint(
             &self.doc.model,
             &self.doc.camera,
             dv(self.viewport.size()),
@@ -112,7 +112,7 @@ impl KetchupApp {
         // Select and move the visible machined boards, retaining their source
         // object IDs. The cache restores stock geometry in the active edit scope.
         if matches!(self.tool,Tool::Select|Tool::Move|Tool::Rotate|Tool::Scale)
-            && self.doc.model.connections.values().any(|c| matches!(c.operation,ketchup_core::connections::ConnectionOperation::Joinery(_)))
+            && self.doc.model.connections.values().any(|c| matches!(c.operation,sketcraft_core::connections::ConnectionOperation::Joinery(_)))
             {
             return self.joinery_geometry.pick(&self.doc.model,&self.doc.camera,&self.doc.display,size,pixel,include_faces);
         }

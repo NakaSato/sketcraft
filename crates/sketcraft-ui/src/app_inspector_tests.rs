@@ -93,7 +93,7 @@ fn sidebar_headers_dock_and_rejoin_in_memory_and_keep_their_disclosure_state() {
     h.app.new_model(&h.ctx);
     h.frame(vec![], egui::Modifiers::NONE);
     assert_eq!(h.app.inspector_order, order);
-    let fresh = KetchupApp::with_document(Document::default(), None, true);
+    let fresh = SketCraftApp::with_document(Document::default(), None, true);
     assert_eq!(fresh.inspector_order, InspectorSection::ALL);
 }
 
@@ -218,7 +218,7 @@ fn materials_section_assigns_catalog_material_as_an_undoable_document_edit() {
         .stock
         .wood
         .push(stock_settings::Stock {
-            id: ketchup_core::MaterialId::new_v4(),
+            id: sketcraft_core::MaterialId::new_v4(),
             name: "Test oak".into(),
             thickness_mm: 19.,
             width_mm: 89.,
@@ -248,7 +248,7 @@ fn materials_section_assigns_catalog_material_as_an_undoable_document_edit() {
     assert_eq!(h.app.stock_material_filter, "TeSt oak");
     h.key(Key::Enter);
     let material_id = h.app.general_settings.stock.wood[0].id;
-    let assigned = ketchup_core::StockMaterial {
+    let assigned = sketcraft_core::StockMaterial {
         name: "Test oak".into(),
         dimensions: [190, 890, 24400],
     };

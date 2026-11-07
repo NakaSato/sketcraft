@@ -1,6 +1,6 @@
 use eframe::{egui, egui_wgpu, wgpu};
 use egui::{Color32, Rect};
-use ketchup_core::{Camera, CameraView, DVec2, DVec3, Face, Model};
+use sketcraft_core::{Camera, CameraView, DVec2, DVec3, Face, Model};
 use std::collections::BTreeMap;
 use std::sync::{Arc, Mutex, OnceLock};
 
@@ -123,14 +123,14 @@ impl ModelSnapshot {
 #[derive(Clone, PartialEq)]
 pub struct SceneKey {
     pub joinery_members: Option<[u64; 2]>,
-    pub joint_preview: Option<([u64; 2], ketchup_core::joinery::JointSettings)>,
+    pub joint_preview: Option<([u64; 2], sketcraft_core::joinery::JointSettings)>,
     pub model_revision: u64,
     pub camera: Camera,
     pub size: DVec2,
     pub pixels_per_point: f32,
-    pub display: ketchup_core::DisplaySettings,
+    pub display: sketcraft_core::DisplaySettings,
     pub dark: bool,
-    pub tool: ketchup_core::Tool,
+    pub tool: sketcraft_core::Tool,
     pub selected: std::collections::BTreeSet<u64>,
     pub hover: Option<u64>,
     pub outliner_hover: std::collections::BTreeSet<u64>,
@@ -256,7 +256,7 @@ pub struct Mesh {
     pixels_per_point: f64,
     parallel: bool,
     view: CameraView,
-    display: ketchup_core::DisplaySettings,
+    display: sketcraft_core::DisplaySettings,
     buffer_pool: Option<BufferPool>,
     gpu_pool: GpuBufferPool,
 }
@@ -1275,7 +1275,7 @@ pub(crate) fn install_resources(
     renderer: &mut egui_wgpu::Renderer,
 ) {
     let shader = device.create_shader_module(wgpu::ShaderModuleDescriptor {
-        label: Some("KetchUp edges"),
+        label: Some("SketCraft edges"),
         source: wgpu::ShaderSource::Wgsl(include_str!("edges.wgsl").into()),
     });
     let face_pipeline = create_pipeline(device, &shader, format, PipelinePass::Faces);
@@ -1333,12 +1333,12 @@ fn create_pipeline_with_samples(
 ) -> wgpu::RenderPipeline {
     device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
         label: Some(match pass {
-            PipelinePass::Faces => "KetchUp filled faces",
-            PipelinePass::EdgeDepth => "KetchUp opaque edge depth",
-            PipelinePass::Edges => "KetchUp antialiased edges",
-            PipelinePass::MaskBase => "KetchUp shadow receiver depth",
-            PipelinePass::MaskShadow => "KetchUp shadow coverage",
-            PipelinePass::ShadowFaces => "KetchUp faces with antialiased shadows",
+            PipelinePass::Faces => "SketCraft filled faces",
+            PipelinePass::EdgeDepth => "SketCraft opaque edge depth",
+            PipelinePass::Edges => "SketCraft antialiased edges",
+            PipelinePass::MaskBase => "SketCraft shadow receiver depth",
+            PipelinePass::MaskShadow => "SketCraft shadow coverage",
+            PipelinePass::ShadowFaces => "SketCraft faces with antialiased shadows",
         }),
         layout: None,
         vertex: wgpu::VertexState {
@@ -1498,7 +1498,7 @@ impl egui_wgpu::CallbackTrait for SceneCallback {
                         create(
                             vertex_bytes,
                             wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST,
-                            "KetchUp vertices",
+                            "SketCraft vertices",
                         )
                     }),
                 indices: indices
@@ -1507,7 +1507,7 @@ impl egui_wgpu::CallbackTrait for SceneCallback {
                         create(
                             index_bytes,
                             wgpu::BufferUsages::INDEX | wgpu::BufferUsages::COPY_DST,
-                            "KetchUp indices",
+                            "SketCraft indices",
                         )
                     }),
             };
@@ -1533,7 +1533,7 @@ impl egui_wgpu::CallbackTrait for SceneCallback {
                 let texture = |format, sample_count, usage| {
                     device
                         .create_texture(&wgpu::TextureDescriptor {
-                            label: Some("KetchUp antialiased shadow mask"),
+                            label: Some("SketCraft antialiased shadow mask"),
                             size,
                             mip_level_count: 1,
                             sample_count,
@@ -1561,7 +1561,7 @@ impl egui_wgpu::CallbackTrait for SceneCallback {
                 );
                 {
                     let mut pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
-                        label: Some("KetchUp 4x antialiasing"),
+                        label: Some("SketCraft 4x antialiasing"),
                         color_attachments: &[Some(wgpu::RenderPassColorAttachment {
                             view: &color,
                             depth_slice: None,
@@ -1593,7 +1593,7 @@ impl egui_wgpu::CallbackTrait for SceneCallback {
                 }
                 let sampler = device.create_sampler(&wgpu::SamplerDescriptor::default());
                 let bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
-                    label: Some("KetchUp resolved viewport"),
+                    label: Some("SketCraft resolved viewport"),
                     layout: &r.shadow_faces.get_bind_group_layout(0),
                     entries: &[
                         wgpu::BindGroupEntry {
@@ -1689,7 +1689,7 @@ pub struct CachedFace {
     pub triangles: Vec<[DVec3; 3]>,
     pub area: f64,
     pub bounds: (DVec3, DVec3),
-    plane: Option<ketchup_core::faces::Plane>,
+    plane: Option<sketcraft_core::faces::Plane>,
     rings: Vec<Vec<DVec2>>,
 }
 impl FaceCache {
@@ -1746,7 +1746,7 @@ impl FaceCache {
             }) {
                 continue;
             }
-            let plane = ketchup_core::faces::plane(model, &face.vertices);
+            let plane = sketcraft_core::faces::plane(model, &face.vertices);
             let triangles = model.face_triangles(face);
             let area = triangles
                 .iter()
@@ -1849,16 +1849,16 @@ impl FaceCache {
 impl CachedFace {
     pub fn contains_point(&self, point: DVec3) -> bool {
         let Some(plane) = self.plane else { return false };
-        if (point - plane.origin).dot(plane.normal).abs() > ketchup_core::document::EPS {
+        if (point - plane.origin).dot(plane.normal).abs() > sketcraft_core::document::EPS {
             return false;
         }
         let xy = plane.project(point);
-        ketchup_core::faces::in_polygon(xy, &self.rings[0], true)
+        sketcraft_core::faces::in_polygon(xy, &self.rings[0], true)
             && !self.rings.iter().skip(1).any(|ring|
-                ketchup_core::faces::in_polygon(xy, ring, true))
+                sketcraft_core::faces::in_polygon(xy, ring, true))
     }
 
-    pub fn hit(&self, ray: ketchup_core::Ray) -> Option<(f64, DVec3)> {
+    pub fn hit(&self, ray: sketcraft_core::Ray) -> Option<(f64, DVec3)> {
         let plane = self.plane?;
         let denominator = ray.direction.dot(plane.normal);
         if denominator.abs() < 1e-9 {
@@ -1870,12 +1870,12 @@ impl CachedFace {
         }
         let point = ray.origin + ray.direction * t;
         let xy = plane.project(point);
-        (ketchup_core::faces::in_polygon(xy, &self.rings[0], true)
+        (sketcraft_core::faces::in_polygon(xy, &self.rings[0], true)
             && !self
                 .rings
                 .iter()
                 .skip(1)
-                .any(|ring| ketchup_core::faces::in_polygon(xy, ring, true)))
+                .any(|ring| sketcraft_core::faces::in_polygon(xy, ring, true)))
         .then_some((t, point))
     }
 }
@@ -1897,7 +1897,7 @@ pub struct EntityState {
 }
 
 impl EntityState {
-    pub fn displayed(self, d: &ketchup_core::DisplaySettings) -> bool {
+    pub fn displayed(self, d: &sketcraft_core::DisplaySettings) -> bool {
         !self.tag_hidden
             && (!self.object_hidden || d.hidden_objects)
             && (!self.geometry_hidden || d.hidden_geometry)
@@ -1912,7 +1912,7 @@ pub struct EntityCache {
     locked: std::collections::BTreeSet<u64>,
     context: Option<u64>,
     states: BTreeMap<u64, EntityState>,
-    tags: BTreeMap<u64, ketchup_core::Tag>,
+    tags: BTreeMap<u64, sketcraft_core::Tag>,
     entity_tags: BTreeMap<u64, u64>,
     revision: u64,
 }

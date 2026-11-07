@@ -1,7 +1,7 @@
 //! Finishing estimates use actual model surfaces and reusable, user-adjustable rates.
 use super::*;
 use crate::inspector_table::{Column, InspectorTable, product_cell_text};
-use ketchup_core::Model;
+use sketcraft_core::Model;
 use std::collections::BTreeSet;
 
 // Research checked 2026-10-29. These are planning assumptions, not universal benchmarks.
@@ -23,9 +23,9 @@ use std::collections::BTreeSet;
 // coat before light use. Light use does not mean fully cured.
 // https://www.minwax.com/en/products/protective-finishes/fast-drying-polyurethane
 type WoodMaterials =
-    std::collections::BTreeMap<ketchup_core::MaterialId, ketchup_core::StockMaterial>;
+    std::collections::BTreeMap<sketcraft_core::MaterialId, sketcraft_core::StockMaterial>;
 
-pub(super) use ketchup_core::surface_treatment::{Duration, Settings, Step};
+pub(super) use sketcraft_core::surface_treatment::{Duration, Settings, Step};
 
 // Model collections allow direct edits, so compare a source snapshot rather than
 // relying on edit notifications. Scrolling only compares inputs; it never repeats
@@ -278,7 +278,7 @@ fn object_tasks(
 
 #[derive(Debug)]
 struct FinishCost {
-    product_id: Option<ketchup_core::MaterialId>,
+    product_id: Option<sketcraft_core::MaterialId>,
     name: String,
     kind: Option<finish_settings::FinishType>,
     containers: Option<f64>,
@@ -293,7 +293,7 @@ fn finishing_costs(
     defaults: &Settings,
     products: &[finish_settings::Finish],
 ) -> Vec<FinishCost> {
-    let mut demand = std::collections::BTreeMap::<Option<ketchup_core::MaterialId>, f64>::new();
+    let mut demand = std::collections::BTreeMap::<Option<sketcraft_core::MaterialId>, f64>::new();
     for (id, area) in areas {
         if !area.is_finite() || *area <= 0. {
             continue;
@@ -689,7 +689,7 @@ pub(super) fn treatment_controls(
     settings.sanitize();
 }
 
-impl KetchupApp {
+impl SketCraftApp {
     pub(super) fn export_time_estimates(&mut self, ctx: &egui::Context) {
         if self.project.blocked() {
             return;

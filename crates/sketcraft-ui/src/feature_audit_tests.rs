@@ -18,7 +18,7 @@ pub(super) fn render_cases() -> Vec<RenderCase> {
             });
         }
     };
-    let defaults = serde_json::to_value(ketchup_core::DisplaySettings::default()).unwrap();
+    let defaults = serde_json::to_value(sketcraft_core::DisplaySettings::default()).unwrap();
     for (key, value) in defaults.as_object().unwrap() {
         if value.is_boolean() {
             // Keys come from a static schema below to retain useful report names.
@@ -60,11 +60,11 @@ pub(super) fn render_cases() -> Vec<RenderCase> {
             pair(key, key, false.into(), true.into());
         }
     }
-    for style in ketchup_core::FaceStyle::ALL {
-        let baseline = if style == ketchup_core::FaceStyle::Materials {
-            ketchup_core::FaceStyle::Shaded
+    for style in sketcraft_core::FaceStyle::ALL {
+        let baseline = if style == sketcraft_core::FaceStyle::Materials {
+            sketcraft_core::FaceStyle::Shaded
         } else {
-            ketchup_core::FaceStyle::Materials
+            sketcraft_core::FaceStyle::Materials
         };
         pair(
             &format!("style-{style:?}"),
@@ -127,9 +127,9 @@ pub(super) fn render_cases() -> Vec<RenderCase> {
     cases
 }
 
-pub(super) fn render_workspace(name: &str) -> KetchupApp {
+pub(super) fn render_workspace(name: &str) -> SketCraftApp {
     let case = render_cases().into_iter().find(|c| c.name == name).unwrap();
-    let mut app = KetchupApp::with_document(Document::default(), None, true);
+    let mut app = SketCraftApp::with_document(Document::default(), None, true);
     app.inspector = false;
     let first = ui_solid_box(
         &mut app.doc.model,
@@ -180,10 +180,10 @@ pub(super) fn render_workspace(name: &str) -> KetchupApp {
             let a = ui_solid_box(&mut app.doc.model, DVec3::ZERO, DVec3::new(0.3, 0.1, 0.04));
             let b = ui_solid_box(&mut app.doc.model, DVec3::new(0.25, 0., 0.), DVec3::new(0.55, 0.1, 0.04));
             if case.key == "wood_joinery" {
-                app.doc.model.add_connection(ketchup_core::connections::Connection {
+                app.doc.model.add_connection(sketcraft_core::connections::Connection {
                     members: [a, b],
                     entry_face: None,
-                    operation: ketchup_core::connections::ConnectionOperation::Joinery(Default::default()),
+                    operation: sketcraft_core::connections::ConnectionOperation::Joinery(Default::default()),
                 }).unwrap();
             } else {
                 app.selected = BTreeSet::from([a, b]);
@@ -259,7 +259,7 @@ pub(super) fn render_workspace(name: &str) -> KetchupApp {
 
 #[test]
 fn every_display_setting_has_an_independent_render_case() {
-    let defaults = serde_json::to_value(ketchup_core::DisplaySettings::default()).unwrap();
+    let defaults = serde_json::to_value(sketcraft_core::DisplaySettings::default()).unwrap();
     let fields: BTreeSet<_> = defaults
         .as_object()
         .unwrap()
@@ -420,10 +420,10 @@ option!(option_fog, "fog", "Display fog");
 option!(option_sky, "sky", "Sky");
 option!(option_ground, "ground", "Ground");
 
-fn check_face_style(style: ketchup_core::FaceStyle) {
+fn check_face_style(style: sketcraft_core::FaceStyle) {
     let mut h = options_workspace();
     if style == h.app.doc.display.face_style {
-        h.app.doc.display.face_style = ketchup_core::FaceStyle::Wireframe;
+        h.app.doc.display.face_style = sketcraft_core::FaceStyle::Wireframe;
     }
     let output = h.frame(vec![], egui::Modifiers::NONE);
     h.click(sidebar_position(&h, &output, style.label()));
@@ -436,7 +436,7 @@ macro_rules! face_style {
     ($name:ident, $style:ident) => {
         #[test]
         fn $name() {
-            check_face_style(ketchup_core::FaceStyle::$style);
+            check_face_style(sketcraft_core::FaceStyle::$style);
         }
     };
 }
@@ -471,7 +471,7 @@ fn reset_display_restores_every_setting_and_preserves_geometry() {
     h.app.doc.display = serde_json::from_value(json).unwrap();
     let output = h.frame(vec![], egui::Modifiers::NONE);
     h.click(sidebar_position(&h, &output, "Reset display"));
-    assert_eq!(h.app.doc.display, ketchup_core::DisplaySettings::default());
+    assert_eq!(h.app.doc.display, sketcraft_core::DisplaySettings::default());
     assert_eq!(h.app.doc.model, model);
     assert!(h.app.doc.model.edges.contains_key(&edge));
     assert!(h.app.project.modified);
@@ -482,7 +482,7 @@ fn numeric_option(key: &str, values: &[f64], invalid: &[f64]) {
     ui_solid_pair(&mut h);
     let model = h.app.doc.model.clone();
     for value in values {
-        let mut json = serde_json::to_value(ketchup_core::DisplaySettings::default()).unwrap();
+        let mut json = serde_json::to_value(sketcraft_core::DisplaySettings::default()).unwrap();
         json[key] = (*value).into();
         h.app.doc.display = serde_json::from_value(json).unwrap();
         // Enable dependencies so each value exercises rendering as well as persistence.

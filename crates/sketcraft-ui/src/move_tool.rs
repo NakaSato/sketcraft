@@ -47,7 +47,7 @@ pub(super) struct MoveCopy {
     pub delta: DVec3,
 }
 
-impl KetchupApp {
+impl SketCraftApp {
     pub(super) fn move_copy_key(ctx: &egui::Context) -> &'static str {
         if ctx.os() == egui::os::OperatingSystem::Mac {
             "Option"

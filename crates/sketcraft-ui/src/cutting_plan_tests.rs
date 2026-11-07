@@ -1,7 +1,7 @@
 use super::*;
 
-fn material() -> ketchup_core::StockMaterial {
-    ketchup_core::StockMaterial {
+fn material() -> sketcraft_core::StockMaterial {
+    sketcraft_core::StockMaterial {
         name: "Catalog oak".into(),
         dimensions: [1000, 12200, 24400],
     }
@@ -25,7 +25,7 @@ fn blank(size: DVec3) -> Model {
         model.add_edge(corners[i], corners[(i + 1) % 4]).unwrap();
     }
     let face = *model.faces.keys().next().unwrap();
-    let normal = ketchup_core::faces::plane(&model, &model.faces[&face].vertices)
+    let normal = sketcraft_core::faces::plane(&model, &model.faces[&face].vertices)
         .unwrap()
         .normal;
     model.push_pull(face, size.z / normal.z).unwrap();
@@ -628,7 +628,7 @@ fn only_assigned_objects_are_included_and_materials_keep_equal_cuts_separate() {
     );
     let mut legacy = serde_json::to_value(&model.objects[&a]).unwrap();
     legacy.as_object_mut().unwrap().remove("stock_material");
-    let legacy: ketchup_core::Object = serde_json::from_value(legacy).unwrap();
+    let legacy: sketcraft_core::Object = serde_json::from_value(legacy).unwrap();
     assert!(legacy.stock_material.is_none());
 }
 
@@ -727,7 +727,7 @@ fn stock_pdf_includes_colored_coded_diagrams_and_uses_the_selected_kerf() {
     let plan = CuttingPlan {
         groups: vec![CutGroup {
             material_id: None,
-            material: ketchup_core::StockMaterial {
+            material: sketcraft_core::StockMaterial {
                 name: "Oak board".into(),
                 dimensions: [380, 890, 10000],
             },
@@ -900,7 +900,7 @@ fn assigned_stock_rejects_cuts_that_exceed_thickness_or_width() {
         let plan = CuttingPlan {
             groups: vec![CutGroup {
                 material_id: None,
-                material: ketchup_core::StockMaterial {
+                material: sketcraft_core::StockMaterial {
                     name: "Narrow stock".into(),
                     dimensions: [380, 890, 10000],
                 },
@@ -948,8 +948,8 @@ fn material_ids_keep_identical_catalog_entries_in_separate_cut_groups() {
         "B",
         false,
     );
-    let first = ketchup_core::MaterialId::new_v4();
-    let second = ketchup_core::MaterialId::new_v4();
+    let first = sketcraft_core::MaterialId::new_v4();
+    let second = sketcraft_core::MaterialId::new_v4();
     for (object, id) in [(a, first), (b, second)] {
         model.objects.get_mut(&object).unwrap().stock_material = None;
         model.objects.get_mut(&object).unwrap().stock_material_id = Some(id);

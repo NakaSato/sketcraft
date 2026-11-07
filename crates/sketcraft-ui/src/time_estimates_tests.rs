@@ -1,7 +1,7 @@
 #[cfg(test)]
 use crate::test_ui::ContextExt as _;
 use super::*;
-use ketchup_core::DVec3;
+use sketcraft_core::DVec3;
 
 fn rectangle(model: &mut Model, offset: DVec3) -> u64 {
     let corners = [
@@ -30,7 +30,7 @@ fn rectangle(model: &mut Model, offset: DVec3) -> u64 {
 fn wood_catalog() -> stock_settings::Settings {
     stock_settings::Settings {
         wood: vec![stock_settings::Stock {
-            id: ketchup_core::MaterialId::nil(),
+            id: sketcraft_core::MaterialId::nil(),
             ..Default::default()
         }],
         ..Default::default()
@@ -219,7 +219,7 @@ fn settings_defaults_partial_data_and_invalid_values_restore_safely() {
     assert_eq!(partial.varnish, Settings::default().varnish);
     settings.sanding[0].coats = 12;
     settings.sanding[0].drying_hours = 2.;
-    settings.sanding[0].product_id = Some(ketchup_core::MaterialId::new_v4());
+    settings.sanding[0].product_id = Some(sketcraft_core::MaterialId::new_v4());
     settings.pre_stain.minutes_per_m2 = f64::NAN;
     settings.stain.drying_hours = f64::INFINITY;
     settings.varnish.minutes_per_m2 = -2.;
@@ -508,7 +508,7 @@ fn every_finish_coat_is_separate_with_final_wait_only_on_its_last_coat() {
 
 #[test]
 fn material_estimate_prices_purchased_stock_and_flags_missing_prices() {
-    fn labels(app: &mut KetchupApp) -> String {
+    fn labels(app: &mut SketCraftApp) -> String {
         fn collect(shape: &egui::Shape, text: &mut String) {
             match shape {
                 egui::Shape::Text(label) => {
@@ -552,7 +552,7 @@ fn material_estimate_prices_purchased_stock_and_flags_missing_prices() {
     doc.model
         .stock_materials
         .insert(stock.id, stock.definition());
-    let mut app = KetchupApp::with_document(doc, None, true);
+    let mut app = SketCraftApp::with_document(doc, None, true);
     app.general_settings.stock.currency = "CAD ".into();
     app.general_settings.stock.wood = vec![stock];
     // Unassigned solids and loose faces must not make the estimate incomplete.
@@ -713,7 +713,7 @@ fn finishing_requires_wood_and_respects_child_overrides_and_catalog_changes() {
     assert_eq!(cache.area(&model, &BTreeSet::from([loose]), &catalog), 0.);
     // A valid purchasing material outside the Wood category is not finishable,
     // even when its parent is assigned wood.
-    let other = ketchup_core::MaterialId::new_v4();
+    let other = sketcraft_core::MaterialId::new_v4();
     model
         .stock_materials
         .insert(other, catalog.wood[0].definition());
@@ -853,7 +853,7 @@ fn per_object_treatments_use_individual_areas_and_survive_document_roundtrip() {
 #[test]
 fn object_defaults_apply_to_existing_objects_and_explicit_overrides_survive_reload() {
     let ctx = egui::Context::default();
-    let mut app = KetchupApp::with_document(Document::default(), None, true);
+    let mut app = SketCraftApp::with_document(Document::default(), None, true);
     let face = rectangle(&mut app.doc.model, DVec3::ZERO);
     app.selected = BTreeSet::from([face]);
     let before = app.doc.model.clone();
@@ -892,7 +892,7 @@ fn object_defaults_apply_to_existing_objects_and_explicit_overrides_survive_relo
 
 #[test]
 fn older_objects_default_to_no_treatment() {
-    let object: ketchup_core::Object = serde_json::from_value(serde_json::json!({
+    let object: sketcraft_core::Object = serde_json::from_value(serde_json::json!({
         "id": 1, "name": "Old part", "kind": "Group", "entities": [], "definition_entities": {}
     }))
     .unwrap();
@@ -905,12 +905,12 @@ fn bulk_treatment_edits_preserve_unedited_object_choices() {
     let before = Settings::default();
     let mut after = before.clone();
     after.sanding[0].enabled = true;
-    let product_id = ketchup_core::MaterialId::new_v4();
+    let product_id = sketcraft_core::MaterialId::new_v4();
     after.stain.product_id = Some(product_id);
     let mut target = before.clone();
     target.varnish.enabled = true;
     target.varnish.coats = 5;
-    let varnish_id = ketchup_core::MaterialId::new_v4();
+    let varnish_id = sketcraft_core::MaterialId::new_v4();
     target.varnish.product_id = Some(varnish_id);
     apply_treatment_changes(&mut target, &before, &after);
     assert!(target.sanding[0].enabled);
@@ -1243,7 +1243,7 @@ fn unified_cost_table_groups_stock_and_finishes_with_one_header() {
         coverage_m2_per_container: Some(100.),
         ..Default::default()
     };
-    let mut app = KetchupApp::with_document(doc, None, true);
+    let mut app = SketCraftApp::with_document(doc, None, true);
     app.general_settings.stock.wood = vec![stock];
     app.time_estimates.stain.enabled = true;
     app.time_estimates.stain.product_id = Some(paint.id);
@@ -1329,7 +1329,7 @@ fn apply_materials_to_descendants_preserves_nested_selection_and_supports_undo()
     child_object.surface_treatment_customized = true;
     child_object.surface_treatment.stain.enabled = true;
     let child_treatment = child_object.surface_treatment.clone();
-    let mut app = KetchupApp::with_document(doc, None, true);
+    let mut app = SketCraftApp::with_document(doc, None, true);
     app.time_estimates.varnish.enabled = true;
     app.selected = BTreeSet::from([root, child]);
     let before = app.doc.model.clone();

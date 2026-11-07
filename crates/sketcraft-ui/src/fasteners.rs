@@ -1,6 +1,6 @@
 use super::*;
 use crate::inspector_table::inspector_field;
-use ketchup_core::connections::{
+use sketcraft_core::connections::{
     Connection, ConnectionOperation, FastenerKind, FastenerSettings, Pattern,
 };
 
@@ -157,7 +157,7 @@ fn millimetres(ui: &mut egui::Ui, id: &str, label: &str, value: &mut f64, min: f
         *value = mm / 1000.;
     }
 }
-impl KetchupApp {
+impl SketCraftApp {
     pub(super) fn fastener_contents(&mut self, ui: &mut egui::Ui) {
         let Some(members) = self.fastener_dialog.members else {
             ui.text_weak(
@@ -561,7 +561,7 @@ fn same_pair(a: [u64; 2], b: [u64; 2]) -> bool {
     a == b || a == [b[1], b[0]]
 }
 
-impl KetchupApp {
+impl SketCraftApp {
     pub(super) fn fastener_pair_block_reason(&self, ctx: &egui::Context, members: [u64; 2]) -> &'static str {
         let pair = BTreeSet::from(members);
         if self.selected != pair {
@@ -738,7 +738,7 @@ impl KetchupApp {
 #[cfg(test)]
 mod tests {
     use super::*;
-    fn fixture() -> (KetchupApp, egui::Context, [u64; 2]) {
+    fn fixture() -> (SketCraftApp, egui::Context, [u64; 2]) {
         let mut model = Model::default();
         let mut members = [0; 2];
         for (i, member) in members.iter_mut().enumerate() {
@@ -749,7 +749,7 @@ mod tests {
                 .make_object(&BTreeSet::from([edge]), false, "Part")
                 .unwrap();
         }
-        let app = KetchupApp::with_document(
+        let app = SketCraftApp::with_document(
             Document {
                 model,
                 ..Default::default()
@@ -815,7 +815,7 @@ mod tests {
         app.account.server = "http://127.0.0.1:0".into();
         app.account.server_reachable = true;
         app.selected = BTreeSet::from(members);
-        app.doc.shared_project = Some(ketchup_core::SharedProject {
+        app.doc.shared_project = Some(sketcraft_core::SharedProject {
             server: "https://sharing.example".into(),
             id: "a".repeat(48),
             revision: 1,

@@ -15,7 +15,7 @@ fn connection_sidebar_sections_restore_without_model_edits() {
         for open in [false, true] {
             let ctx = egui::Context::default();
             let mut storage = SavedPreferences::default();
-            let mut app = KetchupApp::with_document(Document::default(), None, true);
+            let mut app = SketCraftApp::with_document(Document::default(), None, true);
             set_section_open(&ctx, key, open);
             let _ = ctx.run_test_ui(egui::RawInput::default(), |ui| {
                 if key == "connections/wood_joinery" {
@@ -26,7 +26,7 @@ fn connection_sidebar_sections_restore_without_model_edits() {
             });
             app.persist_inspector_changes(&ctx, Some(&mut storage), false);
             let restored_ctx = egui::Context::default();
-            let mut restored = KetchupApp::with_document(Document::default(), None, true);
+            let mut restored = SketCraftApp::with_document(Document::default(), None, true);
             restored.restore_inspector_preferences(&restored_ctx, Some(&storage));
             let _ = restored_ctx.run_test_ui(egui::RawInput::default(), |ui| {
                 assert_eq!(restored_header_open(ui, key, true), Some(open));
@@ -43,7 +43,7 @@ fn history_appends_to_old_layout_and_preferences_save_without_model_edit() {
     let previous: Vec<_> = InspectorSection::ALL.into_iter()
         .filter(|section| !matches!(section, InspectorSection::History | InspectorSection::Fasteners)).collect();
     eframe::set_value(&mut storage, ORDER_PREFERENCE_KEY, &previous);
-    let mut app = KetchupApp::with_document(Document::default(), None, true);
+    let mut app = SketCraftApp::with_document(Document::default(), None, true);
     app.restore_inspector_preferences(&ctx, Some(&storage));
     assert_eq!(&app.inspector_order[..previous.len()], previous.as_slice());
     assert_eq!(app.inspector_order[previous.len()], InspectorSection::History);
@@ -57,7 +57,7 @@ fn history_appends_to_old_layout_and_preferences_save_without_model_edit() {
         app.persist_inspector_changes(&ctx, Some(&mut storage), false);
         assert!(!app.project.modified);
         let restored_ctx = egui::Context::default();
-        let mut restored = KetchupApp::with_document(Document::default(), None, true);
+        let mut restored = SketCraftApp::with_document(Document::default(), None, true);
         restored.restore_inspector_preferences(&restored_ctx, Some(&storage));
         let _ = restored_ctx.run_test_ui(egui::RawInput::default(), |ui| {
             ui.push_id("floating_history", |ui| {
@@ -154,7 +154,7 @@ fn estimate_header_menu_does_not_toggle_the_disclosure() {
 #[test]
 fn outliner_search_fills_section_width_and_abuts_header() {
     let ctx = egui::Context::default();
-    let mut app = KetchupApp::with_document(Document::default(), None, true);
+    let mut app = SketCraftApp::with_document(Document::default(), None, true);
     let mut header = Rect::NOTHING;
     let _ = ctx.run_test_ui(egui::RawInput::default(), |ui| {
         ui.set_width(400.);
@@ -283,14 +283,14 @@ fn sticky_headers_follow_their_own_area_and_keep_disclosures_persistent() {
             ],
         );
     }
-    let mut app = KetchupApp::with_document(Document::default(), None, true);
+    let mut app = SketCraftApp::with_document(Document::default(), None, true);
     let mut storage = SavedPreferences::default();
     app.persist_inspector_changes(&ctx, Some(&mut storage), false);
     assert!(storage.flushed);
     assert!(!app.inspector_preferences.sections["sticky_left"]);
     assert!(app.inspector_preferences.sections["sticky_right"]);
     let restored_ctx = egui::Context::default();
-    let mut restored = KetchupApp::with_document(Document::default(), None, true);
+    let mut restored = SketCraftApp::with_document(Document::default(), None, true);
     restored.restore_inspector_preferences(&restored_ctx, Some(&storage));
     assert!(!restored.inspector_preferences.sections["sticky_left"]);
     assert!(!app.project.modified);
@@ -300,7 +300,7 @@ fn sticky_headers_follow_their_own_area_and_keep_disclosures_persistent() {
 #[test]
 fn sidebar_and_outliner_scroll_positions_save_immediately_and_restore_independently() {
     let ctx = egui::Context::default();
-    let mut app = KetchupApp::with_document(Document::default(), None, true);
+    let mut app = SketCraftApp::with_document(Document::default(), None, true);
     let mut storage = SavedPreferences::default();
     let positions = [
         ("sidebar_left", egui::vec2(0., 110.)),
@@ -321,7 +321,7 @@ fn sidebar_and_outliner_scroll_positions_save_immediately_and_restore_independen
     }
 
     let restored_ctx = egui::Context::default();
-    let mut restored = KetchupApp::with_document(Document::default(), None, true);
+    let mut restored = SketCraftApp::with_document(Document::default(), None, true);
     restored.restore_inspector_preferences(&restored_ctx, Some(&storage));
     for (key, position) in positions {
         // Each area has a new egui scope, just as after an app restart or
@@ -371,10 +371,10 @@ fn scroll_restoration_allows_further_scrolling_and_clamps_shorter_content() {
         Vec2::splat(20.),
     );
     assert_eq!(shorter, Vec2::ZERO);
-    let mut app = KetchupApp::with_document(Document::default(), None, true);
+    let mut app = SketCraftApp::with_document(Document::default(), None, true);
     let mut storage = SavedPreferences::default();
     app.persist_inspector_changes(&ctx, Some(&mut storage), false);
-    let mut restored = KetchupApp::with_document(Document::default(), None, true);
+    let mut restored = SketCraftApp::with_document(Document::default(), None, true);
     let restored_ctx = egui::Context::default();
     restored.restore_inspector_preferences(&restored_ctx, Some(&storage));
     assert_eq!(
@@ -396,7 +396,7 @@ fn scroll_positions_default_for_older_preferences_and_reject_invalid_offsets() {
         .insert("sidebar_left".into(), [-10., 75.]);
     let mut storage = SavedPreferences::default();
     eframe::set_value(&mut storage, PREFERENCE_KEY, &preferences);
-    let mut restored = KetchupApp::with_document(Document::default(), None, true);
+    let mut restored = SketCraftApp::with_document(Document::default(), None, true);
     restored.restore_inspector_preferences(&ctx, Some(&storage));
     assert_eq!(
         restored
@@ -430,8 +430,8 @@ fn outliner_virtualized_geometry_lists_restore_their_own_scroll_positions() {
     set_section_open(&ctx, &format!("outliner_geometry/{:?}", Some(group)), true);
     remember_scroll(&ctx, "outliner_geometry_rows/None", egui::vec2(0., 120.));
     remember_scroll(&ctx, &child_key, egui::vec2(0., 240.));
-    let mut app = KetchupApp::with_document(doc.clone(), None, true);
-    let render = |ctx: &egui::Context, app: &mut KetchupApp| {
+    let mut app = SketCraftApp::with_document(doc.clone(), None, true);
+    let render = |ctx: &egui::Context, app: &mut SketCraftApp| {
         let _ = ctx.run_test_ui(
             egui::RawInput {
                 screen_rect: Some(Rect::from_min_size(Pos2::ZERO, egui::vec2(300., 900.))),
@@ -446,7 +446,7 @@ fn outliner_virtualized_geometry_lists_restore_their_own_scroll_positions() {
     assert!(storage.flushed);
     let restored_ctx = egui::Context::default();
     restored_ctx.style_mut_of(restored_ctx.theme(), |style| style.animation_time = 0.);
-    let mut restored = KetchupApp::with_document(doc, None, true);
+    let mut restored = SketCraftApp::with_document(doc, None, true);
     restored.restore_inspector_preferences(&restored_ctx, Some(&storage));
     render(&restored_ctx, &mut restored);
     let positions = restored
@@ -529,11 +529,11 @@ fn lone_sections_fill_the_area_stay_open_and_preserve_the_saved_disclosure() {
     assert!(body_visible);
     assert!((panel.size() - resized).length() < 0.5, "{panel:?}");
     assert!(!render(&ctx, resized, false, vec![]).0);
-    let mut app = KetchupApp::with_document(Document::default(), None, true);
+    let mut app = SketCraftApp::with_document(Document::default(), None, true);
     let mut storage = SavedPreferences::default();
     app.persist_inspector_changes(&ctx, Some(&mut storage), false);
     let restored_ctx = egui::Context::default();
-    let mut restored = KetchupApp::with_document(Document::default(), None, true);
+    let mut restored = SketCraftApp::with_document(Document::default(), None, true);
     restored.restore_inspector_preferences(&restored_ctx, Some(&storage));
     assert!(!render(&restored_ctx, resized, false, vec![]).0);
     assert!(!app.project.modified);
@@ -542,7 +542,7 @@ fn lone_sections_fill_the_area_stay_open_and_preserve_the_saved_disclosure() {
 #[test]
 fn saved_order_survives_recreating_the_app() {
     let mut storage = SavedPreferences::default();
-    let mut app = KetchupApp::with_document(Document::default(), None, true);
+    let mut app = SketCraftApp::with_document(Document::default(), None, true);
     app.inspector_order.rotate_left(2);
     let order = app.inspector_order;
     eframe::App::save(&mut app, &mut storage);
@@ -550,7 +550,7 @@ fn saved_order_survives_recreating_the_app() {
     assert!(!app.project.modified);
     drop(app);
 
-    let mut refreshed = KetchupApp::with_document(Document::default(), None, true);
+    let mut refreshed = SketCraftApp::with_document(Document::default(), None, true);
     refreshed.inspector_order = restore_order(Some(&storage));
     assert_eq!(refreshed.inspector_order, order);
 }
@@ -559,7 +559,7 @@ fn saved_order_survives_recreating_the_app() {
 fn sidebar_tab_survives_immediate_reload_without_changing_group_emphasis() {
     let ctx = egui::Context::default();
     let mut storage = SavedPreferences::default();
-    let mut app = KetchupApp::with_document(Document::default(), None, true);
+    let mut app = SketCraftApp::with_document(Document::default(), None, true);
     app.persist_inspector_changes(&ctx, Some(&mut storage), false);
     for enabled in [false, true] {
         let _ = ctx.run_test_ui(
@@ -584,7 +584,7 @@ fn sidebar_tab_survives_immediate_reload_without_changing_group_emphasis() {
         assert!(storage.flushed);
         assert!(!app.project.modified);
         assert!(app.dirty_since.is_none());
-        let mut restored = KetchupApp::with_document(Document::default(), None, true);
+        let mut restored = SketCraftApp::with_document(Document::default(), None, true);
         restored.restore_inspector_preferences(&egui::Context::default(), Some(&storage));
         assert_eq!(restored.inspector, enabled);
         assert!(restored.doc.display.group_emphasis);
@@ -611,7 +611,7 @@ fn find_shortcut_reveals_and_focuses_outliner_and_persists_expansion() {
         ] {
             let ctx = egui::Context::default();
             ctx.style_mut_of(ctx.theme(), |style| style.animation_time = 0.);
-            let mut app = KetchupApp::with_document(Document::default(), None, true);
+            let mut app = SketCraftApp::with_document(Document::default(), None, true);
             app.outliner_filter = "Cabinet".into();
             set_section_open(&ctx, "outliner", false);
             let screen_rect = Some(Rect::from_min_size(Pos2::ZERO, egui::vec2(width, 900.)));
@@ -675,7 +675,7 @@ fn find_shortcut_reveals_and_focuses_outliner_and_persists_expansion() {
             app.persist_inspector_changes(&ctx, Some(&mut storage), false);
             assert!(!app.project.modified);
             let restored_ctx = egui::Context::default();
-            let mut restored = KetchupApp::with_document(Document::default(), None, true);
+            let mut restored = SketCraftApp::with_document(Document::default(), None, true);
             restored.restore_inspector_preferences(&restored_ctx, Some(&storage));
             assert!(restored.inspector);
             assert!(
@@ -711,7 +711,7 @@ fn unavailable_or_invalid_saved_order_uses_all_default_sections() {
 #[test]
 fn sidebar_preferences_save_immediately_and_restore_without_a_model_edit() {
     let ctx = egui::Context::default();
-    let mut app = KetchupApp::with_document(Document::default(), None, true);
+    let mut app = SketCraftApp::with_document(Document::default(), None, true);
     app.inspector = false;
     app.inspector_width = 420.;
     app.component_filter = "Cabinet".into();
@@ -732,7 +732,7 @@ fn sidebar_preferences_save_immediately_and_restore_without_a_model_edit() {
     app.doc.camera.fov = 65_f64.to_radians();
     app.doc
         .camera
-        .set_standard_view(ketchup_core::StandardView::Bottom);
+        .set_standard_view(sketcraft_core::StandardView::Bottom);
     for (key, open) in [
         ("display", false),
         ("fog", true),
@@ -756,7 +756,7 @@ fn sidebar_preferences_save_immediately_and_restore_without_a_model_edit() {
     assert!(app.dirty_since.is_none());
 
     let refreshed_ctx = egui::Context::default();
-    let mut refreshed = KetchupApp::with_document(Document::default(), None, true);
+    let mut refreshed = SketCraftApp::with_document(Document::default(), None, true);
     refreshed.restore_inspector_preferences(&refreshed_ctx, Some(&storage));
     assert_eq!(
         refreshed.current_inspector_preferences(&refreshed_ctx),
@@ -801,7 +801,7 @@ fn bulk_expansion_overrides_existing_headers_and_restores_after_immediate_save()
     let ctx = egui::Context::default();
     ctx.style_mut_of(ctx.theme(), |style| style.animation_time = 0.);
     assert_eq!(render(&ctx, false), (false, false));
-    let mut app = KetchupApp::with_document(Document::default(), None, true);
+    let mut app = SketCraftApp::with_document(Document::default(), None, true);
     let mut storage = SavedPreferences::default();
     for open in [true, false] {
         for key in ["outliner_object/42", "outliner_geometry/Some(42)"] {
@@ -816,7 +816,7 @@ fn bulk_expansion_overrides_existing_headers_and_restores_after_immediate_save()
 
         let refreshed_ctx = egui::Context::default();
         refreshed_ctx.style_mut_of(refreshed_ctx.theme(), |style| style.animation_time = 0.);
-        let mut refreshed = KetchupApp::with_document(Document::default(), None, true);
+        let mut refreshed = SketCraftApp::with_document(Document::default(), None, true);
         refreshed.restore_inspector_preferences(&refreshed_ctx, Some(&storage));
         assert_eq!(render(&refreshed_ctx, true), (open, open));
         assert!(!refreshed.project.modified);
@@ -841,7 +841,7 @@ fn expanded_estimate_panels_render_all_finish_grids_without_id_clashes() {
     let ctx = egui::Context::default();
     ctx.style_mut_of(ctx.theme(), |style| style.animation_time = 0.);
     ctx.options_mut(|options| options.warn_on_id_clash = true);
-    let mut app = KetchupApp::with_document(Document::default(), None, true);
+    let mut app = SketCraftApp::with_document(Document::default(), None, true);
     app.time_estimates.pre_stain.enabled = true;
     app.time_estimates.stain.enabled = true;
     app.time_estimates.varnish.enabled = true;
@@ -975,7 +975,7 @@ fn inspector_disclosure_defaults_and_saved_overrides_survive_reload() {
                     &serde_json::from_str::<InspectorPreferences>("{}").unwrap(),
                 );
             }
-            let mut app = KetchupApp::with_document(Document::default(), None, true);
+            let mut app = SketCraftApp::with_document(Document::default(), None, true);
             app.restore_inspector_preferences(&ctx, Some(&storage));
             for section in InspectorSection::ALL {
                 let expected = matches!(
@@ -991,7 +991,7 @@ fn inspector_disclosure_defaults_and_saved_overrides_survive_reload() {
             assert!(app.dirty_since.is_none());
 
             let reloaded_ctx = egui::Context::default();
-            let mut reloaded = KetchupApp::with_document(Document::default(), None, true);
+            let mut reloaded = SketCraftApp::with_document(Document::default(), None, true);
             reloaded.restore_inspector_preferences(&reloaded_ctx, Some(&storage));
             for section in InspectorSection::ALL {
                 assert_eq!(
@@ -1116,7 +1116,7 @@ fn grit_header_clicks_toggle_and_persist_while_remove_stays_independent() {
     click(&ctx, header.center());
     assert!(!open(&ctx));
 
-    let mut app = KetchupApp::with_document(Document::default(), None, true);
+    let mut app = SketCraftApp::with_document(Document::default(), None, true);
     let mut storage = SavedPreferences::default();
     app.persist_inspector_changes(&ctx, Some(&mut storage), false);
     assert!(storage.flushed);
@@ -1130,7 +1130,7 @@ fn grit_header_clicks_toggle_and_persist_while_remove_stays_independent() {
 #[test]
 fn grit_disclosures_keep_identity_and_save_without_a_model_edit() {
     let ctx = egui::Context::default();
-    let mut app = KetchupApp::with_document(Document::default(), None, true);
+    let mut app = SketCraftApp::with_document(Document::default(), None, true);
     let alias = "entity/treatment/sanding/grit/80";
     let renamed = "entity/treatment/sanding/grit/1000";
     let key = item_section_key(&ctx, alias);
@@ -1212,7 +1212,7 @@ fn materials_append_to_existing_orders_and_save_without_model_edits() {
     let mut storage = SavedPreferences::default();
     eframe::set_value(&mut storage, ORDER_PREFERENCE_KEY, &previous);
     let ctx = egui::Context::default();
-    let mut app = KetchupApp::with_document(Document::default(), None, true);
+    let mut app = SketCraftApp::with_document(Document::default(), None, true);
     app.restore_inspector_preferences(&ctx, Some(&storage));
     assert_eq!(&app.inspector_order[..previous.len()], previous.as_slice());
     assert_eq!(
@@ -1243,7 +1243,7 @@ fn materials_append_to_existing_orders_and_save_without_model_edits() {
         assert_eq!(app.doc.model, model);
 
         let reloaded_ctx = egui::Context::default();
-        let mut reloaded = KetchupApp::with_document(Document::default(), None, true);
+        let mut reloaded = SketCraftApp::with_document(Document::default(), None, true);
         reloaded.restore_inspector_preferences(&reloaded_ctx, Some(&storage));
         assert_eq!(reloaded.inspector_order, app.inspector_order);
         let _ = reloaded_ctx.run_test_ui(egui::RawInput::default(), |ui| {
@@ -1301,12 +1301,12 @@ fn new_sections_restore_after_click_save_reload_and_layout_change() {
         );
     }
     assert!(render(&ctx, vec![], false).1);
-    let mut app = KetchupApp::with_document(Document::default(), None, true);
+    let mut app = SketCraftApp::with_document(Document::default(), None, true);
     let mut storage = SavedPreferences::default();
     app.persist_inspector_changes(&ctx, Some(&mut storage), false);
     let new_ctx = egui::Context::default();
     new_ctx.style_mut_of(new_ctx.theme(), |style| style.animation_time = 0.);
-    let mut refreshed = KetchupApp::with_document(Document::default(), None, true);
+    let mut refreshed = SketCraftApp::with_document(Document::default(), None, true);
     refreshed.restore_inspector_preferences(&new_ctx, Some(&storage));
     assert!(render(&new_ctx, vec![], true).1);
 }

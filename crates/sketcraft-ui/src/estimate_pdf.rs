@@ -255,7 +255,7 @@ impl<'a> Pdf<'a> {
                 .collect();
             mappings.push(format!("<{cid:04X}> <{utf16}>"));
         }
-        let mut cmap = "/CIDInit /ProcSet findresource begin 12 dict begin begincmap /CIDSystemInfo << /Registry (Adobe) /Ordering (UCS) /Supplement 0 >> def /CMapName /KetchUpUnicode def /CMapType 2 def 1 begincodespacerange <0000> <FFFF> endcodespacerange\n".to_owned();
+        let mut cmap = "/CIDInit /ProcSet findresource begin 12 dict begin begincmap /CIDSystemInfo << /Registry (Adobe) /Ordering (UCS) /Supplement 0 >> def /CMapName /SketCraftUnicode def /CMapType 2 def 1 begincodespacerange <0000> <FFFF> endcodespacerange\n".to_owned();
         for chunk in mappings.chunks(100) {
             let _ = writeln!(
                 cmap,
@@ -275,17 +275,17 @@ impl<'a> Pdf<'a> {
         let mut objects = vec![
             b"<< /Type /Catalog /Pages 2 0 R >>".to_vec(),
             format!("<< /Type /Pages /Count {count} /Kids [{}] >>", (0..count).map(|i| format!("{} 0 R", 14+i*2)).collect::<Vec<_>>().join(" ")).into_bytes(),
-            b"<< /Type /Font /Subtype /Type0 /BaseFont /KetchUpUbuntu /Encoding /Identity-H /DescendantFonts [4 0 R] /ToUnicode 8 0 R >>".to_vec(),
-            format!("<< /Type /Font /Subtype /CIDFontType2 /BaseFont /KetchUpUbuntu /CIDSystemInfo << /Registry (Adobe) /Ordering (Identity) /Supplement 0 >> /FontDescriptor 5 0 R /CIDToGIDMap 7 0 R /W [0 [{widths}]] >>").into_bytes(),
-            b"<< /Type /FontDescriptor /FontName /KetchUpUbuntu /Flags 32 /FontBBox [-1000 -1000 3000 3000] /ItalicAngle 0 /Ascent 1000 /Descent -300 /CapHeight 750 /StemV 80 /FontFile2 6 0 R >>".to_vec(),
+            b"<< /Type /Font /Subtype /Type0 /BaseFont /SketCraftUbuntu /Encoding /Identity-H /DescendantFonts [4 0 R] /ToUnicode 8 0 R >>".to_vec(),
+            format!("<< /Type /Font /Subtype /CIDFontType2 /BaseFont /SketCraftUbuntu /CIDSystemInfo << /Registry (Adobe) /Ordering (Identity) /Supplement 0 >> /FontDescriptor 5 0 R /CIDToGIDMap 7 0 R /W [0 [{widths}]] >>").into_bytes(),
+            b"<< /Type /FontDescriptor /FontName /SketCraftUbuntu /Flags 32 /FontBBox [-1000 -1000 3000 3000] /ItalicAngle 0 /Ascent 1000 /Descent -300 /CapHeight 750 /StemV 80 /FontFile2 6 0 R >>".to_vec(),
             stream(&format!("/Length1 {}", font_data.len()), font_data),
             stream("", &cid_map), stream("", cmap.as_bytes()),
             stream("/Type /XObject /Subtype /Image /Width 256 /Height 256 /ColorSpace /DeviceRGB /BitsPerComponent 8", &rgb),
         ];
         objects.extend([
-            b"<< /Type /Font /Subtype /Type0 /BaseFont /KetchUpHack /Encoding /Identity-H /DescendantFonts [11 0 R] /ToUnicode 8 0 R >>".to_vec(),
-            format!("<< /Type /Font /Subtype /CIDFontType2 /BaseFont /KetchUpHack /CIDSystemInfo << /Registry (Adobe) /Ordering (Identity) /Supplement 0 >> /FontDescriptor 12 0 R /CIDToGIDMap 7 0 R /W [0 [{widths}]] >>").into_bytes(),
-            b"<< /Type /FontDescriptor /FontName /KetchUpHack /Flags 33 /FontBBox [-1000 -1000 3000 3000] /ItalicAngle 0 /Ascent 1000 /Descent -300 /CapHeight 750 /StemV 80 /FontFile2 13 0 R >>".to_vec(),
+            b"<< /Type /Font /Subtype /Type0 /BaseFont /SketCraftHack /Encoding /Identity-H /DescendantFonts [11 0 R] /ToUnicode 8 0 R >>".to_vec(),
+            format!("<< /Type /Font /Subtype /CIDFontType2 /BaseFont /SketCraftHack /CIDSystemInfo << /Registry (Adobe) /Ordering (Identity) /Supplement 0 >> /FontDescriptor 12 0 R /CIDToGIDMap 7 0 R /W [0 [{widths}]] >>").into_bytes(),
+            b"<< /Type /FontDescriptor /FontName /SketCraftHack /Flags 33 /FontBBox [-1000 -1000 3000 3000] /ItalicAngle 0 /Ascent 1000 /Descent -300 /CapHeight 750 /StemV 80 /FontFile2 13 0 R >>".to_vec(),
             stream(&format!("/Length1 {}", fallback_data.len()), fallback_data),
         ]);
         for (i, page) in self.pages.iter().enumerate() {

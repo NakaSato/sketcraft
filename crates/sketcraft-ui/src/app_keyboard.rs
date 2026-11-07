@@ -1,7 +1,7 @@
 //! Keyboard shortcuts and typed input for tools, files and editing.
 use super::*;
 
-impl KetchupApp {
+impl SketCraftApp {
     pub(super) fn keyboard(&mut self, ctx: &egui::Context) {
         #[cfg(not(target_arch = "wasm32"))]
         if self.updates.open {

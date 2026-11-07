@@ -1,4 +1,4 @@
-use ketchup_core::Document;
+use sketcraft_core::Document;
 
 #[cfg(not(target_arch = "wasm32"))]
 pub(crate) fn data_dir() -> Result<std::path::PathBuf, String> {
@@ -92,7 +92,7 @@ mod tests {
         let mut doc = Document::default();
         doc.name = "Autosave audit".into();
         doc.model
-            .add_edge(ketchup_core::DVec3::ZERO, ketchup_core::DVec3::X)
+            .add_edge(sketcraft_core::DVec3::ZERO, sketcraft_core::DVec3::X)
             .unwrap();
         save(&doc).unwrap();
         assert_eq!(
@@ -112,7 +112,7 @@ mod tests {
         std::fs::write(file.parent().unwrap(), b"blocked").unwrap();
         assert!(save(&doc).is_err());
         doc.model
-            .add_edge(ketchup_core::DVec3::X, ketchup_core::DVec3::Y)
+            .add_edge(sketcraft_core::DVec3::X, sketcraft_core::DVec3::Y)
             .unwrap();
         std::fs::remove_file(file.parent().unwrap()).unwrap();
         save(&doc).unwrap();

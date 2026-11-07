@@ -7,11 +7,11 @@ use crate::{
 };
 use eframe::egui::{self, Align2, Color32, FontId, Key, Pos2, Rect, RichText, Sense, Stroke, Vec2};
 #[cfg(test)]
-use ketchup_core::History;
+use sketcraft_core::History;
 #[cfg(test)]
-use ketchup_core::infer_move_with_snapping;
-use ketchup_core::inference::AxisConstraint;
-use ketchup_core::{
+use sketcraft_core::infer_move_with_snapping;
+use sketcraft_core::inference::AxisConstraint;
+use sketcraft_core::{
     Axis, AxisGuide, Camera, DVec2, DVec3, Document, Inference, Model, ObjectKind, Snap, Tool,
     selection,
 };
@@ -166,8 +166,8 @@ impl CompassAxis {
         }
     }
 
-    fn view(self) -> ketchup_core::StandardView {
-        use ketchup_core::StandardView;
+    fn view(self) -> sketcraft_core::StandardView {
+        use sketcraft_core::StandardView;
         match (self.axis, self.negative) {
             (Axis::X, false) => StandardView::Right,
             (Axis::Y, false) => StandardView::Back,
@@ -243,9 +243,9 @@ struct Modeling {
     value: f64,
     copy: bool,
     preview: Option<Model>,
-    move_snap: Option<ketchup_core::inference::MoveSnapCache>,
+    move_snap: Option<sketcraft_core::inference::MoveSnapCache>,
     snap_excluded: BTreeSet<u64>,
-    move_preview: Option<ketchup_core::modeling::MovePreview>,
+    move_preview: Option<sketcraft_core::modeling::MovePreview>,
     preview_delta: Option<DVec3>,
     snap: Option<Snap>,
     error: Option<&'static str>,
@@ -327,7 +327,7 @@ struct ObjectCreation {
     name: String,
 }
 
-pub struct KetchupApp {
+pub struct SketCraftApp {
     #[cfg(not(target_arch = "wasm32"))]
     viewport_benchmark: Option<viewport_benchmark::Benchmark>,
     account: crate::account::Account,
@@ -407,7 +407,7 @@ pub struct KetchupApp {
     tag_rename: Option<(u64, String)>,
     help: bool,
     settings_open: bool,
-    material_removal: Option<ketchup_core::MaterialId>,
+    material_removal: Option<sketcraft_core::MaterialId>,
     general_settings: settings::GeneralSettings,
     about: bool,
     release_notes: crate::release_notes::ReleaseNotes,
@@ -442,7 +442,7 @@ pub struct KetchupApp {
     object_rename: Option<(u64, String)>,
 }
 
-impl KetchupApp {
+impl SketCraftApp {
     pub fn new(cc: &eframe::CreationContext<'_>) -> Self {
         apply(&cc.egui_ctx);
         restore_preference(&cc.egui_ctx, cc.storage);
@@ -494,7 +494,7 @@ impl KetchupApp {
             || doc.camera != Camera::default()
             || !doc.snap_to_geometry
             || !doc.snap_to_axes
-            || doc.display != ketchup_core::DisplaySettings::default();
+            || doc.display != sketcraft_core::DisplaySettings::default();
         Self {
             #[cfg(not(target_arch = "wasm32"))]
             viewport_benchmark: None,
@@ -1031,7 +1031,7 @@ impl KetchupApp {
         }
     }
 }
-impl eframe::App for KetchupApp {
+impl eframe::App for SketCraftApp {
     fn ui(&mut self, ui: &mut egui::Ui, frame: &mut eframe::Frame) {
         let ctx = ui.ctx().clone();
         #[cfg(not(target_arch = "wasm32"))]

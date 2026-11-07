@@ -62,7 +62,7 @@ mod inspector_tests;
 
 struct Harness {
     ctx: egui::Context,
-    app: KetchupApp,
+    app: SketCraftApp,
     time: f64,
     size: Vec2,
     maximized: bool,
@@ -78,7 +78,7 @@ impl Harness {
         });
         let mut harness = Self {
             ctx,
-            app: KetchupApp::with_document(Document::default(), None, true),
+            app: SketCraftApp::with_document(Document::default(), None, true),
             time: 0.,
             size: egui::vec2(1440., 900.),
             maximized: false,
@@ -234,7 +234,7 @@ fn render_snapshots(state: eframe::egui_wgpu::RenderState, audit: bool) {
     let mut cc = eframe::CreationContext::_new_kittest(ctx.clone());
     cc.wgpu_render_state = Some(state.clone());
     assert!(renderer::install(&cc));
-    let mut app = KetchupApp::with_document(Document::default(), None, true);
+    let mut app = SketCraftApp::with_document(Document::default(), None, true);
     let out_dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../target/qa");
     std::fs::create_dir_all(&out_dir).unwrap();
     let mut time = 0.;
@@ -285,7 +285,7 @@ fn render_snapshots(state: eframe::egui_wgpu::RenderState, audit: bool) {
             app = feature_audit::render_workspace(snapshot);
         }
         if matches!(snapshot, "axis-in-front" | "axis-behind") {
-            app = KetchupApp::with_document(Document::default(), None, true);
+            app = SketCraftApp::with_document(Document::default(), None, true);
             app.doc.display.grid = false;
             app.doc.camera.target = DVec3::Y * 3.;
             let toward_eye = (app.doc.camera.eye() - app.doc.camera.target).normalize();
@@ -1168,7 +1168,7 @@ fn ui_solid_box(model: &mut Model, min: DVec3, max: DVec3) -> u64 {
         body.add_edge(corners[i], corners[(i + 1) % 4]).unwrap();
     }
     let face = *body.faces.keys().next().unwrap();
-    let normal = ketchup_core::faces::plane(&body, &body.faces[&face].vertices)
+    let normal = sketcraft_core::faces::plane(&body, &body.faces[&face].vertices)
         .unwrap()
         .normal;
     body.push_pull(face, (max.z - min.z) / normal.z).unwrap();
