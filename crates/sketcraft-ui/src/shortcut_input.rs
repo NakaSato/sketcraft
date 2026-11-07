@@ -56,6 +56,8 @@ pub(super) fn shortcut_input(
         }
         let label = if listening && !finished {
             "Press a key…"
+        } else if current.is_empty() {
+            "None"
         } else {
             current
         };
@@ -71,7 +73,7 @@ pub(super) fn shortcut_input(
                 egui::Role::Button,
                 ui.is_enabled(),
                 format!(
-                    "Shortcut {current}. {}",
+                    "Shortcut {label}. {}",
                     if listening {
                         "Press a letter or Space; Escape cancels"
                     } else {

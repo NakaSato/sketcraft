@@ -267,6 +267,16 @@ impl KetchupApp {
                         self.set_tool(tool);
                         continue;
                     }
+                    // G makes a component from the selection, as in SketchUp, unless a
+                    // tool was assigned G in Settings (handled above).
+                    if key == Key::G && !modifiers.shift && !modifiers.alt {
+                        if self.selected.is_empty() {
+                            self.say(ctx, "Select geometry, then press G to make a component");
+                        } else {
+                            self.begin_object_creation(ctx, true);
+                        }
+                        continue;
+                    }
                     match key {
                         Key::Delete => self.erase_selected(ctx),
                         Key::Backspace => {

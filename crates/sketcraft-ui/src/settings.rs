@@ -114,7 +114,8 @@ pub(super) const TOOLS: [(Tool, &str); 17] = [
     (Tool::Line, "L"),
     (Tool::Rectangle, "R"),
     (Tool::Circle, "C"),
-    (Tool::Polygon, "G"),
+    // G makes a component, as in SketchUp; Polygon has no default key.
+    (Tool::Polygon, ""),
     (Tool::Freehand, "D"),
     (Tool::Erase, "E"),
     (Tool::Orbit, "O"),
@@ -141,6 +142,10 @@ pub(super) struct GeneralSettings {
     pub show_fps: bool,
     pub default_units: ketchup_core::UnitSettings,
     pub tool_keys: Vec<String>,
+    /// Older settings saved G for Polygon; once migrated, G makes a component.
+    /// Field-level default: settings saved before this flag existed load as `false`.
+    #[serde(default)]
+    pub make_component_key: bool,
     pub stock: stock_settings::Settings,
 }
 
@@ -156,6 +161,7 @@ impl Default for GeneralSettings {
             default_units: Default::default(),
             stock: Default::default(),
             tool_keys: TOOLS.iter().map(|(_, key)| key.to_string()).collect(),
+            make_component_key: true,
         }
     }
 }
@@ -187,9 +193,18 @@ impl GeneralSettings {
                 .tool_keys
                 .iter()
                 .enumerate()
-                .any(|(i, key)| !valid_tool_key(key) || self.tool_keys[..i].contains(key))
+                .any(|(i, key)| {
+                    !key.is_empty() && (!valid_tool_key(key) || self.tool_keys[..i].contains(key))
+                })
         {
             self.tool_keys = Self::default().tool_keys;
+        }
+        if !self.make_component_key {
+            let polygon = TOOLS.iter().position(|(tool, _)| *tool == Tool::Polygon).unwrap();
+            if self.tool_keys[polygon] == "G" {
+                self.tool_keys[polygon].clear();
+            }
+            self.make_component_key = true;
         }
     }
 
@@ -700,6 +715,36 @@ mod tests {
     use super::*;
 
     #[test]
+    fn saved_g_for_polygon_moves_to_make_component_once_and_custom_keys_stay() {
+        let polygon = TOOLS.iter().position(|(tool, _)| *tool == Tool::Polygon).unwrap();
+        assert_eq!(GeneralSettings::default().tool_shortcut(Tool::Polygon), "");
+        // Settings saved before the change carry G for Polygon and no migration flag.
+        let mut old: GeneralSettings = serde_json::from_value(serde_json::json!({
+            "tool_keys": TOOLS.iter().enumerate()
+                .map(|(i, (_, key))| if i == polygon { "G" } else { *key })
+                .collect::<Vec<_>>(),
+        }))
+        .unwrap();
+        assert!(!old.make_component_key);
+        old.normalize();
+        assert_eq!(old.tool_shortcut(Tool::Polygon), "");
+        assert_eq!(old.tool_for_key(Key::G), None);
+        // After migrating, a user's own choice of G for Polygon (or any tool) is kept.
+        old.assign_key(polygon, "G".into());
+        old.normalize();
+        assert_eq!(old.tool_for_key(Key::G), Some(Tool::Polygon));
+        // A different saved key for Polygon is left alone by the migration.
+        let mut custom: GeneralSettings = serde_json::from_value(serde_json::json!({
+            "tool_keys": TOOLS.iter().enumerate()
+                .map(|(i, (_, key))| if i == polygon { "N" } else { *key })
+                .collect::<Vec<_>>(),
+        }))
+        .unwrap();
+        custom.normalize();
+        assert_eq!(custom.tool_shortcut(Tool::Polygon), "N");
+    }
+
+    #[test]
     fn adding_rotate_migrates_existing_custom_keys_and_resolves_conflicts() {
         for custom in ["H", "Q"] {
             let mut settings = GeneralSettings::default();
@@ -729,7 +774,8 @@ mod tests {
         settings.normalize();
         assert_eq!(settings.tool_keys, GeneralSettings::default().tool_keys);
         assert_eq!(settings.orbit_speed, 1.);
-        let old: GeneralSettings = serde_json::from_str("{}").unwrap();
+        let mut old: GeneralSettings = serde_json::from_str("{}").unwrap();
+        old.normalize(); // Marks the G migration as done.
         assert_eq!(old, GeneralSettings::default());
     }
 

@@ -593,3 +593,23 @@ fn history_hover_preview_leaves_document_history_and_dirty_state_unchanged() {
     assert_eq!(app.doc.history.position(), 0);
     assert!(app.project.modified);
 }
+
+#[test]
+fn g_makes_a_component_from_the_selection_and_never_switches_to_polygon() {
+    let mut h = Harness::new();
+    h.app.doc.model.add_edge(DVec3::ZERO, DVec3::X * 2.).unwrap();
+    let tool = h.app.tool;
+    h.key(Key::G);
+    assert!(h.app.object_creation.is_none(), "nothing selected: just a hint");
+    assert_eq!(h.app.tool, tool);
+
+    h.app.selected = h.app.doc.model.selectable_entities();
+    h.key(Key::G);
+    let creation = h.app.object_creation.as_ref().expect("G opens Make Component");
+    assert!(creation.component);
+    assert_ne!(h.app.tool, Tool::Polygon);
+    let dialog = h.frame(vec![], egui::Modifiers::NONE);
+    h.click(text_position(&dialog, "Create"));
+    let id = *h.app.selected.first().unwrap();
+    assert!(matches!(h.app.doc.model.objects[&id].kind, ObjectKind::Component { .. }));
+}

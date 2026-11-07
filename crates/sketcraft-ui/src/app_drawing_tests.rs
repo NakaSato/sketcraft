@@ -4,12 +4,15 @@ use super::*;
 #[test]
 fn shape_tools_create_faces_and_undo_as_one_operation() {
     for (key, tool, edges) in [
-        (Key::R, Tool::Rectangle, 4),
-        (Key::C, Tool::Circle, 48),
-        (Key::G, Tool::Polygon, 6),
+        (Some(Key::R), Tool::Rectangle, 4),
+        (Some(Key::C), Tool::Circle, 48),
+        (None, Tool::Polygon, 6), // Polygon has no default key; G makes components.
     ] {
         let mut h = Harness::new();
-        h.key(key);
+        match key {
+            Some(key) => h.key(key),
+            None => h.app.set_tool(tool),
+        }
         assert_eq!(h.app.tool, tool);
         h.click(h.at(DVec3::ZERO));
         let end = h.at(DVec3::new(2., 1.5, 0.));

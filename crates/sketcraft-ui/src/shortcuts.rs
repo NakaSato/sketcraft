@@ -90,7 +90,7 @@ impl KetchupApp {
                     ("Connected lines", "L"),
                     ("Rectangle", "R"),
                     ("Circle", "C"),
-                    ("Polygon", "G"),
+                    ("Polygon", ""),
                     ("Freehand", "D"),
                     ("Paint faces", "B"),
                     ("Erase edges or faces", "E"),
@@ -127,6 +127,7 @@ impl KetchupApp {
                     ("Divide a copy span", "/N + Enter"),
                     ("Repeat copies", "Nx + Enter"),
                     ("Flip & solid operations", "Union flyout"),
+                    ("Make component from selection", "G"),
                 ],
             ),
             section(

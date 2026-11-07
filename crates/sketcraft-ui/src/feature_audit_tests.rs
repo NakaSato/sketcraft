@@ -617,7 +617,6 @@ fn all_keyboard_tool_shortcuts_select_the_expected_tool() {
         (Key::L, Tool::Line),
         (Key::R, Tool::Rectangle),
         (Key::C, Tool::Circle),
-        (Key::G, Tool::Polygon),
         (Key::D, Tool::Freehand),
         (Key::P, Tool::PushPull),
         (Key::S, Tool::Scale),

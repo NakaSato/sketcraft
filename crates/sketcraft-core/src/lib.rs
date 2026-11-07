@@ -197,7 +197,7 @@ impl Tool {
             Self::Line => "L",
             Self::Rectangle => "R",
             Self::Circle => "C",
-            Self::Polygon => "G",
+            Self::Polygon => "",
             Self::Freehand => "D",
             Self::PushPull => "P",
             Self::Flip
