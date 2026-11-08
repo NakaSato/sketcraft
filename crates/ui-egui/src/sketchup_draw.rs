@@ -11,7 +11,7 @@ use crate::viewport::{Hit, Proj};
 
 /// SketchUp's modelling tools on its tab. SketchUp has no sketch to finish, so choosing one in a
 /// sketch begun from the SketchUp tab finishes that sketch first.
-pub(crate) const MODEL_TOOLS: &[&str] = &["solid.press_pull", "solid.offset_face", "solid.move", "solid.scale", "solid.sweep"];
+pub(crate) const MODEL_TOOLS: &[&str] = &["solid.press_pull", "solid.offset_face", "solid.move", "solid.rotate", "solid.scale", "solid.sweep"];
 
 /// Whether starting `id` now finishes the open sketch first: one of [`MODEL_TOOLS`], in a sketch
 /// begun from the SketchUp tab.

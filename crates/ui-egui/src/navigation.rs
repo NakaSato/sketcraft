@@ -52,6 +52,82 @@ impl NavCaps {
     pub const RENDER: NavCaps = NavCaps { orbit: true, pick: true };
 }
 
+/// SketchUp's Zoom Window while it is latched (`view.zoom_window`): the corners of the rectangle
+/// being dragged (screen points), from the press to the pointer now. Both `None` before the press.
+#[derive(Clone, Copy, Debug, Default, PartialEq)]
+pub(crate) struct ZoomWindow {
+    pub(crate) from: Option<Pos2>,
+    pub(crate) to: Option<Pos2>,
+}
+
+impl ZoomWindow {
+    /// The rectangle being dragged, once the press has happened.
+    pub(crate) fn rect(&self) -> Option<Rect> {
+        Some(Rect::from_two_pos(self.from?, self.to?))
+    }
+}
+
+/// Shortest side (points) of a rectangle Zoom Window frames: a shorter drag is a click (egui's
+/// click tolerance is 6 points), and the tool waits for a real drag.
+const ZOOM_WINDOW_MIN: f32 = 8.0;
+
+/// Zoom Window's left drag in `rect` (the view): the press starts the rectangle, the drag
+/// stretches it and the release frames it, ending the tool. Only in the modelling view; the
+/// rectangle is drawn by [`paint_zoom_window`].
+fn zoom_window_drag(app: &mut SketApp, ui: &egui::Ui, rect: Rect, inside: bool, pressed: bool, down: bool) {
+    let Some(mut window) = app.viewport.zoom_window else { return };
+    let (origin, latest) = ui.input(|i| (i.pointer.press_origin(), i.pointer.latest_pos()));
+    if pressed {
+        window = if inside { ZoomWindow { from: origin.or(latest), to: latest.or(origin) } } else { ZoomWindow::default() };
+    } else if down {
+        if window.from.is_some()
+            && let Some(at) = latest
+        {
+            window.to = Some(at);
+        }
+    } else if let Some(dragged) = window.rect() {
+        if dragged.width() >= ZOOM_WINDOW_MIN && dragged.height() >= ZOOM_WINDOW_MIN {
+            app.viewport.zoom_window = None;
+            frame_screen_rect(app, rect, dragged);
+            return;
+        }
+        window = ZoomWindow::default();
+    }
+    app.viewport.zoom_window = Some(window);
+}
+
+/// Zoom so the screen rectangle `window` fills the view `rect`, centred: pan its centre to the
+/// view's centre, then zoom about it by the larger of its width and height ratios.
+pub(crate) fn frame_screen_rect(app: &mut SketApp, rect: Rect, window: Rect) {
+    let window = window.intersect(rect);
+    if !(window.width() > 0.0 && window.height() > 0.0 && rect.width() > 0.0 && rect.height() > 0.0) {
+        return;
+    }
+    app.cancel_view_animation();
+    app.viewport.orbit_free = None;
+    let mut to = app.cam;
+    // The pan's scale is the projection's, as drawn (`viewport::projection`): perspective or not.
+    to.fov = crate::viewport::projection(app, rect).cam.fov;
+    let shift = rect.center() - window.center();
+    to.pan(f64::from(shift.x), f64::from(shift.y), f64::from(rect.height()));
+    let factor = f64::from((window.width() / rect.width()).max(window.height() / rect.height()));
+    to.zoom_at(factor, None);
+    to.fov = app.cam.fov;
+    app.animate_to(to);
+}
+
+/// The Zoom Window rectangle being dragged, in the theme's accent.
+pub(crate) fn paint_zoom_window(app: &SketApp, painter: &egui::Painter) {
+    let Some(window) = app.viewport.zoom_window.and_then(|w| w.rect()) else { return };
+    let colour = crate::theme::Tokens::view().accent;
+    let stroke = egui::Stroke::new(1.2, colour);
+    painter.rect_filled(window, 0.0, colour.gamma_multiply(0.08));
+    let c = [window.left_top(), window.right_top(), window.right_bottom(), window.left_bottom()];
+    for i in 0..4 {
+        painter.add(egui::Shape::dashed_line(&[c[i], c[(i + 1) % 4]], stroke, 6.0, 4.0));
+    }
+}
+
 /// Give a panel the wheel delta left by its children, one movable axis at a time.
 /// Boundary deltas remain available to the panel host's input fallback.
 pub(crate) fn panel_scroll_offset(ctx: &egui::Context, previous: egui::Vec2, maximum: egui::Vec2) -> egui::Vec2 {
@@ -738,10 +814,20 @@ pub(crate) fn handle(app: &mut SketApp, ui: &mut egui::Ui, rect: Rect, resp: &eg
         app.viewport.zoom_shortcut_drag = false;
     }
     let zoom_drag = app.viewport.zoom_shortcut_drag;
+    // Zoom Window owns the left button while it is latched, in the modelling view: its drag
+    // draws the rectangle to frame rather than selecting, drawing or navigating. Kept through
+    // the release frame, so the end of the drag doesn't click either.
+    let window_latched = app.viewport.zoom_window.is_some() && !zoom_drag && !crate::render_workspace::active(app);
+    if window_latched {
+        zoom_window_drag(app, ui, rect, inside, primary_pressed, primary_down);
+        if inside {
+            ui.ctx().set_cursor_icon(egui::CursorIcon::ZoomIn);
+        }
+    }
 
     // A left press with the preset's keys (Alias: Shift+Alt) navigates until the button is let
     // go (kept through the release frame, so the end of the drag doesn't select either).
-    if primary_pressed && inside && !zoom_drag {
+    if primary_pressed && inside && !zoom_drag && !window_latched {
         let empty_space = |app: &SketApp| {
             app.viewport.context_menu.is_none()
                 && hover.is_some_and(|p| {
@@ -787,6 +873,8 @@ pub(crate) fn handle(app: &mut SketApp, ui: &mut egui::Ui, rect: Rect, resp: &eg
         zoom_held.then_some(NavMode::Zoom)
     } else if space_pan {
         Some(NavMode::Pan)
+    } else if window_latched {
+        None
     } else {
         app.viewport.nav.or(app.viewport.primary_nav)
     };
@@ -949,7 +1037,8 @@ pub(crate) fn handle(app: &mut SketApp, ui: &mut egui::Ui, rect: Rect, resp: &eg
     }
     // Even if the shortcut was released first, the mouse release belongs to the zoom gesture.
     let inside = inside && !zoom_drag;
-    let primary_nav = if zoom_drag { Some(NavMode::Zoom) } else { primary_nav };
+    // Zoom Window's drag is a camera gesture too: the view neither selects nor draws with it.
+    let primary_nav = if zoom_drag || (window_latched && primary_nav.is_none()) { Some(NavMode::Zoom) } else { primary_nav };
     CameraInput { hover, scroll, mods, middle, secondary_down, primary_down, primary_pressed, inside, axes, pinch, pan, primary_nav, mode }
 }
 

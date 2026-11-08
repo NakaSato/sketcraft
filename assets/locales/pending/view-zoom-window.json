@@ -1,0 +1,66 @@
+{
+  "en": {
+    "cmd.view_next": "Next View",
+    "cmd.view_previous": "Previous View",
+    "cmd.view_zoom_window": "Zoom Window",
+    "help.view.next": "Goes forward again to the view that Previous View left. Use it after stepping back too far.",
+    "help.view.previous": "Goes back to the view shown before, one step at a time. Use it to return to where you were after zooming or orbiting.",
+    "help.view.zoom_window": "Drag a rectangle in the view, and the view zooms so that rectangle fills it. Use it to look closely at one part of the model."
+  },
+  "ar": {
+    "cmd.view_next": "العرض التالي",
+    "cmd.view_previous": "العرض السابق",
+    "cmd.view_zoom_window": "تكبير نافذة",
+    "help.view.next": "يتقدم مجددًا إلى العرض الذي تركه العرض السابق. استخدمه بعد الرجوع أكثر من اللازم.",
+    "help.view.previous": "يعود إلى العرض المعروض من قبل، خطوة بخطوة. استخدمه للعودة إلى حيث كنت بعد التكبير أو التدوير.",
+    "help.view.zoom_window": "اسحب مستطيلًا في العرض، فيُكبَّر العرض حتى يملأه ذلك المستطيل. استخدمه لرؤية جزء واحد من النموذج عن قرب."
+  },
+  "he": {
+    "cmd.view_next": "התצוגה הבאה",
+    "cmd.view_previous": "התצוגה הקודמת",
+    "cmd.view_zoom_window": "זום לחלון",
+    "help.view.next": "מתקדם שוב אל התצוגה שהתצוגה הקודמת עזבה. השתמשו בזה אחרי שחזרתם אחורה יותר מדי.",
+    "help.view.previous": "חוזר אל התצוגה שהוצגה קודם, צעד אחר צעד. השתמשו בזה כדי לחזור למקום שבו הייתם אחרי זום או סיבוב.",
+    "help.view.zoom_window": "גררו מלבן בתצוגה, והתצוגה מתקרבת כך שהמלבן ממלא אותה. השתמשו בזה כדי להתבונן מקרוב בחלק אחד של המודל."
+  },
+  "ja": {
+    "cmd.view_next": "次のビュー",
+    "cmd.view_previous": "前のビュー",
+    "cmd.view_zoom_window": "ウィンドウズーム",
+    "help.view.next": "「前のビュー」で戻る前のビューへ再び進みます。戻りすぎたときに使います。",
+    "help.view.previous": "直前に表示していたビューへ一段ずつ戻ります。ズームや回転のあとで元の位置に戻るときに使います。",
+    "help.view.zoom_window": "ビュー内で矩形をドラッグすると、その矩形がビューいっぱいになるようにズームします。モデルの一部を近くで見るときに使います。"
+  },
+  "vi": {
+    "cmd.view_next": "Khung nhìn tiếp theo",
+    "cmd.view_previous": "Khung nhìn trước",
+    "cmd.view_zoom_window": "Thu phóng theo khung",
+    "help.view.next": "Đi tiếp đến khung nhìn mà Khung nhìn trước đã rời đi. Dùng khi bạn đã quay lại quá xa.",
+    "help.view.previous": "Quay lại khung nhìn đã hiển thị trước đó, từng bước một. Dùng để trở về chỗ cũ sau khi thu phóng hoặc xoay.",
+    "help.view.zoom_window": "Kéo một hình chữ nhật trong khung nhìn, và khung nhìn sẽ phóng to để hình chữ nhật đó lấp đầy nó. Dùng để xem kỹ một phần của mô hình."
+  },
+  "zh": {
+    "cmd.view_next": "下一视图",
+    "cmd.view_previous": "上一视图",
+    "cmd.view_zoom_window": "窗口缩放",
+    "help.view.next": "再次前进到“上一视图”离开的视图。在后退过多时使用。",
+    "help.view.previous": "一步一步返回之前显示的视图。在缩放或环绕后回到原来的位置时使用。",
+    "help.view.zoom_window": "在视图中拖出一个矩形，视图会缩放到让该矩形充满视图。用于近距离查看模型的某一部分。"
+  },
+  "de": {
+    "cmd.view_next": "Nächste Ansicht",
+    "cmd.view_previous": "Vorherige Ansicht",
+    "cmd.view_zoom_window": "Zoomfenster",
+    "help.view.next": "Geht wieder vorwärts zu der Ansicht, die „Vorherige Ansicht“ verlassen hat. Verwenden Sie es, wenn Sie zu weit zurückgegangen sind.",
+    "help.view.previous": "Kehrt Schritt für Schritt zur zuvor gezeigten Ansicht zurück. Verwenden Sie es, um nach dem Zoomen oder Drehen dorthin zurückzukehren, wo Sie waren.",
+    "help.view.zoom_window": "Ziehen Sie ein Rechteck in der Ansicht auf, und die Ansicht zoomt so, dass das Rechteck sie ausfüllt. Verwenden Sie es, um einen Teil des Modells aus der Nähe zu betrachten."
+  },
+  "ko": {
+    "cmd.view_next": "다음 뷰",
+    "cmd.view_previous": "이전 뷰",
+    "cmd.view_zoom_window": "창 확대/축소",
+    "help.view.next": "이전 뷰로 떠나온 뷰로 다시 앞으로 이동합니다. 너무 많이 되돌아갔을 때 사용하세요.",
+    "help.view.previous": "이전에 표시된 뷰로 한 단계씩 돌아갑니다. 확대/축소나 궤도 회전 후 원래 위치로 돌아갈 때 사용하세요.",
+    "help.view.zoom_window": "뷰에서 사각형을 드래그하면 그 사각형이 뷰를 채우도록 확대됩니다. 모델의 한 부분을 가까이에서 볼 때 사용하세요."
+  }
+}

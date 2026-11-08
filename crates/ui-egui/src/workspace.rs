@@ -131,7 +131,7 @@ pub const SECTIONS: &[Section] = &[
         tab: "MODEL",
         panel: "ARRANGE",
         promoted: 3,
-        ids: &["solid.move", "solid.mirror", "solid.pattern.rectangular", "solid.align", "solid.pattern.circular", "solid.pattern.path"],
+        ids: &["solid.move", "solid.mirror", "solid.pattern.rectangular", "solid.rotate", "solid.align", "solid.pattern.circular", "solid.pattern.path"],
     },
     Section { tab: "MODEL", panel: "CONFIGURE", promoted: 2, ids: CONFIGURE },
     Section { tab: "MODEL", panel: "CONSTRUCT", promoted: 1, ids: &["construct.plane.offset"] },
@@ -334,7 +334,7 @@ pub const SECTIONS: &[Section] = &[
     Section { tab: "WELDMENTS", panel: "CREATE", promoted: 1, ids: &["frame.member"] },
     Section { tab: "WELDMENTS", panel: "CONFIGURE", promoted: 2, ids: CONFIGURE },
     // SketchUp's Large Tool Set, in its groups (`toolbar_custom::SKETCHUP_LARGE_TOOLSET`).
-    Section { tab: SKETCHUP_TAB, panel: "SELECT", promoted: 3, ids: &["select.clear", "selection.delete", "appearance.paint"] },
+    Section { tab: SKETCHUP_TAB, panel: "SELECT", promoted: 4, ids: &["select.clear", "selection.delete", "sketch.erase", "appearance.paint"] },
     Section {
         tab: SKETCHUP_TAB,
         panel: "CREATE",
@@ -346,19 +346,26 @@ pub const SECTIONS: &[Section] = &[
             "sketch.circle.center",
             "sketch.rectangle.three_point",
             "sketch.polygon.inscribed",
+            "sketch.arc.pie",
+            "sketch.freehand",
         ],
     },
     // Sweep is SketchUp's Follow Me: a profile carried along a path.
     Section {
         tab: SKETCHUP_TAB,
         panel: "MODIFY",
-        promoted: 4,
-        ids: &["solid.press_pull", "solid.offset_face", "solid.move", "solid.scale", "solid.sweep"],
+        promoted: 5,
+        ids: &["solid.press_pull", "solid.offset_face", "solid.move", "solid.rotate", "solid.scale", "solid.sweep"],
     },
     Section { tab: SKETCHUP_TAB, panel: "MEASURE", promoted: 4, ids: &["inspect.measure", "sketch.dimension", "sketch.text", "inspect.section"] },
     Section { tab: SKETCHUP_TAB, panel: "COMPONENTS", promoted: 2, ids: &["component.create", "tags.manage"] },
-    // SketchUp's Camera tools: Orbit, Pan, Zoom and Zoom Extents.
-    Section { tab: SKETCHUP_TAB, panel: "VIEW", promoted: 4, ids: &["view.tool.orbit", "view.tool.pan", "view.tool.zoom", "view.fit"] },
+    // SketchUp's Camera tools: Orbit, Pan, Zoom, Zoom Window, Zoom Extents, Previous and Next.
+    Section {
+        tab: SKETCHUP_TAB,
+        panel: "VIEW",
+        promoted: 5,
+        ids: &["view.tool.orbit", "view.tool.pan", "view.tool.zoom", "view.zoom_window", "view.fit", "view.previous", "view.next"],
+    },
 ];
 
 // Migration data only: Render commands remain registered, but have no live ribbon sections.

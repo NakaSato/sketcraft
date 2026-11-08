@@ -25,13 +25,15 @@
 | Rectangle | R; click the first corner, then click the opposite corner or type width,height + Enter (for example, `5m,50mm`) |
 | Circle | C; click the center, then set the radius by pointer or type a length + Enter (48 segments) |
 | Polygon | G; click the center, then a vertex or type a radius + Enter; choose 3–64 sides in the drawing menu |
-| Freehand | D; drag to draw connected edges; release to finish, or type a total stroke length + Enter |
-| Push/Pull | P; click a face, move along its normal, click to confirm or type a length + Enter |
+| Pie | Arc flyout or SketchUp tab → Pie; click the center and the start, go round either way and click the end, or type a signed sweep; draws the arc and both radius lines as one closed wedge |
+| Freehand | Sketch tab or SketchUp tab → Freehand; press and drag to draw, release to finish; the stroke becomes one smooth curve within 0.5% of its size |
+| Push/Pull | P; click a face, move along its normal, click to confirm or type a length + Enter; with Push/Pull active, double-click a flat face to push or pull it by the last Push/Pull distance (one undo step; the distance is remembered across restarts) |
 | Union flyout | Union button in the left toolbar: Flip, Combine, Union, Intersect, Trim, Split |
 | Flip | Choose Flip, then click a colored mirror plane or use Right / Left / Up for X / Y / Z |
 | Scale | S; select geometry, click a reference point, move or type a scale factor + Enter; axis locks constrain scaling |
 | Offset | F; click near a face boundary, move inward/outward, click or type a length + Enter |
 | Move / Copy | M; click a base point and destination; tap Ctrl (Option on Mac) to toggle Copy; type a length + Enter for precision |
+| Rotate | Q; select bodies, pick the axis (an axis, a straight edge or a round face), type an angle + Enter or drag the turn handle; Copy keeps the original |
 | Aligned copies | After placing a Move copy, type `/N` (or `N/`) + Enter to divide the original span into N equal intervals; type `Nx` (or `xN`, `N*`, `*N`) + Enter for N copies at the original spacing |
 | Paint | B; choose a color in the inspector, then click a filled face |
 | Tape Measure | T; click two snapped points to measure distance |
@@ -43,13 +45,15 @@
 | Shape plane lock | Rectangle, Circle, Polygon, Freehand: Right / Left / Up locks the drawing plane perpendicular to X / Y / Z; repeat or Down unlocks |
 | Clear axis lock | Down arrow |
 | Cancel preview/gesture | Escape |
-| Erase | E; click or drag across edges or faces |
-| Delete selection | Delete or Backspace; a selected face leaves its outline, a selected boundary edge also removes dependent faces |
+| Eraser | In a sketch, SketchUp tab → Eraser: click a curve to delete it, or drag across curves to delete each one crossed; one undo step |
+| Delete selection | Delete or Backspace (E with Use SketchUp Keys); a selected face leaves its outline, a selected boundary edge also removes dependent faces |
 | Orbit | O + left-drag, or middle-drag from any tool |
 | Orbit while drawing | Hold Ctrl/Command and move the cursor; release Ctrl/Command to resume drawing |
 | Pan | **Hold Shift while orbiting**, including middle-drag |
 | Zoom | Mouse wheel; anchors at the pointer on the camera target plane |
+| Zoom Window | SketchUp tab → View → Zoom Window, then left-drag a rectangle in the view; the view zooms so the rectangle fills it, centered. One use ends the tool; Escape or the button again cancels it |
 | Fit all geometry | Fit view button |
+| Previous / Next view | SketchUp tab → View → Previous View / Next View; steps back through the last 50 views shown (each held still for a moment) and forward again. A new view after Previous View clears Next View. Each design tab keeps its own views; they are not saved with the design |
 | Emphasize current group/component | Enabled by default. Emphasize group checkbox before the Snap options toggles the group/component currently being edited solid and everything else in muted wireframe, regardless of selection. Has no visual effect outside a group/component |
 | Toggle right sidebar | Tab, or the model inspector button |
 | Ground, sky, and horizon colors | Model inspector → Display → Environment; color pickers, Sky/Ground toggles, and reset colors |
@@ -91,7 +95,7 @@ The toolbar is ordered Select, Line, Erase, Orbit, Push/Pull, Scale, Offset, Mov
 
 Hover over a toolbar tool or flyout entry for one second to see its name, keyboard shortcut (when available), and usage instructions.
 
-The ribbon's **SketchUp** tab gathers SketchUp's Large Tool Set in one place: Select (Clear Selection, Delete, Paint Appearance), Create (Line, 3-Point Arc, 2-Point Rectangle, Circle), Modify (Press Pull, Offset Face, Move/Copy, Scale), Measure (Measure, Sketch Dimension, Section Analysis), and Components (New Component, Tags & Layers). Its buttons are shortcuts: every command keeps its place on its own tab. A drawing tool starts a sketch first when none is open, and finishing the sketch returns to the SketchUp tab. Show or hide the tab like any other from the toolbar menu (the plus after the tabs, or right-click a tab) or Preferences → Layout → Toolbar tabs.
+The ribbon's **SketchUp** tab gathers SketchUp's Large Tool Set in one place: Select (Clear Selection, Delete, Paint Appearance), Create (Line, 3-Point Arc, 2-Point Rectangle, Circle, 3-Point Rectangle, Polygon, Pie, Freehand), Modify (Press Pull, Offset Face, Move/Copy, Rotate, Scale, Sweep), Measure (Measure, Sketch Dimension, Section Analysis), and Components (New Component, Tags & Layers). Its buttons are shortcuts: every command keeps its place on its own tab. A drawing tool starts a sketch first when none is open, and finishing the sketch returns to the SketchUp tab. Show or hide the tab like any other from the toolbar menu (the plus after the tabs, or right-click a tab) or Preferences → Layout → Toolbar tabs.
 
 The **Union** flyout keeps Flip, Combine, Union, Intersect, Trim, and Split together. Flip mirrors the selection through its bounds center using a colored plane, an inspector axis button, or the X/Y/Z arrow shortcuts. Mirrored component instances retain their links and placement when their definition is edited.
 

@@ -185,6 +185,9 @@ pub struct ViewportState {
     /// the same: a theme or visibility rebuild does not resolve every face again.
     appearance: std::sync::Mutex<AppearanceCache>,
     pub nav: Option<NavMode>,
+    /// Zoom Window is latched (`view.zoom_window`): the next left drag draws the rectangle the
+    /// view then fills, instead of selecting.
+    pub(crate) zoom_window: Option<crate::navigation::ZoomWindow>,
     /// The preset's navigation for the left-button drag under way (Alias: Shift+Alt), taken
     /// when the button went down, so the drag neither selects nor moves sketch geometry.
     pub primary_nav: Option<NavMode>,
@@ -5242,9 +5245,9 @@ pub fn show(app: &mut SketApp, ui: &mut egui::Ui) {
         if app.tool.is_some() {
             crate::tools::on_hover(app, &proj, p, mods.shift);
         }
-        // Trim also trims by press and drag across the pieces to remove (its own release handling,
-        // so not a click that moved on the way below).
-        if app.tool.as_ref().is_some_and(|t| t.cmd == "sketch.trim")
+        // Trim also trims by press and drag across the pieces to remove, and Freehand draws by
+        // press and drag (their own release handling, so not a click that moved on the way below).
+        if app.tool.as_ref().is_some_and(|t| crate::sketch_tools::draws_path(t.cmd))
             && !held
             && primary_nav.is_none()
             && mode.is_none()
@@ -5320,7 +5323,15 @@ pub fn show(app: &mut SketApp, ui: &mut egui::Ui) {
         {
             dialog.restore_value_focus = true;
         }
-        if resp.clicked() && !held && !reference_pick && !joint_handle_pointer && !app.viewport.draw_drag_handled {
+        // Push/Pull open: a double-click on a flat face repeats the last Push/Pull (SketchUp), and
+        // its second click picks nothing.
+        let push_pull_repeat = resp.double_clicked()
+            && !held
+            && !reference_pick
+            && !joint_handle_pointer
+            && mods.is_none()
+            && crate::press_pull_repeat::double_click(app, cand.as_ref().and_then(|c| c.1.as_ref()));
+        if resp.clicked() && !held && !reference_pick && !joint_handle_pointer && !app.viewport.draw_drag_handled && !push_pull_repeat {
             if crate::browser_canvas::click(app, &proj, p) {
                 // Calibrate Canvas: the click sets Point A or B on the image (#9108).
             } else if crate::sketchup_draw::pending(app).is_some() {
@@ -5413,7 +5424,7 @@ pub fn show(app: &mut SketApp, ui: &mut egui::Ui) {
         }
         // Double-click a curve while a Mirror/Move/Copy/Scale/pattern Entities input is open:
         // add the whole connected chain to that input (#8390).
-        if resp.double_clicked() && !held && !dim_edit && app.tool.is_none() && app.dialog.is_some() {
+        if resp.double_clicked() && !held && !dim_edit && !push_pull_repeat && app.tool.is_none() && app.dialog.is_some() {
             let _ = crate::sketch_modify_ui::double_click_entities(app);
         }
         // Double-click an edge: select the edges that continue it smoothly (the loop).
@@ -5757,6 +5768,7 @@ pub fn show(app: &mut SketApp, ui: &mut egui::Ui) {
     if let Some(bx) = &app.viewport.boxsel {
         paint_box_selection(&painter, bx, app.session.active_sketch.is_some());
     }
+    crate::navigation::paint_zoom_window(app, &painter);
     if let Some(tl) = app.tool.as_ref() {
         crate::tools::preview(app, tl, &painter, &proj);
     }

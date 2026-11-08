@@ -1,0 +1,42 @@
+{
+  "en": {
+    "cmd.sketch_freehand": "Freehand",
+    "help.sketch.freehand": "Draws a smooth curve along the path you drag in the sketch. Use it for organic outlines that don't need exact sizes, as SketchUp's Freehand does.",
+    "sketch.hint.freehand": "Freehand: press and drag to draw a curve; let go to finish"
+  },
+  "ar": {
+    "cmd.sketch_freehand": "رسم حر",
+    "help.sketch.freehand": "يرسم منحنى ناعمًا على طول المسار الذي تسحبه في الرسم التخطيطي. استخدمه للخطوط العضوية التي لا تحتاج إلى مقاسات دقيقة، كما في أداة الرسم الحر في SketchUp.",
+    "sketch.hint.freehand": "رسم حر: اضغط واسحب لرسم منحنى، ثم أفلت للإنهاء"
+  },
+  "he": {
+    "cmd.sketch_freehand": "ציור חופשי",
+    "help.sketch.freehand": "ציור עקומה חלקה לאורך המסלול שגוררים בסקיצה. מתאים לקווי מתאר אורגניים שאינם דורשים מידות מדויקות, כמו הציור החופשי של SketchUp.",
+    "sketch.hint.freehand": "ציור חופשי: לוחצים וגוררים כדי לצייר עקומה; משחררים כדי לסיים"
+  },
+  "ja": {
+    "cmd.sketch_freehand": "フリーハンド",
+    "help.sketch.freehand": "スケッチ上でドラッグした経路に沿って滑らかな曲線を描きます。SketchUp のフリーハンドのように、正確な寸法が不要な有機的な輪郭に使います。",
+    "sketch.hint.freehand": "フリーハンド: 押したままドラッグして曲線を描き、離すと完了します"
+  },
+  "vi": {
+    "cmd.sketch_freehand": "Vẽ tự do",
+    "help.sketch.freehand": "Vẽ một đường cong mượt theo đường bạn kéo trong bản phác. Dùng cho các đường viền tự nhiên không cần kích thước chính xác, như công cụ Vẽ tự do của SketchUp.",
+    "sketch.hint.freehand": "Vẽ tự do: nhấn và kéo để vẽ đường cong; thả ra để kết thúc"
+  },
+  "zh": {
+    "cmd.sketch_freehand": "徒手画",
+    "help.sketch.freehand": "沿您在草图中拖动的路径绘制一条平滑曲线。用于不需要精确尺寸的自然轮廓，与 SketchUp 的徒手画工具相同。",
+    "sketch.hint.freehand": "徒手画：按住并拖动以绘制曲线；松开即完成"
+  },
+  "de": {
+    "cmd.sketch_freehand": "Freihand",
+    "help.sketch.freehand": "Zeichnet eine glatte Kurve entlang des Pfads, den Sie in der Skizze ziehen. Für organische Umrisse ohne exakte Maße, wie das Freihand-Werkzeug von SketchUp.",
+    "sketch.hint.freehand": "Freihand: drücken und ziehen, um eine Kurve zu zeichnen; loslassen zum Beenden"
+  },
+  "ko": {
+    "cmd.sketch_freehand": "자유 곡선",
+    "help.sketch.freehand": "스케치에서 드래그한 경로를 따라 부드러운 곡선을 그립니다. SketchUp의 자유 곡선 도구처럼 정확한 치수가 필요 없는 자연스러운 윤곽에 사용합니다.",
+    "sketch.hint.freehand": "자유 곡선: 누른 채 드래그하여 곡선을 그리고, 놓으면 완료됩니다"
+  }
+}

@@ -25,6 +25,7 @@ pub const MODIFIERS: &[ToolModifiers] = &[
     ToolModifiers { tool: "sketch.circle.three_point", scopes: DRAW_SCOPES, bindings: &[], audit: Audit::Implemented },
     ToolModifiers { tool: "sketch.arc.three_point", scopes: DRAW_SCOPES, bindings: &[], audit: Audit::Implemented },
     ToolModifiers { tool: "sketch.arc.center_point", scopes: DRAW_SCOPES, bindings: &[], audit: Audit::Implemented },
+    ToolModifiers { tool: "sketch.arc.pie", scopes: DRAW_SCOPES, bindings: &[], audit: Audit::Implemented },
     ToolModifiers { tool: "sketch.polygon.inscribed", scopes: DRAW_SCOPES, bindings: &[], audit: Audit::Implemented },
     ToolModifiers { tool: "sketch.polygon.circumscribed", scopes: DRAW_SCOPES, bindings: &[], audit: Audit::Implemented },
     ToolModifiers { tool: "sketch.polygon.edge", scopes: DRAW_SCOPES, bindings: &[], audit: Audit::Implemented },
@@ -124,6 +125,7 @@ impl Tool {
             "sketch.spline3d" => ("sketch.spline3d", Kind::Draw(0)),
             "sketch.point3d" => ("sketch.point3d", Kind::Draw(1)),
             "sketch.arc.center_point" => ("sketch.arc.center_point", Kind::Draw(3)),
+            "sketch.arc.pie" => ("sketch.arc.pie", Kind::Draw(3)),
             "sketch.polygon.inscribed" => ("sketch.polygon.inscribed", Kind::Draw(2)),
             "sketch.polygon.circumscribed" => ("sketch.polygon.circumscribed", Kind::Draw(2)),
             "sketch.polygon.edge" => ("sketch.polygon.edge", Kind::Draw(2)),
@@ -177,6 +179,7 @@ pub fn hint(id: &str) -> String {
         "sketch.spline3d" => tr("sketch.hint.spline3d").into(),
         "sketch.point3d" => tr("sketch.hint.point3d").into(),
         "sketch.arc.center_point" => tr("sketch.hint.arc.center_point").into(),
+        "sketch.arc.pie" => tr("sketch.hint.arc.pie").into(),
         "sketch.dimension" => tr("sketch.hint.dimension").into(),
         "sketch.constraint.horizontal_vertical" => tr("sketch.hint.constraint.horizontal_vertical").into(),
         "sketch.slot.center_to_center" | "sketch.slot.overall" => tr("sketch.hint.slot").into(),
@@ -249,7 +252,7 @@ fn follow_arc_turn(t: &mut Tool) {
         t.arc_turn = 0.0;
         return;
     };
-    if t.cmd != "sketch.arc.center_point" || t.pts.len() != 2 {
+    if !matches!(t.cmd, "sketch.arc.center_point" | "sketch.arc.pie") || t.pts.len() != 2 {
         t.arc_turn = 0.0;
         return;
     }
@@ -663,6 +666,15 @@ fn run_shape(app: &mut SketApp, t: &Tool) -> Result<Vec<String>, String> {
                 None => json!({"center": center, "start": arg(&p[1]), "end": xy(&p[2])}),
             }
         }
+        // Pie: the centre-point arc's clicks, always as a signed sweep (it has no `clockwise`).
+        "sketch.arc.pie" => {
+            let center = match &p[0].1 {
+                Some(id) if ["mid:", "on:", "vertex:", "x:"].iter().any(|k| id.starts_with(k)) => json!(id),
+                _ => xy(&p[0]),
+            };
+            let sweep = crate::sketch_dims::locked_value(app, t, "Sweep").unwrap_or_else(|| center_arc_sweep(t, p[2].0));
+            json!({"center": center, "start": arg(&p[1]), "sweep": sweep.to_degrees()})
+        }
         "sketch.polygon.inscribed" | "sketch.polygon.circumscribed" => {
             let a = (p[1].0 - p[0].0).angle().to_degrees();
             json!({"center": xy(&p[0]), "radius": d(0, 1), "sides": sides, "angle": a})
@@ -1029,7 +1041,7 @@ pub(crate) fn preview_curve(
                 }
             }
         }
-        ("sketch.arc.center_point", [c, a]) => {
+        ("sketch.arc.center_point" | "sketch.arc.pie", [c, a]) => {
             let start = (*a - *c).angle();
             let sweep = sweep.unwrap_or_else(|| center_arc_sweep(t, hover));
             if !sweep.is_finite() || sweep.abs() <= 1e-9 || sweep.abs() >= std::f64::consts::TAU {
@@ -1039,6 +1051,11 @@ pub(crate) fn preview_curve(
             sk.add_arc(*c, if sweep > 0.0 { *a } else { b }, if sweep > 0.0 { b } else { *a }, [None; 3], None).ok()?;
             if let Some(curve) = sk.curves.first_mut() {
                 curve.reversed = sweep < 0.0;
+            }
+            // A pie's radius lines close it.
+            if t.cmd == "sketch.arc.pie" {
+                sk.add_line(*c, *a, None, None, None).ok()?;
+                sk.add_line(*c, b, None, None, None).ok()?;
             }
         }
         ("sketch.slot.center_to_center" | "sketch.slot.overall" | "sketch.slot.center_point", [a, b]) => {

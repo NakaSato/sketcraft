@@ -13,7 +13,11 @@ use super::sketch::{add_c, coincident_points, dof_now, edit, ids_of, line_or_axi
 use super::sketch_store;
 use super::{CommandSpec, in_sketch};
 use crate::params::{bad, bool_, expr, num, req_expr, req_vec2, str_, string_list, vec2, vec2_list};
+use crate::schema::sketch_modify::{EraseParams, EraseResult};
+use crate::schema::{TypedContract, output_schema_for};
 use crate::{Result, Session};
+
+const ERASE_CONTRACT: TypedContract<EraseParams> = TypedContract::new();
 
 #[path = "sketch_pattern.rs"]
 mod pattern;
@@ -56,6 +60,13 @@ pub static COMMANDS: &[CommandSpec] = &[
     CommandSpec::new("sketch.offset.break", "Break Offset Association", break_offset).icon("sketch_break")
         .enabled(in_sketch)
         .params("curve: derived offset curve id (retains geometry and makes its points editable)"),
+    CommandSpec::new("sketch.erase", "Eraser", crate::checked!("sketch.erase", erase))
+        .at("SKETCH", "MODIFY")
+        .icon("delete")
+        .enabled(in_sketch)
+        .contract(&ERASE_CONTRACT)
+        .output(output_schema_for::<EraseResult>)
+        .params("points: [[x,y]…] (2…2000 positions: a path drawn across the sketch); dry_run?: bool. Every curve the path crosses is deleted whole, with the constraints on it, as sketch.delete deletes it → erased: [curve ids]"),
     CommandSpec::new("sketch.trim", "Trim", trim)
         .at("SKETCH", "MODIFY")
         .icon("trim")
@@ -913,6 +924,38 @@ fn trim_path(s: &mut Session, p: &Value) -> Result<Value> {
         Ok((trimmed, removed, skipped))
     })?;
     Ok(json!({"trimmed": trimmed, "removed": removed, "skipped": skipped, "sketch": info}))
+}
+
+/// `sketch.erase`: every curve of the active sketch the path crosses, deleted whole by
+/// `sketch.delete` in one step. Infinite lines and the curves trim leaves alone are skipped.
+fn erase(s: &mut Session, p: &Value) -> Result<Value> {
+    let cmd = "sketch.erase";
+    let path = vec2_list(cmd, p, "points", MAX_PATH_POINTS)?;
+    if path.len() < 2 {
+        return Err(bad(cmd, "`points` needs at least two positions"));
+    }
+    let id = s.active_sketch.ok_or_else(|| bad(cmd, "no sketch is open"))?;
+    let sk = s.doc.sketch(id).map_err(|e| bad(cmd, e.to_string()))?;
+    let mut erased: Vec<String> = Vec::new();
+    let mut after = (0, f64::NEG_INFINITY);
+    for _ in 0..MAX_PATH_TRIMS {
+        let Some((si, t, ci, _)) = next_crossing(sk, &path, after) else { break };
+        after = (si, t);
+        if let Some(c) = sk.curves.get(ci)
+            && !erased.contains(&c.id)
+        {
+            erased.push(c.id.clone());
+        }
+    }
+    if bool_(p, "dry_run").unwrap_or(false) {
+        return Ok(json!({"erased": erased, "dry_run": true, "sketch": null}));
+    }
+    if erased.is_empty() {
+        return Err(bad(cmd, "the path crosses no curve"));
+    }
+    let delete = super::find_command("sketch.delete").ok_or_else(|| bad(cmd, "sketch.delete"))?;
+    let out = (delete.run)(s, &json!({"entities": erased}))?;
+    Ok(json!({"erased": erased, "dry_run": false, "sketch": out.get("sketch").cloned().unwrap_or(Value::Null)}))
 }
 
 /// Cuts closer than this to a curve's end or to each other are one place (mm).

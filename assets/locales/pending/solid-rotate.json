@@ -1,0 +1,34 @@
+{
+  "en": {
+    "cmd.solid_rotate": "Rotate",
+    "help.solid.rotate": "Turns the selected bodies, or a copy of them, by an angle about an axis through a point you pick. Use it to swing a part around a hinge or corner, as SketchUp's Rotate does."
+  },
+  "ar": {
+    "cmd.solid_rotate": "تدوير",
+    "help.solid.rotate": "يدير الأجسام المحددة، أو نسخة منها، بزاوية حول محور يمر بنقطة تختارها. استخدمه لتدوير جزء حول مفصل أو زاوية، كما تفعل أداة التدوير في SketchUp."
+  },
+  "he": {
+    "cmd.solid_rotate": "סיבוב",
+    "help.solid.rotate": "סיבוב הגופים שנבחרו, או עותק שלהם, בזווית סביב ציר שעובר בנקודה שבוחרים. מתאים לסיבוב חלק סביב ציר או פינה, כמו כלי הסיבוב של SketchUp."
+  },
+  "ja": {
+    "cmd.solid_rotate": "回転",
+    "help.solid.rotate": "選択した立体、またはそのコピーを、選んだ点を通る軸の周りに指定した角度だけ回転します。SketchUp の回転ツールのように、部品をヒンジや角の周りで回すときに使います。"
+  },
+  "vi": {
+    "cmd.solid_rotate": "Xoay",
+    "help.solid.rotate": "Xoay các khối đã chọn, hoặc một bản sao, một góc quanh trục đi qua điểm bạn chọn. Dùng để xoay một chi tiết quanh bản lề hoặc góc, như công cụ Xoay của SketchUp."
+  },
+  "zh": {
+    "cmd.solid_rotate": "旋转",
+    "help.solid.rotate": "将所选实体或其副本绕经过所选点的轴旋转指定角度。用于让零件绕铰链或拐角转动，与 SketchUp 的旋转工具相同。"
+  },
+  "de": {
+    "cmd.solid_rotate": "Drehen",
+    "help.solid.rotate": "Dreht die ausgewählten Körper oder eine Kopie davon um einen Winkel um eine Achse durch einen gewählten Punkt. So schwenken Sie ein Teil um ein Scharnier oder eine Ecke, wie mit dem Drehen-Werkzeug von SketchUp."
+  },
+  "ko": {
+    "cmd.solid_rotate": "회전",
+    "help.solid.rotate": "선택한 바디 또는 그 복사본을 선택한 점을 지나는 축을 중심으로 지정한 각도만큼 회전합니다. SketchUp의 회전 도구처럼 부품을 경첩이나 모서리를 중심으로 돌릴 때 사용합니다."
+  }
+}

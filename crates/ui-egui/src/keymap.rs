@@ -579,13 +579,13 @@ pub fn reset(app: &mut SketApp, id: Option<&str>) {
     }
 }
 
-/// SketchUp's default keys for the tools both apps have. S (Scale) and Q (Rotate) are left out:
-/// S belongs to the S box and there is no Rotate tool of its own yet. L, R, C, T, B and G
-/// already match. P and M are taken from the sketch tools that share them (Project), so in a
+/// SketchUp's default keys for the tools both apps have. S (Scale) is left out: S belongs to the
+/// S box. L, R, C, T, B and G already match. P and M are taken from the sketch tools that share them (Project), so in a
 /// sketch they finish it and start Push/Pull or Move, as in SketchUp.
 pub const SKETCHUP_KEYS: &[(&str, &str)] = &[
     ("solid.press_pull", "P"),
     ("solid.move", "M"),
+    ("solid.rotate", "Q"),
     ("sketch.arc.three_point", "A"),
     ("selection.delete", "E"),
     ("sketch.offset", "F"),

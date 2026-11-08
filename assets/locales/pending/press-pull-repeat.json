@@ -1,0 +1,26 @@
+{
+  "en": {
+    "ui.press_pull_repeated": "Press Pull repeated: {distance}"
+  },
+  "ar": {
+    "ui.press_pull_repeated": "تكرر الضغط والسحب: {distance}"
+  },
+  "he": {
+    "ui.press_pull_repeated": "הדחיפה/משיכה חזרה: {distance}"
+  },
+  "ja": {
+    "ui.press_pull_repeated": "プレス プルを繰り返しました: {distance}"
+  },
+  "vi": {
+    "ui.press_pull_repeated": "Đã lặp lại Kéo/Đẩy trực tiếp: {distance}"
+  },
+  "zh": {
+    "ui.press_pull_repeated": "已重复按压拖动：{distance}"
+  },
+  "de": {
+    "ui.press_pull_repeated": "Drücken/Ziehen wiederholt: {distance}"
+  },
+  "ko": {
+    "ui.press_pull_repeated": "밀기/당기기 반복: {distance}"
+  }
+}

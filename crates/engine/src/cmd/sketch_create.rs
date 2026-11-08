@@ -17,7 +17,9 @@ use super::sketch::{add_c, circumcircle, edit, ids_of, mark_construction, req_pa
 use super::sketch_store;
 use super::{CommandSpec, in_sketch};
 use crate::params::{bad, num, req_vec2, str_, string_list};
-use crate::schema::sketch_create::{SplineRemovePointParams, SplineRemovePointResult, SplineReverseParams, SplineReverseResult};
+use crate::schema::sketch_create::{
+    FreehandParams, FreehandResult, SplineRemovePointParams, SplineRemovePointResult, SplineReverseParams, SplineReverseResult,
+};
 use crate::schema::{TypedContract, output_schema_for};
 use crate::{EngineError, Result, Session};
 
@@ -31,6 +33,7 @@ mod text_expr_tests;
 
 const SPLINE_REVERSE_CONTRACT: TypedContract<SplineReverseParams> = TypedContract::new();
 const SPLINE_REMOVE_POINT_CONTRACT: TypedContract<SplineRemovePointParams> = TypedContract::new();
+const FREEHAND_CONTRACT: TypedContract<FreehandParams> = TypedContract::new();
 
 pub static COMMANDS: &[CommandSpec] = &[
     CommandSpec::new("sketch.line.midpoint", "Midpoint Line", midpoint_line)
@@ -76,6 +79,13 @@ pub static COMMANDS: &[CommandSpec] = &[
         .icon("spline")
         .enabled(in_sketch)
         .params(concat!("points: [[x,y] or point refs…] (2…500): the spline passes through them, periodic?: boolean (default false); periodic cubic fit closes smoothly through at least 3 distinct samples", created_doc!())),
+    CommandSpec::new("sketch.freehand", "Freehand", crate::checked!("sketch.freehand", freehand))
+        .at("SKETCH", "CREATE")
+        .icon("spline")
+        .enabled(in_sketch)
+        .contract(&FREEHAND_CONTRACT)
+        .output(output_schema_for::<FreehandResult>)
+        .params(concat!("points: [[x,y]…] (2…2000): the stroke's samples, in order; tolerance?: mm, how far the curve may leave them (default 0.5% of the stroke's size); construction?: bool. Thins the samples and draws a fit point spline through the rest (at most 500 points)", created_doc!())),
     CommandSpec::new("sketch.spline.control_point", "Control Point Spline", spline_cv3)
         .at("SKETCH", "CREATE")
         .icon("spline_cv")
@@ -710,6 +720,88 @@ fn spline(s: &mut Session, p: &Value, cmd: &str, control: bool, degree: u8) -> R
 fn spline_fit(s: &mut Session, p: &Value) -> Result<Value> {
     spline(s, p, "sketch.spline.fit_point", false, 3)
 }
+/// Most samples a freehand stroke may carry, and most fit points its spline keeps.
+const FREEHAND_SAMPLES: usize = 2_000;
+const FREEHAND_FIT_POINTS: usize = 500;
+
+/// `sketch.freehand`: the stroke's samples thinned (Douglas–Peucker, `tolerance` from the line
+/// between kept samples), then a fit point spline through what is left.
+fn freehand(s: &mut Session, p: &Value) -> Result<Value> {
+    let cmd = "sketch.freehand";
+    let samples = p
+        .get("points")
+        .and_then(Value::as_array)
+        .filter(|a| (2..=FREEHAND_SAMPLES).contains(&a.len()))
+        .and_then(|a| a.iter().map(crate::params::vec2).collect::<Option<Vec<Vec2>>>())
+        .filter(|a| a.iter().all(|q| q.x.is_finite() && q.y.is_finite() && q.x.abs() < 1e9 && q.y.abs() < 1e9))
+        .ok_or_else(|| bad(cmd, format!("`points` must be 2 to {FREEHAND_SAMPLES} points [x, y]")))?;
+    let mut stroke: Vec<Vec2> = Vec::with_capacity(samples.len());
+    for q in samples {
+        if stroke.last().is_none_or(|last| last.dist(q) > 1e-6) {
+            stroke.push(q);
+        }
+    }
+    let (lo, hi) = stroke.iter().fold((Vec2::new(f64::MAX, f64::MAX), Vec2::new(f64::MIN, f64::MIN)), |(lo, hi), q| {
+        (Vec2::new(lo.x.min(q.x), lo.y.min(q.y)), Vec2::new(hi.x.max(q.x), hi.y.max(q.y)))
+    });
+    let size = lo.dist(hi);
+    if stroke.len() < 2 || size < 1e-6 {
+        return Err(bad(cmd, "the stroke has no length"));
+    }
+    let mut tolerance = match p.get("tolerance") {
+        None | Some(Value::Null) => size * 0.005,
+        Some(v) => v.as_f64().filter(|t| t.is_finite() && *t > 0.0 && *t < 1e9).ok_or_else(|| bad(cmd, "`tolerance` must be a length above zero, in mm"))?,
+    };
+    let mut kept = thin(&stroke, tolerance);
+    while kept.len() > FREEHAND_FIT_POINTS {
+        tolerance *= 2.0;
+        kept = thin(&stroke, tolerance);
+    }
+    let points: Vec<[f64; 2]> = kept.iter().map(|q| [q.x, q.y]).collect();
+    let mut params = json!({"points": points});
+    if let Some(c) = p.get("construction").filter(|c| !c.is_null()) {
+        params["construction"] = c.clone();
+    }
+    spline(s, &params, cmd, false, 3)
+}
+
+/// The samples of `stroke` a curve within `tolerance` of it needs: its ends, and every sample
+/// further than `tolerance` from the line between the kept ones around it (Douglas–Peucker,
+/// without recursion).
+fn thin(stroke: &[Vec2], tolerance: f64) -> Vec<Vec2> {
+    let n = stroke.len();
+    if n < 3 {
+        return stroke.to_vec();
+    }
+    let off = |q: Vec2, a: Vec2, b: Vec2| {
+        let (dx, dy) = (b.x - a.x, b.y - a.y);
+        let len2 = dx * dx + dy * dy;
+        if len2 < 1e-24 {
+            return q.dist(a);
+        }
+        let t = (((q.x - a.x) * dx + (q.y - a.y) * dy) / len2).clamp(0.0, 1.0);
+        q.dist(Vec2::new(a.x + t * dx, a.y + t * dy))
+    };
+    let mut keep = vec![false; n];
+    keep[0] = true;
+    keep[n - 1] = true;
+    let mut spans = vec![(0, n - 1)];
+    while let Some((i, j)) = spans.pop() {
+        let (Some(&a), Some(&b)) = (stroke.get(i), stroke.get(j)) else { continue };
+        let far = (i + 1..j).filter_map(|k| stroke.get(k).map(|&q| (k, off(q, a, b)))).max_by(|x, y| x.1.total_cmp(&y.1));
+        if let Some((k, d)) = far
+            && d > tolerance
+        {
+            if let Some(slot) = keep.get_mut(k) {
+                *slot = true;
+            }
+            spans.push((i, k));
+            spans.push((k, j));
+        }
+    }
+    stroke.iter().zip(keep).filter(|(_, k)| *k).map(|(q, _)| *q).collect()
+}
+
 fn spline_cv3(s: &mut Session, p: &Value) -> Result<Value> {
     spline(s, p, "sketch.spline.control_point", true, 3)
 }

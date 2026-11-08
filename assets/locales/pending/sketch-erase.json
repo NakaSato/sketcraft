@@ -1,0 +1,42 @@
+{
+  "en": {
+    "cmd.sketch_erase": "Eraser",
+    "help.sketch.erase": "Deletes the sketch curve you click, or every curve you drag across, in one step. Use it to clean up lines quickly, as SketchUp's Eraser does; Undo brings them back.",
+    "sketch.hint.erase": "Eraser: click a curve to delete it, or drag across curves to delete each one"
+  },
+  "ar": {
+    "cmd.sketch_erase": "ممحاة",
+    "help.sketch.erase": "يحذف منحنى الرسم الذي تنقر عليه، أو كل منحنى تسحب عبره، في خطوة واحدة. استخدمه لتنظيف الخطوط بسرعة، كما تفعل ممحاة SketchUp؛ ويعيدها التراجع.",
+    "sketch.hint.erase": "ممحاة: انقر منحنى لحذفه، أو اسحب عبر المنحنيات لحذف كل منها"
+  },
+  "he": {
+    "cmd.sketch_erase": "מחק",
+    "help.sketch.erase": "מחיקת עקומת הסקיצה שלוחצים עליה, או כל עקומה שגוררים לרוחבה, בצעד אחד. מתאים לניקוי מהיר של קווים, כמו המחק של SketchUp; ביטול הפעולה מחזיר אותם.",
+    "sketch.hint.erase": "מחק: לוחצים על עקומה כדי למחוק אותה, או גוררים לרוחב עקומות כדי למחוק כל אחת"
+  },
+  "ja": {
+    "cmd.sketch_erase": "消しゴム",
+    "help.sketch.erase": "クリックしたスケッチ曲線、またはドラッグで横切った曲線をまとめて 1 回で削除します。SketchUp の消しゴムのように線を素早く整理するときに使います。元に戻すで復元できます。",
+    "sketch.hint.erase": "消しゴム: 曲線をクリックして削除するか、曲線をまたいでドラッグしてそれぞれ削除します"
+  },
+  "vi": {
+    "cmd.sketch_erase": "Tẩy",
+    "help.sketch.erase": "Xóa đường cong phác thảo bạn nhấp, hoặc mọi đường cong bạn kéo ngang qua, trong một bước. Dùng để dọn đường nhanh, như công cụ Tẩy của SketchUp; Hoàn tác sẽ khôi phục chúng.",
+    "sketch.hint.erase": "Tẩy: nhấp một đường cong để xóa, hoặc kéo ngang qua các đường cong để xóa từng đường"
+  },
+  "zh": {
+    "cmd.sketch_erase": "橡皮擦",
+    "help.sketch.erase": "一步删除您单击的草图曲线，或您拖动划过的每条曲线。用于快速清理线条，与 SketchUp 的橡皮擦相同；撤销可恢复。",
+    "sketch.hint.erase": "橡皮擦：单击曲线将其删除，或拖动划过曲线逐条删除"
+  },
+  "de": {
+    "cmd.sketch_erase": "Radiergummi",
+    "help.sketch.erase": "Löscht die angeklickte Skizzenkurve oder jede Kurve, über die Sie ziehen, in einem Schritt. Zum schnellen Aufräumen von Linien, wie der Radiergummi von SketchUp; Rückgängig stellt sie wieder her.",
+    "sketch.hint.erase": "Radiergummi: Kurve anklicken, um sie zu löschen, oder über Kurven ziehen, um jede zu löschen"
+  },
+  "ko": {
+    "cmd.sketch_erase": "지우개",
+    "help.sketch.erase": "클릭한 스케치 곡선이나 드래그로 가로지른 모든 곡선을 한 번에 삭제합니다. SketchUp의 지우개처럼 선을 빠르게 정리할 때 사용하며, 실행 취소로 되돌릴 수 있습니다.",
+    "sketch.hint.erase": "지우개: 곡선을 클릭하여 삭제하거나, 곡선을 가로질러 드래그하여 각각 삭제합니다"
+  }
+}

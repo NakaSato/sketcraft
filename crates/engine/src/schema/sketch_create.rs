@@ -144,6 +144,35 @@ pub struct SplineReverseResult {
     pub param_warnings: Vec<String>,
 }
 
+/// Draw a freehand stroke in the active sketch (SketchUp's Freehand): the stroke's samples are
+/// thinned to those the curve needs, and a fit point spline is drawn through them.
+#[derive(Debug, Deserialize, JsonSchema)]
+#[schemars(deny_unknown_fields)]
+pub struct FreehandParams {
+    /// The stroke's samples, `[x, y]` in the sketch, in the order they were drawn: 2 to 2000.
+    pub points: Vec<[f64; 2]>,
+    /// How far, in mm, the curve may leave the samples. Default: 0.5% of the stroke's size.
+    #[serde(default)]
+    pub tolerance: Option<f64>,
+    /// Draw it as construction geometry. Default: false.
+    #[serde(default)]
+    pub construction: Option<bool>,
+}
+
+/// What `sketch.freehand` returns: the spline drawn, and the sketch's solve.
+#[derive(Debug, Serialize, JsonSchema)]
+pub struct FreehandResult {
+    /// The new curve's id (one fit point spline).
+    pub curves: Vec<String>,
+    /// Constraints added (none).
+    pub constraints: Vec<String>,
+    /// The sketch's solve: `{solved, dof}`.
+    pub sketch: Value,
+    /// In the warn parameter-check mode: what the call's parameters got wrong.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub param_warnings: Vec<String>,
+}
+
 #[cfg(test)]
 #[path = "sketch_create_tests.rs"]
 mod tests;

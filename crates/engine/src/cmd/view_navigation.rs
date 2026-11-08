@@ -9,13 +9,15 @@ use crate::schema::view_navigation::{
     AmbientOcclusionParams, AmbientOcclusionResult, CameraReply, GraphicsPreset, GraphicsPresetParams, GraphicsPresetResult, HistoryDock,
     HistoryLayoutParams, HistoryLayoutResult, LayoutMode, LayoutParams, LayoutResult, NavToolLatch, NavigateParams, NavigateResult, NavigatorParams,
     NormalToParams, PresetQuality, RenderBrowser, RenderFocus, RenderLive, RenderSelect, RibbonTabsOnly, RibbonTabsOnlyParams, StandardViewParams,
-    TabStep, TabStepParams, ZoomTool,
+    TabStep, TabStepParams, ViewHistoryParams, ViewHistoryStep, ZoomTool, ZoomWindow,
 };
 use crate::schema::{TypedContract, output_schema_for};
 use crate::{Result, Sel, Session};
 
 const ZOOM_TOOL_CONTRACT: TypedContract<ZoomTool> = TypedContract::new();
 const NAV_TOOL_CONTRACT: TypedContract<NavToolLatch> = TypedContract::new();
+const ZOOM_WINDOW_CONTRACT: TypedContract<ZoomWindow> = TypedContract::new();
+const VIEW_HISTORY_CONTRACT: TypedContract<ViewHistoryParams> = TypedContract::new();
 const FOCUS_CONTRACT: TypedContract<RenderFocus> = TypedContract::new();
 const NAVIGATOR_CONTRACT: TypedContract<NavigatorParams> = TypedContract::new();
 const RENDER_LIVE_CONTRACT: TypedContract<RenderLive> = TypedContract::new();
@@ -79,6 +81,18 @@ CommandSpec::new("view.tool.pan", "Pan", crate::checked!("view.tool.pan", pan_to
     .icon("pan").noundo().doc_only()
     .contract(&NAV_TOOL_CONTRACT).output(output_schema_for::<NavToolLatch>)
     .params("on?: bool (omitted: toggle) → on?; latch the Pan tool for left-button drags"),
+CommandSpec::new("view.zoom_window", "Zoom Window", crate::checked!("view.zoom_window", zoom_window))
+    .icon("zoom").noundo().doc_only()
+    .contract(&ZOOM_WINDOW_CONTRACT).output(output_schema_for::<ZoomWindow>)
+    .params("on?: bool (omitted: toggle) → on?; latch Zoom Window: the next left-button drag in the view draws a rectangle that the view then fills; display only"),
+CommandSpec::new("view.previous", "Previous View", crate::checked!("view.previous", previous_view))
+    .icon("chevron_right").noundo().doc_only()
+    .contract(&VIEW_HISTORY_CONTRACT).output(output_schema_for::<ViewHistoryStep>)
+    .params("no parameters → step: -1; the window goes back to the view it showed before (its recent views); display only, never edits the design"),
+CommandSpec::new("view.next", "Next View", crate::checked!("view.next", next_view))
+    .icon("chevron_right").noundo().doc_only()
+    .contract(&VIEW_HISTORY_CONTRACT).output(output_schema_for::<ViewHistoryStep>)
+    .params("no parameters → step: 1; the window goes forward again to the view Previous View left; display only, never edits the design"),
 CommandSpec::new("view.spin", "Continuous Orbit", spin)
     .icon("spin").noundo().doc_only().params("on?: bool (omitted: toggle) → on?; continuous orbit until the next click or key"),
 CommandSpec::new("view.visual_style", "Visual Style", visual_style)
@@ -351,6 +365,24 @@ fn orbit_tool(_s: &mut Session, p: &Value) -> Result<Value> {
 
 fn pan_tool(_s: &mut Session, p: &Value) -> Result<Value> {
     view_toggle(p, "view.tool.pan", "on")
+}
+
+fn zoom_window(_s: &mut Session, p: &Value) -> Result<Value> {
+    view_toggle(p, "view.zoom_window", "on")
+}
+
+fn previous_view(_s: &mut Session, p: &Value) -> Result<Value> {
+    view_history_step(p, "view.previous", -1)
+}
+
+fn next_view(_s: &mut Session, p: &Value) -> Result<Value> {
+    view_history_step(p, "view.next", 1)
+}
+
+/// The window keeps the views it showed; the engine only validates the request (no parameters).
+fn view_history_step(p: &Value, cmd: &str, step: i8) -> Result<Value> {
+    view_params(p, cmd, &[])?;
+    serde_json::to_value(ViewHistoryStep { step, param_warnings: Vec::new() }).map_err(|e| crate::EngineError::Other(e.to_string()))
 }
 
 fn spin(_s: &mut Session, p: &Value) -> Result<Value> {
@@ -733,6 +765,41 @@ mod tests {
         assert_eq!(s.doc.to_json(), before);
         assert!(s.undo.is_empty());
         assert!(s.camera.is_none());
+    }
+
+    /// SketchUp's Zoom Window, Previous and Next view: validated display requests the window
+    /// carries out, with typed contracts, no design edit and no undo step.
+    #[test]
+    fn zoom_window_and_view_history_validate_without_editing_design_or_history() {
+        let mut s = Session::default();
+        let before = s.doc.to_json();
+        for id in ["view.zoom_window", "view.previous", "view.next"] {
+            let spec = crate::cmd::find_command(id).unwrap_or_else(|| panic!("{id} is registered"));
+            assert!(spec.contract.is_some() && spec.output.is_some(), "{id} has a contract and an output schema");
+        }
+        // Zoom Window latches like the other camera tools: omitted toggles, a flag sets it.
+        assert_eq!(s.execute("view.zoom_window", &json!({})).unwrap(), json!({}));
+        assert_eq!(s.execute("view.zoom_window", &Value::Null).unwrap(), json!({}));
+        for on in [false, true] {
+            assert_eq!(s.execute("view.zoom_window", &json!({"on":on})).unwrap(), json!({"on":on}));
+        }
+        for value in [Value::Null, json!(0), json!("true"), json!([]), json!({})] {
+            assert!(s.execute("view.zoom_window", &json!({"on":value})).is_err(), "on: {value}");
+        }
+        assert_eq!(s.execute("view.previous", &json!({})).unwrap(), json!({"step":-1}));
+        assert_eq!(s.execute("view.next", &json!({})).unwrap(), json!({"step":1}));
+        assert_eq!(s.execute("view.previous", &Value::Null).unwrap(), json!({"step":-1}));
+        for id in ["view.previous", "view.next"] {
+            assert!(s.execute(id, &json!({"step":1})).is_err(), "{id} takes no parameters");
+        }
+        for id in ["view.zoom_window", "view.previous", "view.next"] {
+            for params in [json!(true), json!(1), json!("on"), json!([]), json!({"unexpected":true})] {
+                assert!(s.execute(id, &params).is_err(), "{id}: {params}");
+            }
+        }
+        assert_eq!(s.doc.to_json(), before);
+        assert!(s.undo.is_empty());
+        assert!(s.camera.is_none(), "the window owns these views; the session camera is untouched");
     }
 
     #[test]

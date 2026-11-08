@@ -61,8 +61,8 @@ pub fn boxes_for(cmd: &str, n: usize) -> Vec<DimBox> {
         ("sketch.circle.two_tangent", 2) => vec![b("Radius", Length)],
         ("sketch.ellipse", 1) => vec![b("Major radius", Length)],
         ("sketch.ellipse", 2) => vec![b("Minor radius", Length)],
-        ("sketch.arc.center_point" | "sketch.slot.arc_center", 1) => vec![b("Radius", Length)],
-        ("sketch.arc.center_point" | "sketch.slot.arc_center", 2) => vec![b("Sweep", Angle)],
+        ("sketch.arc.center_point" | "sketch.arc.pie" | "sketch.slot.arc_center", 1) => vec![b("Radius", Length)],
+        ("sketch.arc.center_point" | "sketch.arc.pie" | "sketch.slot.arc_center", 2) => vec![b("Sweep", Angle)],
         ("sketch.polygon.inscribed" | "sketch.polygon.circumscribed", 1) => vec![b("Radius", Length), b("Sides", Unitless)],
         // By side: the side from the first click to the second (#11271).
         ("sketch.polygon.edge", 1) => vec![b("Length", Length), b("Sides", Unitless)],
@@ -134,7 +134,7 @@ pub fn effective(app: &SketApp, t: &Tool, h: Vec2) -> Vec2 {
         ("sketch.circle.center", 1) => a + dir_or_x(h - a) * lk("Diameter").map_or((h - a).len(), |d| d * 0.5),
         ("sketch.circle.two_point", 1) => a + dir_or_x(h - a) * lk("Diameter").unwrap_or((h - a).len()),
         ("sketch.slot.center_point", 1) => a + dir_or_x(h - a) * lk("Length").map_or((h - a).len(), |l| l * 0.5),
-        ("sketch.arc.center_point" | "sketch.slot.arc_center", 1) => a + dir_or_x(h - a) * lk("Radius").unwrap_or((h - a).len()),
+        ("sketch.arc.center_point" | "sketch.arc.pie" | "sketch.slot.arc_center", 1) => a + dir_or_x(h - a) * lk("Radius").unwrap_or((h - a).len()),
         ("sketch.ellipse", 1) => a + dir_or_x(h - a) * lk("Major radius").unwrap_or((h - a).len()),
         // A typed minor radius puts the third point on the minor axis, on the cursor's side.
         ("sketch.ellipse", 2) => lk("Minor radius").map_or(h, |r| {
@@ -142,7 +142,7 @@ pub fn effective(app: &SketApp, t: &Tool, h: Vec2) -> Vec2 {
             let n = dir_or_x(a - c).perp();
             c + n * (r * sign(n.dot(h - c)))
         }),
-        ("sketch.arc.center_point" | "sketch.slot.arc_center", 2) => {
+        ("sketch.arc.center_point" | "sketch.arc.pie" | "sketch.slot.arc_center", 2) => {
             let c = t.pts.first().map(|p| p.0).unwrap_or(a);
             let r = (a - c).len();
             let a0 = (a - c).angle();
@@ -341,17 +341,17 @@ fn live(app: &SketApp, t: &Tool, e: Vec2, px: f64) -> Vec<(f64, Vec2)> {
         ("sketch.circle.two_tangent", 2) => {
             vec![(crate::sketch_tools::two_tangent_default_radius(app, t), (first + a) * 0.5 + dir_or_x(a - first).perp() * off)]
         }
-        ("sketch.arc.center_point" | "sketch.slot.arc_center", 1)
+        ("sketch.arc.center_point" | "sketch.arc.pie" | "sketch.slot.arc_center", 1)
         | ("sketch.polygon.inscribed" | "sketch.polygon.circumscribed" | "sketch.polygon.edge", 1) => {
             vec![((e - a).len(), (a + e) * 0.5), (6.0, a + (e - a) * 0.5 + (e - a).perp() * 0.3)]
         }
-        ("sketch.arc.center_point" | "sketch.slot.arc_center", 2) => {
+        ("sketch.arc.center_point" | "sketch.arc.pie" | "sketch.slot.arc_center", 2) => {
             let a0 = (a - first).angle();
             // Out along the radius, clear of the cursor: a box on it would take the hover and
             // the click meant for a point there (#2201).
             // A centre-point arc runs the way the cursor went round (#6645): its sweep is signed.
             let sweep = match t.cmd {
-                "sketch.arc.center_point" => crate::tools::center_arc_sweep(t, e),
+                "sketch.arc.center_point" | "sketch.arc.pie" => crate::tools::center_arc_sweep(t, e),
                 _ => ((e - first).angle() - a0).rem_euclid(std::f64::consts::TAU),
             };
             vec![(sweep, e + dir_or_x(e - first) * (2.5 * off))]
@@ -402,6 +402,7 @@ pub fn sync(t: &mut Tool) {
             && matches!(
                 t.cmd,
                 "sketch.arc.center_point"
+                    | "sketch.arc.pie"
                     | "sketch.ellipse"
                     | "sketch.slot.center_to_center"
                     | "sketch.slot.overall"

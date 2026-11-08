@@ -14,7 +14,7 @@ use super::{CommandSpec, not_in_sketch};
 use crate::params::{UNKNOWN_COMMAND, bad, bool_, expr, expr_problem, req_expr, str_, string_list, string_list_or_default, vec2, vec3};
 use crate::schema::features::{
     AppliedRadius, BoundingSolidParams, BoxParams, ConeParams, CylinderParams, ExtrudeParams, FeatureNotice, FeatureResult, FilletParams,
-    FilletResult, NoticeAction, OffsetPlaneParams, PipeParams, PlaneAtAngleParams, ScaleParams, SphereParams, TorusParams,
+    FilletResult, NoticeAction, OffsetPlaneParams, PipeParams, PlaneAtAngleParams, RotateParams, ScaleParams, SphereParams, TorusParams,
 };
 use crate::schema::{TypedContract, output_schema_for};
 use crate::{EngineError, Result, Session};
@@ -28,6 +28,7 @@ const CONE_CONTRACT: TypedContract<ConeParams> = TypedContract::new();
 const PIPE_CONTRACT: TypedContract<PipeParams> = TypedContract::new();
 const BOUNDING_SOLID_CONTRACT: TypedContract<BoundingSolidParams> = TypedContract::new();
 const SCALE_CONTRACT: TypedContract<ScaleParams> = TypedContract::new();
+const ROTATE_CONTRACT: TypedContract<RotateParams> = TypedContract::new();
 const OFFSET_PLANE_CONTRACT: TypedContract<OffsetPlaneParams> = TypedContract::new();
 const PLANE_AT_ANGLE_CONTRACT: TypedContract<PlaneAtAngleParams> = TypedContract::new();
 const FILLET_CONTRACT: TypedContract<FilletParams> = TypedContract::new();
@@ -172,6 +173,14 @@ pub static COMMANDS: &[CommandSpec] = &[
         .key("P")
         .params("face: [x,y,z] and distance: expr (positive adds material, negative cuts), or edges: [[x,y,z]…] and distance (a fillet)"),
     CommandSpec::new("solid.move", "Move/Copy", move_bodies).at("SOLID", "MODIFY").icon("move").key("M").enabled(not_in_sketch).params("bodies: [names]; translate?: [x,y,z] (exprs or numbers); axis?: [x,y,z]; angle?: expr; copy?: bool (default false: keeps the original bodies and transforms a new copy instead of moving them in place); occurrences?: [occurrence paths, root first] (only with copy: each component is copied as an independent component, as Paste New copies it, and the copy moves by the same translate, axis and angle in the world; the reply lists the copies in occurrences)"),
+    CommandSpec::new("solid.rotate", "Rotate", crate::checked!("solid.rotate", rotate_bodies))
+        .at("SOLID", "MODIFY")
+        .icon("revolve")
+        .key("Q")
+        .enabled(not_in_sketch)
+        .contract(&ROTATE_CONTRACT)
+        .output(output_schema_for::<FeatureResult>)
+        .params("bodies: [names]; angle: expr (right-handed about axis); axis?: X|Y|Z|[x,y,z] (default Z); origin?: [x,y,z] mm, a point on the axis (default the origin); copy?: bool; name?. Adds a Move feature whose turn stays about origin when the angle is an expression"),
 ];
 
 /// Where an extrude starts and which way is positive: a point inside the (first) profile or
@@ -3536,6 +3545,60 @@ fn scale(s: &mut Session, p: &Value) -> Result<Value> {
     check_expr(s, &factor, Kind::Unitless, cmd, "factor")?;
     let origin = p.get("origin").and_then(vec3).unwrap_or(Vec3::ZERO);
     add_feature(s, p, FeatureKind::Scale { bodies: bodies.into_iter().map(BodyName).collect(), origin: Position(origin), factor, factors })
+}
+
+/// `solid.rotate`: a turn about an axis through `origin`, made as `solid.move`'s turn about the
+/// world origin followed by the translation `o − R·o`. That translation is written as
+/// expressions of the angle, so a turn by a parameter stays about `origin` when it changes.
+fn rotate_bodies(s: &mut Session, p: &Value) -> Result<Value> {
+    let cmd = "solid.rotate";
+    let bodies = string_list(cmd, p, "bodies")?;
+    if bodies.is_empty() {
+        return Err(bad(cmd, "`bodies` must list bodies"));
+    }
+    let given = req_expr(cmd, p, "angle")?;
+    // A bare number is degrees, as `AngleExpr` says; name the unit so the trigonometry in the
+    // translation reads it the same way.
+    let angle = if given.trim().parse::<f64>().is_ok() { format!("{} deg", given.trim()) } else { given.to_string() };
+    check_expr(s, &angle, Kind::Angle, cmd, "angle")?;
+    let axis = match p.get("axis") {
+        None | Some(Value::Null) => Vec3::Z,
+        Some(v) => axis_dir_form(v).map_err(|why| bad(cmd, why))?,
+    };
+    let origin = match p.get("origin") {
+        None | Some(Value::Null) => Vec3::ZERO,
+        Some(v) => vec3(v).filter(|o| [o.x, o.y, o.z].iter().all(|c| c.is_finite() && c.abs() < 1e9)).ok_or_else(|| bad(cmd, "`origin` must be [x, y, z] in mm"))?,
+    };
+    // R·o = o cos a + (k × o) sin a + k (k · o)(1 − cos a), so o − R·o = r (1 − cos a) − q sin a
+    // with r = o − k (k · o), the part of o off the axis, and q = k × o.
+    let r = origin - axis * axis.dot(origin);
+    let q = axis.cross(origin);
+    let mm = |v: f64| {
+        let v = (v * 1e9).round() / 1e9;
+        format!("{} mm", if v == 0.0 { 0.0 } else { v })
+    };
+    let coord = |r: f64, q: f64| {
+        let mut terms = Vec::new();
+        if r.abs() > 1e-9 {
+            terms.push(format!("{} * (1 - cos({angle}))", mm(r)));
+        }
+        if q.abs() > 1e-9 {
+            terms.push(format!("{} * sin({angle})", mm(-q)));
+        }
+        if terms.is_empty() { "0 mm".to_string() } else { terms.join(" + ") }
+    };
+    let translate = [coord(r.x, q.x), coord(r.y, q.y), coord(r.z, q.z)];
+    let mut params = json!({
+        "bodies": bodies,
+        "translate": translate,
+        "axis": [axis.x, axis.y, axis.z],
+        "angle": angle,
+        "copy": bool_(p, "copy").unwrap_or(false),
+    });
+    if let Some(name) = str_(p, "name") {
+        params["name"] = json!(name);
+    }
+    move_bodies(s, &params)
 }
 
 fn delete_face(s: &mut Session, p: &Value) -> Result<Value> {

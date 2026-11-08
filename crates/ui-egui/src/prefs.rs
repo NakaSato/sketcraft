@@ -1423,6 +1423,11 @@ preference_settings! {
     /// The variant last started in each split tool family (Rectangle, Circle, Arc, Slot, Polygon, Line,
     /// Spline): the family's button and shortcut start it again (`sketch_families`).
     sketch_variants: crate::sketch_families::Choices = crate::sketch_families::Choices::default();
+    /// Push/Pull's last distance in millimetres (positive pulls out of the face, negative pushes
+    /// in), from its window or a `solid.press_pull` run: with Push/Pull open, a double-click on a
+    /// flat face repeats it (`press_pull_repeat`). `None` (the default, and what older settings
+    /// load as) until Push/Pull is used; no page reset discards it.
+    press_pull_distance: Option<f64> = None;
     /// Personal Hole parameter combinations, shared by every design in this profile.
     /// No page reset discards this user-authored library.
     hole_presets: crate::hole_presets::Library = crate::hole_presets::Library::default();

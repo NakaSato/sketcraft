@@ -262,6 +262,26 @@ fn invert_navigator_arrows_defaults_off_persists_and_resets() {
     assert!(!app.preferences.invert_navigator_arrows);
 }
 
+/// Push/Pull's remembered distance (repeated by a double-click) is unset by default and in older
+/// settings, survives a restart, and no page's Defaults discards it.
+#[test]
+fn press_pull_distance_defaults_unset_persists_and_survives_page_resets() {
+    assert_eq!(Prefs::default().press_pull_distance, None);
+    let older = serde_json::json!({"length_decimals": 4});
+    assert_eq!(serde_json::from_value::<Prefs>(older.clone()).unwrap().press_pull_distance, None);
+    assert_eq!(super::lenient(&older).press_pull_distance, None);
+    let mut app = SketApp::new(sketcraft_engine::Session::default(), Default::default());
+    app.preferences.press_pull_distance = Some(-12.5);
+    assert_eq!(serde_json::to_value(&app.preferences).unwrap()["press_pull_distance"], -12.5);
+    let mut restored = SketApp::new(sketcraft_engine::Session::default(), Default::default());
+    restored.load_prefs(&app.prefs());
+    assert_eq!(restored.preferences.press_pull_distance, Some(-12.5));
+    for page in 0..PAGES.len() {
+        super::reset_preferences(&mut app.preferences, page);
+    }
+    assert_eq!(app.preferences.press_pull_distance, Some(-12.5), "no page reset discards it");
+}
+
 /// #10483: the curved-roll invert toggle is off by default, persists, and the Navigation
 /// page's Defaults resets it.
 #[test]

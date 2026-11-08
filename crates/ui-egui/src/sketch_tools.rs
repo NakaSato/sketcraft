@@ -63,6 +63,8 @@ pub const MODIFIERS: &[ToolModifiers] = &[
     ToolModifiers { tool: "canvas.insert", scopes: NONE, bindings: &[], audit: Audit::VerifiedNoOp },
     ToolModifiers { tool: "canvas.decal", scopes: NONE, bindings: &[], audit: Audit::VerifiedNoOp },
     ToolModifiers { tool: "sketch.trim", scopes: NONE, bindings: &[], audit: Audit::VerifiedNoOp },
+    ToolModifiers { tool: "sketch.freehand", scopes: NONE, bindings: &[], audit: Audit::VerifiedNoOp },
+    ToolModifiers { tool: "sketch.erase", scopes: NONE, bindings: &[], audit: Audit::VerifiedNoOp },
     ToolModifiers { tool: "sketch.extend", scopes: NONE, bindings: EXTEND_BINDINGS, audit: Audit::Implemented },
     ToolModifiers { tool: "sketch.break", scopes: NONE, bindings: &[], audit: Audit::VerifiedNoOp },
     ToolModifiers { tool: "sketch.line.midpoint", scopes: DRAW_SCOPES, bindings: &[], audit: Audit::Implemented },
@@ -129,11 +131,18 @@ fn on_sketch_plane(app: &SketApp, proj: &Proj, pos: Pos2) -> Option<Vec2> {
     ss.plane.intersect_ray(o, d).map(|w| ss.plane.to_local(w))
 }
 
-/// A press and drag with Trim draws a path from `press`; true when it started one. Each piece
-/// the path crosses is trimmed when it is let go (`sketch.trim.path`).
+/// The tools a press and drag draws a path with: Trim (the pieces it crosses go), Eraser (the
+/// curves it crosses go) and Freehand (the path becomes a curve).
+pub fn draws_path(cmd: &str) -> bool {
+    matches!(cmd, "sketch.trim" | "sketch.freehand" | "sketch.erase")
+}
+
+/// A press and drag with Trim or Freehand draws a path from `press`; true when it started one.
+/// Letting go trims each piece the path crosses (`sketch.trim.path`) or draws the path
+/// (`sketch.freehand`).
 pub fn trim_drag_start(app: &mut SketApp, proj: &Proj, press: Pos2) -> bool {
     let Some(q) = on_sketch_plane(app, proj, press) else { return false };
-    let Some(tool) = app.tool.as_mut().filter(|t| t.cmd == "sketch.trim") else { return false };
+    let Some(tool) = app.tool.as_mut().filter(|t| draws_path(t.cmd)) else { return false };
     tool.pts = vec![(q, None)];
     TRIM_LAST.with(|c| c.set(Some(press)));
     TRIM_REMOVED.with(|r| r.borrow_mut().clear());
@@ -147,12 +156,30 @@ pub fn trim_drag_to(app: &mut SketApp, proj: &Proj, pos: Pos2) {
         return;
     }
     let Some(q) = on_sketch_plane(app, proj, pos) else { return };
-    let Some(tool) = app.tool.as_mut().filter(|t| t.cmd == "sketch.trim" && !t.pts.is_empty()) else { return };
+    let Some(tool) = app.tool.as_mut().filter(|t| draws_path(t.cmd) && !t.pts.is_empty()) else { return };
     if tool.pts.len() >= TRIM_PATH_MAX {
         return;
     }
     tool.pts.push((q, None));
     TRIM_LAST.with(|c| c.set(Some(pos)));
+    if tool.cmd == "sketch.freehand" {
+        return;
+    }
+    if tool.cmd == "sketch.erase" {
+        let points: Vec<[f64; 2]> = tool.pts.iter().map(|p| [p.0.x, p.0.y]).collect();
+        let ids: Vec<String> = app
+            .session
+            .execute("sketch.erase", &json!({"points": points, "dry_run": true}))
+            .map(|v| v["erased"].as_array().into_iter().flatten().filter_map(|id| id.as_str().map(str::to_string)).collect())
+            .unwrap_or_default();
+        let st = crate::open_meshing::session_world(&app.session);
+        let removed = active_sketch(app)
+            .and_then(|sid| st.sketch(sid))
+            .map(|ss| ids.iter().filter_map(|id| ss.sketch.curve_index(id)).map(|ci| ss.sketch.polyline(ci)).collect())
+            .unwrap_or_default();
+        TRIM_REMOVED.with(|r| *r.borrow_mut() = removed);
+        return;
+    }
     let points: Vec<[f64; 2]> = tool.pts.iter().map(|p| [p.0.x, p.0.y]).collect();
     let removed = app
         .session
@@ -177,8 +204,29 @@ const TRIM_PATH_MAX: usize = 2_000;
 pub fn trim_drag_end(app: &mut SketApp) -> bool {
     TRIM_LAST.with(|c| c.set(None));
     let crossed = TRIM_REMOVED.with(|r| !std::mem::take(&mut *r.borrow_mut()).is_empty());
-    let Some(tool) = app.tool.as_mut().filter(|t| t.cmd == "sketch.trim") else { return false };
+    let Some(tool) = app.tool.as_mut().filter(|t| draws_path(t.cmd)) else { return false };
+    let (freehand, erase) = (tool.cmd == "sketch.freehand", tool.cmd == "sketch.erase");
     let points: Vec<[f64; 2]> = std::mem::take(&mut tool.pts).iter().map(|p| [p.0.x, p.0.y]).collect();
+    // Eraser: a path that crossed curves erases them; one that crossed nothing is a click.
+    if erase {
+        if !crossed || points.len() < 2 {
+            return false;
+        }
+        if let Err(why) = app.run("sketch.erase", json!({"points": points})) {
+            app.set_status(crate::friendly_error("sketch.erase", &why), true);
+        }
+        return true;
+    }
+    // Freehand: the stroke becomes a curve. One that never left its press is a click (nothing).
+    if freehand {
+        if points.len() < 2 {
+            return false;
+        }
+        if let Err(why) = app.run("sketch.freehand", json!({"points": points})) {
+            app.set_status(crate::friendly_error("sketch.freehand", &why), true);
+        }
+        return true;
+    }
     if !crossed || points.len() < 2 {
         return false;
     }
@@ -843,6 +891,10 @@ enum Mode {
     Entities(usize),
     /// Model faces / sketch curves in steps (see the command).
     Steps,
+    /// Press and drag a stroke; letting go draws it (Freehand). A click alone does nothing.
+    Stroke,
+    /// Click a curve to delete it, or drag across curves to delete each one crossed (Eraser).
+    Erase,
 }
 
 /// Whether a click with tool `id` acts on `hit`: what is under the pointer lights up only when
@@ -864,6 +916,8 @@ fn mode(id: &str) -> Option<Mode> {
         "inspect.curvature_comb" | "canvas.insert" | "canvas.decal" => Mode::ModelRef,
         "inspect.minimum_radius" | "inspect.center_of_mass" | "inspect.isocurve" | "inspect.continuity" => Mode::ModelRef,
         "sketch.trim" | "sketch.extend" | "sketch.break" => Mode::CurveAt,
+        "sketch.freehand" => Mode::Stroke,
+        "sketch.erase" => Mode::Erase,
         "sketch.line.midpoint" => Mode::Points(2),
         "sketch.arc.tangent" => Mode::Points(2),
         "sketch.ellipse" | "sketch.conic" | "sketch.slot.center_point" => Mode::Points(3),
@@ -927,6 +981,8 @@ pub fn hint(id: &str) -> Option<String> {
             "canvas.insert" => crate::i18n::tr("canvas.place_hint"),
             "canvas.decal" => crate::i18n::tr("canvas.decal_place_hint"),
             "sketch.trim" => tr("sketch.hint.trim"),
+            "sketch.freehand" => tr("sketch.hint.freehand"),
+            "sketch.erase" => tr("sketch.hint.erase"),
             "sketch.extend" => tr("sketch.hint.extend"),
             "sketch.break" => tr("sketch.hint.break"),
             "sketch.line.midpoint" => "Midpoint line: click the middle, then an end",
@@ -1348,6 +1404,22 @@ pub fn on_click(app: &mut SketApp, tool: &mut Tool, proj: &Proj, pos: Pos2) {
                 }
             }
         },
+        // Freehand draws by press and drag (`trim_drag_*`); a click alone draws nothing.
+        Mode::Stroke => {}
+        // Eraser: the clicked curve goes whole (a drag across curves is `trim_drag_*`).
+        Mode::Erase => {
+            let curve = active_sketch(app).and_then(|active| {
+                hits.iter().find_map(|hit| match hit {
+                    Hit::SketchCurve { sketch, id, .. } if *sketch == active => Some(id.clone()),
+                    _ => None,
+                })
+            });
+            if let Some(id) = curve
+                && let Err(why) = app.run("sketch.delete", json!({"entities": [id]}))
+            {
+                app.set_status(crate::friendly_error("sketch.delete", &why), true);
+            }
+        }
     }
 }
 
@@ -1657,8 +1729,9 @@ pub fn preview(app: &SketApp, t: &Tool, painter: &egui::Painter, proj: &Proj) {
         crate::tools::paint_sketch_path(&world, 0, painter, proj, Stroke::new(2.0, tk.preview_new.gamma_multiply(0.9)));
     }
     let stroke = Stroke::new(1.5, tk.sketch_accent);
-    // A Trim drag: the pieces it will remove, then the path drawn so far.
-    if t.cmd == "sketch.trim" && !t.pts.is_empty() {
+    // A Trim drag: the pieces it will remove, then the path drawn so far. A Freehand stroke: the
+    // path alone.
+    if draws_path(t.cmd) && !t.pts.is_empty() {
         TRIM_REMOVED.with(|r| {
             for piece in r.borrow().iter() {
                 let line: Vec<Pos2> = piece.iter().filter_map(|p| to(*p)).collect();

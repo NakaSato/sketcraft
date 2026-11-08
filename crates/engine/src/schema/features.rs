@@ -398,6 +398,29 @@ pub struct ScaleParams {
     pub participants: Option<StringList>,
 }
 
+/// Turn bodies about an axis through a point (SketchUp's Rotate). It adds a Move feature.
+#[derive(Debug, Deserialize, JsonSchema)]
+#[schemars(deny_unknown_fields)]
+pub struct RotateParams {
+    /// The bodies to turn.
+    pub bodies: StringList,
+    /// How far to turn, right-handed about `axis`.
+    pub angle: AngleExpr,
+    /// The direction of the axis. Default: Z.
+    #[serde(default, deserialize_with = "present")]
+    #[schemars(with = "AxisDir")]
+    pub axis: Option<AxisDir>,
+    /// A point on the axis, in mm. Default: the origin.
+    #[serde(default)]
+    pub origin: Option<Point3>,
+    /// Keep the bodies where they are and turn a copy. Default: false.
+    #[serde(default)]
+    pub copy: Option<bool>,
+    /// The feature's name in the timeline.
+    #[serde(default)]
+    pub name: Option<String>,
+}
+
 /// Add a construction plane parallel to `base`: `offset` away along its normal, or through a
 /// point.
 #[derive(Debug, Deserialize, JsonSchema)]

@@ -42,6 +42,8 @@ pub struct DocSlot {
     pub(crate) autosave: Option<sketcraft_engine::recovery::Autosaver>,
     pub(crate) big_operation: bool,
     cam: Camera,
+    /// Its recent views, for Previous and Next view.
+    view_history: crate::view_history::ViewHistory,
     pub(crate) pending_feature_edit: Option<crate::feature_edit::PendingFeatureEdit>,
     pre_sketch_cam: Option<crate::PreSketchView>,
     pre_sketch_component: Option<crate::PreSketchComponent>,
@@ -143,6 +145,7 @@ impl DocSlot {
             autosave: None,
             big_operation: false,
             cam: Camera::default(),
+            view_history: Default::default(),
             pending_feature_edit: None,
             pre_sketch_cam: None,
             pre_sketch_component: None,
@@ -286,6 +289,7 @@ fn swap_in(app: &mut SketApp, mut slot: DocSlot) -> DocSlot {
         autosave: app.autosave.as_mut().and_then(|a| std::mem::replace(&mut a.active, slot.autosave)),
         big_operation: std::mem::replace(&mut app.big_operation, slot.big_operation),
         cam: std::mem::replace(&mut app.cam, slot.cam),
+        view_history: std::mem::replace(&mut app.view_history, slot.view_history),
         pending_feature_edit: std::mem::replace(&mut app.pending_feature_edit, slot.pending_feature_edit),
         pre_sketch_cam: std::mem::replace(&mut app.pre_sketch_cam, slot.pre_sketch_cam),
         pre_sketch_component: std::mem::replace(&mut app.pre_sketch_component, slot.pre_sketch_component),
@@ -524,6 +528,7 @@ pub fn adopt(app: &mut SketApp, session: Session) -> bool {
         crate::render_workspace::reset_document(app);
         app.session.invalidate_view(rev);
         app.cam = Camera::default();
+        app.view_history = Default::default();
         app.fit_view();
         // The linked designs that changed while it was closed are read again (#9739): last, as a
         // read is taken up only by the design revision it started from.
@@ -669,6 +674,7 @@ pub fn close(app: &mut SketApp, i: usize, force: bool) {
         app.session.revision = rev + 1;
         crate::prefs::apply_new_design(app);
         app.cam = Camera::default();
+        app.view_history = Default::default();
         app.fit_view();
         put_view(app, DocView::default());
         app.docs = Documents::default();

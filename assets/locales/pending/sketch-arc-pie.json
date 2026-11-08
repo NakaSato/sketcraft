@@ -1,0 +1,42 @@
+{
+  "en": {
+    "cmd.sketch_arc_pie": "Pie",
+    "help.sketch.arc.pie": "Draws a closed wedge: an arc around a centre point and the two radius lines back to the centre. Use it for slices and fan shapes ready to push or pull, as SketchUp's Pie does.",
+    "sketch.hint.arc.pie": "Pie: click center and start, go round either way and click the end, or type a signed sweep"
+  },
+  "ar": {
+    "cmd.sketch_arc_pie": "قطاع دائري",
+    "help.sketch.arc.pie": "يرسم قطاعًا مغلقًا: قوسًا حول نقطة مركز وخطي نصف القطر العائدين إلى المركز. استخدمه للشرائح والأشكال المروحية الجاهزة للدفع أو السحب، كما في أداة القطاع في SketchUp.",
+    "sketch.hint.arc.pie": "قطاع دائري: انقر المركز والبداية، ودر في أي اتجاه وانقر النهاية، أو اكتب زاوية موقعة"
+  },
+  "he": {
+    "cmd.sketch_arc_pie": "פלח",
+    "help.sketch.arc.pie": "ציור פלח סגור: קשת סביב נקודת מרכז ושני קווי הרדיוס שחוזרים למרכז. מתאים לפרוסות ולצורות מניפה שמוכנות לדחיפה או משיכה, כמו כלי הפלח של SketchUp.",
+    "sketch.hint.arc.pie": "פלח: לוחצים על המרכז ועל ההתחלה, מסתובבים לכל כיוון ולוחצים על הסוף, או מקלידים זווית עם סימן"
+  },
+  "ja": {
+    "cmd.sketch_arc_pie": "扇形",
+    "help.sketch.arc.pie": "中心点の周りの円弧と、中心へ戻る 2 本の半径線からなる閉じた扇形を描きます。SketchUp の扇形のように、押し出し・引き込みにそのまま使えるスライスや扇の形に使います。",
+    "sketch.hint.arc.pie": "扇形: 中心と始点をクリックし、どちらかに回して終点をクリックするか、符号付きの角度を入力します"
+  },
+  "vi": {
+    "cmd.sketch_arc_pie": "Hình quạt",
+    "help.sketch.arc.pie": "Vẽ một hình quạt kín: một cung quanh tâm và hai đường bán kính trở về tâm. Dùng cho các lát cắt và hình quạt sẵn sàng để đẩy hoặc kéo, như công cụ Hình quạt của SketchUp.",
+    "sketch.hint.arc.pie": "Hình quạt: nhấp tâm và điểm đầu, xoay theo chiều bất kỳ rồi nhấp điểm cuối, hoặc nhập góc có dấu"
+  },
+  "zh": {
+    "cmd.sketch_arc_pie": "扇形",
+    "help.sketch.arc.pie": "绘制一个闭合扇形：绕中心点的圆弧以及回到中心的两条半径线。用于可直接推拉的切片和扇形，与 SketchUp 的扇形工具相同。",
+    "sketch.hint.arc.pie": "扇形：单击中心和起点，向任一方向转动后单击终点，或输入带符号的扫掠角"
+  },
+  "de": {
+    "cmd.sketch_arc_pie": "Kreissektor",
+    "help.sketch.arc.pie": "Zeichnet einen geschlossenen Sektor: einen Bogen um einen Mittelpunkt und die beiden Radiuslinien zurück zum Mittelpunkt. Für Stücke und Fächerformen, die direkt gedrückt oder gezogen werden können, wie mit dem Kreissektor von SketchUp.",
+    "sketch.hint.arc.pie": "Kreissektor: Mittelpunkt und Start anklicken, in eine Richtung drehen und das Ende anklicken oder einen vorzeichenbehafteten Winkel eingeben"
+  },
+  "ko": {
+    "cmd.sketch_arc_pie": "부채꼴",
+    "help.sketch.arc.pie": "중심점을 둘러싼 호와 중심으로 돌아오는 두 반지름 선으로 닫힌 부채꼴을 그립니다. SketchUp의 부채꼴처럼 바로 밀거나 당길 수 있는 조각과 부채 모양에 사용합니다.",
+    "sketch.hint.arc.pie": "부채꼴: 중심과 시작점을 클릭하고 원하는 방향으로 돌려 끝점을 클릭하거나, 부호 있는 각도를 입력합니다"
+  }
+}

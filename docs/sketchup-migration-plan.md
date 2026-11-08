@@ -27,16 +27,16 @@ Status words: **done** (in the tree), **partial** (the command exists, the Sketc
 
 | SketchUp | Status | SketCraft today | Work |
 |---|---|---|---|
-| Select, Eraser, Paint Bucket | done | `select.*`, `selection.delete`, `appearance.paint` | Eraser drag across edges; Paint Bucket with a Materials tray |
-| Line, Arc, Rectangle, Circle, Polygon | done | `sketch.line`, `sketch.arc.*`, `sketch.rectangle.two_point` / `three_point`, `sketch.circle.center`, `sketch.polygon.inscribed` | Pie arc; typed lengths in SketchUp's units syntax |
-| Freehand | partial | `sketch.spline.fit_point` | Drag-to-draw front end on the SketchUp tab |
-| Push/Pull, Offset, Move, Scale, Follow Me | done | `solid.press_pull`, `solid.offset_face`, `solid.move`, `solid.scale`, `solid.sweep` | Double-click repeats last Push/Pull; Move of edges and faces, not only bodies |
-| Rotate (Q) | missing | `solid.move` already takes `axis` and `angle` | Interactive Rotate tool: protractor cursor, pick plane, base, angle; key Q |
+| Select, Eraser, Paint Bucket | done | `select.*`, `selection.delete`, `sketch.erase` (click or drag across sketch curves), `appearance.paint` | Erasing model edges; Paint Bucket with a Materials tray |
+| Line, Arc, Pie, Rectangle, Circle, Polygon | done | `sketch.line`, `sketch.arc.*` (Pie: `sketch.arc.pie`), `sketch.rectangle.two_point` / `three_point`, `sketch.circle.center`, `sketch.polygon.inscribed` | Typed lengths in SketchUp's units syntax |
+| Freehand | done | `sketch.freehand`: press and drag, thinned to one fit point spline | Typed stroke length |
+| Push/Pull, Offset, Move, Scale, Follow Me | done | `solid.press_pull`, `solid.offset_face`, `solid.move`, `solid.scale`, `solid.sweep` | Move of edges and faces, not only bodies (double-click repeat of the last Push/Pull is done) |
+| Rotate (Q) | partial | `solid.rotate` (Q) opens Move/Copy on its Rotate type | Protractor cursor: pick plane, base, angle in the view |
 | Tape Measure, Protractor | partial | `inspect.measure`, `view.angle_readout`, `construct.*` | Guide lines and points from the Tape Measure and Protractor (map onto `construct.plane.*` / `construct.point.*`, shown as dashed guides); Resize model by typed length |
 | Dimensions, Text, 3D Text | partial | `sketch.dimension`, `sketch.text` | Model-space dimensions outside a sketch; 3D Text is missing |
 | Section Plane | done | `inspect.section` | Section cuts as scene state |
 | Axes tool | missing | none | Move and rotate the drawing axes; store in the design |
-| Orbit, Pan, Zoom, Zoom Extents | done | `view.tool.*`, `view.fit` | Zoom Window, Previous view, Look Around, Walk, Position Camera |
+| Orbit, Pan, Zoom, Zoom Extents, Zoom Window, Previous/Next | done | `view.tool.*`, `view.fit`, `view.zoom_window`, `view.previous`, `view.next` | Look Around, Walk, Position Camera |
 | Inference (endpoint, midpoint, on face, from point, axis lock) | partial | `crates/engine/src/snap.rs`, `inference.rs` (Line only), arrow-key axis locks | One inference engine for every tool on the tab, with SketchUp's colours and labels |
 | Groups and Components | done | `component.create` (G), `component.edit_in_place`, `component.activate`, explode via `component.extract` | Group as a lightweight component; Make Unique; component browser |
 | Outliner, Entity Info | partial | `browser.*` and the inspector | Present the Browser as Outliner on the SketchUp tab; an Entity Info section |

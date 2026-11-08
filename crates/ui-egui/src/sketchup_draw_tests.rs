@@ -135,3 +135,99 @@ fn a_rectangle_drags_out_from_its_first_press() {
     assert_eq!(h.app.session.doc.sketch(sketch).unwrap().curves.len(), 4, "one rectangle");
     assert!(h.app.viewport.boxsel.is_none(), "the drag drew, it did not box-select");
 }
+
+/// Rotate (Q) is on the SketchUp tab and opens Move/Copy on its Rotate type with the selected
+/// body picked; a quarter turn about Z then lands the box as `solid.move` turns it.
+#[test]
+fn rotate_opens_move_on_its_rotate_type() {
+    let mut h = on_sketchup_tab();
+    h.app.run("solid.box", json!({"length": 20, "width": 30, "height": 10})).unwrap();
+    h.frames(2);
+    assert!(crate::scenario::handle_at("button:solid.rotate").is_some(), "Rotate has a button on the SketchUp tab");
+    h.app.run("select.set", json!({"items": [{"type": "body", "body": "Body1"}]})).unwrap();
+    h.step(&json!({"key": "Q"})).unwrap();
+    h.frames(2);
+    let d = h.app.dialog.as_mut().expect("Q opens a dialog");
+    let crate::dialogs::Kind::Move { mode, .. } = d.kind else { panic!("not Move/Copy: {:?}", d.kind) };
+    assert_eq!(mode, crate::dialogs_move::ROTATE, "on its Rotate type");
+    assert_eq!(d.inputs[0].items, vec![sketcraft_engine::Sel::Body { name: "Body1".into() }], "the selected body is picked");
+    d.inputs[1].items = vec![sketcraft_engine::Sel::Axis { name: "Z".into() }];
+    if let crate::dialogs::Kind::Move { angle, .. } = &mut d.kind {
+        *angle = "-90 deg".into();
+    }
+    h.frames(2);
+    h.step(&json!({"key": "Enter"})).unwrap();
+    h.settle();
+    assert!(h.app.dialog.is_none());
+    let bounds = h.app.session.model.state().body("Body1").unwrap().mesh().bounds();
+    assert!((bounds.min - Vec3::new(0.0, -20.0, 0.0)).len() < 1e-6, "{bounds:?}");
+    assert!((bounds.max - Vec3::new(30.0, 0.0, 10.0)).len() < 1e-6, "{bounds:?}");
+}
+
+/// Freehand draws by press and drag: letting go turns the stroke into one fit point spline. A
+/// click alone draws nothing.
+#[test]
+fn freehand_draws_one_curve_along_a_drag() {
+    let mut h = Harness::new();
+    h.app.home.open = false;
+    h.app.run("sketch.create", json!({"plane": "XY"})).unwrap();
+    h.app.start("sketch.freehand");
+    assert_eq!(h.app.tool.as_ref().map(|t| t.cmd), Some("sketch.freehand"));
+    let sketch = h.app.session.active_sketch.expect("a sketch is open");
+    let curves = |h: &Harness| h.app.session.doc.sketch(sketch).map(|s| s.curves.len()).unwrap_or(0);
+    h.step(&json!({"click": {"world": [5, 5, 0]}})).unwrap();
+    h.frames(2);
+    assert_eq!(curves(&h), 0, "a click draws nothing");
+    h.step(&json!({"drag": [{"world": [0, 0, 0]}, {"world": [40, 20, 0]}], "steps": 16})).unwrap();
+    h.frames(2);
+    let sk = h.app.session.doc.sketch(sketch).unwrap();
+    assert_eq!(sk.curves.len(), 1, "one curve");
+    assert!(matches!(sk.curves[0].kind, sketcraft_engine::sketch::CurveKind::Spline { control: false, .. }), "a fit point spline");
+    assert_eq!(h.app.tool.as_ref().map(|t| t.cmd), Some("sketch.freehand"), "the tool stays for the next stroke");
+}
+
+/// Eraser: a click deletes the curve under it, and a drag deletes every curve it crosses.
+#[test]
+fn eraser_deletes_a_clicked_curve_and_those_a_drag_crosses() {
+    let mut h = Harness::new();
+    h.app.home.open = false;
+    h.app.run("sketch.create", json!({"plane": "XY"})).unwrap();
+    for x in [0, 10, 20] {
+        h.app.run("sketch.line", json!({"points": [[x, 0], [x, 10]], "connect": false})).unwrap();
+    }
+    let sketch = h.app.session.active_sketch.expect("a sketch is open");
+    let lines = |h: &Harness| h.app.session.doc.sketch(sketch).map(|s| s.curves.len()).unwrap_or(0);
+    h.app.start("sketch.erase");
+    assert_eq!(h.app.tool.as_ref().map(|t| t.cmd), Some("sketch.erase"));
+    h.frames(2);
+    h.step(&json!({"click": {"world": [20, 5, 0]}})).unwrap();
+    h.frames(2);
+    assert_eq!(lines(&h), 2, "the clicked line is gone");
+    h.step(&json!({"drag": [{"world": [-5, 5, 0]}, {"world": [15, 5, 0]}], "steps": 16})).unwrap();
+    h.frames(2);
+    assert_eq!(lines(&h), 0, "the drag erased both lines it crossed");
+    h.app.run("edit.undo", json!({})).unwrap();
+    assert_eq!(lines(&h), 2, "one undo brings the dragged-over lines back");
+}
+
+/// Pie: three clicks (centre, start, end) draw the arc and both radius lines.
+#[test]
+fn pie_draws_an_arc_closed_by_two_radius_lines() {
+    let mut h = Harness::new();
+    h.app.home.open = false;
+    h.app.run("sketch.create", json!({"plane": "XY"})).unwrap();
+    h.app.start("sketch.arc.pie");
+    assert_eq!(h.app.tool.as_ref().map(|t| t.cmd), Some("sketch.arc.pie"));
+    for at in [[0, 0, 0], [20, 0, 0], [0, 20, 0]] {
+        h.step(&json!({"click": {"world": at}})).unwrap();
+        h.frames(2);
+    }
+    let sketch = h.app.session.active_sketch.expect("a sketch is open");
+    let sk = h.app.session.doc.sketch(sketch).unwrap();
+    let (lines, arcs) = sk.curves.iter().fold((0, 0), |(l, a), c| match c.kind {
+        sketcraft_engine::sketch::CurveKind::Line { .. } => (l + 1, a),
+        sketcraft_engine::sketch::CurveKind::Arc { .. } => (l, a + 1),
+        _ => (l, a),
+    });
+    assert_eq!((arcs, lines), (1, 2), "one arc and its two radius lines");
+}

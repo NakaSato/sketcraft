@@ -70,6 +70,7 @@ pub const MODIFIERS: &[ToolModifiers] = &[
     ToolModifiers { tool: "solid.sweep", scopes: SELECT_ONLY, bindings: &[], audit: Audit::VerifiedNoOp },
     // Move: no Alt-copy / inventable chords; inherits Selection + Manipulator only.
     ToolModifiers { tool: "solid.move", scopes: SELECT_MANIP, bindings: &[], audit: Audit::VerifiedNoOp },
+    ToolModifiers { tool: "solid.rotate", scopes: SELECT_MANIP, bindings: &[], audit: Audit::VerifiedNoOp },
     ToolModifiers { tool: "solid.hole", scopes: SELECT_MANIP, bindings: &[], audit: Audit::VerifiedNoOp },
     ToolModifiers { tool: "solid.box", scopes: SELECT_ONLY, bindings: &[], audit: Audit::VerifiedNoOp },
     ToolModifiers { tool: "solid.cylinder", scopes: SELECT_ONLY, bindings: &[], audit: Audit::VerifiedNoOp },
@@ -554,6 +555,9 @@ pub struct Dialog {
     /// An extrude Press Pull opened with nothing selected: its first pick may be a curved face or
     /// an edge, which reopens Press Pull on it (an offset or a fillet).
     pub press_pull: bool,
+    /// An Extrude opened by Push/Pull (with or without a face picked first): its applied
+    /// distance is the one a double-click repeats (`press_pull_repeat`).
+    pub(crate) push_pull: bool,
     /// The operation the window chooses by itself (#6901).
     pub op_auto: crate::op_auto::OpAuto,
     /// Where the face that reopened this fillet or chamfer was clicked (Press Pull): its arrow
@@ -822,6 +826,7 @@ impl Dialog {
             list_hover: None,
             shell_chain: Default::default(),
             press_pull: false,
+            push_pull: false,
             op_auto: Default::default(),
             anchor_hint: None,
         }
@@ -1037,6 +1042,11 @@ impl Dialog {
                 ]
             }),
             "solid.move" => Dialog::new(crate::dialogs_move::kind(0, &s.doc), crate::dialogs_move::inputs(0)),
+            // SketchUp's Rotate: Move/Copy opened on its Rotate type (pick the bodies, then the axis).
+            "solid.rotate" => {
+                let rotate = crate::dialogs_move::ROTATE;
+                Dialog::new(crate::dialogs_move::kind(rotate, &s.doc), crate::dialogs_move::inputs(rotate))
+            }
             "solid.hole" => Dialog::new(hole_defaults(s), single_hole_inputs()),
             "solid.box" => Dialog::new(
                 Kind::Primitive {
@@ -4144,6 +4154,10 @@ pub fn show(app: &mut SketApp, ctx: &egui::Context) {
                 Err(error) => d.refuse(app, error),
             }
         }
+    }
+    // Push/Pull keeps its distance for a double-click to repeat, read before Apply clears the picks.
+    if applied && d.editing.is_none() {
+        crate::press_pull_repeat::dialog_applied(app, &d);
     }
     if applied && apply_again {
         for input in &mut d.inputs {

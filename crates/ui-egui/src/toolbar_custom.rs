@@ -357,15 +357,19 @@ pub fn quick_move(app: &mut SketApp, id: &str, before: Option<&str>) {
 pub const SKETCHUP_LARGE_TOOLSET: &[&str] = &[
     "select.clear",
     "selection.delete",
+    "sketch.erase",
     "sketch.line",
     "sketch.arc.three_point",
     "sketch.rectangle.two_point",
     "sketch.circle.center",
     "sketch.rectangle.three_point",
     "sketch.polygon.inscribed",
+    "sketch.arc.pie",
+    "sketch.freehand",
     "solid.press_pull",
     "solid.offset_face",
     "solid.move",
+    "solid.rotate",
     "solid.scale",
     "solid.sweep",
     "inspect.measure",
@@ -378,7 +382,10 @@ pub const SKETCHUP_LARGE_TOOLSET: &[&str] = &[
     "view.tool.orbit",
     "view.tool.pan",
     "view.tool.zoom",
+    "view.zoom_window",
     "view.fit",
+    "view.previous",
+    "view.next",
 ];
 
 /// Load SketchUp Large Tool Set into the quick access bar.

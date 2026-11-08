@@ -40,7 +40,7 @@ pub const FAMILIES: &[Family] = &[
             "sketch.circle.three_tangent",
         ],
     },
-    Family { label: "Arc", commands: &["sketch.arc.three_point", "sketch.arc.center_point", "sketch.arc.tangent"] },
+    Family { label: "Arc", commands: &["sketch.arc.three_point", "sketch.arc.center_point", "sketch.arc.tangent", "sketch.arc.pie"] },
     Family {
         label: "Slot",
         commands: &[

@@ -72,6 +72,33 @@ pub struct NavToolLatch {
     pub on: Option<bool>,
 }
 
+/// Latch or release SketchUp's Zoom Window: while it is on, the next left-button drag in the
+/// view draws a rectangle and the view zooms so the rectangle fills it. With no flag, the UI
+/// toggles it. A display tool: not saved with the design and not an undo step.
+#[derive(Debug, Deserialize, Serialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct ZoomWindow {
+    #[serde(default, deserialize_with = "present", skip_serializing_if = "Option::is_none")]
+    #[schemars(with = "bool")]
+    pub on: Option<bool>,
+}
+
+/// `view.previous` and `view.next` take no parameters.
+#[derive(Debug, Deserialize, JsonSchema)]
+#[schemars(deny_unknown_fields)]
+pub struct ViewHistoryParams {}
+
+/// What `view.previous` and `view.next` return. The window steps through the views it showed
+/// recently; the design is not changed and nothing is added to undo.
+#[derive(Debug, Serialize, JsonSchema)]
+pub struct ViewHistoryStep {
+    /// -1: back to the view before; 1: forward again to the view Previous View left.
+    pub step: i8,
+    /// In the warn parameter-check mode: what the call's parameters got wrong.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub param_warnings: Vec<String>,
+}
+
 /// Empty input for the read-only viewport effect query.
 #[derive(Debug, Deserialize, Serialize, JsonSchema)]
 #[serde(deny_unknown_fields)]

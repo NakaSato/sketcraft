@@ -8,7 +8,7 @@ use sketcraft_sketch::{Analysis, Budget, ConstraintKind, CurveKind, Hold, PointE
 
 use super::{CommandSpec, in_sketch};
 use crate::params::{bad, bool_, expr, num, req_expr, req_vec2, str_, string_list, vec2, vec3};
-use crate::schema::sketch::{CancelResult, EditParams, EditResult, ExitParams, FinishResult};
+use crate::schema::sketch::{CancelResult, EditParams, EditResult, ExitParams, FinishResult, PieParams, PieResult};
 use crate::schema::{TypedContract, output_schema_for};
 use crate::{EngineError, Result, Session, SketchEntry, Snapshot};
 
@@ -38,6 +38,7 @@ macro_rules! model_operand_doc {
 
 const EDIT_CONTRACT: TypedContract<EditParams> = TypedContract::new();
 const EXIT_CONTRACT: TypedContract<ExitParams> = TypedContract::new();
+const PIE_CONTRACT: TypedContract<PieParams> = TypedContract::new();
 
 pub static COMMANDS: &[CommandSpec] = &[
     CommandSpec::new("sketch.create", "Create Sketch", create_sketch)
@@ -114,6 +115,13 @@ pub static COMMANDS: &[CommandSpec] = &[
         .icon("arc_center")
         .enabled(in_sketch)
         .params(concat!("center, start, end (counter-clockwise from start; clockwise?: bool for clockwise) | center, start, sweep: signed degrees; construction?: bool", connect_doc!(), created_doc!())),
+    CommandSpec::new("sketch.arc.pie", "Pie", crate::checked!("sketch.arc.pie", arc_pie))
+        .at("SKETCH", "CREATE")
+        .icon("arc_center")
+        .enabled(in_sketch)
+        .contract(&PIE_CONTRACT)
+        .output(output_schema_for::<PieResult>)
+        .params(concat!("center, start, end (counter-clockwise from start) | center, start, sweep: signed degrees; construction?: bool. A centre point arc and the radius lines to its ends, sharing its points: a closed wedge", created_doc!())),
     CommandSpec::new("sketch.polygon.inscribed", "Inscribed Polygon", polygon_inscribed)
         .at("SKETCH", "CREATE")
         .icon("polygon")
@@ -1763,6 +1771,62 @@ fn arc_center(s: &mut Session, p: &Value) -> Result<Value> {
         };
         mark_construction(sk, &[ci], p);
         Ok((ids_of(sk, &[ci]), Vec::new()))
+    })?;
+    Ok(result(out, info))
+}
+
+/// `sketch.arc.pie`: a centre point arc (counter-clockwise from `start` to `end`, or by a signed
+/// `sweep`) and the two radius lines that close it, all sharing the centre and the arc's ends.
+fn arc_pie(s: &mut Session, p: &Value) -> Result<Value> {
+    let cmd = "sketch.arc.pie";
+    let p = &super::sketch_project::snap_points(s, p, cmd)?;
+    let sweep = num(p, "sweep");
+    let (out, info) = draw(s, p, cmd, |sk, doc| {
+        let c = req_parg(sk, doc, p, "center", cmd)?;
+        let a = req_parg(sk, doc, p, "start", cmd)?;
+        let r = a.pos().dist(c.pos());
+        if !(r > 1e-9 && r.is_finite()) {
+            return Err(bad(cmd, "`start` must not be on `center`"));
+        }
+        let from = (a.pos() - c.pos()).angle();
+        let turn = match sweep {
+            Some(sw) if sw.abs() > 1e-9 && sw.abs() < 360.0 => sw.to_radians(),
+            Some(_) => return Err(bad(cmd, "`sweep` must be between -360 and 360 degrees (not 0)")),
+            None => {
+                let b = req_parg(sk, doc, p, "end", cmd)?;
+                if b.pos().dist(c.pos()) <= 1e-9 {
+                    return Err(bad(cmd, "`end` must not be on `center`"));
+                }
+                let t = ((b.pos() - c.pos()).angle() - from).rem_euclid(std::f64::consts::TAU);
+                if t <= 1e-9 {
+                    return Err(bad(cmd, "`end` must not be in line with `start`"));
+                }
+                t
+            }
+        };
+        let end = c.pos() + Vec2::from_angle(from + turn) * r;
+        let ci = match c.idx() {
+            Some(i) => i,
+            None => sk.add_point(c.pos(), None)?,
+        };
+        let ai = match a.idx() {
+            Some(i) => i,
+            None => sk.add_point(a.pos(), None)?,
+        };
+        let bi = sk.add_point(end, None)?;
+        let arc = if turn > 0.0 {
+            sk.add_arc(c.pos(), a.pos(), end, [Some(ci), Some(ai), Some(bi)], None)?
+        } else {
+            let arc = sk.add_arc(c.pos(), end, a.pos(), [Some(ci), Some(bi), Some(ai)], None)?;
+            if let Some(cu) = sk.curves.get_mut(arc) {
+                cu.reversed = true;
+            }
+            arc
+        };
+        let to_start = sk.add_line(c.pos(), a.pos(), Some(ci), Some(ai), None)?;
+        let to_end = sk.add_line(c.pos(), end, Some(ci), Some(bi), None)?;
+        mark_construction(sk, &[arc, to_start, to_end], p);
+        Ok((ids_of(sk, &[arc, to_start, to_end]), Vec::new()))
     })?;
     Ok(result(out, info))
 }

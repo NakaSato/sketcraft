@@ -3693,7 +3693,7 @@ pub fn shortcuts(app: &mut SketApp, ctx: &egui::Context) {
                 }
                 // End navigation before the underlying tool or dialog; sketch double-Escape
                 // handling starts with the next press.
-                if app.viewport.nav.take().is_some() {
+                if app.viewport.nav.take().is_some() || app.viewport.zoom_window.take().is_some() {
                     app.last_escape = None;
                     continue;
                 }

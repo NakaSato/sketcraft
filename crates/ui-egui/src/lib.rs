@@ -211,6 +211,9 @@ pub mod prefs_notice;
 mod prefs_search;
 #[cfg(test)]
 mod preselect_tests;
+pub(crate) mod press_pull_repeat;
+#[cfg(test)]
+mod press_pull_repeat_tests;
 pub mod preview;
 #[cfg(test)]
 mod preview_placement_tests;
@@ -321,6 +324,9 @@ mod value_step;
 pub(crate) mod view_angles;
 mod view_confirm;
 pub mod view_gizmo;
+pub(crate) mod view_history;
+#[cfg(test)]
+mod view_history_tests;
 pub mod view_pick;
 pub mod viewport;
 mod viewport_details;
@@ -559,6 +565,8 @@ pub struct SketApp {
     pub cam: Camera,
     /// A view change in progress (axis view, Home, Fit); any mouse navigation cancels it.
     pub cam_anim: Option<CameraAnim>,
+    /// The views shown recently, for Previous and Next view (each design tab keeps its own).
+    pub(crate) view_history: view_history::ViewHistory,
     /// The custom view navigator's body (kept with the preferences).
     pub view_gizmo: view_gizmo::State,
     /// Seconds since start, as of this frame.
@@ -857,6 +865,7 @@ impl SketApp {
             shell: Default::default(),
             cam: Camera::default(),
             cam_anim: None,
+            view_history: Default::default(),
             view_gizmo: view_gizmo::State::default(),
             now: 0.0,
             pre_sketch_cam: None,
@@ -1306,6 +1315,9 @@ impl SketApp {
             self.status = None;
         }
         let done = self.command_completed(id, r);
+        if done.is_ok() && id == "solid.press_pull" {
+            press_pull_repeat::command_ran(self, params);
+        }
         if self.session.revision != revision {
             timeline::stop_playback(self);
         }
@@ -1354,6 +1366,7 @@ impl SketApp {
                         Some("zoom") => Some(viewport::NavMode::Zoom),
                         _ => None,
                     };
+                    self.viewport.zoom_window = None;
                 }
                 "view.tool.zoom" | "view.tool.orbit" | "view.tool.pan" => {
                     let mode = match id {
@@ -1364,10 +1377,24 @@ impl SketApp {
                     let active = self.viewport.nav == Some(mode);
                     if v.get("on").and_then(Value::as_bool).unwrap_or(!active) {
                         self.viewport.nav = Some(mode);
+                        // One camera tool at a time.
+                        self.viewport.zoom_window = None;
                     } else if active {
                         self.viewport.nav = None;
                     }
                 }
+                "view.zoom_window" => {
+                    let active = self.viewport.zoom_window.is_some();
+                    if v.get("on").and_then(Value::as_bool).unwrap_or(!active) {
+                        if !active {
+                            self.viewport.zoom_window = Some(navigation::ZoomWindow::default());
+                        }
+                        self.viewport.nav = None;
+                    } else {
+                        self.viewport.zoom_window = None;
+                    }
+                }
+                "view.previous" | "view.next" => view_history::step(self, id == "view.next"),
                 "view.spin" => {
                     self.cancel_view_animation();
                     self.viewport.spin = v.get("on").and_then(Value::as_bool).unwrap_or(!self.viewport.spin);
@@ -1732,6 +1759,13 @@ impl SketApp {
         }
         let empty = sel.is_empty();
         self.start("solid.extrude");
+        // Its distance is the one a double-click repeats (`press_pull_repeat`).
+        if let Some(d) = &mut self.dialog
+            && matches!(d.kind, dialogs::Kind::Extrude { .. })
+            && d.editing.is_none()
+        {
+            d.push_pull = true;
+        }
         if empty
             && let Some(d) = &mut self.dialog
             && let Some(input) = d.inputs.first_mut()
@@ -1910,6 +1944,9 @@ impl SketApp {
                 | "view.tool.zoom"
                 | "view.tool.orbit"
                 | "view.tool.pan"
+                | "view.zoom_window"
+                | "view.previous"
+                | "view.next"
                 | "view.spin"
                 | "view.grid"
                 | "view.ground_shadow"
@@ -3231,6 +3268,7 @@ impl SketApp {
             self.set_up_axis(self.ui.up_axis);
         }
         self.step_view_animation(ctx);
+        view_history::observe(self, ctx);
         self.poll_control_jobs(ctx);
         self.drain_control(ctx);
         self.follow_view_request(true);
