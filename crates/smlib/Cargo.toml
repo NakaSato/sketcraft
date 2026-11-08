@@ -1,6 +1,6 @@
 [package]
 name = "sketcraft-smlib"
-description = "SketCraft: the B-rep kernel, sketcore (tangency-labs/solidcore, the Rust port of NVIDIA's SMLib, Apache-2.0), behind a safe wrapper"
+description = "SketCraft: the B-rep kernel, sketcore (the Rust port of NVIDIA's SMLib, Apache-2.0), behind a safe wrapper"
 version.workspace = true
 edition.workspace = true
 license.workspace = true

@@ -528,7 +528,7 @@ mod smlib {
     use super::*;
     use crate::offset_backend;
 
-    /// tangency-labs/solidcore#380: a closed shell whose wall leaves no room inside the body is
+    /// sketcore#380: a closed shell whose wall leaves no room inside the body is
     /// refused before SMLib's offset sees it, by the body's own inradius (the L's legs are 15
     /// wide, the largest ball fits at the inner corner: 15 * sqrt(2) / (1 + sqrt(2)) = 8.79),
     /// never by its box (whose half extent, 10, the old guard used).

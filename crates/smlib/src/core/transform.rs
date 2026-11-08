@@ -2,7 +2,7 @@
 //! `smlib_brep_transform`, ported from the fork's `capi/src/smlib_c.cpp`.
 //!
 //! As there, a transform works on a copy of its body (`SmApiBrepCopy`), which
-//! `SmBrep::Transform(double[4][4], bScaleTol)` (sketcore's `transform_matrix`, solidcore#1570)
+//! `SmBrep::Transform(double[4][4], bScaleTol)` (sketcore's `transform_matrix`, sketcore#1570)
 //! then moves in place, tolerances scaling with the model. The matrix is the capi's: rows 0-2 the
 //! images of x, y and z, row 3 the translation (row-vector convention, `p' = p·A + t`); the
 //! fourth column is not read.

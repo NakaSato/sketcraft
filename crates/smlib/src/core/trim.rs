@@ -20,7 +20,7 @@
 //! continue.
 //!
 //! An untrim of a face out of its body (`in_place` false) copies the face into a body of its own
-//! through `SmBrep::CopyFaces` with the merge (solidcore#1872), which keeps its attributes.
+//! through `SmBrep::CopyFaces` with the merge (sketcore#1872), which keeps its attributes.
 
 use std::sync::PoisonError;
 

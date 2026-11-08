@@ -293,7 +293,7 @@ impl<T> super::dump::Answer for std::result::Result<T, Refusal> {
 /// report. sketcore's [`check_brep`] runs the same two calls.
 ///
 /// The geometry owners are named as the body's naming scheme names them: `check_brep` reads a
-/// [`NamingScheme::Caller`] body's keys from where its maker recorded them (solidcore#1585: an
+/// [`NamingScheme::Caller`] body's keys from where its maker recorded them (sketcore#1585: an
 /// array import through `make_topology_from_data`, `api_brep_copy`); where it recorded none, the
 /// arena identities the binders name such an entity by. A [`NamingScheme::Unknown`] body would be
 /// checked under arena identities no maker uses: every edge would fail `SmBrep` test 61 on the

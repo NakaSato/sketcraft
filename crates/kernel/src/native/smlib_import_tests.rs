@@ -131,7 +131,7 @@ fn a_cone_apex_comes_back_measuring_as_it_went() {
 /// bounded by its rim, its seam both ways and the pole; a ball centred on the dome near the seam
 /// cuts a hole in it. Opened at the pole the outer loop spans v in [-1, 0] while the hole
 /// projects into [0, 1]: the mesh covered the hole as well (+1694 mm³) until the hole is moved
-/// a period to lie inside the outer loop (tangency-labs/solidcore#433).
+/// a period to lie inside the outer loop (sketcore#433).
 #[test]
 fn a_hole_in_a_dome_by_its_seam_measures_as_smlib_cuts_it() {
     use sketcraft_smlib::sweeps::Curve;

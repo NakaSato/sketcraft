@@ -17,7 +17,7 @@ fn wedge() -> Body {
     fillet_variable_spline(&body, at, t.start, &t.spline).unwrap()
 }
 
-/// The wedge's variable round takes off the union of its balls (smlib#78, solidcore#2262):
+/// The wedge's variable round takes off the union of its balls (smlib#78, sketcore#2262):
 /// `removed_by_balls` along the 40 mm edge, about 754.28, on whichever kernel the test runs.
 #[test]
 fn the_wedge_round_keeps_its_volume() {

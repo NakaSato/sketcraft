@@ -1,4 +1,4 @@
-//! The B-rep kernel, sketcore (tangency-labs/solidcore, the Rust port of NVIDIA's SMLib,
+//! The B-rep kernel, sketcore (the Rust port of NVIDIA's SMLib, pinned in the root Cargo.toml,
 //! Apache-2.0), behind a safe wrapper. Only `crates/kernel` uses this crate (ADR 0002).
 //!
 //! Every call runs in a sketcore kernel of its own, never changes its inputs, turns sketcore's

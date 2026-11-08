@@ -10,11 +10,11 @@
 //! solid as the capi does since tangency-labs/smlib#17.
 //!
 //! A draft tilts planes and, since tangency-labs/smlib#27, turns a cylinder about the pull into
-//! a cone (sketcore's `Cone::lean_cylinder`, solidcore#1545), and since smlib#53 a cone about the
+//! a cone (sketcore's `Cone::lean_cylinder`, sketcore#1545), and since smlib#53 a cone about the
 //! pull into the cone its generators turned make. A draft's tilted faces go in through sketcore's
 //! `SmBrep::LocalOperation` ([`local_operation`]). The capi's check that it moved some face
 //! (`moved_faces`) marks the replacement surfaces; sketcore names a surface by its owning face, so
-//! the mark goes on the picked faces, which it stays with through the operation (solidcore#1875).
+//! the mark goes on the picked faces, which it stays with through the operation (sketcore#1875).
 
 use sketcore::EntityRef;
 use sketcore::SolidError;
@@ -57,7 +57,7 @@ const OFFSET_WALLS_TOUCH: i32 = 1042;
 /// `status` (smlib_shim.h): an offset whose walls touch is [`Error::WallsTouch`]; a vertex moved
 /// past an edge's other end (`SM_ERR_OFFSET_EDGE_VANISHES`, fork 34318f4) is
 /// `SMLIB_ERR_UNSUPPORTED`; a wall whose face's offset folds, which sketcore's one construction
-/// refuses (`fixes.shell_one_construction`, solidcore#2367), is [`Error::WallFolds`] with the
+/// refuses (`fixes.shell_one_construction`, sketcore#2367), is [`Error::WallFolds`] with the
 /// largest wall it names; any other status as the blends pass it on.
 fn status(e: SolidError) -> Error {
     match e {
@@ -177,7 +177,7 @@ fn outer_faceuse(b: &Brep, f: FaceId) -> sketcore::Result<Option<FaceuseId>> {
 /// face that is offset. A point counts only as the centre of a ball inside `b`, reached from a
 /// face sample by stepping inward along the normal, then from ball to ball. The capi refuses a
 /// wall this finds no room for before SMLib sees it (C++ SMLib corrupts memory there,
-/// solidcore#380); the same refusal here keeps the C++ path's answer.
+/// sketcore#380); the same refusal here keeps the C++ path's answer.
 fn leaves_cavity(k: &mut Kernel, b: &mut Brep, open: &[FaceId], wall: f64) -> sketcore::Result<bool> {
     let list = brep_p1::faces(b, None)?;
     let (mut all, mut walls) = (FaceSet::new(), FaceSet::new());
@@ -371,7 +371,7 @@ fn move_faces(k: &mut Kernel, b: &mut Brep, picked: &[FaceId], distance: f64) ->
         OffsetFacesRefusal::Unsupported => Error::Unsupported,
         OffsetFacesRefusal::NotExact => Error::NotExact,
         OffsetFacesRefusal::NoEffect => Error::NoEffect,
-        // Not in the fork (solidcore#2020, #2027): the blends cannot be put back, the fillet's
+        // Not in the fork (sketcore#2020, #2027): the blends cannot be put back, the fillet's
         // status kept. SketCraft has no such error: a move sketcore does not make.
         OffsetFacesRefusal::NotPutBack => Error::Unsupported,
         OffsetFacesRefusal::None => status(e),
@@ -453,7 +453,7 @@ fn outward_normal(k: &Kernel, b: &Brep, f: FaceId, fu: FaceuseId, at: Point3) ->
 /// where the face looks away from the axis (a pin), -1 where it looks towards it (a hole). It is
 /// the surface's own NURB with each control point moved radially by the new radius over the old at
 /// its height, so it keeps the surface's parameters and the face's UV trims stay valid: for a
-/// cylinder sketcore's `Cone::lean_cylinder` (solidcore#1545), for a cone the same edit on
+/// cylinder sketcore's `Cone::lean_cylinder` (sketcore#1545), for a cone the same edit on
 /// [`Cone::base_mut`]. [`Error::Unsupported`] when the pull does not run along the axis, the axis
 /// lies in the neutral plane, or the cone would close within the face's span.
 #[allow(clippy::too_many_arguments)] // the capi's drafted_cone
@@ -530,7 +530,7 @@ const MOVED_MARK: u64 = ids::USER_1 + 8;
 
 /// `Before::mark` on each replacement surface. A surface has no identity apart from its owning
 /// face here, and `faces[i]`'s offset face takes `surfaces[i]`, so the mark goes on the picked face
-/// and travels as the surface's does (Copy behaviour; solidcore#1875). The one difference, recorded
+/// and travels as the surface's does (Copy behaviour; sketcore#1875). The one difference, recorded
 /// in sketcore's `topology.brep_local_operation--1875-face-mark-for-surface-mark` finding: a merge
 /// keeping an unpicked face over a picked one hands that survivor the mark, where SMLib's survivor
 /// keeps its own unmarked surface.

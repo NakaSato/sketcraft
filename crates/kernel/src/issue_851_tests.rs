@@ -366,7 +366,7 @@ fn rounds_ending_in_a_sphere_of_any_size_never_panic() {
 /// middle of the arc top edge's tangent chain) at the round's own radius: the ball sits on the
 /// round's axis, fixed, and the plane square to the edge at its top end misses that centre, so
 /// no round ends there. sketcore refuses it as a collapsed offset (`NoRoomReason::
-/// OffsetCollapses`, solidcore#2431), naming 2 less its fit margin; the refusal says why.
+/// OffsetCollapses`, sketcore#2431), naming 2 less its fit margin; the refusal says why.
 #[test]
 fn a_ball_as_wide_as_the_round_it_rolls_on_is_refused_saying_why() {
     let rounded = fillet(&part(), &[tf()], 2.0).unwrap();

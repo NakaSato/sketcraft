@@ -399,7 +399,7 @@ pub(crate) fn fixes() -> UpstreamFixes {
 /// the fork doesn't have stays on, and where sketcore builds what SMLib refuses, a result right
 /// against its closed form is a win.
 ///
-/// `fillet_refuse_rounds_breaking_through` (WR-707, solidcore#2311): sound geometry refused. With it
+/// `fillet_refuse_rounds_breaking_through` (WR-707, sketcore#2311): sound geometry refused. With it
 /// on, 11 rig cases that pass with it off, each graded against its closed form or invariants, are
 /// refused as breaking through the part (190-fillet-disc-rim-past-its-2mm-wall fails status 1001
 /// instead): every-hole-top-rim-r12-past-plate-bottom, 1080-chamfer-runs-into-openings-cut-by-them
@@ -590,7 +590,7 @@ fn call_on<T: dump::Answer>(
 
 /// A call the capi checks for `SM_SUCCESS`, treating any other status as no answer: an error
 /// that stands for an SMLib status exactly ([`SolidError::sm_status`](sketcore::SolidError::sm_status),
-/// solidcore#1452) is `None`. Every other sketcore error
+/// sketcore#1452) is `None`. Every other sketcore error
 /// (unported code, invalid input to an adapter, a missing record...) is not a status the C++
 /// path returns, so it fails the call instead of hiding as a skipped entity.
 pub(crate) fn answer<T>(r: std::result::Result<T, sketcore::SolidError>) -> std::result::Result<Option<T>, sketcore::SolidError> {

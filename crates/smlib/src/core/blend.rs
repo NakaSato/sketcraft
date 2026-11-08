@@ -14,7 +14,7 @@
 //! What the capi asks of fork-only SMLib code that sketcore does not have is
 //! [`Error::Unsupported`], refused where the capi would first reach it, so every error before
 //! it is the C++ path's:
-//! - a variable radius whose law has a corner (`SplitFilletFacesAtRadiusCorners`, fork 6eecf04; solidcore#430, PR #1403).
+//! - a variable radius whose law has a corner (`SplitFilletFacesAtRadiusCorners`, fork 6eecf04; sketcore#430, PR #1403).
 //!
 //! sketcore's own refusals of code it has not ported (`SolidError::Unported`) are
 //! [`Error::Unsupported`] too.
@@ -252,7 +252,7 @@ enum Section<'a> {
     /// such rounds at a side edge as the [`Turn`] says (`SetSweptTurns`).
     Round(Turn),
     /// The curvature-continuous section (`SM_FSG_BLEND_CURVE`): the Gⁿ generator's order 2 at the
-    /// equal-area thumbweight (`SMLIB_BLEND_THUMBWEIGHT`, fork 6148773; solidcore#2261 under
+    /// equal-area thumbweight (`SMLIB_BLEND_THUMBWEIGHT`, fork 6148773; sketcore#2261 under
     /// `fillet_gn_section_generator`), which takes off what the ball's circle does.
     Curvature,
     Chord,
@@ -288,7 +288,7 @@ fn face_set(b: &Brep) -> sketcore::Result<HashSet<FaceId>> {
 /// `smlib_blend_fit_size`, or [`SolidError::FilletRefused`] carrying it; under
 /// `fixes.fillet_gn_section_generator`) is [`Error::TooLarge`] with that size, its edge's point
 /// filled in by the caller from the edge returned with it ([`sized_on`]); a corner sketcore
-/// refuses as not supported (the mixed corner whose rails cross, solidcore#2256) is
+/// refuses as not supported (the mixed corner whose rails cross, sketcore#2256) is
 /// [`Error::Unported`] naming it.
 fn blend_failure(s: &FilletSession<'_>, e: SolidError, corner: bool) -> (Error, Option<EdgeId>) {
     let info = s.error_info();
@@ -465,7 +465,7 @@ fn blend_edges_stopping(
                 Some(&size) => s.prepare_variable_radius_edges(k, edges, size, law, 1, 1),
                 None => return Ok(Err(Err(Error::Argument))),
             },
-            // The equal-area thumbweight by sketcore's name, never its value: solidcore#2274 moves
+            // The equal-area thumbweight by sketcore's name, never its value: sketcore#2274 moves
             // it from -2 to 2, after which -2 is an ordinary weight.
             (Section::Curvature, _) => {
                 s.prepare_per_edge_constant_radius(k, edges, sizes, &[FilletSurfaceGeneratorType::BlendCurve], 2, GN_THUMBWEIGHT_EQUAL_AREA)
@@ -671,7 +671,7 @@ fn picked_on(b: &Brep, e: EdgeId) -> Option<(sketcore::geom::attribute::Attribut
     a.application_value::<Picked>().map(|p| (h, p.0))
 }
 
-/// Whether the rounds that overflow go first ([`overflow_first`]): on since solidcore#1980, which
+/// Whether the rounds that overflow go first ([`overflow_first`]): on since sketcore#1980, which
 /// keeps the attributes of the target edges the subtraction replaces, so a picked edge the overflow
 /// only shortened still reads as picked.
 const OVERFLOW_GOES_FIRST: bool = true;
@@ -807,7 +807,7 @@ fn untagged(mut b: Brep) -> Out<Brep> {
 
 /// Why a curvature fillet over edges of different wedge angles is refused. The equal-area
 /// thumbweight is resolved once per call, from the first blend's wedge, and every edge takes it
-/// (in the fork as in solidcore#2261): an edge of another wedge takes off another area than its
+/// (in the fork as in sketcore#2261): an edge of another wedge takes off another area than its
 /// own, and which one depends on the edges' order.
 pub(crate) const CURVATURE_MIXED_WEDGES: &str = "a curvature-continuous fillet on sketcore over edges whose faces meet at different \
 angles: every edge takes the equal-area thumbweight of the first one's angle, so the others take off the wrong area \
@@ -931,7 +931,7 @@ fn blend_call(
         let section = match kind {
             Blend::Round => Section::Round(turn),
             // Every edge of one call takes the equal-area thumbweight of the first's wedge
-            // (solidcore#2250's comment 6563419897): edges of other wedges would take off another
+            // (sketcore#2250's comment 6563419897): edges of other wedges would take off another
             // area than their own, so they are not built together.
             Blend::Curvature if !one_wedge(k, &mut w, &picked)? => return Ok(Err(Error::Unported(CURVATURE_MIXED_WEDGES))),
             Blend::Curvature => Section::Curvature,
@@ -1405,7 +1405,7 @@ pub(crate) fn fillet_variable(
         if law_has_corner(degree, knots, radii) {
             return Ok(Err(Error::Unsupported));
         }
-        // The round is the union of its balls (smlib#78, solidcore#2262 with
+        // The round is the union of its balls (smlib#78, sketcore#2262 with
         // `fillet_gn_section_generator`): each ball touches it along the circle shifted
         // -r r'/|c'| from its great circle. A law whose balls fold over one another is refused
         // (`NoRoomReason::BallsFold`), [`Error::NoRoom`].

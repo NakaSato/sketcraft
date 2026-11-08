@@ -871,7 +871,7 @@ fn open_at_pole(s: &EvalSurface, dom: &uv::Domain, reach: f64, l: &mut seam::Loo
 
 /// Each loop is projected on its own, so along a closed direction a hole can come out a whole
 /// period away from the outer loop: a dome's outer loop opened at its pole spans v in [-1, 0]
-/// while the hole projects into [0, 1], outside it (tangency-labs/solidcore#433). Every other
+/// while the hole projects into [0, 1], outside it (sketcore#433). Every other
 /// loop is moved by whole periods to the copy whose middle is nearest the outer loop's (the
 /// loop of largest area); a face that does not wind lies within one period, so that is the
 /// copy inside it.

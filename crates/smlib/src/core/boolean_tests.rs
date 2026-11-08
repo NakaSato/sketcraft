@@ -97,7 +97,7 @@ fn case(name: &str) -> Case {
         ),
         "intersect_disjoint" => plain(Op::Boolean(A, Shape::Box([20.0; 3], [10.0; 3]), BooleanOp::Intersect), None, None),
         // A 10 mm sphere less a cap of height h = 5: 4/3 πr³ - πh²(3r - h)/3.
-        // (solidcore#1431, brep_volume of a whole sphere failing at 1e-8, does not touch the cut
+        // (sketcore#1431, brep_volume of a whole sphere failing at 1e-8, does not touch the cut
         // sphere: it measures at 1e-8.)
         "sphere_minus_box" => plain(
             Op::Boolean(Shape::Sphere([0.0; 3], 10.0), Shape::Box([-20.0, -20.0, 5.0], [40.0, 40.0, 20.0]), BooleanOp::Subtract),

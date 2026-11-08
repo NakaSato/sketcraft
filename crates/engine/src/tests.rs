@@ -112,7 +112,7 @@ fn fillet_as_wide_as_a_face_rounds_it_off() {
 /// r3 in a second fillet, whose tangent chain takes the mitre's seam with it. The corner is the
 /// one sketcore 8ddce9016 builds for three rounds of different radii there: one patch, 10
 /// faces, 7928.743041456134 mm³ (the fork's setback corner, 15 faces and 7928.142563938, waits
-/// for solidcore#2310). The r2 rounds keep their names, and the r3 round and the corner's patch
+/// for sketcore#2310). The r2 rounds keep their names, and the r3 round and the corner's patch
 /// are the second fillet's.
 #[test]
 fn a_later_round_at_a_mitred_corner_is_blended_with_the_rounds_there() {

@@ -1083,7 +1083,7 @@ mod imp {
         let pieces = pieces(region.loops());
         let start = path.first().map(crate::PathSeg::start).ok_or_else(|| KernelError::Invalid("the path needs 1…1000 segments".into()))?;
         // A circle centred on the twist axis, swept straight along that axis, turns onto itself:
-        // its wall is exactly the cylinder, built as one rather than skinned (solidcore#2184: a
+        // its wall is exactly the cylinder, built as one rather than skinned (sketcore#2184: a
         // skin lying within 4e-9 of a cylinder another body shares fails the boolean).
         let axial = straight_axis(plane, path, ctl, start).map(|(k, length)| {
             let round: Vec<Option<(Vec3, f64)>> = region.loops().map(|l| circle_on_axis(plane, &l.lp, start, k)).collect();

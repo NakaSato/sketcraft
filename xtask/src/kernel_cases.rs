@@ -648,7 +648,7 @@ pub const CASES_LIST: &str = "tests/kernel-cases/CASES";
 
 /// Where a new kernel case goes instead, for the check's failure message.
 const NEW_CASES_GO: &str = "tests/kernel-cases/ takes no new cases. A kernel case goes to sketcore's corpus, \
-crates/solidcore/tests/kernel_cases/<area>/ in tangency-labs/solidcore: draft it here as a recipe, export it with \
+crates/solidcore/tests/kernel_cases/<area>/ in the sketcore repository: draft it here as a recipe, export it with \
 `cargo xtask kernel-cases --area <area> --export DIR` and add DIR/<area>/<case>.json (and its .bodies.json.gz) there, \
 or write the entry by hand as that folder's README describes; then delete the draft. A case about a command, the UI \
 or a product rule is a test in its area's existing test file here (CONTRIBUTING.md, \"Tests\").";

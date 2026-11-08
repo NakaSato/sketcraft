@@ -353,7 +353,7 @@ fn a_blend_too_large_is_refused_with_the_largest_size_that_fits() {
     assert!((size - 2.0).abs() < 1e-12 && kind == crate::FitKind::Distance, "{size} {kind:?}");
 }
 
-/// A cliff overflow the fork refuses too (`fixes.fillet_cliff_overflow`, solidcore#960): the
+/// A cliff overflow the fork refuses too (`fixes.fillet_cliff_overflow`, sketcore#960): the
 /// three edges at a 20 mm cube's corner rounded r20, their fillet's boundary on two faces'
 /// surfaces, has no room, as on the fork, not "not supported": too large, the largest radius that
 /// builds 19.99 (the whole edge less sketcore's fit margin), which builds.
@@ -560,7 +560,7 @@ fn an_edge_tag_crosses_a_cliff_overflow() {
 /// does it, with `keep_operand_uv_trims` on too, on the body the boolean gives:
 /// 21000 - (50 d² + 4/3 d³) = 19265.666666667 (the fork, and the same body through the flat
 /// arrays). Without `fillet_run_on_bspline_trims` it is refused: error 3, Corner Edge Computation
-/// Failure (solidcore#1981).
+/// Failure (sketcore#1981).
 #[test]
 fn pocket_chamfer_on_a_boolean_body() {
     use sketcore::blend::fillet_executive::session::FilletSession;
@@ -639,11 +639,11 @@ fn a_setback_corner_left_open_returns_its_hole() {
 }
 
 /// A curvature-continuous round at the equal-area thumbweight takes off what the ball's circle
-/// does, r² (cot(α/2) - (π - α)/2) per unit length on a wedge α (solidcore#2261): on a 40 x 30 x 20
+/// does, r² (cot(α/2) - (π - α)/2) per unit length on a wedge α (sketcore#2261): on a 40 x 30 x 20
 /// box with its top back edge chamfered 5, r 2 along the chamfer's top edge (α 135°) takes
 /// 0.0860579227 per mm, along the bottom front edge (α 90°) 0.8584073464. Both in one call are
 /// refused: every edge takes the first one's thumbweight, so the other would take 17% too little
-/// or 21% too much (solidcore#2250's comment 6563419897), whichever order they come in.
+/// or 21% too much (sketcore#2250's comment 6563419897), whichever order they come in.
 #[test]
 fn a_curvature_round_takes_its_wedges_equal_area_and_mixed_wedges_are_refused() {
     let r = 2.0;
@@ -673,7 +673,7 @@ fn a_curvature_round_takes_its_wedges_equal_area_and_mixed_wedges_are_refused() 
     assert_eq!(blend(&chamfered, Blend::Curvature, &[[90.0; 3]], &[r], TOL, &[], &[], Corners::Filled).err(), Some(Error::NoMatch { point: 0 }));
 }
 
-/// A variable round is the union of its balls (solidcore#2262, `fillet_gn_section_generator`).
+/// A variable round is the union of its balls (sketcore#2262, `fillet_gn_section_generator`).
 /// Along the 30 mm top front edge: a law of one radius 2 takes the constant round's
 /// (1 - π/4) 4 · 30 = 25.752220; 1 to 3, the balls' union's 27.857434 (the great circles would take
 /// 27.898239), either way along the edge. Both come out 5.3e-5 of that over, as on the C++

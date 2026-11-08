@@ -7,7 +7,7 @@ of them. `cargo xtask kernel-cases` runs them and writes
 
 **This folder takes no new cases.** New kernel cases go to sketcore's corpus,
 `crates/solidcore/tests/kernel_cases/<area>/` in
-[tangency-labs/solidcore](https://github.com/tangency-labs/solidcore) (see
+[the sketcore repository](https://github.com/tangency-labs/solidcore) (see
 [Exporting to sketcore](#exporting-to-sketcore)). `CASES` lists every case here and only
 shrinks: `cargo xtask lists` fails on a case it does not list, and on a listed case that is gone.
 
@@ -32,7 +32,7 @@ once), `each_step` (after every sweep, boolean and blend, as before) or `off`; t
 - **No user designs.** A crash report or a repro design becomes a small synthetic recipe that
   shows the same geometry. Check for private content before committing anything.
 - **No workaround on SketCraft's side.** A case that fails stays failing until the kernel is
-  fixed. SMLib defects go to tangency-labs/solidcore as issues (`priority: high`,
+  fixed. SMLib defects go to the sketcore repository as issues (`priority: high`,
   `bug`), and the fix goes into the fork.
 
 ## Layout

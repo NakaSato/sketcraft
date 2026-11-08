@@ -1744,11 +1744,11 @@ fn tabbed_plate_outline() -> Loop2 {
     }
 }
 
-/// solidcore#2223: the tabbed plate's R25 rim and one R2 tab corner arc, which share no vertex,
+/// sketcore#2223: the tabbed plate's R25 rim and one R2 tab corner arc, which share no vertex,
 /// rounded together at r 0.5 on the plate 2 high (no hole). Each rounds alone; together they
 /// failed 1001 in cliff_overflow. They take off the sum: the rim alone's closed form,
 /// 7.958672911836132 (its spandrel (1 − π/4) r² revolved about the disc's axis outside |x| < 4,
-/// solidcore#2176's test; the rim's End, `fillet_blend_corner`, builds it to 5e-8), and the
+/// sketcore#2176's test; the rim's End, `fillet_blend_corner`, builds it to 5e-8), and the
 /// corner arc's Pappus volume with flat ends, 0.15913583972191622 (the spandrel about the
 /// corner's axis at 2 − its centroid over a quarter turn), 8.117808752.
 #[test]

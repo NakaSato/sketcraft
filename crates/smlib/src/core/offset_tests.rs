@@ -463,7 +463,7 @@ fn faces_are_picked_on_the_box_and_on_its_working_copy() {
         }
         assert!(faces[0].as_ref().is_some_and(|f| f.len() == 1), "the body: {faces:?}");
         assert_eq!(faces[0], faces[1], "the body and its copy pick the same face");
-        // `BrepIdentity::of_brep` honours a copy's owner keys since solidcore#1445: the body
+        // `BrepIdentity::of_brep` honours a copy's owner keys since sketcore#1445: the body
         // and its copy both resolve.
         for (what, x) in [("of_brep on the body", &mut b), ("of_brep on its copy", &mut w)] {
             let proven = BrepIdentity::of_brep(x);
@@ -546,8 +546,8 @@ fn offset_faces_close_a_step_wall() {
 /// Rig case shell/4492's rounded box: four mitred rounds, r 3, come off a 40 x 30 x 10 box's top
 /// together and follow it. From height 0 the outline is the 34 x 24 top moved out by the round's
 /// w(z) = sqrt(9 - (z - axis)^2), or 3 below the axis. With the fork's values at +19, and bodies
-/// whose rounds go all the way down from -7 and are cut short from -7.5 (solidcore#2027). At -9
-/// sketcore refuses to put the rounds back (solidcore#2020, open): SketCraft says it does not
+/// whose rounds go all the way down from -7 and are cut short from -7.5 (sketcore#2027). At -9
+/// sketcore refuses to put the rounds back (sketcore#2020, open): SketCraft says it does not
 /// make that move.
 #[test]
 fn mitred_rounds_follow_a_moved_top() {
@@ -641,7 +641,7 @@ fn an_l_sheet_thickens() {
     assert!(rel(volume(&core, 1e-8).unwrap(), 840.0) < 1e-9);
 }
 
-/// solidcore#2350's parabolic sheet: the quadratic Bézier (-10, 0), (0, 10), (10, 0) lofted 20
+/// sketcore#2350's parabolic sheet: the quadratic Bézier (-10, 0), (0, 10), (10, 0) lofted 20
 /// along z, a B-spline face whose radius of curvature at its apex is 10. Thickened 11 towards
 /// its centre of curvature its offset folds there: sketcore's one construction refuses it
 /// naming 10, the largest wall that works (`fixes.shell_one_construction`); 2 builds.

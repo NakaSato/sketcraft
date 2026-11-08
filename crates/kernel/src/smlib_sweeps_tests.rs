@@ -307,7 +307,7 @@ fn z_cylinders(b: &Body, r: f64) -> usize {
 
 #[test]
 fn a_twisted_sweep_builds_circles_about_its_path_as_exact_cylinders() {
-    // solidcore#2184: a tube r 2 / 1.5 extruded over z -2..3, joined with a tube r 2.5 / 1.5 swept
+    // sketcore#2184: a tube r 2 / 1.5 extruded over z -2..3, joined with a tube r 2.5 / 1.5 swept
     // 1.25 up z with a twist. The twist turns each circle onto itself, so both of the swept tube's
     // walls are the exact cylinders, and its bore lies on the extruded tube's: one body,
     // pi (1.75 x 5 + 4 x 1.25 - 1.75 x 1.25) = 11.5625 pi. Skinned, the bore stayed within 4e-9
