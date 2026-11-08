@@ -21,6 +21,7 @@ The contributor skills (everything except modeling, editing, checking and mechan
 | [`sketcraft-tests`](sketcraft-tests/SKILL.md) | places or runs tests |
 | [`sketcraft-performance`](sketcraft-performance/SKILL.md) | works on slow code, the window thread or the wasm build |
 | [`sketcraft-packaging`](sketcraft-packaging/SKILL.md) | prepares a release or changes packages |
+| [`sketcraft-migration`](sketcraft-migration/SKILL.md) | moves SketCraft further towards the SketchUp clone: adds a SketchUp tool, key or default, hides or removes a CAD-only feature, or renames a SolveCraft leftover |
 | [`sketcraft-agent-tools`](sketcraft-agent-tools/SKILL.md) | runs the app, drives the control channel or changes MCP tools |
 | [`sketcraft-modeling`](sketcraft-modeling/SKILL.md) | builds a new part (enclosure, bracket, plate, flange, …) |
 | [`sketcraft-editing`](sketcraft-editing/SKILL.md) | changes, fixes or extends an existing design |

@@ -50,4 +50,4 @@ L0 geom → L1 sketch, kernel, render → L2 doc → L3 io → L4 engine → L5 
 
 ## Where to look
 
-`skills/*/SKILL.md` are short contributor guides, chosen by task: `sketcraft-tests` (test placement and running), `sketcraft-ui` (dialogs, panels, icons), `sketcraft-ui-text` (labels and i18n keys like `cmd.<id>` / `help.<id>`), `sketcraft-file-formats` (saved data and import/export), `sketcraft-preferences`, `sketcraft-crash-safety` (hostile input), `sketcraft-performance` (window thread, wasm). User docs are in `docs/`.
+`skills/*/SKILL.md` are short contributor guides, chosen by task: `sketcraft-tests` (test placement and running), `sketcraft-ui` (dialogs, panels, icons), `sketcraft-ui-text` (labels and i18n keys like `cmd.<id>` / `help.<id>`), `sketcraft-file-formats` (saved data and import/export), `sketcraft-preferences`, `sketcraft-crash-safety` (hostile input), `sketcraft-performance` (window thread, wasm), `sketcraft-migration` (the SketchUp layer, hiding CAD features, legacy names). User docs are in `docs/`.
