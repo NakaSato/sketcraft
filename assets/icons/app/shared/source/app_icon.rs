@@ -1,5 +1,6 @@
-//! Original SketCraft mark, shared by desktop, packaging and CLI: the borderless mark, five
-//! faces with transparent gaps between them, drawn from the macOS icon's
+//! Original SketCraft mark, shared by desktop, packaging and CLI: a slab with a block pulled up
+//! out of it (push/pull), drawn borderless as six faces with transparent gaps between them. Same
+//! faces and gradients as the macOS icon's
 //! `macos/source/SketCraft.icon/Assets/03-solid-blue-cutout.svg`.
 type P = (f32, f32);
 
@@ -11,41 +12,47 @@ struct Face {
     to: (P, [u8; 3]),
 }
 
-const FACES: [Face; 5] = [
-    // Inner side of the upper step.
+const FACES: [Face; 6] = [
+    // Top of the slab, around the block.
     Face {
-        outline: &[(547.883, 282.66), (709.797, 188.211), (709.797, 375.985)],
-        from: ((619.14, 179.734), [29, 99, 198]),
-        to: ((694.687, 396.761), [21, 73, 158]),
+        outline: &[(296.546, 522.551), (135.092, 615.767), (512.0, 833.374), (888.908, 615.767), (727.454, 522.551), (512.0, 646.944)],
+        from: ((398.928, 522.551), [69, 159, 255]),
+        to: ((625.072, 833.374), [35, 121, 231]),
     },
-    // Top of the lower step.
+    // Right side of the slab.
     Face {
-        outline: &[(727.797, 593.626), (727.797, 407.136), (889.571, 500.381)],
-        from: ((619.14, 413.244), [69, 159, 255]),
-        to: ((790.839, 605.547), [35, 121, 231]),
+        outline: &[(906.908, 740.159), (530.0, 957.767), (530.0, 864.551), (906.908, 646.944)],
+        from: ((661.918, 646.944), [27, 102, 207]),
+        to: ((774.99, 957.767), [18, 69, 150]),
     },
-    // Right face, with the recess.
+    // Left side of the slab.
     Face {
-        outline: &[(530.0, 521.17), (691.797, 427.912), (691.797, 655.928), (907.594, 531.545), (907.594, 740.159), (530.0, 957.8)],
-        from: ((632.876, 399.508), [27, 102, 207]),
-        to: ((783.971, 968.175), [18, 69, 150]),
+        outline: &[(117.092, 740.159), (494.0, 957.767), (494.0, 864.551), (117.092, 646.944)],
+        from: ((249.01, 646.944), [37, 141, 245]),
+        to: ((362.082, 957.767), [20, 97, 218]),
     },
-    // Left face, stepped.
+    // Right side of the pulled block.
     Face {
-        outline: &[(116.406, 510.769), (116.406, 303.529), (494.0, 521.17), (494.0, 957.8), (314.203, 854.167), (314.203, 624.777)],
-        from: ((207.063, 303.357), [37, 141, 245]),
-        to: ((426.837, 968.175), [20, 97, 218]),
+        outline: &[(709.454, 491.374), (530.0, 594.982), (530.0, 294.551), (709.454, 190.944)],
+        from: ((592.809, 190.944), [27, 102, 207]),
+        to: ((646.645, 594.982), [18, 69, 150]),
     },
-    // Top of the extruded profile.
+    // Left side of the pulled block.
     Face {
-        outline: &[(134.374, 272.334), (512.0, 53.364), (691.828, 157.015), (476.117, 282.846), (673.752, 396.761), (512.0, 489.993)],
-        from: ((385.63, 53.364), [81, 173, 255]),
-        to: ((522.989, 510.769), [43, 131, 241]),
+        outline: &[(314.546, 491.374), (494.0, 594.982), (494.0, 294.551), (314.546, 190.944)],
+        from: ((377.355, 190.944), [37, 141, 245]),
+        to: ((431.191, 594.982), [20, 97, 218]),
+    },
+    // Top of the pulled block.
+    Face {
+        outline: &[(512.0, 56.159), (691.454, 159.767), (512.0, 263.374), (332.546, 159.767)],
+        from: ((458.164, 56.159), [81, 173, 255]),
+        to: ((565.836, 263.374), [43, 131, 241]),
     },
 ];
 
 /// The mark's extent in SVG units: left, top, width, height.
-const BOUNDS: (f32, f32, f32, f32) = (116.406, 53.364, 791.188, 904.436);
+const BOUNDS: (f32, f32, f32, f32) = (117.092, 56.159, 789.816, 901.608);
 
 /// This block is the icon image data
 pub fn rgba(size: usize) -> Result<Vec<u8>, String> {
@@ -130,17 +137,17 @@ mod tests {
     }
 
     /// Borderless: no white edge lines, and the gaps between faces are see-through. At 256 px
-    /// the gap between the left and right faces (SVG x 494..530) is transparent on the row
-    /// through the middle of the mark, and no opaque pixel is white.
+    /// the gap between the slab's left and right sides (SVG x 494..530) is transparent on a row
+    /// through the slab, and no opaque pixel is white.
     #[test]
     fn shared_mark_is_borderless() {
         let size = 256;
         let pixels = super::rgba(size).expect("valid size");
         let px = |x: usize, y: usize| pixels.as_chunks::<4>().0[y * size + x];
-        let s = size as f32 / 904.436;
-        let gap_x = ((size as f32 - 791.188 * s) / 2.0 + (512.0 - 116.406) * s) as usize;
-        let row = ((750.0 - 53.364) * s) as usize;
-        assert_eq!(px(gap_x, row)[3], 0, "the seam between the left and right faces is a gap");
+        let s = size as f32 / 901.608;
+        let gap_x = ((size as f32 - 789.816 * s) / 2.0 + (512.0 - 117.092) * s) as usize;
+        let row = ((910.0 - 56.159) * s) as usize;
+        assert_eq!(px(gap_x, row)[3], 0, "the seam between the slab's sides is a gap");
         assert!(px(gap_x - 8, row)[3] == 255 && px(gap_x + 8, row)[3] == 255, "faces on both sides of the gap");
         assert!(pixels.as_chunks::<4>().0.iter().all(|p| p[3] == 0 || p[0] < 200), "no white edges");
     }

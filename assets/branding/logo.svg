@@ -1,11 +1,40 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-labelledby="title">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" role="img" aria-labelledby="title">
   <title id="title">SketCraft</title>
-  <rect width="128" height="128" rx="28" fill="#D94836"/>
-  <polygon fill="#FFE0CD" points="28,39 43,30 57,30 42,39"/>
-  <polygon fill="#F2A38B" points="42,39 57,30 57,51 42,60"/>
-  <polygon fill="#FFE0CD" points="62,39 77,30 95,30 80,39"/>
-  <polygon fill="#F2A38B" points="80,39 95,30 70,57 55,66"/>
-  <polygon fill="#FFE0CD" points="55,66 70,57 98,88 83,97"/>
-  <polygon fill="#F2A38B" points="42,73 57,64 57,88 42,97"/>
-  <polygon fill="#FFF9F2" points="28,39 42,39 42,60 62,39 80,39 55,66 83,97 64,97 42,73 42,97 28,97"/>
+  <rect width="1024" height="1024" rx="230" fill="#F5F7FA"/>
+  <g transform="translate(153.6 153.6) scale(0.7)">
+  <defs>
+    <linearGradient id="g1" x1="398.928" y1="522.551" x2="625.072" y2="833.374" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#459fff"/>
+      <stop offset="1" stop-color="#2379e7"/>
+    </linearGradient>
+    <linearGradient id="g2" x1="661.918" y1="646.944" x2="774.99" y2="957.767" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#1b66cf"/>
+      <stop offset="1" stop-color="#124596"/>
+    </linearGradient>
+    <linearGradient id="g3" x1="249.01" y1="646.944" x2="362.082" y2="957.767" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#258df5"/>
+      <stop offset="1" stop-color="#1461da"/>
+    </linearGradient>
+    <linearGradient id="g4" x1="592.809" y1="190.944" x2="646.645" y2="594.982" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#1b66cf"/>
+      <stop offset="1" stop-color="#124596"/>
+    </linearGradient>
+    <linearGradient id="g5" x1="377.355" y1="190.944" x2="431.191" y2="594.982" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#258df5"/>
+      <stop offset="1" stop-color="#1461da"/>
+    </linearGradient>
+    <linearGradient id="g6" x1="458.164" y1="56.159" x2="565.836" y2="263.374" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#51adff"/>
+      <stop offset="1" stop-color="#2b83f1"/>
+    </linearGradient>
+  </defs>
+  <g id="Layer_1" data-name="Layer 1">
+    <path data-name="Top of the slab, around the block" d="M296.546 522.551 L135.092 615.767 L512 833.374 L888.908 615.767 L727.454 522.551 L512 646.944 Z" fill="url(#g1)"/>
+    <path data-name="Right side of the slab" d="M906.908 740.159 L530 957.767 L530 864.551 L906.908 646.944 Z" fill="url(#g2)"/>
+    <path data-name="Left side of the slab" d="M117.092 740.159 L494 957.767 L494 864.551 L117.092 646.944 Z" fill="url(#g3)"/>
+    <path data-name="Right side of the pulled block" d="M709.454 491.374 L530 594.982 L530 294.551 L709.454 190.944 Z" fill="url(#g4)"/>
+    <path data-name="Left side of the pulled block" d="M314.546 491.374 L494 594.982 L494 294.551 L314.546 190.944 Z" fill="url(#g5)"/>
+    <path data-name="Top of the pulled block" d="M512 56.159 L691.454 159.767 L512 263.374 L332.546 159.767 Z" fill="url(#g6)"/>
+  </g>
+  </g>
 </svg>
