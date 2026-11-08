@@ -3,7 +3,7 @@
 [Documentation](README.md) · [Developer README](../README.md) · Rules: `skills/sketcraft-migration/SKILL.md`, parity map: `skills/sketcraft-migration/reference.md`
 
 SketCraft becomes a SketchUp alternative by layering SketchUp's tools, defaults and look over the
-parametric SolidCraft core it inherited. The core (B-rep kernel, sketch solver, command registry,
+parametric SolveCraft core it inherited. The core (B-rep kernel, sketch solver, command registry,
 components, undo, autosave) is kept. CAD-only surface is hidden first and removed only as whole
 subsystems. This page is the work list; each item follows the migration skill's steps (find the
 existing command, add it to the SketchUp tab and `SKETCHUP_LARGE_TOOLSET`, give it SketchUp's key,

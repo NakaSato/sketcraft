@@ -1,11 +1,11 @@
 ---
 name: sketcraft-migration
-description: "Use when moving SketCraft further towards a SketchUp clone on its parametric SolveCraft core: adding a SketchUp tool, key, default or look, mapping a SketchUp concept onto an existing command, hiding or removing a CAD-only feature, or renaming a SolveCraft/SolidCraft leftover."
+description: "Use when moving SketCraft further towards a SketchUp clone on its parametric SolveCraft core: adding a SketchUp tool, key, default or look, mapping a SketchUp concept onto an existing command, hiding or removing a CAD-only feature, or renaming a SolveCraft leftover."
 ---
 
 # Migrating to the SketchUp clone
 
-SketCraft is a SketchUp-first workspace on the parametric SolidCraft core. The core is not rewritten: SketchUp behaviour is a layer in `crates/ui-egui`, and CAD-only features are hidden before they are removed. `reference.md` maps SketchUp's tools onto SketCraft's commands and lists what is open.
+SketCraft is a SketchUp-first workspace on the parametric SolveCraft core. The core is not rewritten: SketchUp behaviour is a layer in `crates/ui-egui`, and CAD-only features are hidden before they are removed. `reference.md` maps SketchUp's tools onto SketCraft's commands and lists what is open.
 
 ## The SketchUp layer
 - Tab: `SKETCHUP_TAB` and its `Section`s in `crates/ui-egui/src/workspace.rs`; the same list is `SKETCHUP_LARGE_TOOLSET` in `crates/ui-egui/src/toolbar_custom.rs`. Its buttons are shortcuts: every command keeps its home tab.
@@ -29,5 +29,5 @@ SketCraft is a SketchUp-first workspace on the parametric SolidCraft core. The c
 
 ## Names
 - Visible text, crates, binaries and types say SketCraft (`sketcraft-*`, `SketApp`; `sketcore` for the upstream solidcore packages, whose URLs, licences, issue numbers and cache tag keep `solidcore`).
-- Keep what saved data still reads: `LEGACY_STORAGE_KEY`, `LEGACY_FORMAT_PREFIX`, the `SOLVECRAFT_*` fallbacks in `crates/geom/src/env.rs`, the `.solvecraft` extension, `apps/sketcraft-cli/src/alias.rs` and `crates/io/src/legacy_dir.rs`. SolidCraft's own tags are no longer read; do not bring them back.
+- Keep what saved data still reads: `LEGACY_STORAGE_KEY`, `LEGACY_FORMAT_PREFIX`, the `SOLVECRAFT_*` fallbacks in `crates/geom/src/env.rs`, the `.solvecraft` extension, `apps/sketcraft-cli/src/alias.rs` and `crates/io/src/legacy_dir.rs`.
 - `docs/controls.md` and `docs/sidebar.md` still describe parts of the older KetchUp UI: check a line against the app before citing it.

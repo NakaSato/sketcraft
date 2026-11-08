@@ -5,9 +5,9 @@ Companion to `SKILL.md`. Facts here describe the tree today; update them in the 
 ## How the tree got here
 
 1. KetchUp: a SketchUp-style UI on `sketcraft-core`, two crates, no parametric history.
-2. The SolidCraft (upstream SolveCraft fork) tree was brought back as the app: `apps/sketcraft`, `crates/ui-egui` and the engine crates replaced `crates/sketcraft-ui`. `sketcraft-core` stayed only for SKP import, then became `crates/skp`.
+2. The upstream SolveCraft fork was brought back as the app: `apps/sketcraft`, `crates/ui-egui` and the engine crates replaced `crates/sketcraft-ui`. `sketcraft-core` stayed only for SKP import, then became `crates/skp`.
 3. SketchUp-first workspace on that core: the SketchUp ribbon tab with the Large Tool Set, `sketchup_draw`, `sketchup_screen`, the SketchUp defaults, Use SketchUp Keys.
-4. Renames: SolidCraft → SketCraft everywhere visible; `solidcore` → `sketcore` as Cargo `package =` aliases; `SolveApp` → `SketApp`. SolidCraft's file tags and the 3D mouse crates were removed. The browser build moved to Trunk.
+4. Renames: the fork's name → SketCraft everywhere visible; `solidcore` → `sketcore` as Cargo `package =` aliases; `SolveApp` → `SketApp`. The fork's own file tags and the 3D mouse crates were removed. The browser build moved to Trunk.
 5. The SKP reader became pure Rust on every target; the vendored OpenSKP C++ reader stays on desktop as the oracle for `crates/skp/src/parity.rs`.
 
 ## Tool map

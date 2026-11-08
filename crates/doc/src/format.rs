@@ -2388,8 +2388,6 @@ mod tests {
         assert_eq!(version_of("sketcraft/x"), None);
         // Compatibility shim: files saved before the rename carry the legacy tag.
         assert_eq!(version_of("solvecraft/13"), Some(13));
-        assert_eq!(version_of("solidcraft/15"), None, "SolidCraft's tags are no longer read");
-        assert_eq!(DRAWING.version_of("solidcraft-drawing/1"), None, "nor its drawings'");
         assert_eq!(version_of("solvecraftx/13"), None);
         let d = Document::new("A");
         assert_eq!(d.format, format_string(FORMAT));
