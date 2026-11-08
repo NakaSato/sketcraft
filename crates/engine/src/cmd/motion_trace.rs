@@ -7,11 +7,11 @@ use std::sync::Arc;
 
 use serde_json::{Value, json};
 use sketcore_record::Vec3;
-use sketcraft_doc::joints::{self, JointOrigin, Snap};
+use sketcraft_doc::joints::{self};
 use sketcraft_doc::motion::{MotionTrace, TraceMotion};
 use sketcraft_doc::{IDENTITY, apply_point};
 
-use crate::params::{bad, bool_};
+use crate::params::bad;
 use crate::{Result, Session};
 
 const CMD: &str = "motion.trace.edit";
@@ -28,70 +28,6 @@ pub(crate) struct Cache {
 struct CacheEntry {
     inputs: std::result::Result<Value, String>,
     error: Option<String>,
-}
-
-fn motion(s: &Session, p: &Value, cmd: &str) -> Result<TraceMotion> {
-    let _ = super::motion_plan(s, p, cmd)?;
-    if p.get("study").is_some() {
-        let study = s.doc.assembly.studies.get(super::study_index(s, p, cmd)?).ok_or_else(|| bad(cmd, "study is missing"))?;
-        Ok(TraceMotion::Study { study: study.id })
-    } else {
-        Ok(TraceMotion::Joint {
-            joint: super::joint_id(s, p.get("joint"), cmd)?,
-            index: p.get("index").and_then(Value::as_u64).unwrap_or(0) as usize,
-            from: p.get("from").cloned().unwrap_or(Value::Null),
-            to: p.get("to").cloned().unwrap_or(Value::Null),
-        })
-    }
-}
-
-pub(super) fn source(s: &Session, p: &Value, cmd: &str) -> Result<MotionTrace> {
-    if s.doc.assembly.traces.len() >= super::MAX_ITEMS {
-        return Err(bad(cmd, "too many motion traces"));
-    }
-    let (occurrence, local) = super::traced_point(s, p, cmd)?;
-    let point = match p.get("point_ref") {
-        Some(v) => {
-            let mut reference = v.clone();
-            // The origin parser uses an occurrence's first placement. A trace can name a
-            // different nested instance; convert its world pick to that canonical frame.
-            let id = occurrence.last().copied().unwrap_or(0);
-            let placed = placed_world(s, &occurrence)?;
-            let inverse = sketcraft_doc::mat_inverse(&placed).ok_or_else(|| bad(cmd, "invalid occurrence placement"))?;
-            let canonical = joints::occurrence_world(&s.doc, id);
-            for key in ["face", "circle", "edge", "point", "corner"] {
-                if let Some(at) = reference.get(key).and_then(crate::params::vec3) {
-                    let at = apply_point(&canonical, apply_point(&inverse, at));
-                    reference[key] = json!([at.x, at.y, at.z]);
-                }
-            }
-            if let Some(z) = reference.get("z").and_then(crate::params::vec3) {
-                let z = sketcraft_doc::apply_vector(&canonical, sketcraft_doc::apply_vector(&inverse, z));
-                reference["z"] = json!([z.x, z.y, z.z]);
-            }
-            let o = super::super::joints::origin_param(s, Some(&reference), cmd)?;
-            if o.occurrence != occurrence.last().copied().unwrap_or(0) {
-                return Err(bad(cmd, "point_ref must belong to the traced occurrence"));
-            }
-            o
-        }
-        None => JointOrigin { occurrence: occurrence.last().copied().unwrap_or(0), snap: Snap::Point { point: local, z: None, x: None } },
-    };
-    let referenced = apply_point(&joints::resolve_origin(&s.doc, &s.model.state(), &point)?, Vec3::ZERO);
-    if referenced.dist(local) > 1e-4 {
-        return Err(bad(cmd, "point_ref must resolve to the traced point"));
-    }
-    let motion = motion(s, p, cmd)?;
-    let samples = p.get("samples").map(|_| super::sample_count(p, 100, super::MAX_TRACE, cmd)).transpose()?;
-    Ok(MotionTrace {
-        sketch: 0,
-        wire: String::new(),
-        occurrence,
-        point,
-        motion,
-        samples,
-        seeds: s.doc.assembly.joints.iter().map(|j| (j.id, j.values.clone())).collect(),
-    })
 }
 
 fn params(t: &MotionTrace, point: Vec3) -> Value {
@@ -252,17 +188,6 @@ fn seeded(s: &Session, t: &MotionTrace) -> Session {
     scratch
 }
 
-pub(super) fn remember(s: &mut Session, t: &MotionTrace) {
-    let key = inputs(s, t).map_err(|e| e.to_string());
-    if let Ok(key) = &key
-        // design-only: a motion trace's wire is in one of the design's sketches.
-        && let Some(points) = s.doc.sketch(t.sketch).ok().and_then(|sk| sk.wires.iter().find(|w| w.id == t.wire)).map(|w| w.fit.clone())
-    {
-        remember_points(s, t.sketch, key.clone(), points);
-    }
-    Arc::make_mut(&mut s.motion_traces.entries).insert(t.sketch, CacheEntry { inputs: key, error: None });
-}
-
 fn remember_points(s: &mut Session, id: u64, key: Value, points: Vec<Vec3>) {
     let history = Arc::make_mut(&mut s.motion_traces.history).entry(id).or_default();
     if history.iter().all(|(old, _)| *old != key) {
@@ -387,53 +312,4 @@ pub(crate) fn refresh(s: &mut Session) {
             r.warning = Some(format!("Motion Trace: {error}; showing its last successful curve"));
         }
     }
-}
-
-pub(super) fn list(s: &Session) -> Vec<Value> {
-    s.doc
-        .assembly
-        .traces
-        .iter()
-        .map(|t| {
-            json!({"sketch":t.sketch,"motion":t.motion,"samples":t.samples,
-        "error":s.motion_traces.entries.get(&t.sketch).and_then(|e| e.error.as_ref())})
-        })
-        .collect()
-}
-
-pub(super) fn edit(s: &mut Session, p: &Value) -> Result<Value> {
-    let key = p.get("sketch").map(|v| v.as_str().map(str::to_string).unwrap_or_else(|| v.to_string())).ok_or_else(|| bad(CMD, "give a sketch"))?;
-    let id = s.doc.find_feature(&key).map(|f| f.id).ok_or_else(|| bad(CMD, "trace sketch is missing"))?;
-    let i = s.doc.assembly.traces.iter().position(|t| t.sketch == id).ok_or_else(|| bad(CMD, "the sketch has no associative trace"))?;
-    if bool_(p, "auto_update") == Some(false) {
-        s.doc_mut().assembly.traces.remove(i);
-        Arc::make_mut(&mut s.motion_traces.entries).remove(&id);
-        Arc::make_mut(&mut s.motion_traces.history).remove(&id);
-        return Ok(json!({"sketch":id,"auto_update":false}));
-    }
-    let mut t = s.doc.assembly.traces.get(i).cloned().ok_or_else(|| bad(CMD, "trace is missing"))?;
-    if p.get("study").is_some() || p.get("joint").is_some() {
-        t.motion = motion(s, p, CMD)?;
-    } else if let TraceMotion::Joint { from, to, index, .. } = &mut t.motion {
-        if let Some(v) = p.get("from") {
-            *from = v.clone();
-        }
-        if let Some(v) = p.get("to") {
-            *to = v.clone();
-        }
-        if let Some(v) = p.get("index") {
-            *index = v.as_u64().and_then(|n| usize::try_from(n).ok()).ok_or_else(|| bad(CMD, "invalid index"))?;
-        }
-    }
-    if p.get("samples").is_some() {
-        t.samples = Some(super::sample_count(p, 100, super::MAX_TRACE, CMD)?);
-    }
-    inputs(s, &t)?;
-    // Validate before publishing an edited definition; execute can then undo the whole edit.
-    if s.doc.assembly.traces.get(i) != Some(&t)
-        && let Some(slot) = s.doc_mut().assembly.traces.get_mut(i)
-    {
-        *slot = t;
-    }
-    Ok(json!({"sketch":id,"auto_update":true}))
 }

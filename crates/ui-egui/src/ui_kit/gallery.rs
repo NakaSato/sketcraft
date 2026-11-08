@@ -1749,18 +1749,10 @@ const ELEMENTS: &[Element] = &[
             text_field_tip(ui, &mut s.value, "Name", "What it is called");
         });
     }),
-    element!("continuity_row", "dialog:row:Gallery", Some("dialog:Gallery"), |ui, _| {
-        let mut order = Continuity::G1;
-        continuity_row(ui, "Gallery", "gallery_continuity", &mut order, &[Continuity::G0, Continuity::G1, Continuity::G2]);
-    }),
     element!("continuity_row_explained", "dialog:row:Gallery", Some("dialog:Gallery"), |ui, _| {
         let mut order = Continuity::G2;
         let allowed = [Continuity::G1, Continuity::G2];
-        continuity_row_explained(ui, "Gallery", "gallery_continuity", &mut order, &allowed, &continuity_tip(&allowed));
-    }),
-    element!("continuity_tip", "dialog:row:Gallery", None, |ui, _| {
-        let tip = continuity_tip(&[Continuity::G0, Continuity::G1]);
-        row(ui, "Gallery", |ui| ui.label(tip));
+        continuity_row_explained(ui, "Gallery", "gallery_continuity", &mut order, &allowed, "G1: tangent\nG2: curvature");
     }),
     element!("text_field", "dialog:row:Gallery", Some("dialog:Gallery"), |ui, s| {
         row(ui, "Gallery", |ui| {
@@ -2014,9 +2006,6 @@ const ELEMENTS: &[Element] = &[
     }),
     element!("status_line", "dialog:status:needs a joint that turns and one that slides", None, |ui, _| {
         status_line(ui, "needs a joint that turns and one that slides", StatusTone::Dim);
-    }),
-    element!("status_line_warning", |ui, _| {
-        status_line(ui, "Pick two different components before creating a joint.", StatusTone::Warning);
     }),
     element!("status_line_error", |ui, _| {
         status_line(ui, "The interference check could not finish. Check the selected bodies.", StatusTone::Error);

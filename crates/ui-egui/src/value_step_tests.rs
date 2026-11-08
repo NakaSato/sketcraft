@@ -223,86 +223,6 @@ fn the_wheel_over_a_focused_field_steps_it_instead_of_scrolling() {
     assert!(f.scrolled() > 0.0, "the panel scrolls off the field");
 }
 
-/// An edge Flange dialog open on a 100 x 60 base flange, its Height box (10 mm) beside the edge,
-/// with value stepping `on` or off.
-fn edge_flange(on: bool) -> Harness {
-    let mut h = Harness::new();
-    h.app.preferences.step_values = on;
-    h.app.run("sketch.create", json!({"plane": "XY", "name": "Base"})).unwrap();
-    h.app.run("sketch.rectangle.two_point", json!({"p0": [0, 0], "p1": [100, 60]})).unwrap();
-    h.app.run("sketch.finish", json!({})).unwrap();
-    let sk = h.app.session.doc.features[0].id;
-    h.app.session.selection = vec![sketcraft_engine::Sel::Profile { sketch: sk, index: 0 }];
-    h.app.start("sheet.flange");
-    let d = h.app.dialog.take().unwrap();
-    for (id, p) in crate::dialogs::apply_commands(&h.app, &d).unwrap() {
-        h.app.run(&id, p).unwrap();
-    }
-    let edge = crate::dialogs::edge_sel(&h.app.session, sketcore_record::Vec3::new(50.0, 0.0, 2.5)).unwrap();
-    h.app.session.selection = vec![edge];
-    h.step(&json!({"start": "sheet.flange"})).unwrap();
-    h.frames(6);
-    assert_eq!(flange(&h), (1, "10 mm".into(), String::new()), "an edge flange, 10 mm high");
-    h
-}
-
-/// The open Flange dialog's type, height and bend radius.
-fn flange(h: &Harness) -> (usize, String, String) {
-    match &h.app.dialog.as_ref().unwrap().kind {
-        crate::dialogs::Kind::Sheet(crate::dialogs_sheet::Sm::Flange { ty, height, radius, .. }) => (*ty, height.clone(), radius.clone()),
-        _ => panic!("flange dialog"),
-    }
-}
-
-/// #2320 as reported: in an edge Flange, the Height box beside the edge and the Bend Radius row
-/// both take Up/Down and the wheel, and OK makes the stepped flange.
-#[test]
-fn flange_height_and_bend_radius_step_with_arrows_and_wheel() {
-    let mut h = edge_flange(true);
-    // The box sits at the arrow's tip, so it moves as the height does.
-    let at = |h: &Harness| h.ctx.read_response(egui::Id::unique("sc_canvas_value")).expect("the Height box beside the edge").rect.center();
-    let height = at(&h);
-    h.step(&json!({"click": [height.x, height.y]})).unwrap();
-    h.step(&json!({"key": "ArrowUp"})).unwrap();
-    h.frames(2);
-    assert_eq!(flange(&h).1, "11 mm");
-    h.step(&json!({"key": "ArrowUp", "shift": true})).unwrap();
-    h.frames(2);
-    assert_eq!(flange(&h).1, "21 mm");
-    // Close in, then notch after notch at one spot: the box stays under the pointer while its arrow
-    // shrinks, so every notch steps it and none reaches the camera.
-    h.call("ui.camera", json!({"target": [50, 0, 15], "distance": 40}));
-    h.frames(4);
-    let rect = h.ctx.read_response(egui::Id::unique("sc_canvas_value")).unwrap().rect;
-    let tip = h.at(&json!({"handle": "arrow"})).unwrap()[1];
-    let cam = h.app.cam;
-    for _ in 0..4 {
-        h.call("ui.scroll", json!({"x": rect.center().x, "y": rect.center().y, "delta": -40.0}));
-        h.frames(2);
-    }
-    assert_eq!(flange(&h).1, "17 mm", "four notches down");
-    assert_eq!(h.app.cam, cam, "the view did not zoom");
-    let moved = (h.at(&json!({"handle": "arrow"})).unwrap()[1] - tip).abs();
-    assert!(moved > f64::from(rect.height()), "the tip moved {moved}, further than the box is tall");
-    // The Bend Radius row (under Advanced) is found by its label, empty ("from the rule") does not
-    // step, a number does.
-    h.step(&json!({"click": {"handle": "dialog:section:Advanced"}})).unwrap();
-    h.frames(2);
-    h.step(&json!({"click": {"handle": "dialog:Bend Radius"}})).unwrap();
-    h.step(&json!({"key": "ArrowUp"})).unwrap();
-    h.frames(2);
-    assert_eq!(flange(&h).2, "");
-    h.step(&json!({"text": "2 mm"})).unwrap();
-    h.step(&json!({"key": "ArrowUp"})).unwrap();
-    h.frames(2);
-    assert_eq!(flange(&h).2, "3 mm");
-    h.step(&json!({"widget": "OK"})).unwrap();
-    h.frames(2);
-    let f = h.app.session.doc.features.last().unwrap();
-    let sketcraft_engine::doc::FeatureKind::SheetFlange { height, radius, .. } = &f.kind else { panic!("flange feature: {:?}", f.kind) };
-    assert_eq!((height.as_str(), radius.as_deref()), ("17 mm", Some("3 mm")));
-}
-
 /// The Parameters window's expression boxes step too; Enter applies the stepped expression.
 #[test]
 fn parameter_expressions_step_and_apply() {
@@ -339,20 +259,6 @@ fn off_by_default_the_keys_and_the_wheel_do_what_they_did() {
     assert_eq!(f.text, "20 mm");
     assert!(f.scrolled() > 0.0, "the wheel scrolled the panel");
 
-    let mut h = edge_flange(false);
-    let at = h.ctx.read_response(egui::Id::unique("sc_canvas_value")).unwrap().rect.center();
-    h.step(&json!({"click": [at.x, at.y]})).unwrap();
-    h.step(&json!({"key": "ArrowUp"})).unwrap();
-    h.call("ui.scroll", json!({"x": at.x, "y": at.y, "delta": 40.0}));
-    h.frames(2);
-    assert_eq!(flange(&h).1, "10 mm", "neither Up nor the wheel stepped the Height box");
-    // Typed with the pointer over the box, the box follows the arrow's tip as before.
-    h.step(&json!({"key": "A", "cmd": true})).unwrap();
-    h.step(&json!({"text": "40 mm"})).unwrap();
-    h.frames(3);
-    assert_eq!(flange(&h).1, "40 mm");
-    let moved = h.ctx.read_response(egui::Id::unique("sc_canvas_value")).unwrap().rect.center();
-    assert!((moved.y - at.y).abs() > 5.0, "the box moved with the arrow ({at:?} -> {moved:?})");
 }
 
 /// The preference is on Preferences › Design, and the control channel sets it.

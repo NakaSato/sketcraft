@@ -38,8 +38,6 @@ mod dialog_descriptor;
 pub mod dialogs;
 pub mod dialogs_appearance;
 pub mod dialogs_assembly;
-pub mod dialogs_coupling;
-pub mod dialogs_frame;
 mod dialogs_hole;
 pub mod dialogs_insert_drawing;
 pub mod dialogs_library;
@@ -49,8 +47,7 @@ pub mod dialogs_part_size;
 pub mod dialogs_parts;
 pub mod dialogs_plastic;
 pub mod dialogs_save_mesh;
-pub mod dialogs_sheet;
-pub mod dialogs_surface;
+pub mod dialogs_split_face;
 pub mod dialogs_sweep;
 mod dialogs_thread;
 pub mod dialogs_view_dxf;
@@ -99,8 +96,6 @@ pub mod inference;
 pub mod insert_handles;
 pub mod install;
 pub mod issue_report;
-pub mod joint_drag;
-pub(crate) mod joint_handles;
 pub mod keymap;
 mod length_input;
 mod linked_source;
@@ -122,6 +117,7 @@ pub mod mesh_units;
 pub mod messages;
 pub(crate) mod motion;
 pub mod occurrence_drag;
+pub(crate) mod occurrence_move;
 #[cfg(test)]
 mod pattern_arrow_tests;
 #[cfg(test)]
@@ -132,6 +128,7 @@ mod scale_tests;
 mod surface_clamp_tests;
 #[cfg(test)]
 mod surface_errors_tests;
+pub(crate) mod tape_tool;
 #[cfg(test)]
 mod timeline_dependents_tests;
 #[cfg(test)]
@@ -181,10 +178,6 @@ mod move_preview;
 pub use file_picker::FilePickerFuture;
 #[cfg(test)]
 mod blend_arrow_tests;
-#[cfg(test)]
-mod blend_dialog_tests;
-#[cfg(test)]
-mod boundary_dialog_tests;
 pub(crate) mod display_lod;
 #[cfg(test)]
 mod file_load_ui_tests;
@@ -201,7 +194,6 @@ pub mod open_elsewhere;
 pub(crate) mod open_meshing;
 pub mod panel_runtime;
 pub mod params_dialog;
-pub mod personal_sheet_rules;
 pub(crate) mod pick_index;
 pub(crate) mod place_gizmo;
 pub(crate) mod plugins;
@@ -235,6 +227,7 @@ pub mod resume_ui;
 mod revolve_edit_tests;
 #[cfg(test)]
 mod revolve_manipulator_tests;
+pub(crate) mod rotate_tool;
 #[cfg(test)]
 mod round_pick_tests;
 mod rule_editor;
@@ -567,6 +560,10 @@ pub struct SketApp {
     pub cam_anim: Option<CameraAnim>,
     /// The views shown recently, for Previous and Next view (each design tab keeps its own).
     pub(crate) view_history: view_history::ViewHistory,
+    /// SketchUp's Rotate with its protractor, while it is open on the SketchUp tab.
+    pub(crate) rotate_tool: Option<rotate_tool::RotateTool>,
+    /// SketchUp's Tape Measure with its guides, while it is open on the SketchUp tab.
+    pub(crate) tape_tool: Option<tape_tool::TapeTool>,
     /// The custom view navigator's body (kept with the preferences).
     pub view_gizmo: view_gizmo::State,
     /// Seconds since start, as of this frame.
@@ -808,8 +805,6 @@ pub struct SketApp {
     pending_fit: Option<(Camera, sketcraft_engine::geom::Aabb3, bool, bool)>,
     /// Frames a pending fit has waited for a layout that can frame it (`resolve_fit`).
     fit_waits: u32,
-    /// The sheet metal flat pattern's own pan and zoom.
-    pub flat_view: dialogs_sheet::FlatView,
     /// The start page.
     pub home: home::HomeState,
     pub file_load: file_load::FileLoad,
@@ -866,6 +861,8 @@ impl SketApp {
             cam: Camera::default(),
             cam_anim: None,
             view_history: Default::default(),
+            rotate_tool: None,
+            tape_tool: None,
             view_gizmo: view_gizmo::State::default(),
             now: 0.0,
             pre_sketch_cam: None,
@@ -988,7 +985,6 @@ impl SketApp {
             fitted: false,
             pending_fit: None,
             fit_waits: 0,
-            flat_view: Default::default(),
             embedded: false,
             embed_editor: false,
             home: home::HomeState::default(),
@@ -1779,8 +1775,10 @@ impl SketApp {
         // A tool can be started outside the frame's scope (a direct `start`, a shortcut in
         // `logic`): build its hint in the user's language, not the thread default.
         let _language = crate::i18n::scope(&self.preferences.language);
-        // Another command ends a SketchUp drawing tool still waiting for its first click.
+        // Another command ends a SketchUp drawing tool still waiting for its first click, and Rotate.
         sketchup_draw::cancel(self);
+        rotate_tool::cancel(self);
+        tape_tool::cancel(self);
         if sketcraft_engine::panels::commands::is_command(id) {
             if let Err(why) = self.run(id, json!({})) {
                 self.set_status(why, true);
@@ -1816,9 +1814,6 @@ impl SketApp {
         if self.file_load.busy() || self.file_picker.is_some() {
             return;
         }
-        if id != "occurrence.move" {
-            joint_handles::close(self);
-        }
         // Repeat Last Command starts the tool it names; it is never the one repeated itself.
         if id == "edit.repeat" {
             self.repeat_last();
@@ -1852,14 +1847,11 @@ impl SketApp {
             }
             return;
         }
-        // Front … Isometric (Ctrl+1…7 by default) turn the view as the view cube's faces do. The
-        // flat pattern is a 2D page: it has no other side to turn to.
+        // Front … Isometric (Ctrl+1…7 by default) turn the view as the view cube's faces do.
         if sketcraft_engine::standard_view(id).is_some() {
-            if !dialogs_sheet::flat_active(self) {
-                // `view.isometric` → "isometric", which `StandardView::parse` reads as Iso.
-                self.animate_view(id.trim_start_matches("view."));
-                self.home.open = false;
-            }
+            // `view.isometric` → "isometric", which `StandardView::parse` reads as Iso.
+            self.animate_view(id.trim_start_matches("view."));
+            self.home.open = false;
             return;
         }
         // Print Face (Ctrl+B) acts on the selected face at once: it has no dialog.
@@ -1934,6 +1926,16 @@ impl SketApp {
         if render_workspace::start_interactive(self, id) {
             return;
         }
+        // Rotate on the SketchUp tab is SketchUp's protractor, not Move/Copy.
+        if rotate_tool::wanted(self, id) {
+            rotate_tool::begin(self);
+            return;
+        }
+        // So is Measure: SketchUp's Tape Measure, which also makes guides.
+        if tape_tool::wanted(self, id) {
+            tape_tool::begin(self);
+            return;
+        }
         // A display toggle leaves the current modelling tool and camera in place, and the ribbon
         // where it is: F6, the navigation bar and the view cube never went through `start`, so
         // command search and the VIEW tab's menus must not move the tab either (#10540).
@@ -1976,7 +1978,7 @@ impl SketApp {
         self.command_tab_before_start = Some(self.ui.tab.clone());
         workspace::select_command_tab(self, id);
         if id == "occurrence.move" {
-            joint_handles::start(self);
+            occurrence_move::start(self);
             return;
         }
         // One selected placement moves as a component, the same way as its Browser menu,
@@ -2067,7 +2069,7 @@ impl SketApp {
         dim_view::cancel();
         self.tool = None;
         self.home.open = false;
-        if dialogs_sheet::start_export(self, id) || toolbar::start_export(self, id) {
+        if toolbar::start_export(self, id) {
             return;
         }
         if id == "component.finish_edit" {
@@ -2863,10 +2865,6 @@ impl SketApp {
             render_workspace::fit_result(self);
             return;
         }
-        if dialogs_sheet::flat_active(self) {
-            self.flat_view.fitted = false;
-            return;
-        }
         if render_workspace::active(self) {
             self.cancel_view_animation();
             match sketcraft_engine::product_scene::extract(&self.session) {
@@ -3055,10 +3053,6 @@ impl SketApp {
 
     /// Frame everything shown, keeping the orientation (animated; the selection is ignored).
     pub fn animate_fit_all(&mut self) {
-        if dialogs_sheet::flat_active(self) {
-            self.animate_view("fit");
-            return;
-        }
         if render_workspace::active(self) {
             // The Render preview frames its product scene (see `fit_view`).
             self.fit_view();
@@ -3108,11 +3102,6 @@ impl SketApp {
     fn frame_view(&mut self, home: bool) {
         if render_workspace::result_active(self) {
             render_workspace::fit_result(self);
-            return;
-        }
-        // The flat pattern is a 2D view: Fit and Home frame it, and the Design camera stays put.
-        if dialogs_sheet::flat_active(self) {
-            self.flat_view.fitted = false;
             return;
         }
         if render_workspace::active(self) {
@@ -3633,7 +3622,6 @@ impl SketApp {
         delete::show(self, ui.ctx());
         easyprint_ui::show(self, ui.ctx());
         linked_source::show_copies(self, ui.ctx());
-        joint_handles::show_warning(self, ui.ctx());
         shortcut_box::show(self, ui.ctx());
         prefs::show(self, ui.ctx());
         toolbar_custom::window(self, ui.ctx());

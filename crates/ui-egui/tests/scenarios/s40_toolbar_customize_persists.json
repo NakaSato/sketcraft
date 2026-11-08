@@ -19,7 +19,7 @@
     "toolbar:solid.revolve"
    ],
    "hidden_handles": [
-    "toolbar:solid.draft"
+    "toolbar:solid.split_face"
    ]
   }
  },
@@ -30,7 +30,7 @@
    "y": 80,
    "target": {
     "type": "toolbar_command",
-    "id": "solid.draft"
+    "id": "solid.split_face"
    }
   }
  },
@@ -43,7 +43,7 @@
  {
   "expect": {
    "shown_handles": [
-    "toolbar:solid.draft"
+    "toolbar:solid.split_face"
    ]
   }
  },
@@ -74,7 +74,7 @@
  {
   "drag": [
    {
-    "handle": "toolbar:solid.draft"
+    "handle": "toolbar:solid.split_face"
    },
    {
     "handle": "toolbar:solid.extrude"
@@ -85,7 +85,7 @@
  {
   "expect": {
    "handle_order": [
-    "toolbar:solid.draft",
+    "toolbar:solid.split_face",
     "toolbar:solid.extrude"
    ]
   }
@@ -96,7 +96,7 @@
  {
   "expect": {
    "shown_handles": [
-    "toolbar:solid.draft"
+    "toolbar:solid.split_face"
    ],
    "hidden_handles": [
     "toolbar:solid.revolve"
@@ -106,7 +106,7 @@
  {
   "expect": {
    "handle_order": [
-    "toolbar:solid.draft",
+    "toolbar:solid.split_face",
     "toolbar:solid.extrude"
    ]
   }

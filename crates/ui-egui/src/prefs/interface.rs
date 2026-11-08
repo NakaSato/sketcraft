@@ -533,6 +533,7 @@ pub(super) fn layout(app: &mut SketApp, ui: &mut egui::Ui) {
                 app.tr("prefs.ribbon_tabs_only"),
                 app.tr("prefs.layout_page.pinned_menus"),
                 app.tr("prefs.layout_page.hover_panel_menus"),
+                app.tr("prefs.show_cad_tools"),
             ];
             let widest =
                 labels.iter().map(|label| ui_kit::ContentWidth::label(ui, label)).fold(0.0, f32::max) + t.space_14 + t.space_6 * 2.0 + t.space_16;
@@ -600,6 +601,15 @@ pub(super) fn layout(app: &mut SketApp, ui: &mut egui::Ui) {
                                             app.tr("prefs.layout_page.hover_panel_menus_help"),
                                             &mut app.preferences.ribbon_menus_follow_hover,
                                             "ribbon_menus_follow_hover",
+                                        );
+                                    }
+                                    6 => {
+                                        layout_check(
+                                            ui,
+                                            app.tr("prefs.show_cad_tools"),
+                                            app.tr("prefs.show_cad_tools_note"),
+                                            &mut app.preferences.show_cad_tools,
+                                            "show_cad_tools",
                                         );
                                     }
                                     _ => {}

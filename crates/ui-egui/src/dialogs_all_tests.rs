@@ -29,7 +29,6 @@ fn measure_input_fits_external_sketch_geometry() {
 fn feature_inputs_reject_external_sketch_geometry() {
     let h = Harness::new();
     for (command, sel) in [
-        ("solid.pipe", Sel::ExternalSketchCurve { sketch: 17, id: "line1".into() }),
         ("solid.hole", Sel::ExternalSketchPoint { sketch: 17, id: "p1".into() }),
     ] {
         let d = Dialog::for_command(&h.app, command).unwrap();
@@ -255,12 +254,12 @@ fn representative(h: &Harness, command: &str) -> Dialog {
         if matches!(input.label, "Rail" | "Second Rail" | "Pass through" | "Direction" | "Roller (optional)" | "Tip (optional)") {
             continue;
         }
-        let name = if index == 1 && command != "surface.ruled" { "Body2" } else { "Body1" };
-        let point = if index == 1 && command != "surface.ruled" { Vec3::new(30.0, 0.0, 5.0) } else { Vec3::new(0.0, 0.0, 5.0) };
+        let name = if index == 1 { "Body2" } else { "Body1" };
+        let point = if index == 1 { Vec3::new(30.0, 0.0, 5.0) } else { Vec3::new(0.0, 0.0, 5.0) };
         input.items = if command == "construct.point.along_path" {
             vec![edge_sel(s, Vec3::new(10.0, 0.0, 5.0)).unwrap()]
         } else if input.accept & PROFILES != 0 {
-            if matches!(d.kind, Kind::Loft { .. } | Kind::Surface(crate::dialogs_surface::Surf::Loft { .. })) {
+            if matches!(d.kind, Kind::Loft { .. }) {
                 profiles.clone()
             } else {
                 vec![profiles[0].clone()]
@@ -283,8 +282,6 @@ fn representative(h: &Harness, command: &str) -> Dialog {
             vec![Sel::Axis { name: axis.into() }]
         } else if input.accept & (FACES | PLANAR_FACES) != 0 {
             vec![face_sel(s, point).unwrap()]
-        } else if command == "surface.match" && index == 2 {
-            vec![edge_sel(s, Vec3::new(40.0, 0.0, 5.0)).unwrap()]
         } else if input.accept & EDGES != 0 {
             vec![edge_sel(s, Vec3::new(10.0, 0.0, 5.0)).unwrap()]
         } else {
@@ -297,14 +294,8 @@ fn representative(h: &Harness, command: &str) -> Dialog {
     if let Kind::Mirror = &d.kind {
         d.extra.insert("combine".into(), json!(false));
     }
-    if let Kind::BoundaryFill { cells, .. } = &mut d.kind {
-        cells.push((Vec3::new(0.0, 0.0, 2.0), "Cell".into(), true));
-    }
     if let Kind::Thread { designation, .. } = &mut d.kind {
         *designation = "M20x2.5".into();
-    }
-    if let Kind::Assembly(crate::dialogs_assembly::Asm::Cam(f)) = &mut d.kind {
-        f.b = s.doc.assembly.joints[2].id;
     }
     d
 }
@@ -358,22 +349,15 @@ fn check_form(command: &str, labels: &[&str]) {
     }
     let checks: &[&str] = match command {
         "solid.shell" => &["Tangent Chain"],
-        "solid.rib" | "solid.web" | "solid.align" | "sheet.flange" | "sheet.hem" | "sheet.fold" | "joint.create" => &["Flip"],
+        "solid.align" | "sheet.flange" | "sheet.hem" | "sheet.fold" | "joint.create" => &["Flip"],
         "inspect.section" => &["Flip", "Hatch"],
         "solid.move" => &["Create Copy"],
         "solid.combine" => &["Keep Tools", "New Component"],
         "solid.thread" => &["Modeled", "Automatic size"],
-        "solid.boundary_fill" => &["Remove Tools"],
-        "surface.offset" => &["Tangent chain"],
-        "surface.fair" => &["Keep edges"],
-        "surface.trim" => &["Extend to meet", "Stitch the kept pieces"],
-        "surface.ruled" => &["Flip"],
-        "surface.untrim" => &["Restore outer boundary", "In place (surfaces)"],
         "component.create" => &["Activate"],
         "joint.gear" => &["Reverse", "Internal gear"],
         "joint.rack_pinion" | "joint.screw" => &["Reverse"],
         "joint.cam" => &["Other side"],
-        "frame.member" => &["All Lines", "Mirror"],
         "construct.plane.at_angle" => &["Use axis direction only"],
         _ => &[],
     };
@@ -437,44 +421,7 @@ macro_rules! form_case {
 }
 form_case!(revolve, "solid.revolve", ["Angle", "Direction", "Type"]);
 form_case!(shell, "solid.shell", ["Thickness", "Direction"]);
-form_case!(draft, "solid.draft", ["Angle"]);
 form_case!(mirror, "solid.mirror", ["Operation"]);
-
-/// The Motion Study's and Motion Trace's hints read in the user's language: the dialogs drew them
-/// as they got them, in English.
-#[test]
-fn motion_dialog_hints_are_translated() {
-    fn texts(shape: &egui::Shape, out: &mut Vec<String>) {
-        match shape {
-            egui::Shape::Text(text) => out.push(text.galley.job.text.clone()),
-            egui::Shape::Vec(shapes) => shapes.iter().for_each(|shape| texts(shape, out)),
-            _ => {}
-        }
-    }
-    let mut h = fixture();
-    h.app.preferences.language = "ja".into();
-    let _japanese = crate::i18n::scope("ja");
-    for (command, english) in [("motion.study", "add a key for a joint first"), ("motion.trace", "select a point on a component")] {
-        let mut d = Dialog::for_command(&h.app, command).unwrap();
-        let mut painted = Vec::new();
-        for _ in 0..2 {
-            let mut out = h.ctx.run_ui(
-                egui::RawInput { screen_rect: Some(egui::Rect::from_min_size(egui::Pos2::ZERO, vec2(320.0, 1600.0))), ..Default::default() },
-                |ui| {
-                    ui.set_width(264.0);
-                    ui_kit::scope(ui, |ui| {
-                        rows(&mut h.app, &h.ctx, &mut d, ui);
-                    });
-                },
-            );
-            out.textures_delta.clear();
-            painted.clear();
-            out.shapes.iter().for_each(|shape| texts(&shape.shape, &mut painted));
-        }
-        assert!(!painted.iter().any(|p| p == english), "{command} paints {english:?} in Japanese");
-        assert!(painted.iter().any(|p| p == crate::i18n::tr_label(english)), "{command} paints {painted:?}");
-    }
-}
 
 fn mirror_preselection() -> (Harness, Vec<Sel>) {
     let mut h = Harness::new();
@@ -618,11 +565,7 @@ fn scale_takes_a_factor_per_axis() {
 form_case!(offset_faces, "solid.offset_face", ["Distance"]);
 form_case!(section, "inspect.section", ["Distance"]);
 form_case!(move_copy, "solid.move", ["Move Type", "X Distance", "Y Distance", "Z Distance", "X Angle", "Y Angle", "Z Angle"]);
-form_case!(rib, "solid.rib", ["Direction", "Thickness", "Depth"]);
-form_case!(web, "solid.web", ["Direction", "Thickness", "Depth"]);
 form_case!(emboss, "solid.emboss", ["Depth", "Type"]);
-form_case!(replace_face, "solid.replace_face", []);
-form_case!(boundary_fill, "solid.boundary_fill", ["Cells", "Operation"]);
 form_case!(align, "solid.align", ["Object Type", "From Snap", "To Snap"]);
 
 #[test]
@@ -671,10 +614,6 @@ fn align_components_mode_switches_and_aligns_only_selected_instance() {
     assert!((b2.min.x - 10.0).abs() < 1e-5 && (b2.max.x - 70.0).abs() < 1e-5, "{b2:?}");
 }
 form_case!(remove, "solid.remove", []);
-form_case!(path_pattern, "solid.pattern.path", ["Type", "Object Type", "Quantity", "Spacing"]);
-form_case!(pipe, "solid.pipe", ["Diameter", "Wall", "Operation"]);
-form_case!(stock, "solid.bounding_solid", ["Margin"]);
-form_case!(frame_member, "frame.member", ["All Lines", "Anchor", "Angle", "Mirror", "Name"]);
 form_case!(thread, "solid.thread", ["Form", "Size", "Pitch", "Designation", "Hand", "Starts", "Extent", "Start", "End"]);
 form_case!(primitive_box, "solid.box", ["ui.length", "ui.width", "ui.height", "Operation"]);
 form_case!(cylinder, "solid.cylinder", ["ui.diameter", "ui.height", "Operation"]);
@@ -683,22 +622,6 @@ form_case!(torus, "solid.torus", ["ui.major_radius", "ui.minor_radius", "Operati
 form_case!(cone, "solid.cone", ["ui.diameter", "ui.top_diameter", "ui.height", "Operation"]);
 form_case!(coil, "solid.coil", ["ui.diameter", "ui.revolutions", "ui.pitch", "ui.section_size", "Operation"]);
 form_case!(combine, "solid.combine", ["Operation"]);
-form_case!(surface_extrude, "surface.extrude", ["Distance", "Direction"]);
-form_case!(surface_revolve, "surface.revolve", ["Angle", "Direction"]);
-form_case!(surface_sweep, "surface.sweep", ["Orientation"]);
-form_case!(surface_loft, "surface.loft", []);
-form_case!(surface_patch, "surface.patch", ["Continuity"]);
-form_case!(surface_unstitch, "surface.unstitch", []);
-form_case!(surface_reverse, "surface.reverse_normal", []);
-form_case!(surface_offset, "surface.offset", ["Distance"]);
-form_case!(surface_ruled, "surface.ruled", ["Distance", "Type", "Corners"]);
-form_case!(surface_stitch, "surface.stitch", ["Tolerance"]);
-form_case!(surface_fair, "surface.fair", ["ui.fair_strength", "ui.fair_iterations", "Tolerance"]);
-form_case!(surface_match, "surface.match", ["Continuity"]);
-form_case!(thicken, "surface.thicken", ["Thickness", "Direction", "Operation"]);
-form_case!(surface_extend, "surface.extend", ["Distance"]);
-form_case!(surface_trim, "surface.trim", []);
-form_case!(surface_untrim, "surface.untrim", ["Holes"]);
 form_case!(split_face, "solid.split_face", []);
 form_case!(flange, "sheet.flange", ["Type", "Rule"]);
 form_case!(path_flange, "sheet.path_flange", ["Bend Radius"]);
@@ -750,7 +673,6 @@ fn hand_drawn_dialog_texts_are_translated() {
     for (command, english) in [
         ("joint.gear", "▶ Play"),
         ("motion.study", "Loop"),
-        ("surface.stitch", "tight"),
         ("sheet.flange", "Base"),
         ("solid.emboss", "Orthogonal line profiles tangent to one supported cylinder wrap automatically. Pick a wall to choose a target."),
     ] {
@@ -1080,7 +1002,7 @@ fn blend_editor_refills_named_edges_after_sketch_resize() {
 #[test]
 fn face_editor_refills_named_faces_after_sketch_resize() {
     for (command, params) in
-        [("solid.shell", json!({"faces":[[20,20,10]],"thickness":2})), ("solid.draft", json!({"faces":[[20,20,10]],"neutral":"XY","angle":3}))]
+        [("solid.shell", json!({"faces":[[20,20,10]],"thickness":2}))]
     {
         let (mut h, id) = resized_box_editor(command, params);
         let d = h.app.dialog.as_ref().unwrap();
@@ -1099,78 +1021,12 @@ fn face_editor_refills_named_faces_after_sketch_resize() {
 }
 
 #[test]
-fn draft_uses_the_picked_solid_beside_a_hidden_overlapping_mesh() {
-    use sketcraft_engine::doc::{Document, MeshData, naming};
-
-    let mesh = sketcraft_engine::kernel::box_solid(Vec3::ZERO, Vec3::new(20.0, 20.0, 10.0))
-        .unwrap()
-        .mesh(&sketcraft_engine::kernel::MeshTolerance::chord(0.01))
-        .unwrap();
-    let mut doc = Document::default();
-    doc.add_feature(
-        FeatureKind::MeshImport {
-            file: "overlapping-box.stl".into(),
-            meshes: vec![MeshData {
-                name: "Hidden mesh".into(),
-                positions: mesh.positions.iter().flat_map(|p| [p.x, p.y, p.z]).collect(),
-                triangles: mesh.triangles.iter().flatten().copied().collect(),
-                color: None,
-            }],
-        },
-        Some("Imported mesh"),
-    )
-    .unwrap();
-    let mut h = Harness::new();
-    h.app.session = Session::new(doc);
-    h.app.run("solid.box", json!({"length":20,"width":20,"height":10})).unwrap();
-    h.app.run("browser.visibility", json!({"items":["Hidden mesh"],"visible":false})).unwrap();
-    let state = crate::open_meshing::session_world(&h.app.session);
-    let hidden_mesh = state.body("Hidden mesh").unwrap().mesh();
-    let body = state.bodies.iter().find(|body| !body.body.is_mesh()).unwrap();
-    let target = body.name.clone();
-    let point = Vec3::new(20.0, 10.0, 5.0);
-    let name = naming::face_name_at_body(body, point).unwrap();
-    let (index, _) = naming::face_on_body(body, &name, point).unwrap();
-    h.app.session.selection = vec![Sel::Face { body: target.clone(), index, point }];
-    let mut d = Dialog::for_command(&h.app, "solid.draft").unwrap();
-    d.inputs[1].items = vec![Sel::Plane { name: "XY".into() }];
-    d.kind = Kind::Draft { angle: "5 deg".into() };
-    let commands = apply_commands(&h.app, &d).unwrap();
-    assert_eq!(preview_commands(&h.app, &d).unwrap(), commands);
-    let (command, params) = &commands[0];
-    h.app.run(command, params.clone()).unwrap();
-    assert_eq!(params["body"], target);
-    let state = h.app.session.model.state();
-    assert_eq!(state.bodies.len(), 2);
-    assert!(state.body("Hidden mesh").unwrap().body.is_mesh());
-    assert_eq!(state.body("Hidden mesh").unwrap().mesh().positions, hidden_mesh.positions);
-    assert_eq!(state.body("Hidden mesh").unwrap().mesh().triangles, hidden_mesh.triangles);
-    let volume = state.body(&target).unwrap().body.volume_at(0.01).unwrap();
-    assert!((volume - 4000.0).abs() > 50.0, "the picked wall should taper: {volume}");
-    assert!(matches!(
-        &h.app.session.doc.features.last().unwrap().kind,
-        FeatureKind::Draft { body: Some(body), .. } if *body == target
-    ));
-}
-
-#[test]
-fn draft_rejects_faces_from_different_bodies() {
-    let h = Harness::new();
-    let mut d = Dialog::for_command(&h.app, "solid.draft").unwrap();
-    d.inputs[0].items =
-        vec![Sel::Face { body: "First".into(), index: 0, point: Vec3::ZERO }, Sel::Face { body: "Second".into(), index: 0, point: Vec3::X }];
-    d.inputs[1].items = vec![Sel::Plane { name: "XY".into() }];
-    assert_eq!(apply_commands(&h.app, &d).unwrap_err(), "pick faces of one body");
-}
-
-#[test]
 fn solid_pattern_quantity_arrows_step_the_count_the_command_receives() {
     let mut h = fixture();
     h.app.run("parameters.add", json!({"name":"copies","expression":"3","unit":""})).unwrap();
     for (command, key, label) in [
         ("solid.pattern.circular", "count", "Quantity"),
         ("solid.pattern.rectangular", "count1", "Quantity"),
-        ("solid.pattern.path", "count", "Quantity"),
     ] {
         let mut d = representative(&h, command);
         if command == "solid.pattern.rectangular" {
@@ -1186,7 +1042,7 @@ fn solid_pattern_quantity_arrows_step_the_count_the_command_receives() {
         h.step(&json!({"click":{"handle":format!("dialog:{label} up")}})).unwrap();
         assert_eq!(sent(&h), json!((before + 1).to_string()), "{command}");
         let set = |h: &mut Harness, text: &str| {
-            if let Some(Kind::PatternRect { count, .. } | Kind::PatternCirc { count, .. } | Kind::PathPattern { count, .. }) =
+            if let Some(Kind::PatternRect { count, .. } | Kind::PatternCirc { count, .. }) =
                 h.app.dialog.as_mut().map(|d| &mut d.kind)
             {
                 *count = text.into();
@@ -1592,9 +1448,7 @@ fn stored_bare_numbers_edit_with_their_units() {
         (one("solid.chamfer", json!({"edges": [[20, 0, 20]], "distance": 1, "distance2": 1.5})), &["1 mm", "1.5 mm"]),
         (one("solid.chamfer", json!({"edges": [[20, 0, 20]], "distance": 1, "angle": 30})), &["1 mm", "30 deg"]),
         (one("solid.shell", json!({"faces": [[20, 15, 20]], "thickness": 2})), &["2 mm"]),
-        (one("solid.draft", json!({"faces": [[0, 15, 10]], "angle": 3, "neutral": "XY"})), &["3 deg"]),
         (one("solid.offset_face", json!({"faces": [[20, 15, 20]], "distance": 2})), &["2 mm"]),
-        (one("solid.bounding_solid", json!({"margin": 2})), &["2 mm"]),
         (one("construct.plane.offset", json!({"base": "XY", "offset": 5})), &["5 mm"]),
         (profile.iter().cloned().chain([("solid.revolve", json!({"sketch": "Profile", "axis": "Z", "angle": 90}))]).collect(), &["90 deg"]),
     ];
@@ -1616,9 +1470,7 @@ fn stored_bare_numbers_edit_with_their_units() {
             Kind::Fillet { radius, distance2, ctype: 1, .. } => vec![radius.clone(), distance2.clone()],
             Kind::Fillet { radius, angle, ctype: 2, .. } => vec![radius.clone(), angle.clone()],
             Kind::Shell { thickness } => vec![thickness.clone()],
-            Kind::Draft { angle } => vec![angle.clone()],
             Kind::OffsetFaces { distance } => vec![distance.clone()],
-            Kind::Stock { margin } => vec![margin.clone()],
             Kind::OffsetPlane { offset } => vec![offset.clone()],
             Kind::Revolve { angle, .. } => vec![angle.clone()],
             other => panic!("{command}: {other:?}"),

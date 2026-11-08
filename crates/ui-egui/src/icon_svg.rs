@@ -959,18 +959,6 @@ mod tests {
     }
 
     #[test]
-    fn contact_actions_have_distinct_icons_from_interference_analysis() {
-        let mut icons = std::collections::HashSet::new();
-        let interference = sketcraft_engine::find_command("inspect.interference").unwrap().icon;
-        for id in ["contact.enable_sets", "contact.enable_all", "contact.disable_all", "contact.create"] {
-            let icon = sketcraft_engine::find_command(id).unwrap().icon;
-            assert_ne!(icon, interference, "{id} is a contact control, not an interference result");
-            assert!(icons.insert(icon), "contact controls share an icon: {id}");
-            assert!(!resolve(icon).placeholder, "{id}: {icon}");
-        }
-    }
-
-    #[test]
     fn reviewed_model_folder_is_also_the_folder_drawn_in_the_app() {
         let source = SVGS.iter().find(|(id, fam, _)| *id == "folder" && *fam == "model").unwrap().2;
         let expected = Doc::parse(source).unwrap();

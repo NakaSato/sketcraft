@@ -1,9 +1,8 @@
-//! The Loft and Surface Loft dialogs' guide rails (#201): rails picked in the dialog reach the
+//! The Loft dialog's guide rails (#201): rails picked in the dialog reach the
 //! commands with their sketches and the fit, and editing the loft brings them back and keeps them.
 //! Their sections follow the picks, two of them from one sketch included (#8221), and profiles
 //! picked one after another in one sketch are one section (#11720).
 use crate::dialogs::Kind;
-use crate::dialogs_surface::Surf;
 use crate::scenario::Harness;
 use crate::viewport::Hit;
 use serde_json::json;
@@ -61,32 +60,6 @@ fn a_rail_picked_in_the_loft_dialog_is_kept_through_an_edit() {
     assert_eq!(rails(&h), (stored, fit));
 }
 
-#[test]
-fn a_rail_picked_in_the_surface_loft_dialog_is_kept_through_an_edit() {
-    let mut h = Harness::new();
-    let (base, top, rail_sketch) = setup(&mut h);
-    h.step(&json!({"call":"ui.start","params":{"command":"surface.loft"}})).unwrap();
-    h.frames(3);
-    assert!(h.widget("Rail").is_some() && h.widget("Rail Fit").is_some());
-    let d = h.app.dialog.as_mut().unwrap();
-    d.inputs[0].items = vec![Sel::Profile { sketch: base, index: 0 }, Sel::Profile { sketch: top, index: 0 }];
-    d.inputs[1].items = vec![Sel::SketchCurve { id: "out".into(), sketch: None }];
-    ok(&mut h);
-    let name = h.app.session.doc.features.last().unwrap().name.clone();
-    let rails = |h: &Harness| match &h.app.session.doc.find_feature(&name).unwrap().kind {
-        FeatureKind::SurfaceLoft { rails, rail_fit, .. } => (rails.clone(), *rail_fit),
-        k => panic!("{k:?}"),
-    };
-    assert_eq!(rails(&h), (vec![SweepRail { sketch: SketchId(rail_sketch), curves: vec!["out".into()] }], RailFit::Scale));
-    h.step(&json!({"call":"ui.editFeature","params":{"feature":name}})).unwrap();
-    h.frames(8);
-    let d = h.app.dialog.as_ref().unwrap();
-    assert!(matches!(d.kind, Kind::Surface(Surf::Loft { rail_fit: 0 })), "{:?}", d.kind);
-    assert_eq!(d.inputs[1].items, vec![Sel::SketchCurve { id: "out".into(), sketch: Some(rail_sketch) }]);
-    ok(&mut h);
-    assert_eq!(rails(&h).0.len(), 1);
-}
-
 /// Curve ids repeat from one sketch to the next (#3726). Rails `out` in two sketches each reach
 /// the loft from their own sketch, not both from the newest one with an `out`; and two sketches'
 /// lines `l` both stay in Surface Loft's sections, the second pick not taking the first back out.
@@ -110,24 +83,6 @@ fn curves_that_share_an_id_are_picked_from_their_own_sketches() {
     }
     let commands = crate::dialogs::apply_commands(&h.app, h.app.dialog.as_ref().unwrap()).unwrap();
     assert_eq!(commands[0].1["rails"], json!([{"sketch": right, "curves": ["out"]}, {"sketch": left, "curves": ["out"]}]));
-    h.step(&json!({"key":"Escape"})).unwrap();
-
-    for (name, z) in [("Low", 0), ("High", 40)] {
-        h.app.run("sketch.create", json!({"name": name, "plane": {"origin": [0, 0, z], "x_dir": [1, 0, 0], "y_dir": [0, 1, 0]}})).unwrap();
-        h.app.run("sketch.line", json!({"points": [[-10, 0], [10, 0]], "ids": ["l"]})).unwrap();
-        h.app.run("sketch.finish", json!({})).unwrap();
-    }
-    let (low, high) = (h.app.session.doc.find_feature("Low").unwrap().id, h.app.session.doc.find_feature("High").unwrap().id);
-    h.step(&json!({"call":"ui.start","params":{"command":"surface.loft"}})).unwrap();
-    h.frames(3);
-    let d = h.app.dialog.as_mut().unwrap();
-    for sketch in [low, high] {
-        let pick = d.candidate_on(&h.app.session, &hit(sketch, "l"), None).unwrap();
-        d.pick(&h.app.session, pick);
-    }
-    assert_eq!(d.inputs[0].items.len(), 2, "{:?}", d.inputs[0].items);
-    let commands = crate::dialogs::apply_commands(&h.app, h.app.dialog.as_ref().unwrap()).unwrap();
-    assert_eq!(commands[0].1["sections"], json!([{"sketch": low, "curves": ["l"]}, {"sketch": high, "curves": ["l"]}]));
 }
 
 /// A sketch at height `z` named `name`, made by `draw`; its id.
@@ -138,60 +93,6 @@ fn sketch_at(h: &mut Harness, name: &str, z: i32, draw: &[(&str, serde_json::Val
     }
     h.app.run("sketch.finish", json!({})).unwrap();
     h.app.session.doc.find_feature(name).unwrap().id
-}
-
-/// Two sections can come from one sketch (#8221): Surface Loft from one line of `A`, over `B`'s,
-/// back to `A`'s other line makes three sections in pick order, and an edit keeps them.
-#[test]
-fn surface_loft_sections_from_one_sketch_stay_apart() {
-    let mut h = Harness::new();
-    let a = sketch_at(
-        &mut h,
-        "A",
-        0,
-        &[
-            ("sketch.line", json!({"points": [[-10, 0], [10, 0]], "ids": ["front"]})),
-            ("sketch.line", json!({"points": [[-10, 40], [10, 40]], "ids": ["back"]})),
-        ],
-    );
-    let b = sketch_at(&mut h, "B", 30, &[("sketch.line", json!({"points": [[-10, 20], [10, 20]], "ids": ["top"]}))]);
-    h.step(&json!({"call":"ui.start","params":{"command":"surface.loft"}})).unwrap();
-    h.frames(3);
-    let d = h.app.dialog.as_mut().unwrap();
-    d.inputs[0].items = vec![
-        Sel::SketchCurve { id: "front".into(), sketch: Some(a) },
-        Sel::SketchCurve { id: "top".into(), sketch: Some(b) },
-        Sel::SketchCurve { id: "back".into(), sketch: Some(a) },
-    ];
-    let expected = json!([{"sketch": a, "curves": ["front"]}, {"sketch": b, "curves": ["top"]}, {"sketch": a, "curves": ["back"]}]);
-    let commands = crate::dialogs::apply_commands(&h.app, h.app.dialog.as_ref().unwrap()).unwrap();
-    assert_eq!(commands[0].1["sections"], expected);
-    ok(&mut h);
-    let name = h.app.session.doc.features.last().unwrap().name.clone();
-    h.step(&json!({"call":"ui.editFeature","params":{"feature":name}})).unwrap();
-    h.frames(8);
-    let commands = crate::dialogs::apply_commands(&h.app, h.app.dialog.as_ref().unwrap()).unwrap();
-    assert_eq!(commands[0].1["params"]["sections"], expected);
-    ok(&mut h);
-}
-
-/// Curves of one sketch that meet end to end are still one Surface Loft section, whatever order
-/// they were picked in.
-#[test]
-fn surface_loft_curves_that_meet_are_one_section() {
-    let mut h = Harness::new();
-    let a = sketch_at(&mut h, "A", 0, &[("sketch.line", json!({"points": [[-10, 0], [0, 0], [10, 5]], "ids": ["left", "right"]}))]);
-    let b = sketch_at(&mut h, "B", 30, &[("sketch.line", json!({"points": [[-10, 0], [10, 0]], "ids": ["top"]}))]);
-    h.step(&json!({"call":"ui.start","params":{"command":"surface.loft"}})).unwrap();
-    h.frames(3);
-    let d = h.app.dialog.as_mut().unwrap();
-    d.inputs[0].items = vec![
-        Sel::SketchCurve { id: "right".into(), sketch: Some(a) },
-        Sel::SketchCurve { id: "top".into(), sketch: Some(b) },
-        Sel::SketchCurve { id: "left".into(), sketch: Some(a) },
-    ];
-    let commands = crate::dialogs::apply_commands(&h.app, h.app.dialog.as_ref().unwrap()).unwrap();
-    assert_eq!(commands[0].1["sections"], json!([{"sketch": a, "curves": ["right", "left"]}, {"sketch": b, "curves": ["top"]}]));
 }
 
 /// Loft from one circle of `C`, over `D`'s, back to `C`'s other circle (#8221): each picked

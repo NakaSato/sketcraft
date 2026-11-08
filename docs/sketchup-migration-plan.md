@@ -9,6 +9,9 @@ subsystems. This page is the work list; each item follows the migration skill's 
 existing command, add it to the SketchUp tab and `SKETCHUP_LARGE_TOOLSET`, give it SketchUp's key,
 keep SketchUp-only behaviour in the front end keyed on the tab, add `help.<id>`, docs and a test).
 
+The longer-term replacement of the CAD engine by an edge/face core is planned in
+[edge-face-rewrite-plan.md](edge-face-rewrite-plan.md).
+
 Status words: **done** (in the tree), **partial** (the command exists, the SketchUp feel does not),
 **missing** (nothing to map onto yet), **decide** (needs a maintainer decision first).
 
@@ -17,11 +20,19 @@ Status words: **done** (in the tree), **partial** (the command exists, the Sketc
 - done: SketchUp ribbon tab with the Large Tool Set (`crates/ui-egui/src/workspace.rs`), drawing
   without Create Sketch (`sketchup_draw.rs`), the sky-and-ground model screen (`sketchup_screen.rs`),
   Use SketchUp Keys (`keymap.rs`), SketchUp defaults with the CAD tabs hidden, Line inference
-  (`inference.rs`), pure-Rust `.skp` import on every target (`crates/skp`).
+  (`crates/ui-egui/src/inference.rs`), pure-Rust `.skp` import on every target (`crates/skp`).
+- done: the CAD-only tools SketchUp has no match for (`CAD_ONLY` in `workspace.rs`: Fillet, Shell,
+  Hole, Loft, the primitives, patterns and more) are left out of the ribbon, the command search,
+  menus and shortcuts unless Preferences › Layout › Show CAD tools is on. They still run for agents,
+  MCP and scripts, and features they made stay editable.
+- done (Nov 2026): the Surface, Sheet Metal and Weldments tabs are removed with their commands,
+  dialogs, strings, tests and kernel cases, and so are joints, motion studies and contact sets
+  (the Assemble tab keeps components, positions and exploded views). Their `FeatureKind`s and the
+  joint solver stay: a design that holds them opens and rebuilds, but can't edit them.
 - done: names. Crates, binaries and types say SketCraft; legacy readers keep `solvecraft.prefs`,
   `solvecraft/N` tags, `SOLVECRAFT_*` env vars, the `.solvecraft` extension and the CLI alias.
-- The command registry has 574 commands; the SketchUp tab uses 24 of them. The rest is the CAD
-  surface, hidden by tab.
+- The SketchUp tab uses 31 commands of the registry. The rest is the CAD surface, hidden by tab
+  and, for the CAD-only `solid.*` tools, by Show CAD tools.
 
 ## Gap analysis
 
@@ -31,8 +42,8 @@ Status words: **done** (in the tree), **partial** (the command exists, the Sketc
 | Line, Arc, Pie, Rectangle, Circle, Polygon | done | `sketch.line`, `sketch.arc.*` (Pie: `sketch.arc.pie`), `sketch.rectangle.two_point` / `three_point`, `sketch.circle.center`, `sketch.polygon.inscribed` | Typed lengths in SketchUp's units syntax |
 | Freehand | done | `sketch.freehand`: press and drag, thinned to one fit point spline | Typed stroke length |
 | Push/Pull, Offset, Move, Scale, Follow Me | done | `solid.press_pull`, `solid.offset_face`, `solid.move`, `solid.scale`, `solid.sweep` | Move of edges and faces, not only bodies (double-click repeat of the last Push/Pull is done) |
-| Rotate (Q) | partial | `solid.rotate` (Q) opens Move/Copy on its Rotate type | Protractor cursor: pick plane, base, angle in the view |
-| Tape Measure, Protractor | partial | `inspect.measure`, `view.angle_readout`, `construct.*` | Guide lines and points from the Tape Measure and Protractor (map onto `construct.plane.*` / `construct.point.*`, shown as dashed guides); Resize model by typed length |
+| Rotate (Q) | done | `solid.rotate` (Q): the protractor on the tab (`rotate_tool.rs`), Move/Copy's Rotate type elsewhere | A live preview of the turned bodies while the angle is chosen |
+| Tape Measure, Protractor | partial | `inspect.measure` with guide lines and points on the tab (`tape_tool.rs` over `construct.axis.two_points` / `construct.point.vertex`), `view.angle_readout` | The Protractor tool's angled guide lines; guides drawn dashed and infinite; Resize model by typed length |
 | Dimensions, Text, 3D Text | partial | `sketch.dimension`, `sketch.text` | Model-space dimensions outside a sketch; 3D Text is missing |
 | Section Plane | done | `inspect.section` | Section cuts as scene state |
 | Axes tool | missing | none | Move and rotate the drawing axes; store in the design |
@@ -56,10 +67,15 @@ Status words: **done** (in the tree), **partial** (the command exists, the Sketc
 ## Phases
 
 ### Phase 1: finish the Large Tool Set
-Rotate tool (Q); Freehand drag; Eraser drag; Pie arc; Zoom Window, Previous view; Protractor and
-Tape Measure guides; double-click repeat on Push/Pull. Every tool follows the five steps in
+Done: Freehand drag, Eraser drag, Pie arc, Zoom Window, Previous and Next view, double-click repeat
+on Push/Pull, Rotate (Q) with its protractor, Tape Measure guide lines and points, and SketchUp's default keys: every tool SketchUp gives
+a key has it, except Select (Space; no Select command), Scale (S stays the S box), Zoom Window
+(Ctrl+Shift+W closes a browser window) and Eraser inside a sketch (E stays on Delete); the parity
+map gives the reasons. Left: the Protractor tool (angled guide lines); a live preview while
+Rotate's angle is chosen; guides drawn as SketchUp's dashed infinite lines. Every tool follows the five steps in
 `skills/sketcraft-migration/SKILL.md`. Done when every entry of SketchUp's Large Tool Set has a
-button on the tab and a key in `SKETCHUP_KEYS`, and `docs/controls.md` lists it.
+button on the tab, SketchUp's default key where it has one and SketCraft can take it, and
+`docs/controls.md` lists it.
 
 ### Phase 2: the modelling feel
 One inference engine for all tools on the tab, built on `crates/engine/src/snap.rs` and the Line
@@ -81,12 +97,40 @@ browser (no C++). Done when a model round-trips SketCraft → SketchUp → SketC
 chosen interchange with geometry, groups, tags and materials intact.
 
 ### Phase 5: retire the CAD surface
-Per hidden tab (Surface, Assemble, Sheet Metal, Weldments) and per hidden workspace (Render, the
-timeline, parameters, drawings): keep hidden, or remove as a whole subsystem (crate, prefs page,
+Surface, Sheet Metal and Weldments are removed, and Assemble keeps only components, positions
+and exploded views (Nov 2026). Per hidden CAD-only tool (`CAD_ONLY`)
+and per hidden workspace (Render, the timeline, parameters, drawings): keep hidden, or remove as a whole subsystem (crate, prefs page,
 strings, assets, `ATTRIBUTION.md` rows, docs, tests in one PR; then `cargo xtask layers` and
 `cargo xtask ci`). Measure the wasm size before and after (`skills/sketcraft-performance/SKILL.md`).
 Done when the default download carries only what the SketchUp tab reaches, plus what a user can
 show again from the toolbar menu.
+
+#### Removing the CAD-only `solid.*` tools
+
+Group 1 below is removed (Nov 2026); the 17 tools left in `CAD_ONLY` are hidden. They cannot all go at once: Push/Pull runs
+the Extrude and Fillet code (`press_pull` in `crates/engine/src/cmd/features.rs`), features
+already in a design reopen through their command when edited, and the tests build their models
+with them. Counts are lines that name the command (Nov 2026): tests, engine and UI code outside
+tests, each including the command's own definition.
+
+| Group | Commands (test lines) | Why this group |
+|---|---|---|
+| Keep | `extrude` (1286), `fillet` (627), `chamfer` (168), `box` (3456), `cylinder` (775) | Push/Pull extrudes faces and edits fillet and chamfer faces; `box` and `cylinder` build most test models (255 and 55 engine lines). Hidden for good |
+| 1: removed | `web`, `replace_face`, `boundary_fill`, `bounding_solid`, `draft`, `pattern.path`, `rib`, `pipe` | Commands, schemas, dialogs, help strings and their tests, oracle cases and kernel cases are gone; their `FeatureKind`s stay, so designs that hold them open and rebuild, but can't be edited. The studio scenes in `examples/studio/coffee-*.json` still call `solid.pipe` and need it rewritten as Follow Me (`solid.sweep`) |
+| 2: some coupling | `loft` (140; 65 kernel cases, 31 of them also test fillets, chamfers or extrudes), `torus` (35), `coil` (44), `emboss` (44), `cone` (45), `pattern.circular` (57), `pattern.rectangular` (97), `sphere` (103), `shell` (142), `revolve` (154), `thread` (168), `hole` (338) | Shared dialog code (primitives, patterns, hole presets), the sample design and fuzzing name them |
+
+`solid.remove` is not in the list: it is what Delete runs on a body (`crates/engine/src/cmd/delete.rs`).
+
+Per command, one PR: the `CommandSpec` and its schema contract, its dialog `Kind` and form, its
+icon, `cmd.<id>` / `help.<id>` strings and `DOCUMENTED` entry, docs, and its tests (a test that
+only used it to build a model moves to `solid.box` or a sketch and Push/Pull). The `FeatureKind`
+and the kernel operation stay until the format decision below, so designs that hold the feature
+still open and rebuild. Measure the wasm size before and after each group.
+
+Removing a `FeatureKind` itself needs a decision first: a design saved with that feature must
+still open. Either it opens with the feature baked into a plain solid (a format pending file,
+`skills/sketcraft-file-formats/SKILL.md`), or the feature keeps evaluating but can no longer be
+edited. Until then, group 1 and 2 removals take away only the way to make new ones.
 
 ### Phase 6: names, docs and checks
 Rewrite `docs/controls.md` and `docs/sidebar.md` from the app, not the KetchUp-era text; regenerate
@@ -106,7 +150,9 @@ drop a legacy name only when the release that wrote it is two releases back.
 
 ## Decisions for the maintainer
 1. `.skp` export: write the format, or ship Collada as the interchange.
-2. Which hidden CAD subsystems are removed in Phase 5, and in what order.
+2. Which hidden CAD subsystems are removed in Phase 5, and in what order; for the `solid.*`
+   tools, whether a removed feature in an old design is baked into a plain solid or stays
+   uneditable.
 3. Whether the parametric timeline stays as a hidden power feature or SketchUp-tab edits collapse
    history into direct modelling.
 4. Whether groups become a distinct lightweight object or stay components with a flag.

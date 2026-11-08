@@ -161,36 +161,6 @@ fn a_turned_occurrence_turns_its_world_tensor_but_not_its_own() {
 }
 
 #[test]
-fn a_rigid_group_is_one_body_and_other_joints_keep_bodies_apart() {
-    let mut s = Session::default();
-    let (_, a, body_a) = part(&mut s, "Base", [10.0, 10.0, 10.0], "Steel");
-    let (_, b, body_b) = part(&mut s, "Cap", [10.0, 10.0, 10.0], "Steel");
-    run(&mut s, "occurrence.move", json!({"occurrence": b, "translate": [0, 0, 40]}));
-    let (_, c, _) = part(&mut s, "Loose", [10.0, 10.0, 10.0], "Steel");
-    run(&mut s, "occurrence.move", json!({"occurrence": c, "translate": [100, 0, 0]}));
-    run(&mut s, "joint.rigid_group", json!({"occurrences": [a, b]}));
-    let r = run(&mut s, "assembly.mass_properties", json!({}));
-    let (ga, gb, gc) = (occurrence(&r, a)["group"].clone(), occurrence(&r, b)["group"].clone(), occurrence(&r, c)["group"].clone());
-    assert_eq!(ga, gb);
-    assert_ne!(ga, gc);
-    let g = &r["groups"][ga.as_u64().unwrap_or(0) as usize];
-    let mut held: Vec<u64> = vec![a, b];
-    held.sort_unstable();
-    assert_eq!(g["occurrences"], json!(held));
-    assert_eq!(g["frame_occurrence"], json!(held[0]));
-    let m1 = 1000.0 * s.doc.density(&body_a) * 1e-6;
-    let m2 = 1000.0 * s.doc.density(&body_b) * 1e-6;
-    let m = m1 + m2;
-    let mass = &g["mass"];
-    near(num(&mass["mass_kg"]), m, 1e-9);
-    // Centres at z = 5 and z = 45: the common one halfway, each 20 mm off it.
-    near(num(&mass["center_of_mass_mm"][2]), 25.0, 1e-9);
-    let own = m1 / 12.0 * 200.0 + m2 / 12.0 * 200.0;
-    let shift = m1 * 400.0 + m2 * 400.0;
-    diag(&tensor(&mass["inertia_world_kg_mm2"]), [own + shift, own + shift, own], 1e-9);
-}
-
-#[test]
 fn a_nested_occurrence_no_joint_places_moves_with_its_parent() {
     let mut s = Session::default();
     let outer = run(&mut s, "component.create", json!({"name": "Assembly", "grounded": false}));

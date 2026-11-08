@@ -324,36 +324,6 @@ fn a_name_of_a_body_without_history_is_found_by_geometry_and_says_so_once_it_mov
     assert!(!solid_at(&s, [49.9, 15.0, 11.9]));
 }
 
-/// Replace Face keeps the body's history, as Offset Face does: every face of the result is named
-/// exactly, and a sketch takes an attachment on the replaced face (before, no face could: "this
-/// face can't keep an attachment") and follows it when the target moves.
-#[test]
-fn a_sketch_on_a_replaced_face_follows_it() {
-    let mut s = Session::default();
-    run(&mut s, "parameters.add", json!({"name": "top", "expression": "15 mm"}));
-    block(&mut s);
-    run(&mut s, "solid.replace_face", json!({"faces": [[20, 15, 10]], "target": {"origin": [0, 0, "top"], "normal": [0, 0, 1]}, "name": "Lift"}));
-    assert!(names(&s, "Body1").iter().all(|(_, exact)| *exact), "{:?}", names(&s, "Body1"));
-    // A side the replacement only stretched takes an attachment too.
-    run(&mut s, "sketch.create", json!({"plane": {"face": [0, 15, 5]}, "name": "Side"}));
-    run(&mut s, "sketch.finish", json!({}));
-    run(&mut s, "sketch.create", json!({"plane": {"face": [20, 15, 15]}, "name": "OnTop"}));
-    run(&mut s, "sketch.circle.center", json!({"center": [0, 0], "radius": 3}));
-    run(&mut s, "sketch.finish", json!({}));
-    run(&mut s, "solid.extrude", json!({"sketch": "OnTop", "distance": 5, "operation": "join", "name": "Boss"}));
-    // The boss stands on the replaced top wherever the circle's centre lands on it.
-    let (lo, hi) = {
-        let state = s.model.state();
-        let b = state.body("Body1").unwrap().mesh().bounds();
-        (b.min.z, b.max.z)
-    };
-    assert!((lo - 0.0).abs() < 1e-6 && (hi - 20.0).abs() < 1e-6, "{lo} {hi}");
-    change(&mut s, "top", "18 mm");
-    assert_eq!(error(&s, "Boss"), None);
-    let hi = s.model.state().body("Body1").unwrap().mesh().bounds().max.z;
-    assert!((hi - 23.0).abs() < 1e-6, "the boss follows the top to z = 18: {hi}");
-}
-
 #[test]
 fn a_sketch_on_a_certified_face_survives_a_fillet_and_a_cut_upstream_of_it() {
     let mut s = Session::default();
@@ -797,8 +767,8 @@ fn a_sketch_on_a_thickened_surface_follows_the_face() {
     run(&mut s, "sketch.create", json!({"plane": "XY", "name": "Line"}));
     run(&mut s, "sketch.line", json!({"points": [[0, 0], [40, 0]], "ids": ["l1"]}));
     run(&mut s, "sketch.finish", json!({}));
-    run(&mut s, "surface.extrude", json!({"sketch": "Line", "curves": ["l1"], "distance": 30, "body_name": "Sheet"}));
-    run(&mut s, "surface.thicken", json!({"bodies": ["Sheet"], "thickness": "thick", "body_name": "Slab"}));
+    crate::cmd::sheet_fixtures::extrude(&mut s, json!({"sketch": "Line", "curves": ["l1"], "distance": 30, "body_name": "Sheet"}));
+    crate::cmd::sheet_fixtures::thicken(&mut s, json!({"bodies": ["Sheet"], "thickness": "thick", "body_name": "Slab"}));
     // The offset face is the copy at y = -2. Its frame is X and Z, origin on that plane.
     let made = run(&mut s, "sketch.create", json!({"plane": {"face": [30.0, -2.0, 10.0]}, "name": "OnFace"}));
     assert_eq!(made["attachment"], "exact_face", "{made}");

@@ -188,10 +188,7 @@ pub(crate) fn curve_pick(id: &str, sketch: u64, active: Option<u64>) -> Sel {
 pub(crate) trait SelectionExt {
     fn body_names(&self) -> Vec<String>;
     fn curve_ids(&self) -> Vec<String>;
-    /// The sketch every curve pick names, when they all name the same one (#3726).
-    fn named_sketch(&self) -> Option<u64>;
     fn profiles(&self) -> Vec<(u64, usize)>;
-    fn edge_points(&self) -> Vec<Vec3>;
     fn face_points(&self) -> Vec<Vec3>;
 }
 
@@ -202,16 +199,8 @@ impl SelectionExt for [Sel] {
     fn curve_ids(&self) -> Vec<String> {
         self.iter().filter_map(|x| if let Sel::SketchCurve { id, .. } = x { Some(id.clone()) } else { None }).collect()
     }
-    fn named_sketch(&self) -> Option<u64> {
-        let mut named = self.iter().filter_map(|x| if let Sel::SketchCurve { sketch, .. } = x { Some(*sketch) } else { None });
-        let first = named.next()??;
-        named.all(|k| k == Some(first)).then_some(first)
-    }
     fn profiles(&self) -> Vec<(u64, usize)> {
         self.iter().filter_map(|x| if let Sel::Profile { sketch, index } = x { Some((*sketch, *index)) } else { None }).collect()
-    }
-    fn edge_points(&self) -> Vec<Vec3> {
-        self.iter().filter_map(|x| if let Sel::Edge { point, .. } = x { Some(*point) } else { None }).collect()
     }
     fn face_points(&self) -> Vec<Vec3> {
         self.iter().filter_map(|x| if let Sel::Face { point, .. } = x { Some(*point) } else { None }).collect()

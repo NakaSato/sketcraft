@@ -91,12 +91,10 @@ pub(crate) fn shown(doc: &Document, mm: f64) -> String {
 /// The editable length expressions in a dialog. Counts, angles, ratios, selectors and standard
 /// part designations never go through length conversion. Keep this list shared by submission
 /// and feature refill, so a bare stored millimetre cannot become inches just by pressing OK.
-pub(crate) fn fields<'a>(doc: &Document, kind: &'a mut crate::dialogs::Kind) -> Vec<&'a mut String> {
+pub(crate) fn fields<'a>(_doc: &Document, kind: &'a mut crate::dialogs::Kind) -> Vec<&'a mut String> {
     use crate::dialogs::Kind as D;
     use crate::dialogs_assembly::Asm;
     use crate::dialogs_plastic::Pl;
-    use crate::dialogs_sheet::Sm;
-    use crate::dialogs_surface::Surf;
     match kind {
         D::Extrude { distance, distance2, to_offset, start, wall, wall2, .. } => vec![distance, distance2, to_offset, start, wall, wall2],
         D::Fillet { radius, distance2, setback, .. } => {
@@ -113,35 +111,11 @@ pub(crate) fn fields<'a>(doc: &Document, kind: &'a mut crate::dialogs::Kind) -> 
         D::OffsetFaces { distance } => vec![distance],
         D::MeshConvert { tolerance } => vec![tolerance],
         D::Thread { length, .. } | D::Emboss { depth: length, .. } => vec![length],
-        D::Rib { thickness, depth, .. } => vec![thickness, depth],
-        D::PathPattern { spacing, .. } => vec![spacing],
-        D::Pipe { diameter, wall, .. } => vec![diameter, wall],
-        D::Stock { margin } => vec![margin],
         D::Move { x, y, z, .. } => vec![x, y, z],
         D::Hole { diameter, depth, cb_diameter, cb_depth, cs_diameter, opts, .. } => {
             vec![diameter, depth, cb_diameter, cb_depth, cs_diameter, &mut opts.bridge]
         }
         D::Primitive { fields, .. } => fields.iter_mut().filter(|(key, _)| *key != "revolutions").map(|(_, value)| value).collect(),
-        D::Surface(k) => match k {
-            Surf::Extrude { distance, .. } | Surf::Offset { distance, .. } | Surf::Ruled { distance, .. } | Surf::Extend { distance } => {
-                vec![distance]
-            }
-            Surf::Thicken { thickness, .. } => vec![thickness],
-            Surf::Stitch { tolerance } | Surf::Fair { tolerance, .. } => vec![tolerance],
-            _ => vec![],
-        },
-        D::Sheet(k) => match k {
-            Sm::Flange { height, radius, distance, relief_size, own, .. } => {
-                let mut values = vec![height, radius, distance, relief_size];
-                values.extend(own.iter_mut().map(|(_, _, height)| height));
-                values
-            }
-            Sm::Hem { length, gap, .. } => vec![length, gap],
-            Sm::Fold { radius, .. } => vec![radius],
-            // K factor is the only dimensionless sheet rule value.
-            Sm::Rules { values, .. } => values.iter_mut().enumerate().filter(|(i, _)| *i != 1).map(|(_, value)| value).collect(),
-            _ => vec![],
-        },
         D::Plastic(k) => match k {
             Pl::Boss { diameter, height, hole_diameter, hole_depth, fillet, rib_thickness, rib_length, rib_offset, .. } => {
                 vec![diameter, height, hole_diameter, hole_depth, fillet, rib_thickness, rib_length, rib_offset]
@@ -161,44 +135,9 @@ pub(crate) fn fields<'a>(doc: &Document, kind: &'a mut crate::dialogs::Kind) -> 
             _ => vec![],
         },
         D::Assembly(k) => match k {
-            Asm::Joint(f) => {
-                let kind = f.joint_kind();
-                let mut values: Vec<_> = f.offset.iter_mut().collect();
-                for (i, (_, lo, hi)) in f.limits.iter_mut().enumerate() {
-                    if !kind.is_angle(i) {
-                        values.extend([lo, hi]);
-                    }
-                }
-                values
-            }
-            Asm::Drive { joint, values, .. } => values
-                .iter_mut()
-                .enumerate()
-                .filter(|(i, _)| doc.assembly.joints.get(*joint).is_some_and(|j| !j.kind.is_angle(*i)))
-                .map(|(_, v)| v)
-                .collect(),
-            Asm::MotionLink { b, ib, offset, .. }
-                if doc
-                    .assembly
-                    .joints
-                    .iter()
-                    .filter(|j| j.kind != sketcraft_engine::doc::joints::JointKind::Rigid)
-                    .nth(*b)
-                    .is_some_and(|j| !j.kind.is_angle(*ib)) =>
-            {
-                vec![offset]
-            }
-            Asm::Coupling(f) => f.sizes.iter_mut().collect(),
-            Asm::Cam(f) => vec![&mut f.radius],
             Asm::Interference { clearance, .. } => vec![clearance],
-            Asm::Trace(f) if doc.assembly.joints.get(f.joint).is_some_and(|j| !j.kind.is_angle(f.index)) => vec![&mut f.from, &mut f.to],
             _ => vec![],
         },
-        D::Motion(crate::dialogs_motion::Mo::MotionStudy { tracks, .. }) => tracks
-            .iter_mut()
-            .filter(|t| doc.assembly.joints.get(t.joint).is_some_and(|j| !j.kind.is_angle(t.index)))
-            .flat_map(|t| t.points.iter_mut().map(|(_, v)| v))
-            .collect(),
         D::SketchModify(k) => {
             use crate::sketch_modify_ui::Mod;
             match k {

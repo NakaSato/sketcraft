@@ -1,0 +1,29 @@
+{
+  "en": {
+    "ui.rotate_tool.angle": "Rotate: click to set the angle, or type it in degrees and press Enter. Tap Ctrl to copy.",
+    "ui.rotate_tool.bad_angle": "Rotate: type the angle as a number of degrees.",
+    "ui.rotate_tool.center": "Rotate: click the centre of rotation. Arrow keys lock the axis to X, Y or Z.",
+    "ui.rotate_tool.copy": "(Copy)",
+    "ui.rotate_tool.done": "Rotated by {angle}",
+    "ui.rotate_tool.nothing": "Rotate: select what to rotate, or click on it.",
+    "ui.rotate_tool.start": "Rotate: click the start of the angle."
+  },
+  "ja": {
+    "ui.rotate_tool.angle": "回転: クリックして角度を決めるか、度数を入力して Enter を押します。Ctrl を押すとコピーします。",
+    "ui.rotate_tool.bad_angle": "回転: 角度を度数の数値で入力してください。",
+    "ui.rotate_tool.center": "回転: 回転の中心をクリックします。矢印キーで軸を X、Y、Z に固定します。",
+    "ui.rotate_tool.copy": "(コピー)",
+    "ui.rotate_tool.done": "{angle} 回転しました",
+    "ui.rotate_tool.nothing": "回転: 回転するものを選択するか、クリックしてください。",
+    "ui.rotate_tool.start": "回転: 角度の始点をクリックします。"
+  },
+  "zh": {
+    "ui.rotate_tool.angle": "旋转：单击设置角度，或输入度数后按 Enter。轻按 Ctrl 可复制。",
+    "ui.rotate_tool.bad_angle": "旋转：请以度数输入角度。",
+    "ui.rotate_tool.center": "旋转：单击旋转中心。方向键可将轴锁定为 X、Y 或 Z。",
+    "ui.rotate_tool.copy": "（复制）",
+    "ui.rotate_tool.done": "已旋转 {angle}",
+    "ui.rotate_tool.nothing": "旋转：请选择要旋转的对象，或单击它。",
+    "ui.rotate_tool.start": "旋转：单击角度的起点。"
+  }
+}

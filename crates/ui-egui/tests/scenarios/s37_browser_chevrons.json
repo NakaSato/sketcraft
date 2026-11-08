@@ -1,7 +1,12 @@
 [
-  {"call": "ui.prefs", "params": {"browser_components_open": true}},
  {
-  "note": "Browser chevrons expand and collapse every kind of node (folders, components, groups, the origin, named views, document settings). Model: two components with a body each, a joint, a sketch, an offset plane, a named view."
+  "call": "ui.prefs",
+  "params": {
+   "browser_components_open": true
+  }
+ },
+ {
+  "note": "Browser chevrons expand and collapse every kind of node (folders, components, groups, the origin, named views, document settings). Model: two components with a body each, a sketch, an offset plane, a named view."
  },
  {
   "note": "Each component keeps its Bodies folder (Preferences › Interface › Bodies folders: Always), so that folder's chevron is checked too."
@@ -164,36 +169,6 @@
   }
  },
  {
-  "start": "joint.create"
- },
- {
-  "click": {
-   "world": [
-    10,
-    10,
-    10
-   ]
-  }
- },
- {
-  "click": {
-   "world": [
-    40,
-    0,
-    5
-   ]
-  }
- },
- {
-  "widget": "Rigid"
- },
- {
-  "widget": "Revolute"
- },
- {
-  "widget": "OK"
- },
- {
   "call": "engine.execute",
   "params": {
    "command": "construct.plane.offset",
@@ -328,10 +303,24 @@
    ]
   }
  },
- {"note": "Close the already checked upper folders so the component rows fit in the Browser without scrolling."},
- {"click": {"handle": "fold:Document Settings"}},
- {"click": {"handle": "fold:Named Views"}},
- {"click": {"handle": "fold:Origin"}},
+ {
+  "note": "Close the already checked upper folders so the component rows fit in the Browser without scrolling."
+ },
+ {
+  "click": {
+   "handle": "fold:Document Settings"
+  }
+ },
+ {
+  "click": {
+   "handle": "fold:Named Views"
+  }
+ },
+ {
+  "click": {
+   "handle": "fold:Origin"
+  }
+ },
  {
   "note": "Expanded rows now scroll within the floating card, above the History strip."
  },
@@ -542,33 +531,6 @@
   "expect": {
    "shown_handles": [
     "row:Origin"
-   ]
-  }
- },
- {
-  "note": "The joints folder lists the joint (Fusion's Joints folder in the root component)."
- },
- {
-  "expect": {
-   "shown_handles": [
-    "fold:Joints"
-   ]
-  }
- },
- {
-  "click": {
-   "handle": "fold:Joints"
-  }
- },
- {
-  "click": {
-   "handle": "fold:Joints"
-  }
- },
- {
-  "expect": {
-   "shown_handles": [
-    "fold:Joints"
    ]
   }
  }

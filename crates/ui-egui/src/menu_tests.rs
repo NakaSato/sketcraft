@@ -1156,11 +1156,6 @@ fn rename_shows_f2_and_f2_with_a_menu_open_renames_what_the_menu_is_for() {
         assert_eq!(rename_key(&h.app, &target), "F2", "Rename shows F2: {target:?}");
     }
     assert_eq!(rename_key(&h.app, &Target::NamedView { name: "Top".into() }), "", "F2 does not rename a saved view");
-    let sample = sketcraft_engine::sample::samples().into_iter().find(|s| s.name == "Hinge Assembly").unwrap();
-    let mut assembly = SketApp::new(Session::default(), Services::default());
-    assembly.session.run_script(&(sample.script)()).unwrap();
-    let joint = assembly.session.doc.assembly.joints[0].id;
-    assert_eq!(rename_key(&assembly, &Target::Joint { id: joint }), "", "F2 does not rename a joint");
 
     let press_f2 = |h: &mut crate::scenario::Harness| {
         for pressed in [true, false] {
@@ -1640,15 +1635,6 @@ fn every_context_target_has_identified_icon_rows_including_submenus() {
     ] {
         let rows = context_menu::items(&app, &target);
         assert!(!rows.is_empty(), "unexercised target: {target:?}");
-        check(&rows);
-    }
-    let sample = sketcraft_engine::sample::samples().into_iter().find(|s| s.name == "Hinge Assembly").unwrap();
-    let mut assembly = SketApp::new(Session::default(), Services::default());
-    assembly.session.run_script(&(sample.script)()).unwrap();
-    assert!(!assembly.session.doc.assembly.joints.is_empty());
-    for joint in &assembly.session.doc.assembly.joints {
-        let rows = context_menu::items(&assembly, &Target::Joint { id: joint.id });
-        assert!(!rows.is_empty());
         check(&rows);
     }
     check(&context_menu::radial_items(&app));

@@ -164,39 +164,6 @@ fn wire_frame_include_other_component_refresh_break_lost_and_reopen() {
 }
 
 #[test]
-fn wire_frame_pipe_component_and_world_paths_have_analytic_volume_and_position() {
-    for space in [WireSpace::Component, WireSpace::World] {
-        let (mut s, _, first, second) = second_frame();
-        if space == WireSpace::World {
-            // A single placed owner lets an immutable world path stay physically fixed;
-            // replicated solids still follow their occurrence placements by design.
-            run(&mut s, "selection.delete", json!({"items":[{"type":"occurrence","path":[first]}]}));
-        }
-        let sketch = s.active_sketch.unwrap();
-        let wire = if space == WireSpace::Component {
-            run(&mut s, "sketch.line3d", json!({"points":[[17,32,45],[17,32,55]]}))["curves"][0].as_str().unwrap().to_string()
-        } else {
-            s.doc_mut().sketch_mut(sketch).unwrap().add_drawn_wire(&[Vec3::new(17.0, 32.0, 45.0), Vec3::new(17.0, 32.0, 55.0)]).unwrap()
-        };
-        run(&mut s, "sketch.finish", json!({}));
-        run(&mut s, "solid.pipe", json!({"path_sketch":sketch,"path":[wire],"diameter":4}));
-        let world = s.world_state().unwrap();
-        let body = world.bodies.last().unwrap();
-        // Property measurement uses fine adaptive tessellation; the viewport mesh alone
-        // undershoots a small circular profile by about 0.64% at its display chord tolerance.
-        let measure = sketcraft_kernel::measure(&body.body).unwrap();
-        assert!((measure.volume - 40.0 * std::f64::consts::PI).abs() < 0.05, "{}", measure.volume);
-        let bounds = body.mesh().bounds();
-        near((bounds.min + bounds.max) / 2.0, Vec3::new(17.0, 32.0, 50.0));
-        run(&mut s, "occurrence.move", json!({"occurrence":second,"translate":[5,0,0]}));
-        let world = s.world_state().unwrap();
-        let body = world.bodies.last().unwrap();
-        let bounds = body.mesh().bounds();
-        near((bounds.min + bounds.max) / 2.0, Vec3::new(if space == WireSpace::Component { 22.0 } else { 17.0 }, 32.0, 50.0));
-    }
-}
-
-#[test]
 fn wire_frame_nonactive_repeated_owner_refuses_ambiguous_world_input() {
     let (mut s, _, _, _) = second_frame();
     let target = s.active_sketch.unwrap();
@@ -400,23 +367,6 @@ fn arc3d_hostile_inputs_rollback_full_session() {
         assert_eq!(s.doc.to_json(), doc);
         assert_eq!((s.undo.len(), s.redo.len()), history);
     }
-}
-
-#[test]
-fn arc3d_pipes_along_the_arc() {
-    let mut s = Session::default();
-    run(&mut s, "sketch.create", json!({"plane":"XY"}));
-    run(&mut s, "sketch.options", json!({"sketch_3d":true}));
-    let sketch = s.active_sketch.unwrap();
-    let d = 10.0 * std::f64::consts::SQRT_2;
-    let wire = run(&mut s, "sketch.arc3d", json!({"start":[20,0,0],"through":[d,d,0],"end":[0,20,0]}))["curves"][0].as_str().unwrap().to_string();
-    run(&mut s, "sketch.finish", json!({}));
-    run(&mut s, "solid.pipe", json!({"path_sketch":sketch,"path":[wire],"diameter":4}));
-    let world = s.world_state().unwrap();
-    let body = world.bodies.last().unwrap();
-    let measure = sketcraft_kernel::measure(&body.body).unwrap();
-    let quarter = 20.0 * std::f64::consts::FRAC_PI_2;
-    assert!((measure.volume - 4.0 * std::f64::consts::PI * quarter).abs() < 0.5, "{}", measure.volume);
 }
 
 #[test]

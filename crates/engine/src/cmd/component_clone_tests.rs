@@ -198,32 +198,6 @@ fn selected_nested_pending_placement_survives_copy_and_undo() {
 }
 
 #[test]
-fn copied_sheet_base_targets_its_own_sketch_history() {
-    let mut s = Session::default();
-    let part = component(&mut s, "Sheet");
-    let sketch = run(&mut s, "sketch.create", json!({"plane":"XY","name":"Base"}))["sketch"].as_u64().unwrap();
-    run(&mut s, "sketch.rectangle.two_point", json!({"p0":[0,0],"p1":[10,10]}));
-    run(&mut s, "sketch.finish", json!({}));
-    run(&mut s, "sheet.flange", json!({"sketch":"Base"}));
-    let source_volume = volume(&mut s, part);
-    let copied = copy(&mut s, part);
-    let new = copied["component"].as_u64().unwrap();
-    near(volume(&mut s, new), source_volume);
-    let clone_sketch = s.doc.features.iter().find(|f| f.component == new && matches!(f.kind, sketcraft_doc::FeatureKind::Sketch { .. })).unwrap().id;
-    assert_ne!(clone_sketch, sketch);
-    let base = s.doc.features.iter().find(|f| f.component == new && matches!(f.kind, sketcraft_doc::FeatureKind::SheetBase { .. })).unwrap();
-    assert_eq!(base.kind.input_sketches(), vec![clone_sketch]);
-    // Mutate only source geometry, then verify the copied base remains unchanged.
-    if let sketcraft_doc::FeatureKind::Sketch { sketch, .. } = &mut s.doc_mut().feature_mut(sketch).unwrap().kind {
-        for p in &mut sketch.points {
-            p.pos.x *= 2.0;
-        }
-    }
-    s.refresh();
-    near(volume(&mut s, new), source_volume);
-}
-
-#[test]
 fn renamed_pattern_outputs_and_later_body_operands_follow_clone() {
     let mut s = Session::default();
     let part = component(&mut s, "PatternPart");

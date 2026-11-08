@@ -194,17 +194,15 @@ pub(crate) fn row<R>(ui: &mut Ui, text: &str, control: impl FnOnce(&mut Ui) -> R
 #[derive(Clone, Copy)]
 pub(crate) enum StatusTone {
     Dim,
-    Warning,
     Error,
 }
 
 /// Full-width, wrapping status or refusal text. Place directly in the form, outside a `row`:
-/// rows clip their controls to one line. Tokens: `font_label, text_dim, warning, error`.
+/// rows clip their controls to one line. Tokens: `font_label, text_dim, error`.
 pub(crate) fn status_line(ui: &mut Ui, text: &str, tone: StatusTone) -> Response {
     let t = Tokens::get();
     let ink = match tone {
         StatusTone::Dim => t.text_dim,
-        StatusTone::Warning => t.warning,
         StatusTone::Error => t.error,
     };
     let response = ui.add(egui::Label::new(RichText::new(crate::i18n::tr_label(text)).size(t.font_label).color(ink)).wrap());
@@ -261,16 +259,11 @@ pub(crate) fn choice_row(ui: &mut Ui, label: &str, id: &str, selected: &mut usiz
     row(ui, label, |ui| super::dropdown(ui, id, selected, options))
 }
 
-/// The one control that chooses a continuity order, wherever one is chosen: a dropdown of
-/// `allowed` (what the construction builds, `Construction::offered`). Its labels are the orders'
-/// plain words and its hover text a line per order naming its code, both from the kernel's one
-/// table of orders; a value not in `allowed` shows the first. Tokens: `row, dropdown`.
-pub(crate) fn continuity_row(ui: &mut Ui, label: &str, id: &str, value: &mut Continuity, allowed: &[Continuity]) -> Response {
-    continuity_row_explained(ui, label, id, value, allowed, &continuity_tip(allowed))
-}
-
-/// [`continuity_row`] whose hover text says what each order builds there (`tip`, which names
-/// each order's code), for a choice whose orders stand for constructions (a fillet's corners).
+/// The one control that chooses a continuity order: a dropdown of `allowed` (what the
+/// construction builds, `Construction::offered`), its labels the orders' plain words; a value not
+/// in `allowed` shows the first. Its hover text (`tip`, which names each order's code) says what
+/// each order builds there, for a choice whose orders stand for constructions (a fillet's
+/// corners). Tokens: `row, dropdown`.
 pub(crate) fn continuity_row_explained(ui: &mut Ui, label: &str, id: &str, value: &mut Continuity, allowed: &[Continuity], tip: &str) -> Response {
     let labels: Vec<&str> = allowed.iter().map(|g| g.label_id()).collect();
     let mut index = allowed.iter().position(|g| g == value).unwrap_or(0);
@@ -279,11 +272,6 @@ pub(crate) fn continuity_row_explained(ui: &mut Ui, label: &str, id: &str, value
         *value = *g;
     }
     response.backing_on_hover_text(tip)
-}
-
-/// The hover text of a continuity choice: each order's own line, which names its code.
-pub(crate) fn continuity_tip(allowed: &[Continuity]) -> String {
-    allowed.iter().map(|g| crate::i18n::tr(g.tip_id())).collect::<Vec<_>>().join("\n")
 }
 
 /// Internal form geometry for controls which need several lines (e.g. text areas).

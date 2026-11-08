@@ -117,7 +117,6 @@ fn grid_rows_break_at_headings_and_arrow_keys_skip_disabled_icons() {
         (None, c("solid.cylinder")),
         (None, c("solid.sphere")),
         (None, c("solid.torus")),
-        (None, c("solid.pipe")),
         (Some("Other"), c("solid.extrude")),
         (None, c("solid.revolve")),
     ];

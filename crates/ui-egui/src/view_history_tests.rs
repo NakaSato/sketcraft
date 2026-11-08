@@ -7,7 +7,7 @@ use egui::{Pos2, Rect, pos2, vec2};
 use serde_json::json;
 use sketcraft_engine::geom::prelude::*;
 use sketcraft_engine::render::Camera;
-use solidcore_record::Vec3;
+use sketcore_record::Vec3;
 
 /// The SketchUp tab, view changes immediate (no animation) so each step lands at once.
 fn harness() -> Harness {

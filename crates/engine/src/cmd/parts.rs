@@ -2,9 +2,8 @@
 //! generated in code from the dimensions in the public standards tables (no vendor geometry).
 //! Inch parts are tabled in inches and built in millimetres like the rest. Each part is inserted as
 //! its own component, built by ordinary features (so it stays parametric and editable), with a
-//! cosmetic thread where it has one; at a hole it gets a rigid joint that puts its axis on the
-//! hole's and seats it on the face. Inserted at several holes it is still one component, placed
-//! once per hole, each placement with its own joint.
+//! cosmetic thread where it has one; at a hole it is placed with its axis on the hole's, seated
+//! on the face. Inserted at several holes it is still one component, placed once per hole.
 //!
 //! Part frame: the seating plane is z = 0 (the underside of a head, the bottom of a nut or
 //! washer, the top of a set screw or pin); the shank runs down −z.
@@ -44,17 +43,17 @@ pub static COMMANDS: &[CommandSpec] = &[
             "family (socket_head_cap_screw | button_head_cap_screw | hex_bolt | hex_nut | washer | set_screw | dowel_pin | bearing | \
          hex_cap_screw_inch | hex_nut_inch | washer_sae | washer_uss); size (\"M6\", \"608\" for bearings, \"1/2-13 UNC\" for inch screws and nuts, \
          \"1/2\" for inch washers); length? (mm, inch parts too; screws, bolts, set screws, pins; default a standard length near 2.5 d); \
-         at?: [x,y,z] on a hole's rim or wall (the part seats on the hole's face with a rigid joint), or a list of them (one component, \
-         placed and seated once per hole) | point?: [x,y,z] with direction?: [x,y,z] (no joint: the part's seating plane, under a head or \
+         at?: [x,y,z] on a hole's rim or wall (the part is placed seated on the hole's face), or a list of them (one component, \
+         placed and seated once per hole) | point?: [x,y,z] with direction?: [x,y,z] (the part's seating plane, under a head or \
          the bottom of a nut, washer or bearing, the top of a set screw or pin, goes to point, and direction is its +z, from the shank's tip toward the head; default [0,0,1], \
-         head up, shank down -z); name? → component, occurrence, joint?, \
-         and with at: occurrences, joints (one per hole, in pick order)",
+         head up, shank down -z); name? → component, occurrence, \
+         and with at: occurrences (one per hole, in pick order)",
         ),
     CommandSpec::new("parts.resize", "Change Part Size", crate::checked!("parts.resize", resize_atomic))
         .icon("scale")
         .contract(&RESIZE_CONTRACT)
         .output(output_schema_for::<ResizedPart>)
-        .params("component: id|name of an inserted part; size?; length? — rebuilds it (joints keep it seated)"),
+        .params("component: id|name of an inserted part; size?; length? — rebuilds it where it is (its seat, the part's origin, does not move)"),
 ];
 
 /// A family: (id, name, standard).
@@ -731,7 +730,7 @@ fn length_param(p: &Value, cmd: &str) -> Result<Option<f64>> {
     }
 }
 
-/// Building the part and seating it runs many feature and joint commands: as in
+/// Building the part and seating it runs many feature and placement commands: as in
 /// [`resize_atomic`], they run on a scratch session and the insert is one undo step.
 fn insert_atomic(s: &mut Session, p: &Value) -> Result<Value> {
     let mut computed = s.scratch();
@@ -789,15 +788,13 @@ fn insert(s: &mut Session, p: &Value) -> Result<Value> {
         component: comp,
         occurrence: occ,
         name: name.clone(),
-        joint: None,
         occurrences: None,
-        joints: None,
         param_warnings: Vec::new(),
     };
     if !holes.is_empty() {
         // The first hole has the placement the component came with; each further hole places the
         // same part again. All are made before any is seated, while each is still at the part's
-        // own origin, where the joint below takes the part's seating point to be.
+        // own origin, where the seating below takes the part's seating point to be.
         let mut occurrences = vec![occ];
         for _ in 1..holes.len() {
             occurrences.push(
@@ -806,21 +803,13 @@ fn insert(s: &mut Session, p: &Value) -> Result<Value> {
                     .ok_or_else(|| bad(cmd, "the copy has no occurrence"))?,
             );
         }
-        let mut joints = Vec::new();
-        for (i, ((a, h), o)) in holes.into_iter().zip(&occurrences).enumerate() {
+        for ((a, h), o) in holes.into_iter().zip(&occurrences) {
             // Seat it: its axis on the hole's, its seating plane on the hole's face, the shank
-            // going into the hole (the joint mates the part's −z with the face's outward z).
-            let seat = if i == 0 { format!("{name} seat") } else { format!("{name} seat {}", i + 1) };
-            let j = run(
-                s,
-                "joint.create",
-                json!({"type": "rigid", "a": {"occurrence": h, "circle": a}, "b": {"occurrence": o, "point": [0, 0, 0], "z": [0, 0, -1]}, "name": seat}),
-            )?;
-            joints.push(j["joint"].as_u64().ok_or_else(|| bad(cmd, "the joint has no id"))?);
+            // going into the hole (the part's −z along the face's outward z). The part is moved
+            // there; nothing holds it there afterwards.
+            seat(s, cmd, (h, a), *o)?;
         }
-        out.joint = joints.first().copied();
         out.occurrences = Some(occurrences);
-        out.joints = Some(joints);
     } else if let Some(pt) = p.get("point").and_then(vec3) {
         // Placed at a point, its +z along `direction`.
         let dir = p.get("direction").and_then(vec3).and_then(|d| d.normalized()).unwrap_or(Vec3::Z);
@@ -1212,7 +1201,6 @@ mod tests {
         run(&mut s, "solid.hole", json!({"position": [20, 15, 10], "diameter": 6.4}));
         // Pick the hole's rim at the top face.
         let r = run(&mut s, "parts.insert", json!({"family": "socket_head_cap_screw", "size": "M6", "length": 20, "at": [23.2, 15, 10]}));
-        assert!(r["joint"].is_number(), "{r}");
         let (lo, hi) = bbox(&s, "SHCS M6x20");
         // The head sits flush on the top face, the shank down the hole's axis.
         assert!((hi.z - 16.0).abs() < 1e-6 && (lo.z + 10.0).abs() < 1e-6, "{lo:?} {hi:?}");
@@ -1236,8 +1224,7 @@ mod tests {
             let undo = s.undo.len();
             // Both the top bore rim and the wall are world picks on the seated washer (#9648).
             let screw = run(&mut s, "parts.fastener", json!({"family":"socket_head_cap_screw","size":"M8","length":20,"at":[23.8,33.948,z]}));
-            let joint = s.doc.assembly.joints.iter().find(|j| Some(j.id) == screw["joint"].as_u64()).unwrap();
-            assert_eq!(Some(joint.a.occurrence), washer["occurrence"].as_u64());
+            assert!(screw["occurrences"].as_array().is_some_and(|o| o.len() == 1), "{screw} on {washer}");
             let (lo, hi) = bbox(&s, "SHCS M8x20");
             assert!((lo.z + 8.4).abs() < 1e-6 && (hi.z - 19.6).abs() < 1e-6, "{lo:?} {hi:?}");
             assert!(((lo.x + hi.x) / 2.0 - 19.6).abs() < 1e-6 && ((lo.y + hi.y) / 2.0 - 33.948).abs() < 1e-6, "{lo:?} {hi:?}");
@@ -1253,8 +1240,7 @@ mod tests {
         let washer = run(&mut s, "parts.insert", json!({"family":"washer","size":"M8","point":[40,50,60],"direction":[1,0,0]}));
         run(&mut s, "occurrence.ground", json!({"occurrence":washer["occurrence"],"grounded":true}));
         let screw = run(&mut s, "parts.insert", json!({"family":"socket_head_cap_screw","size":"M8","length":20,"at":[41.6,54.2,60]}));
-        let joint = s.doc.assembly.joints.iter().find(|j| Some(j.id) == screw["joint"].as_u64()).unwrap();
-        assert_eq!(Some(joint.a.occurrence), washer["occurrence"].as_u64());
+        assert!(screw["occurrences"].as_array().is_some_and(|o| o.len() == 1), "{screw} on {washer}");
         // The seating face is X = 41.6: the 20 mm shank runs along -X and the 8 mm head along +X.
         let (lo, hi) = bbox(&s, "SHCS M8x20");
         assert!(lo.dist(sketcore_record::Vec3::new(21.6, 43.5, 53.5)) < 1e-6, "{lo:?}");
@@ -1309,8 +1295,6 @@ mod tests {
         let placed: Vec<u64> = r["occurrences"].as_array().into_iter().flatten().filter_map(Value::as_u64).collect();
         assert_eq!(placed.len(), 4, "{r}");
         assert!(placed.iter().all(|o| s.doc.occurrences.iter().any(|x| x.id == *o && x.component == comp)), "{r}");
-        assert_eq!(r["joints"].as_array().map(|j| j.iter().filter(|j| j.is_number()).count()), Some(4), "{r}");
-        assert_eq!(r["joint"], r["joints"][0]);
         // Each placement sits in its own hole: the head flush on the top face, the shank down
         // the hole's axis.
         let st = s.world_state().unwrap();
@@ -1491,4 +1475,33 @@ mod tests {
         assert_eq!(s.undo.first().map(|step| step.label.as_str()), Some("Earlier step 1"));
         assert_eq!(s.undo.last().map(|step| step.label.as_str()), Some("Change Part Size"));
     }
+}
+
+
+/// Moves occurrence `part` so that its seating frame (its origin, −z into the hole) mates the
+/// frame of the circle `hole` = (occurrence, point on the rim), z against z.
+fn seat(s: &mut Session, cmd: &str, hole: (u64, Vec3), part: u64) -> Result<()> {
+    use sketcraft_doc::{mat_inverse, mat_mul};
+    let at = super::joints::origin_param(s, Some(&json!({"occurrence": hole.0, "circle": hole.1})), cmd)?;
+    let from = super::joints::origin_param(s, Some(&json!({"occurrence": part, "point": [0, 0, 0], "z": [0, 0, -1]})), cmd)?;
+    let st = s.model.state();
+    // An origin's frame is in its occurrence's coordinates: placed in the world through it.
+    let frame = |o: &sketcraft_doc::joints::JointOrigin| {
+        let local = sketcraft_doc::joints::resolve_origin(&s.doc, &st, o).map_err(|e| bad(cmd, e.to_string()))?;
+        Ok::<_, crate::EngineError>(mat_mul(&sketcraft_doc::joints::occurrence_world(&s.doc, o.occurrence), &local))
+    };
+    let (to, now) = (frame(&at)?, frame(&from)?);
+    // A mate turns the part's frame half a turn about its x, so the two z axes face each other
+    // (as a rigid joint without flip places it).
+    let facing = [[1.0, 0.0, 0.0, 0.0], [0.0, -1.0, 0.0, 0.0], [0.0, 0.0, -1.0, 0.0], [0.0, 0.0, 0.0, 1.0]];
+    let delta = mat_mul(&mat_mul(&to, &facing), &mat_inverse(&now).ok_or_else(|| bad(cmd, "the part's seat has no frame"))?);
+    let world = sketcraft_doc::joints::occurrence_world(&s.doc, part);
+    let local = s.doc.occurrences.iter().find(|o| o.id == part).map(|o| o.transform).ok_or_else(|| bad(cmd, "no such occurrence"))?;
+    // The frame the occurrence is placed in (its parent's), so the move is made in the world.
+    let parent = mat_mul(&world, &mat_inverse(&local).ok_or_else(|| bad(cmd, "the part has no placement"))?);
+    let placed = mat_mul(&mat_inverse(&parent).ok_or_else(|| bad(cmd, "the part has no placement"))?, &mat_mul(&delta, &world));
+    if let Some(o) = s.doc_mut().occurrences.iter_mut().find(|o| o.id == part) {
+        o.transform = placed;
+    }
+    Ok(())
 }

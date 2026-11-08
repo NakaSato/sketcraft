@@ -203,7 +203,7 @@ pub fn search(app: &SketApp, q: &str) -> Vec<Row> {
     let q = q.trim().to_lowercase();
     let mut v: Vec<(u32, Row)> = command_specs()
         .into_iter()
-        .filter(|c| !crate::workspace::AGENT_ONLY.contains(&c.id))
+        .filter(|c| crate::workspace::offered(app, c.id))
         .filter_map(|c| {
             let (home_tab, home_panel) = crate::workspace::destination(c).unwrap_or(("", ""));
             let info = crate::render_workspace::interactive_command_info(app, c);
@@ -749,7 +749,7 @@ mod tests {
 
     #[test]
     fn a_reveal_pulses_twice_then_stays_for_a_preview_and_ends_for_a_start() {
-        let preview = Reveal { id: "surface.stitch", since: 10.0, preview: true, back: "MODEL".into() };
+        let preview = Reveal { id: "inspect.measure", since: 10.0, preview: true, back: "MODEL".into() };
         let start = Reveal { preview: false, ..preview.clone() };
         for r in [&preview, &start] {
             assert_eq!(r.strength(10.0, true), 0.0);
@@ -788,22 +788,22 @@ mod tests {
 
         // Results appearing under a resting pointer reveal nothing: the box opens again with
         // the pointer already where the row will be.
-        h.app.sbox.text = "stitch".into();
+        h.app.sbox.text = "measure".into();
         h.frames(2);
-        let row = rect_of("search:command:surface.stitch").unwrap();
+        let row = rect_of("search:command:inspect.measure").unwrap();
         h.call("ui.key", json!({"key": "Escape"}));
         h.frames(10);
         h.call("ui.move", json!({"x": row.center().x, "y": row.center().y}));
         h.frames(2);
         h.call("ui.palette", json!({}));
-        h.app.sbox.text = "stitch".into();
+        h.app.sbox.text = "measure".into();
         h.frames(10);
         assert!(h.app.sbox.reveal.is_none() && h.app.ui.tab == "MODEL", "{:?}", h.app.sbox.reveal);
 
         // A visible button: its tab, the button marked, its tooltip open.
-        hover(&mut h, "surface.stitch");
-        assert_eq!(h.app.ui.tab, "SURFACE");
-        assert_eq!(rect_of("ribbon:reveal"), rect_of("button:surface.stitch"));
+        hover(&mut h, "inspect.measure");
+        assert_eq!(h.app.ui.tab, "INSPECT");
+        assert_eq!(rect_of("ribbon:reveal"), rect_of("button:inspect.measure"));
         assert!(rect_of("ribbon:reveal_tooltip").is_some());
         h.call("ui.move", json!({"x": away.x, "y": away.y}));
         h.frames(2);
@@ -848,7 +848,7 @@ mod tests {
         h.call("ui.move", json!({"x": away.x, "y": away.y}));
         h.call("ui.palette", json!({}));
         h.frames(10);
-        for (query, id) in [("stitch", "surface.stitch"), ("circular", "solid.pattern.circular")] {
+        for (query, id) in [("measure", "inspect.measure"), ("circular", "solid.pattern.circular")] {
             h.app.sbox.text = query.into();
             h.frames(2);
             let row = rect_of(&format!("search:command:{id}")).unwrap_or_else(|| panic!("no result row for {id}"));

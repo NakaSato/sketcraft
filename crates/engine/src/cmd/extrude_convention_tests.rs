@@ -137,23 +137,17 @@ fn assert_z(s: &Session, name: &str, lo: f64, hi: f64) {
 }
 
 /// A symmetric surface extrude reads its distance as a solid one does: the total, split evenly
-/// around the start plane, through a redefine and a save.
+/// around the start plane, through a save.
 #[test]
 fn surface_extrude_symmetric_distance_is_the_total_like_solid_extrude() {
     let mut s = fixture(json!({}));
-    run(&mut s, "surface.extrude", json!({"sketch":"Square","distance":"10 mm","direction":"symmetric","name":"Sheet","body_name":"Sheet"}));
+    crate::cmd::sheet_fixtures::extrude(&mut s, json!({"sketch":"Square","distance":"10 mm","direction":"symmetric","name":"Sheet","body_name":"Sheet"}));
     assert_z(&s, "Sheet", -5.0, 5.0);
     let FeatureKind::SurfaceExtrude { extent, .. } = &s.doc.find_feature("Sheet").unwrap().kind else { panic!("surface extrude") };
     assert_eq!(extent.convention, ExtrudeConvention::TotalDistance);
-    run(
-        &mut s,
-        "timeline.redefine",
-        json!({"feature":"Sheet","command":"surface.extrude","params":{"sketch":"Square","distance":"10 mm","direction":"symmetric","body_name":"Sheet"}}),
-    );
-    assert_z(&s, "Sheet", -5.0, 5.0);
     assert_z(&Session::new(Document::from_json(&s.doc.to_json()).unwrap()), "Sheet", -5.0, 5.0);
     // A one-sided surface extrude made symmetric splits its distance too, as a solid one does.
-    run(&mut s, "surface.extrude", json!({"sketch":"Square","distance":"10 mm","convention":"legacy_per_side","name":"Wall","body_name":"Wall"}));
+    crate::cmd::sheet_fixtures::extrude(&mut s, json!({"sketch":"Square","distance":"10 mm","convention":"legacy_per_side","name":"Wall","body_name":"Wall"}));
     assert_z(&s, "Wall", 0.0, 10.0);
     run(&mut s, "timeline.edit", json!({"feature":"Wall","set":{"extent":{"direction":"symmetric"}}}));
     assert_z(&s, "Wall", -5.0, 5.0);
@@ -164,9 +158,8 @@ fn surface_extrude_symmetric_distance_is_the_total_like_solid_extrude() {
 #[test]
 fn older_symmetric_surface_extrudes_keep_the_distance_on_each_side() {
     let mut s = fixture(json!({}));
-    run(
+    crate::cmd::sheet_fixtures::extrude(
         &mut s,
-        "surface.extrude",
         json!({"sketch":"Square","distance":"10 mm","direction":"symmetric","convention":"legacy_per_side","name":"Sheet","body_name":"Sheet"}),
     );
     assert_z(&s, "Sheet", -10.0, 10.0);
@@ -184,12 +177,6 @@ fn older_symmetric_surface_extrudes_keep_the_distance_on_each_side() {
         assert_z(&s, "Sheet", -10.0, 10.0);
         run(&mut s, "timeline.edit", json!({"feature":"Sheet","set":{"extent":{"distance":"12 mm"}}}));
         assert_z(&s, "Sheet", -12.0, 12.0);
-        run(
-            &mut s,
-            "timeline.redefine",
-            json!({"feature":"Sheet","command":"surface.extrude","params":{"sketch":"Square","distance":"10 mm","direction":"symmetric","body_name":"Sheet"}}),
-        );
-        assert_z(&s, "Sheet", -10.0, 10.0);
     }
 }
 

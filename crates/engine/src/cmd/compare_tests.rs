@@ -127,17 +127,11 @@ fn a_taller_box_has_a_slab_only_it_has() {
     assert_eq!(r["warnings"], json!([]), "{r}");
 }
 
-/// A 100 x 60 sheet-metal plate with a 20 mm flange along y = 0 and a 5 mm hole at (x, 40).
+/// A 100 x 60 x 2.5 plate with a 20 mm wall along y = 0 and a 5 mm hole at (x, 40).
 fn bracket(s: &mut Session, name: &str, x: f64) {
-    run(s, "sketch.create", json!({"plane": "XY", "name": format!("{name} base")}));
-    run(s, "sketch.rectangle.two_point", json!({"p0": [0, 0], "p1": [100, 60]}));
-    run(s, "sketch.finish", json!({}));
-    run(s, "sheet.flange", json!({"sketch": format!("{name} base"), "body_name": name}));
-    run(s, "sheet.flange", json!({"edges": [[50, 0, 2.5]], "height": 20, "body": name}));
-    run(s, "sketch.create", json!({"plane": "XY", "name": format!("{name} hole")}));
-    run(s, "sketch.circle.center", json!({"center": [x, 40], "diameter": 5}));
-    run(s, "sketch.finish", json!({}));
-    run(s, "solid.extrude", json!({"sketch": format!("{name} hole"), "through_all": true, "operation": "cut", "targets": [name]}));
+    run(s, "solid.box", json!({"corner": [0, 0, 0], "length": 100, "width": 60, "height": 2.5, "body_name": name}));
+    run(s, "solid.box", json!({"corner": [0, 0, 0], "length": 100, "width": 2.5, "height": 20, "operation": "join", "targets": [name]}));
+    run(s, "solid.cylinder", json!({"diameter": 5, "height": 2.5, "base": [x, 40, 0], "operation": "cut", "targets": [name]}));
 }
 
 #[test]
@@ -149,7 +143,7 @@ fn a_hole_moved_2_mm_leaves_two_crescents() {
     let rs = regions(&r);
     assert_eq!(rs.len(), 2, "{r}");
     // Each is a disk of 2.5 mm radius less its overlap with the other, centres 2 mm apart, through
-    // the 2.5 mm sheet: (π r² − 2 r² acos(d / 2r) + (d / 2) √(4 r² − d²)) · t.
+    // the 2.5 mm plate: (π r² − 2 r² acos(d / 2r) + (d / 2) √(4 r² − d²)) · t.
     let (rr, d, t) = (2.5f64, 2.0f64, 2.5);
     let crescent = (std::f64::consts::PI * rr * rr - 2.0 * rr * rr * (d / (2.0 * rr)).acos() + d / 2.0 * (4.0 * rr * rr - d * d).sqrt()) * t;
     assert!((crescent - 24.316_34).abs() < 1e-4);
@@ -213,7 +207,7 @@ fn a_region_the_cut_cannot_measure_has_no_volume_and_says_why() {
     run(&mut s, "sketch.create", json!({"plane": "XY", "name": "Square"}));
     run(&mut s, "sketch.rectangle.two_point", json!({"p0": [0, 0], "p1": [10, 10]}));
     run(&mut s, "sketch.finish", json!({}));
-    run(&mut s, "surface.extrude", json!({"sketch": "Square", "distance": "10 mm", "name": "Tube", "body_name": "Tube"}));
+    crate::cmd::sheet_fixtures::extrude(&mut s, json!({"sketch": "Square", "distance": "10 mm", "name": "Tube", "body_name": "Tube"}));
     let r = run(&mut s, "inspect.compare", json!({"a": "Block", "b": "Tube"}));
     assert!(f(&r["deviation"]["max_mm"]).is_finite(), "{r}");
     let rs = regions(&r);

@@ -69,8 +69,6 @@ pub struct RepairHole {
     /// Why it was not, when `patch_holes` asked for it.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub why: Option<String>,
-    /// The Patch that fills it: `{command: "surface.patch", params}`.
-    pub patch: Value,
 }
 
 /// What the repair did, face by face.

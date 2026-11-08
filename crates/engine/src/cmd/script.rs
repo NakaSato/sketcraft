@@ -242,17 +242,9 @@ pub(crate) fn script_steps(doc: &Document) -> Result<(Vec<Value>, Vec<String>)> 
     if !odd.is_empty() {
         omitted.push(format!("design properties document.metadata.set can't set ({})", odd.join(", ")));
     }
-    for rule in &doc.sheet.rules {
-        let mut p = serde_json::to_value(rule).map_err(|e| EngineError::Other(e.to_string()))?;
-        if doc.sheet.active.as_deref() == Some(rule.name.as_str())
-            && let Some(o) = p.as_object_mut()
-        {
-            o.insert("active".into(), json!(true));
-        }
-        out.push(step("sheet.manage_rules", p));
-    }
-    if let Some(active) = doc.sheet.active.as_deref().filter(|a| !doc.sheet.rules.iter().any(|r| r.name == *a)) {
-        out.push(step("sheet.manage_rules", json!({"name": active, "active": true})));
+    // Sheet metal has no commands any more: its rules stay in the design but can't be scripted.
+    if !doc.sheet.rules.is_empty() || doc.sheet.active.is_some() {
+        omitted.push("sheet metal rules (sheet metal has no commands)".to_string());
     }
     for rule in &doc.plastic.rules {
         out.push(step("plastic.manage_rules", serde_json::to_value(rule).map_err(|e| EngineError::Other(e.to_string()))?));

@@ -758,22 +758,4 @@ mod tests {
         let _ = std::fs::remove_dir_all(folder);
     }
 
-    #[test]
-    fn relink_displays_the_warning_when_changed_geometry_has_joints() {
-        let (mut app, component, occurrence, folder, moved) = fixture("warning");
-        app.run(
-            "joint.create",
-            json!({"name": "Seat", "type": "rigid", "a": {"occurrence": 0, "point": [0,0,0]}, "b": {"occurrence": occurrence, "point": [0,0,0]}}),
-        )
-        .unwrap();
-        let mut changed = Session::default();
-        changed.execute("solid.box", &json!({"length": 10, "width": 20, "height": 45})).unwrap();
-        changed.execute("file.save", &json!({"path": moved})).unwrap();
-        answer(&mut app, Some(moved.to_string_lossy().into_owned()));
-        start(&mut app, component);
-        crate::file_picker::tick(&mut app, &egui::Context::default());
-        assert!(app.status.as_ref().is_some_and(|(s, _, error)| s.contains("check this component's joints") && *error));
-        assert!(app.session.log.iter().any(|s| s.contains("check this component's joints")));
-        let _ = std::fs::remove_dir_all(folder);
-    }
 }

@@ -1399,28 +1399,6 @@ fn three_d_curves_need_the_option_and_move_joined() {
     assert!(sketch(&s).wire_index(&curve_ids(&sp)[0]).is_none());
 }
 
-#[test]
-fn pipe_and_sweep_follow_3d_sketch_curves() {
-    let mut s = Session::default();
-    run(&mut s, "sketch.create", json!({"plane": "XY", "name": "Path"}));
-    run(&mut s, "sketch.options", json!({"sketch_3d": true}));
-    let r = run(&mut s, "sketch.line3d", json!({"points": [[0, 0, 0], [0, 0, 30], [20, 0, 30]]}));
-    let mut path = curve_ids(&r);
-    let sp = run(&mut s, "sketch.spline3d", json!({"points": [[20, 0, 30], [35, 10, 35], [50, 0, 50]]}));
-    path.extend(curve_ids(&sp));
-    run(&mut s, "sketch.finish", json!({}));
-    let p = run(&mut s, "solid.pipe", json!({"path_sketch": "Path", "path": path, "diameter": 4}));
-    let si = run(&mut s, "document.inspect", json!({"measure": true}));
-    let body = si["bodies"].as_array().and_then(|b| b.first()).cloned().unwrap_or_default();
-    // The tube runs from the first line's start to the spline's end (radius 2 around them; the
-    // end cap is square to the spline, so it reaches up to 2 past the end point).
-    let (lo, hi) = (&body["bbox"]["min"], &body["bbox"]["max"]);
-    let near = |v: &Value, x: f64| (v.as_f64().unwrap_or(f64::NAN) - x).abs() < 0.5;
-    let within = |v: &Value, a: f64, b: f64| v.as_f64().is_some_and(|x| x > a - 0.1 && x < b + 0.1);
-    assert!(near(&lo[0], -2.0) && near(&lo[2], 0.0) && within(&hi[0], 50.0, 52.0) && within(&hi[2], 50.0, 52.0), "{p} {body}");
-    assert!(body["volume_mm3"].as_f64().unwrap_or(0.0) > 4.0 * std::f64::consts::PI * 50.0 * 0.95, "{p} {body}");
-}
-
 /// Between two points, or on a line, that don't line up with an axis, an `auto` dimension takes
 /// its orientation from where its text goes: across from the two (and a tenth of their distance
 /// past) the distance between them; pulled further past an end, up or down from it the
@@ -2440,11 +2418,8 @@ fn a_changed_length_dimension_keeps_its_first_point() {
 #[test]
 fn a_dimension_measures_a_model_edge() {
     let mut s = Session::default();
-    // A sheet-metal base flange: a 100 x 50 plate whose front edge runs along y = 0.
-    run(&mut s, "sketch.create", json!({"plane": "XY", "name": "Base"}));
-    run(&mut s, "sketch.rectangle.two_point", json!({"p0": [0, 0], "p1": [100, 50]}));
-    run(&mut s, "sketch.finish", json!({}));
-    run(&mut s, "sheet.flange", json!({"sketch": "Base", "body_name": "Flange"}));
+    // A 100 x 50 plate whose front edge runs along y = 0.
+    run(&mut s, "solid.box", json!({"corner": [0, 0, 0], "length": 100, "width": 50, "height": 2, "body_name": "Flange"}));
     // A sketch with a point 25 above the flange's front edge.
     run(&mut s, "sketch.create", json!({"plane": "XY", "name": "Near"}));
     let point = run(&mut s, "sketch.point", json!({"point": [50, 25]}))["point"].as_str().unwrap().to_string();
@@ -2462,11 +2437,8 @@ fn a_dimension_refuses_a_long_list_of_entities() {
     // The most entities one call may project (the engine's `MAX_PROJECTED_ENTITIES`).
     const MAX_PROJECTED: usize = 1_000;
     let mut s = Session::default();
-    // A sheet-metal base flange: a 100 x 50 plate whose front edge runs along y = 0.
-    run(&mut s, "sketch.create", json!({"plane": "XY", "name": "Base"}));
-    run(&mut s, "sketch.rectangle.two_point", json!({"p0": [0, 0], "p1": [100, 50]}));
-    run(&mut s, "sketch.finish", json!({}));
-    run(&mut s, "sheet.flange", json!({"sketch": "Base", "body_name": "Flange"}));
+    // A 100 x 50 plate whose front edge runs along y = 0.
+    run(&mut s, "solid.box", json!({"corner": [0, 0, 0], "length": 100, "width": 50, "height": 2, "body_name": "Flange"}));
     // A sketch with a point 25 above the flange's front edge.
     run(&mut s, "sketch.create", json!({"plane": "XY", "name": "Near"}));
     let point = run(&mut s, "sketch.point", json!({"point": [50, 25]}))["point"].as_str().unwrap().to_string();

@@ -568,10 +568,11 @@ mod tests {
                     ("sketch.create", json!({"plane":"XY","name":"Boundary"})),
                     ("sketch.rectangle.two_point", json!({"p0":[20,20],"p1":[30,30]})),
                     ("sketch.finish", json!({})),
-                    ("surface.patch", json!({"sketch":"Boundary","body_name":"Sheet"})),
-                    ("inspect.zebra", json!({"stripes":14.5})),
-                    ("inspect.section", json!({"plane":"XY"})),
                 ] {
+                    s.execute(command, &params).unwrap();
+                }
+                crate::cmd::sheet_fixtures::patch(&mut s, json!({"sketch":"Boundary","body_name":"Sheet"}));
+                for (command, params) in [("inspect.zebra", json!({"stripes":14.5})), ("inspect.section", json!({"plane":"XY"}))] {
                     s.execute(command, &params).unwrap();
                 }
                 if had_continuity {

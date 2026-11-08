@@ -69,19 +69,11 @@ fn face_names(s: &mut Session, body: &str) -> Vec<String> {
 fn a_rail_sweeps_a_frustum_and_stretching_is_an_edit() {
     let mut s = setup();
     let volume = PI * 40.0 / 3.0 * (100.0 + 50.0 + 25.0);
-    let lateral = PI * 15.0 * (40.0f64 * 40.0 + 25.0).sqrt();
     sweep(&mut s, "Plain", json!({})).unwrap();
     sweep(&mut s, "Frustum", json!({"rails": [{"curves": ["in"]}], "name": "Railed"})).unwrap();
     let m = measure(&s, "Frustum");
     assert!((m.volume - volume).abs() < 2e-3 * volume, "volume {} vs {volume}", m.volume);
     assert_eq!(face_names(&mut s, "Plain"), face_names(&mut s, "Frustum"));
-    run(
-        &mut s,
-        "surface.sweep",
-        json!({"sketch": "C", "curves": ["c"], "path_sketch": "P", "path": ["up"], "rails": [{"sketch": "P", "curves": ["in"]}], "body_name": "Side"}),
-    );
-    let a = measure(&s, "Side").area;
-    assert!((a - lateral).abs() < 2e-3 * lateral, "side {a} vs {lateral}");
 
     let doc = sketcraft_doc::Document::from_json(&s.doc.to_json()).unwrap();
     let reopened = Session::new(doc);
@@ -93,22 +85,6 @@ fn a_rail_sweeps_a_frustum_and_stretching_is_an_edit() {
     let elliptic = PI * 100.0 * 40.0 * 0.75;
     assert!((stretched.volume - elliptic).abs() < 2e-3 * elliptic, "stretched {} vs {elliptic}", stretched.volume);
     assert!((stretched.bbox.max.y - 10.0).abs() < 1e-3 && (stretched.bbox.min.y + 10.0).abs() < 1e-3, "{:?}", stretched.bbox);
-}
-
-/// Two arcs bulging apart carry a line between them: the sheet fills the region between the
-/// arcs in the XZ plane, area 2(a√(R² − a²) + R² asin(a/R)) − 400 with R = 25, a = 20.
-#[test]
-fn two_rails_carry_a_line_between_arcs() {
-    let mut s = setup();
-    run(
-        &mut s,
-        "surface.sweep",
-        json!({"sketch": "L", "curves": ["l"], "path_sketch": "P", "path": ["up"], "rails": [{"sketch": "R", "curves": ["left"]}, {"sketch": "R", "curves": ["right"]}], "body_name": "Between"}),
-    );
-    let m = measure(&s, "Between");
-    let area = 2.0 * (20.0 * 15.0 + 625.0 * 0.8f64.asin()) - 400.0;
-    assert!((m.area - area).abs() < 1e-3 * area, "area {} vs {area}", m.area);
-    assert!((m.bbox.max.x - 20.0).abs() < 1e-2 && (m.bbox.min.x + 20.0).abs() < 1e-2, "{:?}", m.bbox);
 }
 
 /// Hostile rails are refused with an error and leave the design as it was.
@@ -135,9 +111,6 @@ fn hostile_rails_are_refused() {
         json!({"rails": [{"curves": ["in"]}, {"curves": ["in"]}]}),
     ] {
         assert!(sweep(&mut s, "Bad", bad.clone()).is_err(), "{bad}");
-        let mut p = json!({"sketch": "C", "curves": ["c"], "path_sketch": "P", "path": ["up"]});
-        p.as_object_mut().unwrap().extend(bad.as_object().unwrap().clone());
-        assert!(s.execute("surface.sweep", &p).is_err(), "surface {bad}");
         assert_eq!(s.doc.features.len(), before, "{bad}");
     }
 }

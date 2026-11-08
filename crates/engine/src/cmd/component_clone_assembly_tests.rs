@@ -197,49 +197,6 @@ fn second_copy_has_unique_names_and_keeps_global_contact_switches_unchanged() {
     assert_eq!(names.len(), destination.assembly.origins.len());
 }
 
-#[test]
-fn paste_new_internal_motion_study_drives_only_the_copied_assembly_and_reopens() {
-    use serde_json::{Value, json};
-    fn run(s: &mut crate::Session, command: &str, params: Value) -> Value {
-        s.execute(command, &params).unwrap_or_else(|e| panic!("{command}: {e}"))
-    }
-    let mut s = crate::Session::default();
-    let parent = run(&mut s, "component.create", json!({"name":"Mechanism"}))["component"].as_u64().unwrap();
-    let fixed = run(&mut s, "component.create", json!({"name":"Support"}))["occurrence"].as_u64().unwrap();
-    run(&mut s, "solid.box", json!({"length":2,"width":2,"height":2,"body_name":"SupportBox"}));
-    run(&mut s, "occurrence.ground", json!({"occurrence":fixed,"grounded":true}));
-    run(&mut s, "component.activate", json!({"component":parent}));
-    let moving = run(&mut s, "component.create", json!({"name":"Carriage"}))["occurrence"].as_u64().unwrap();
-    run(&mut s, "solid.box", json!({"length":2,"width":2,"height":2,"corner":[0,0,5],"body_name":"CarriageBox"}));
-    run(&mut s, "joint.origin", json!({"name":"Support origin","occurrence":fixed,"point":[0,0,0]}));
-    let source_joint = run(&mut s, "joint.as_built", json!({"type":"slider","a":fixed,"b":moving,"name":"Rail"}))["joint"].as_u64().unwrap();
-    run(&mut s, "contact.create", json!({"name":"Internal contact","occurrences":[fixed,moving]}));
-    run(&mut s, "motion.study", json!({"name":"Travel","steps":10,"keys":[{"joint":source_joint,"points":[[0,0],[10,6]]}]}));
-    run(
-        &mut s,
-        "explode.create",
-        json!({"name":"Exploded mechanism","moves":[{"occurrence":fixed,"translate":[10,0,0]},{"occurrence":moving,"translate":[0,10,0]}]}),
-    );
-    let original = s.doc.occurrences.iter().find(|o| o.id == moving).unwrap().transform;
-    run(&mut s, "component.activate", json!({"component":"root"}));
-    let result = run(&mut s, "component.paste_new", json!({"component":parent,"translate":[20,0,0]}));
-    assert_eq!(result["notices"], json!([]));
-    assert_eq!(s.doc.assembly.joints.len(), 2);
-    assert_eq!(s.doc.assembly.origins.len(), 2);
-    assert_eq!(s.doc.assembly.contact_sets.len(), 2);
-    assert_eq!(s.doc.assembly.exploded.len(), 2);
-    let copied_joint = s.doc.assembly.joints.iter().find(|j| j.name == "Rail (2)").unwrap().id;
-    let copied_moving = s.doc.assembly.joints.iter().find(|j| j.id == copied_joint).unwrap().b.occurrence;
-    assert_ne!(copied_moving, moving);
-    run(&mut s, "motion.play", json!({"study":"Travel (2)","step":10}));
-    assert_eq!(s.doc.assembly.joints.iter().find(|j| j.id == source_joint).unwrap().values, vec![0.0]);
-    assert_eq!(s.doc.assembly.joints.iter().find(|j| j.id == copied_joint).unwrap().values, vec![6.0]);
-    assert_eq!(s.doc.occurrences.iter().find(|o| o.id == moving).unwrap().transform, original);
-    let reopened = Document::from_json(&s.doc.to_json()).unwrap();
-    assert_eq!(reopened.assembly, s.doc.assembly);
-    assert!(reopened.assembly.studies.iter().any(|m| m.name == "Travel (2)" && m.keys[0].joint == copied_joint));
-}
-
 /// An edge origin's edge, face and corner edge are the copy's too.
 #[test]
 fn an_edge_origin_is_copied_onto_the_copys_edges() {

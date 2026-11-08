@@ -206,15 +206,9 @@ pub struct InsertedPart {
     pub occurrence: u64,
     /// The component's name.
     pub name: String,
-    /// With `at`: the first hole's joint.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub joint: Option<u64>,
     /// With `at`: an occurrence per hole, in pick order.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub occurrences: Option<Vec<u64>>,
-    /// With `at`: a joint per hole, in pick order.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub joints: Option<Vec<u64>>,
     /// In the warn parameter-check mode: what the call's parameters got wrong.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub param_warnings: Vec<String>,

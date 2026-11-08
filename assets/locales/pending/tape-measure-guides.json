@@ -1,0 +1,23 @@
+{
+  "en": {
+    "ui.tape_tool.bad_length": "Tape Measure: type a length, such as 1200 or 1.2m.",
+    "ui.tape_tool.distance": "Distance: {distance}",
+    "ui.tape_tool.first": "Tape Measure: click a point to measure from. Start on an edge for a guide line, on a vertex for a guide point.",
+    "ui.tape_tool.no_guides": "(no guides; tap Ctrl to make them again)",
+    "ui.tape_tool.second": "Tape Measure: click the second point, or type a distance and press Enter. Tap Ctrl to turn guides off."
+  },
+  "ja": {
+    "ui.tape_tool.bad_length": "メジャー: 1200 や 1.2m のように長さを入力してください。",
+    "ui.tape_tool.distance": "距離: {distance}",
+    "ui.tape_tool.first": "メジャー: 測定の始点をクリックします。エッジから始めるとガイド線、頂点から始めるとガイド点を作ります。",
+    "ui.tape_tool.no_guides": "(ガイドなし。Ctrl を押すと再び作ります)",
+    "ui.tape_tool.second": "メジャー: 2 点目をクリックするか、距離を入力して Enter を押します。Ctrl を押すとガイドをオフにします。"
+  },
+  "zh": {
+    "ui.tape_tool.bad_length": "卷尺：请输入长度，例如 1200 或 1.2m。",
+    "ui.tape_tool.distance": "距离：{distance}",
+    "ui.tape_tool.first": "卷尺：单击测量起点。从边开始会生成参考线，从顶点开始会生成参考点。",
+    "ui.tape_tool.no_guides": "（不生成参考；轻按 Ctrl 重新开启）",
+    "ui.tape_tool.second": "卷尺：单击第二个点，或输入距离后按 Enter。轻按 Ctrl 可关闭参考。"
+  }
+}

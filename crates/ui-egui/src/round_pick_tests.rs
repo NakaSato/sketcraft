@@ -96,7 +96,7 @@ fn a_circular_edge_or_cylinder_wall_is_an_axis_and_a_flat_face_is_not() {
 fn axis_inputs_take_only_edges_and_faces_that_have_an_axis() {
     let mut h = shaft();
     let (wall, rim, cap) = picks(&h);
-    for cmd in ["solid.revolve", "solid.pattern.circular", "construct.plane.at_angle", "surface.revolve"] {
+    for cmd in ["solid.revolve", "solid.pattern.circular", "construct.plane.at_angle"] {
         h.app.start(cmd);
         let mut d = h.app.dialog.clone().unwrap();
         d.active = 1;

@@ -9,8 +9,6 @@ pub(super) fn command(kind: &Kind) -> Option<&'static str> {
         Kind::Material { .. } => Some("material.assign"),
         Kind::Appearance(_) => Some("appearance.assign"),
         Kind::Motion(k) => Some(match k {
-            crate::dialogs_motion::Mo::ContactSet { .. } => "contact.create",
-            crate::dialogs_motion::Mo::MotionStudy { .. } => "motion.study",
             crate::dialogs_motion::Mo::Explode { .. } => "explode.create",
             crate::dialogs_motion::Mo::Configurations { .. } => "config.table",
         }),
@@ -48,39 +46,11 @@ pub(super) fn command(kind: &Kind) -> Option<&'static str> {
         Kind::DeleteFaces => Some("face.delete"),
         Kind::Move { .. } => Some("solid.move"),
         Kind::Thread { .. } => Some("solid.thread"),
-        Kind::ReplaceFace => Some("solid.replace_face"),
-        Kind::BoundaryFill { .. } => Some("solid.boundary_fill"),
         Kind::Align { .. } => Some("solid.align"),
         Kind::Remove => Some("solid.remove"),
-        Kind::PathPattern { .. } => Some("solid.pattern.path"),
         Kind::Combine { .. } => Some("solid.combine"),
-        Kind::Rib { web, .. } => Some(if *web { "solid.web" } else { "solid.rib" }),
         Kind::Primitive { cmd, .. } => Some(cmd),
-        Kind::Surface(k) => Some(match k {
-            crate::dialogs_surface::Surf::Extrude { .. } => "surface.extrude",
-            crate::dialogs_surface::Surf::Revolve { .. } => "surface.revolve",
-            crate::dialogs_surface::Surf::Sweep(_) => "surface.sweep",
-            crate::dialogs_surface::Surf::Loft { .. } => "surface.loft",
-            crate::dialogs_surface::Surf::Blend { .. } => "surface.blend",
-            crate::dialogs_surface::Surf::Boundary { .. } => "surface.boundary",
-            crate::dialogs_surface::Surf::Patch { .. } => "surface.patch",
-            crate::dialogs_surface::Surf::Unstitch => "surface.unstitch",
-            crate::dialogs_surface::Surf::ReverseNormal => "surface.reverse_normal",
-            crate::dialogs_surface::Surf::Ruled { .. } => "surface.ruled",
-            crate::dialogs_surface::Surf::Trim { .. } => "surface.trim",
-            crate::dialogs_surface::Surf::Untrim { .. } => "surface.untrim",
-            crate::dialogs_surface::Surf::SplitFace => "solid.split_face",
-            _ => k.simple_metadata().map_or("", |(command, _)| command),
-        }),
-        Kind::Sheet(k) => match k {
-            crate::dialogs_sheet::Sm::Flange { .. } => Some("sheet.flange"),
-            crate::dialogs_sheet::Sm::Unfold { refold } => Some(if *refold { "sheet.refold" } else { "sheet.unfold" }),
-            crate::dialogs_sheet::Sm::Convert { .. } => Some("sheet.convert"),
-            crate::dialogs_sheet::Sm::Rules { .. } => Some("sheet.manage_rules"),
-            crate::dialogs_sheet::Sm::FlatPattern { .. } => Some("sheet.flat_pattern"),
-            _ => k.simple_metadata().map(|(command, _)| command),
-        },
-        Kind::Frame(_) => Some("frame.member"),
+        Kind::SplitFace => Some("solid.split_face"),
         Kind::Plastic(k) => match k {
             crate::dialogs_plastic::Pl::SnapFit { .. } => Some("plastic.snap_fit"),
             crate::dialogs_plastic::Pl::Assign { .. } => Some("plastic.assign_rule"),
@@ -90,14 +60,6 @@ pub(super) fn command(kind: &Kind) -> Option<&'static str> {
         Kind::Assembly(k) => match k {
             crate::dialogs_assembly::Asm::FromBodies => Some("component.from_bodies"),
             crate::dialogs_assembly::Asm::NewComponent { .. } => Some("component.create"),
-            crate::dialogs_assembly::Asm::Joint(f) => Some(if f.as_built { "joint.as_built" } else { "joint.create" }),
-            crate::dialogs_assembly::Asm::JointOrigin { .. } => Some("joint.origin"),
-            crate::dialogs_assembly::Asm::RigidGroup => Some("joint.rigid_group"),
-            crate::dialogs_assembly::Asm::MotionLink { .. } => Some("joint.motion_link"),
-            crate::dialogs_assembly::Asm::Coupling(f) => Some(f.command),
-            crate::dialogs_assembly::Asm::Cam(_) => Some("joint.cam"),
-            crate::dialogs_assembly::Asm::Trace(_) => Some("motion.trace"),
-            crate::dialogs_assembly::Asm::Drive { .. } => Some("joint.drive"),
             crate::dialogs_assembly::Asm::Interference { .. } => Some("inspect.interference"),
         },
         _ => kind.simple_metadata().map(|(command, _)| command),
@@ -369,7 +331,7 @@ pub(super) fn rows(app: &mut SketApp, ctx: &egui::Context, d: &mut Dialog, ui: &
         Kind::Material { .. } => Some("manage.material_hint"),
         Kind::Appearance(_) => Some("manage.appearance_hint"),
         Kind::Motion(crate::dialogs_motion::Mo::Configurations { .. }) => Some("manage.config_hint"),
-        Kind::Sheet(crate::dialogs_sheet::Sm::Rules { .. }) | Kind::Plastic(crate::dialogs_plastic::Pl::Rules { .. }) => Some("manage.rules_hint"),
+        Kind::Plastic(crate::dialogs_plastic::Pl::Rules { .. }) => Some("manage.rules_hint"),
         Kind::Plastic(crate::dialogs_plastic::Pl::Assign { .. }) => Some("manage.assign_hint"),
         _ => None,
     };
@@ -880,9 +842,6 @@ fn additional_rows(app: &mut SketApp, d: &mut Dialog, ui: &mut egui::Ui) -> bool
             });
             extra_options(ui, "shell_options", &mut d.extra, &[("Tangent Chain", "tangent_chain")]);
         }
-        Kind::Draft { angle } => {
-            enter |= expr_row(ui, "Angle", angle);
-        }
         Kind::Mirror => {
             // Feature replay retains the source operation; Join is for body copies.
             if !d.inputs.first().is_some_and(|i| i.accept == selection::FEATURES) {
@@ -919,17 +878,7 @@ fn additional_rows(app: &mut SketApp, d: &mut Dialog, ui: &mut egui::Ui) -> bool
         Kind::Construct { t: Some(t), .. } => {
             form_row(ui, "Position (0 to 1)", |ui| enter |= field(ui, t));
         }
-        Kind::Split | Kind::ReplaceFace | Kind::Remove | Kind::Midplane | Kind::ChatContext | Kind::Construct { t: None, .. } => {}
-        Kind::Rib { thickness, depth, flip, normal, .. } => {
-            form_row(ui, "Direction", |ui| {
-                let mut i = usize::from(*normal);
-                ui_kit::segmented(ui, &mut i, &["In plane", "Normal"], Default::default());
-                *normal = i == 1;
-            });
-            enter |= expr_row(ui, "Thickness", thickness);
-            enter |= hint_row(ui, "Depth", depth, tr("to the next face"));
-            ui_kit::options(ui, "feature_options", &mut [("Flip", flip)]);
-        }
+        Kind::Split | Kind::Remove | Kind::Midplane | Kind::ChatContext | Kind::Construct { t: None, .. } => {}
         Kind::Emboss { depth, deboss } => {
             enter |= expr_row(ui, "Depth", depth);
             form_row(ui, "Type", |ui| {
@@ -966,31 +915,6 @@ fn additional_rows(app: &mut SketApp, d: &mut Dialog, ui: &mut egui::Ui) -> bool
                 let t = Tokens::get();
                 ui.add(egui::Label::new(RichText::new(tr(ALIGN_SHARED_WARNING)).color(t.warning).size(t.font_small)).wrap());
             }
-        }
-        Kind::BoundaryFill { operation, cells, .. } => {
-            form_row(ui, "Cells", |_| {});
-            if cells.is_empty() {
-                ui_kit::status_line(ui, "Pick the tool bodies", ui_kit::StatusTone::Dim);
-            }
-            for (i, (_, label, on)) in cells.iter_mut().enumerate() {
-                form_row(ui, &format!("Cell {}", i + 1), |ui| {
-                    ui_kit::checkbox(ui, label.as_str(), on);
-                });
-            }
-            choice_row(ui, "Operation", "bf_op", operation, &OP_LABELS);
-            extra_options(ui, "boundary_options", &mut d.extra, &[("Remove Tools", "remove_tools")]);
-        }
-        Kind::PathPattern { count, spacing } => {
-            enter |= quantity_row(ui, &app.session.doc, "Quantity", count);
-            enter |= expr_row(ui, if d.extra.contains_key("distance") { "Distance" } else { "Spacing" }, spacing);
-        }
-        Kind::Pipe { diameter, wall, operation } => {
-            enter |= expr_row(ui, "Diameter", diameter);
-            enter |= hint_row(ui, "Wall", wall, tr("solid"));
-            choice_row(ui, "Operation", "pp_op", operation, &OP_LABELS);
-        }
-        Kind::Stock { margin } => {
-            enter |= expr_row(ui, "Margin", margin);
         }
         Kind::Scale { factor, per_axis, factor_y, factor_z } => {
             form_row(ui, "Type", |ui| {
@@ -1097,10 +1021,7 @@ fn additional_rows(app: &mut SketApp, d: &mut Dialog, ui: &mut egui::Ui) -> bool
                 }
             });
         }
-        Kind::Surface(k) => enter |= crate::dialogs_surface::rows(ui, k),
-        Kind::Sheet(k) => enter |= crate::dialogs_sheet::rows(app, ui, k, &mut d.inputs),
         Kind::Plastic(k) => enter |= crate::dialogs_plastic::rows(app, ui, k, &d.inputs),
-        Kind::Frame(k) => enter |= crate::dialogs_frame::rows(app, ui, k, &d.inputs),
         Kind::Assembly(k) => enter |= crate::dialogs_assembly::rows(app, ui, k, &mut d.inputs, &mut d.active),
         Kind::Measure { result, show, .. } => measure_rows(app, ui, result.as_ref(), show),
         Kind::Section { offset, flip, hatch } => {

@@ -33,10 +33,10 @@
 | Scale | S; select geometry, click a reference point, move or type a scale factor + Enter; axis locks constrain scaling |
 | Offset | F; click near a face boundary, move inward/outward, click or type a length + Enter |
 | Move / Copy | M; click a base point and destination; tap Ctrl (Option on Mac) to toggle Copy; type a length + Enter for precision |
-| Rotate | Q; select bodies, pick the axis (an axis, a straight edge or a round face), type an angle + Enter or drag the turn handle; Copy keeps the original |
+| Rotate | Q. On the SketchUp tab: select bodies (or click one), click the centre (the axis is the face's normal there; Right / Left / Up lock it to X / Y / Z, Down unlocks), click the start of the angle, then click the end (it snaps every 15°) or type degrees + Enter. Tap Ctrl (Option on Mac) for a copy; Escape steps back a click. On other tabs: pick the axis (an axis, a straight edge or a round face), type an angle + Enter or drag the turn handle; Copy keeps the original |
 | Aligned copies | After placing a Move copy, type `/N` (or `N/`) + Enter to divide the original span into N equal intervals; type `Nx` (or `xN`, `N*`, `*N`) + Enter for N copies at the original spacing |
 | Paint | B; choose a color in the inspector, then click a filled face |
-| Tape Measure | T; click two snapped points to measure distance |
+| Tape Measure | T; click two snapped points to measure distance. On the SketchUp tab, starting on a straight edge makes a guide line parallel to it, and starting on a vertex makes a guide point; click where it goes or type a length + Enter (`1200`, `1.2m`). Tap Ctrl (Option on Mac) to measure without guides. Guides are construction axes and points, saved with the design |
 | Protractor | A; click a center, a baseline point, and an angle point |
 | Dimensions | I; click two endpoints, move the label, and click to place it; Right / Left / Up aligns the dimension with X / Y / Z; repeat or Down unlocks |
 | Precise length | Choose a preview direction, type a length such as `5`, `5cm`, or `50mm`, press Enter; plain numbers use meters |

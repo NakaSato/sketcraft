@@ -441,7 +441,8 @@ pub fn command_for(app: &SketApp, key: &str) -> Option<&'static str> {
     let enabled: Vec<&'static str> = commands_for(app, key)
         .into_iter()
         .filter(|id| {
-            (scope(id) != Scope::Render || here == Scope::Render)
+            crate::workspace::offered(app, id)
+                && (scope(id) != Scope::Render || here == Scope::Render)
                 && (here != Scope::Render || scope(id) != Scope::Sketch)
                 && sketcraft_engine::find_command(id).is_some_and(|c| crate::render_workspace::interactive_command_info(app, c).enabled)
         })

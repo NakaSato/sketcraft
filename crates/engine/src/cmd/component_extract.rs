@@ -889,8 +889,8 @@ mod tests {
         out
     }
 
-    /// A design with a moved Plate component (a box sized by a parameter, with a Pin subcomponent
-    /// held to it by a joint) next to an Other component.
+    /// A design with a moved Plate component (a box sized by a parameter, with a Pin subcomponent)
+    /// next to an Other component.
     fn assembly() -> (Session, u64, u64) {
         let mut s = Session::default();
         run(&mut s, "parameters.add", json!({"name": "plate_h", "expression": "12 mm"}));
@@ -902,11 +902,6 @@ mod tests {
         let pin_occ = pin["occurrence"].as_u64().unwrap();
         run(&mut s, "solid.box", json!({"length": 4, "width": 4, "height": 20, "body_name": "PinBody"}));
         run(&mut s, "occurrence.move", json!({"occurrence": pin_occ, "translate": [5, 5, 0]}));
-        run(
-            &mut s,
-            "joint.create",
-            json!({"name": "PinHold", "type": "rigid", "a": {"occurrence": plate_occ, "point": [0, 0, 0]}, "b": {"occurrence": pin_occ, "point": [5, 5, 0]}, "quiet": true}),
-        );
         run(&mut s, "component.activate", json!({"component": 0}));
         let other = run(&mut s, "component.create", json!({"name": "Other"}))["component"].as_u64().unwrap();
         run(&mut s, "solid.box", json!({"length": 10, "width": 10, "height": 10, "body_name": "OtherBody"}));
@@ -919,7 +914,6 @@ mod tests {
     fn extract_moves_the_history_to_its_own_design_and_links_it() {
         let dir = folder("basic");
         let (mut s, plate, other) = assembly();
-        run(&mut s, "timeline.group", json!({"name":"Internal joints", "joints":["PinHold"]}));
         run(&mut s, "file.save", json!({"path": dir.join("asm.sketcraft")}));
         let (vol, cen) = (volumes(&s), centroids(&s));
         let other_features: Vec<u64> = s.doc.features.iter().filter(|f| f.component == other).map(|f| f.id).collect();
@@ -929,13 +923,12 @@ mod tests {
         assert_eq!(out["path"], "parts/plate.sketcraft", "{out}");
         assert_eq!(out["copies"], json!([]), "{out}");
 
-        // This design: Plate holds one linked Import feature, its subcomponent and joint are gone
+        // This design: Plate holds one linked Import feature, its subcomponent is gone
         let plate_features: Vec<&sketcraft_doc::Feature> = s.doc.features.iter().filter(|f| f.component == plate).collect();
         assert_eq!(plate_features.len(), 1);
         assert!(matches!(plate_features[0].kind, FeatureKind::Import { .. }));
         assert_eq!(s.doc.links.get(&plate).map(|l| l.feature), Some(plate_features[0].id));
         assert!(s.doc.components.iter().all(|c| c.name != "Pin"));
-        assert!(s.doc.assembly.joints.is_empty());
         assert_eq!(s.doc.features.iter().filter(|f| f.component == other).map(|f| f.id).collect::<Vec<_>>(), other_features);
         assert_eq!(volumes(&s), vol);
         assert_eq!(centroids(&s), cen);
@@ -943,14 +936,12 @@ mod tests {
         let links = run(&mut s, "component.links", json!({}));
         assert_eq!(links["links"][0]["found"], true, "{links}");
 
-        // The new design: Plate's history at its root, with Pin, the joint and the parameter it uses
+        // The new design: Plate's history at its root, with Pin and the parameter it uses
         let mut part = Session::default();
         run(&mut part, "doc.open", json!({"path": file}));
         assert_eq!(part.doc.name, "plate");
         assert_eq!(part.doc.components.iter().map(|c| c.name.as_str()).collect::<Vec<_>>(), ["Pin"]);
         assert_eq!(part.doc.occurrences.len(), 1);
-        assert_eq!(part.doc.assembly.joints.iter().map(|j| j.name.as_str()).collect::<Vec<_>>(), ["PinHold"]);
-        assert_eq!(part.doc.timeline_groups[0].joints, [part.doc.assembly.joints[0].id], "joint folders follow the extracted ids");
         assert!(part.doc.param("plate_h").is_some() && part.doc.param("unused").is_none());
         assert!(part.model.results.iter().all(|r| r.error.is_none()));
         let part_vol = volumes(&part);
@@ -974,78 +965,6 @@ mod tests {
         assert!(s.doc.components.iter().any(|c| c.name == "Pin"));
         assert_eq!(volumes(&s), vol);
         assert!(file.is_file());
-        let _ = std::fs::remove_dir_all(&dir);
-    }
-
-    #[test]
-    fn extract_refuses_what_it_cannot_move_and_changes_nothing() {
-        let dir = folder("refuse");
-        let (mut s, plate, other) = assembly();
-        let file = dir.join("plate.sketcraft");
-        let refuse = |s: &mut Session, p: Value, why: &str| {
-            let before = serde_json::to_value(&*s.doc).unwrap();
-            let err = s.execute("component.extract", &p).unwrap_err().to_string();
-            assert!(err.contains(why), "{p}: {err}");
-            assert_eq!(serde_json::to_value(&*s.doc).unwrap(), before);
-            assert!(!file.exists());
-        };
-        refuse(&mut s, json!({"component": 0, "path": file}), "not the design");
-        refuse(&mut s, json!({"component": "Plate"}), "`path` is required");
-        refuse(&mut s, json!({"component": "Plate", "path": dir.join("plate.step")}), ".sc file");
-
-        // A joint from Plate's subcomponent to the rest of the design
-        let pin_occ = s.doc.occurrences.iter().find(|o| o.name.starts_with("Pin")).map(|o| o.id).unwrap();
-        let other_occ = s.doc.occurrence_of(other).map(|o| o.id).unwrap();
-        run(
-            &mut s,
-            "joint.create",
-            json!({"name": "PinToOther", "type": "rigid", "a": {"occurrence": pin_occ, "point": [0, 0, 0]}, "b": {"occurrence": other_occ, "point": [0, 0, 0]}, "quiet": true}),
-        );
-        refuse(&mut s, json!({"component": "Plate", "path": file}), "PinToOther");
-        run(&mut s, "edit.undo", json!({}));
-
-        // A feature outside that uses one of Plate's sketches
-        run(&mut s, "component.activate", json!({"component": plate}));
-        run(&mut s, "sketch.create", json!({"plane": "XY"}));
-        run(&mut s, "sketch.rectangle.two_point", json!({"p0": [0, 0], "p1": [5, 5]}));
-        run(&mut s, "sketch.finish", json!({}));
-        let sketch = s.doc.features.last().map(|f| f.id).unwrap();
-        run(&mut s, "component.activate", json!({"component": 0}));
-        run(&mut s, "solid.extrude", json!({"sketch": sketch, "distance": 3, "operation": "new"}));
-        refuse(&mut s, json!({"component": "Plate", "path": file}), "uses a sketch of Plate");
-        let _ = std::fs::remove_dir_all(&dir);
-    }
-
-    #[test]
-    fn joints_on_the_extracted_component_keep_their_faces() {
-        let dir = folder("joints");
-        let (mut s, plate, other) = assembly();
-        let plate_occ = s.doc.occurrence_of(plate).map(|o| o.id).unwrap();
-        let other_occ = s.doc.occurrence_of(other).map(|o| o.id).unwrap();
-        let top = {
-            let w = s.world_state().unwrap();
-            let m = sketcraft_kernel::measure(&w.body("PlateBody").unwrap().body).unwrap();
-            [(m.bbox.min.x + m.bbox.max.x) / 2.0, (m.bbox.min.y + m.bbox.max.y) / 2.0, m.bbox.max.z]
-        };
-        let bottom = {
-            let w = s.world_state().unwrap();
-            let m = sketcraft_kernel::measure(&w.body("OtherBody").unwrap().body).unwrap();
-            [(m.bbox.min.x + m.bbox.max.x) / 2.0, (m.bbox.min.y + m.bbox.max.y) / 2.0, m.bbox.min.z]
-        };
-        run(
-            &mut s,
-            "joint.create",
-            json!({"name": "Stack", "type": "rigid", "a": {"occurrence": plate_occ, "face": top}, "b": {"occurrence": other_occ, "face": bottom}}),
-        );
-        let cen = centroids(&s);
-        let out = run(&mut s, "component.extract", json!({"component": "Plate", "path": dir.join("plate.sketcraft")}));
-        assert_eq!(out["warnings"], json!([]), "{out}");
-        assert_eq!(out["notices"], json!([]), "{out}");
-        let joint = run(&mut s, "joint.inspect", json!({"joint": "Stack"}));
-        assert_eq!(joint["joints"][0]["a"]["resolves"], true, "{joint}");
-        assert_eq!(joint["joints"][0]["errors"], json!([]), "{joint}");
-        run(&mut s, "joint.solve", json!({}));
-        assert_eq!(centroids(&s), cen);
         let _ = std::fs::remove_dir_all(&dir);
     }
 
@@ -1143,66 +1062,6 @@ mod tests {
         assert!(err.contains("BothCut"), "{err}");
         assert_eq!(serde_json::to_value(&*s.doc).unwrap(), before);
         assert!(!file.exists());
-        let _ = std::fs::remove_dir_all(&dir);
-    }
-
-    #[test]
-    fn identical_copies_are_found_and_become_placements_of_the_link() {
-        let dir = folder("copies");
-        let (mut s, plate, other) = assembly();
-        let plate_occ = s.doc.occurrence_of(plate).map(|o| o.id).unwrap();
-        // A round hole: its volume moves a little through the link's STEP round trip
-        run(&mut s, "component.activate", json!({"component": plate}));
-        run(
-            &mut s,
-            "solid.cylinder",
-            json!({"radius": 5, "height": 40, "base": [120, -5, 6], "axis": "Y", "operation": "cut", "targets": ["PlateBody"]}),
-        );
-        run(&mut s, "component.activate", json!({"component": 0}));
-        let copy = run(&mut s, "component.paste_new", json!({"component": plate, "occurrence": plate_occ, "translate": [0, 80, 0]}));
-        let (copy, copy_occ) = (copy["component"].as_u64().unwrap(), copy["occurrence"].as_u64().unwrap());
-        // A face joint on the copy, which has to follow it onto the link
-        let other_occ = s.doc.occurrence_of(other).map(|o| o.id).unwrap();
-        let top = {
-            let st = s.model.state();
-            let body = st.bodies.iter().find(|b| s.doc.model_body_component(b) == copy && b.name.starts_with("PlateBody")).unwrap();
-            let m = sketcraft_kernel::measure(&body.body).unwrap();
-            let w = sketcraft_doc::joints::occurrence_world(&s.doc, copy_occ);
-            sketcraft_doc::apply_point(&w, Vec3::new((m.bbox.min.x + m.bbox.max.x) / 2.0, (m.bbox.min.y + m.bbox.max.y) / 2.0, m.bbox.max.z))
-        };
-        run(
-            &mut s,
-            "joint.create",
-            json!({"name": "OnCopy", "type": "rigid", "a": {"occurrence": copy_occ, "face": [top.x, top.y, top.z]}, "b": {"occurrence": other_occ, "point": [0, 0, 0]}, "quiet": true}),
-        );
-        // A component that only looks alike is no copy
-        run(&mut s, "component.create", json!({"name": "Taller"}));
-        run(&mut s, "solid.box", json!({"length": 40, "width": 30, "height": 13}));
-        run(&mut s, "component.activate", json!({"component": 0}));
-        // Nothing is grounded, so OnCopy floats until PinHold, the first joint, goes with Plate's
-        // history: then the copy holds still and Other is placed on it
-        let out = run(&mut s, "component.extract", json!({"component": "Plate", "path": dir.join("plate.sketcraft")}));
-        assert_eq!(out["copies"], json!([{"component": copy, "name": s.doc.components.iter().find(|c| c.id == copy).unwrap().name}]), "{out}");
-        assert!(out["warnings"].to_string().contains("the joints now place Other"), "{out}");
-        assert_eq!(run(&mut s, "component.copies", json!({"component": plate}))["copies"], out["copies"]);
-        let shapes_before = shapes(&s);
-
-        let replaced = run(&mut s, "component.replace_with_link", json!({"components": [copy], "with": plate}));
-        assert_eq!(replaced["warnings"], json!([]), "{replaced}");
-        assert!(s.doc.components.iter().all(|c| c.id != copy));
-        assert_eq!(s.doc.occurrences.iter().filter(|o| o.component == plate).count(), 2);
-        let placed = s.doc.occurrences.iter().find(|o| o.id == copy_occ).unwrap();
-        assert_eq!((placed.component, placed.name.as_str()), (plate, "Plate:2"));
-        assert_eq!(shapes(&s), shapes_before);
-        let joint = run(&mut s, "joint.inspect", json!({"joint": "OnCopy"}));
-        assert_eq!(joint["joints"][0]["a"]["resolves"], true, "{joint}");
-        assert_eq!(run(&mut s, "component.copies", json!({"component": plate}))["copies"], json!([]));
-
-        // Not the same: refused, nothing changes
-        let before = serde_json::to_value(&*s.doc).unwrap();
-        let err = s.execute("component.replace_with_link", &json!({"component": "Taller", "with": plate})).unwrap_err().to_string();
-        assert!(err.contains("not the same"), "{err}");
-        assert_eq!(serde_json::to_value(&*s.doc).unwrap(), before);
         let _ = std::fs::remove_dir_all(&dir);
     }
 

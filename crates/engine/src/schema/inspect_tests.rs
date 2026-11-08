@@ -41,12 +41,6 @@ fn model_lists_reply_with_their_schemas() {
     };
     run(&mut s, "solid.cylinder", json!({"radius": 4, "height": 20, "body_name": "Shaft"}));
     run(&mut s, "solid.thread", json!({"face": [4, 0, 10], "designation": "M8"}));
-    run(&mut s, "sheet.manage_rules", json!({"name": "R1", "thickness": "1 mm", "bend_radius": "1 mm", "active": true}));
-    run(&mut s, "sketch.create", json!({"plane": "XY", "name": "Base"}));
-    run(&mut s, "sketch.rectangle.two_point", json!({"p0": [20, 0], "p1": [60, 30]}));
-    run(&mut s, "sketch.finish", json!({}));
-    run(&mut s, "sheet.flange", json!({"sketch": "Base"}));
-    let sheet = s.model.state().bodies.iter().map(|b| b.name.clone()).find(|n| n != "Shaft").unwrap_or_default();
 
     let r = run(&mut s, "model.edges", json!({"body": "Shaft"}));
     matches(&edges, &r, false);
@@ -54,9 +48,6 @@ fn model_lists_reply_with_their_schemas() {
     let r = run(&mut s, "model.faces", json!({"body": "Shaft"}));
     matches(&faces, &r, false);
     assert!(r["faces"].as_array().into_iter().flatten().any(|f| f["cylinder"]["radius"].as_f64().is_some_and(|r| (r - 4.0).abs() < 1e-9)), "{r}");
-    let r = run(&mut s, "model.faces", json!({"body": sheet}));
-    matches(&faces, &r, false);
-    assert!(r["faces"].as_array().into_iter().flatten().any(|f| f["sheet_face"].as_str().is_some_and(|n| n.starts_with("sheet:"))), "{r}");
     let r = run(&mut s, "model.threads", json!({}));
     matches(&threads, &r, false);
     assert_eq!((r["threads"][0]["designation"].as_str(), r["threads"][0]["hand"].as_str()), (Some("M8"), Some("right")), "{r}");

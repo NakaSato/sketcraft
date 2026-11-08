@@ -18,9 +18,9 @@
     "button:solid.torus",
     "button:solid.coil",
     "button:solid.loft",
-    "button:solid.rib",
+    "button:solid.emboss",
     "button:solid.sweep",
-    "button:solid.pipe",
+    "button:solid.cone",
     "button:solid.thread"
    ]
   }
@@ -134,7 +134,7 @@
    "y": 60,
    "target": {
     "type": "toolbar_command",
-    "id": "solid.rib"
+    "id": "solid.emboss"
    }
   }
  },
@@ -168,7 +168,7 @@
    "y": 60,
    "target": {
     "type": "toolbar_command",
-    "id": "solid.pipe"
+    "id": "solid.cone"
    }
   }
  },
@@ -204,9 +204,9 @@
     "button:solid.torus",
     "button:solid.coil",
     "button:solid.loft",
-    "button:solid.rib",
+    "button:solid.emboss",
     "button:solid.sweep",
-    "button:solid.pipe",
+    "button:solid.cone",
     "button:solid.thread"
    ],
    "handle_order": [
@@ -217,9 +217,9 @@
     "button:solid.torus",
     "button:solid.coil",
     "button:solid.loft",
-    "button:solid.rib",
+    "button:solid.emboss",
     "button:solid.sweep",
-    "button:solid.pipe",
+    "button:solid.cone",
     "button:solid.thread"
    ],
    "count": {
@@ -241,7 +241,7 @@
  {
   "expect": {
    "hidden_handles": [
-    "button:solid.pipe",
+    "button:solid.cone",
     "button:solid.thread"
    ],
    "shown_handles": [
@@ -264,9 +264,9 @@
     "dropdown:solid.torus",
     "dropdown:solid.coil",
     "dropdown:solid.loft",
-    "dropdown:solid.rib",
+    "dropdown:solid.emboss",
     "dropdown:solid.sweep",
-    "dropdown:solid.pipe",
+    "dropdown:solid.cone",
     "dropdown:solid.thread"
    ]
   }
@@ -283,9 +283,9 @@
     "dropdown:solid.torus",
     "dropdown:solid.coil",
     "dropdown:solid.loft",
-    "dropdown:solid.rib",
+    "dropdown:solid.emboss",
     "dropdown:solid.sweep",
-    "dropdown:solid.pipe",
+    "dropdown:solid.cone",
     "dropdown:solid.thread"
    ]
   }
@@ -311,9 +311,9 @@
     "button:solid.torus",
     "button:solid.coil",
     "button:solid.loft",
-    "button:solid.rib",
+    "button:solid.emboss",
     "button:solid.sweep",
-    "button:solid.pipe",
+    "button:solid.cone",
     "button:solid.thread"
    ],
    "shown_handles": [
@@ -338,9 +338,9 @@
     "toolbar:solid.torus",
     "toolbar:solid.coil",
     "toolbar:solid.loft",
-    "toolbar:solid.rib",
+    "toolbar:solid.emboss",
     "toolbar:solid.sweep",
-    "toolbar:solid.pipe",
+    "toolbar:solid.cone",
     "toolbar:solid.thread"
    ]
   }
@@ -370,9 +370,9 @@
     "button:solid.torus",
     "button:solid.coil",
     "button:solid.loft",
-    "button:solid.rib",
+    "button:solid.emboss",
     "button:solid.sweep",
-    "button:solid.pipe",
+    "button:solid.cone",
     "button:solid.thread"
    ],
    "count": {
@@ -406,9 +406,9 @@
     "button:solid.torus",
     "button:solid.coil",
     "button:solid.loft",
-    "button:solid.rib",
+    "button:solid.emboss",
     "button:solid.sweep",
-    "button:solid.pipe",
+    "button:solid.cone",
     "button:solid.thread"
    ],
    "shown_handles": [

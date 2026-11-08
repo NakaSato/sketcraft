@@ -338,65 +338,6 @@ pub fn to_script(recipe: &Value) -> Result<Value, String> {
                 let axis = f.get("axis").map(|a| json!({"origin": a.get("origin").cloned().unwrap_or(json!([0, 0, 0])), "dir": a.get("dir")})).unwrap_or(Value::Null);
                 out.push(json!({"command": "solid.pattern.circular", "params": {"features": feature_refs(f.get("features")), "axis": axis, "count": f.get("count"), "angle": f.get("total_angle").cloned().unwrap_or(json!(360)), "name": name}}));
             }
-            Some("sm_flange") => match f.get("type").and_then(Value::as_str) {
-                Some("edge") => {
-                    let mut p = json!({"type": "edge", "edges": edge_points(f), "height": f.get("height"), "name": name});
-                    if let Some(a) = f.get("angle") {
-                        p["angle"] = a.clone();
-                    }
-                    if f.get("flip").and_then(Value::as_bool) == Some(true) {
-                        p["flip"] = json!(true);
-                    }
-                    out.push(json!({"command": "sheet.flange", "params": p}));
-                }
-                Some("contour") => out.push(json!({"command": "sheet.flange", "params": {
-                    "type": "contour", "sketch": f.get("profile_sketch"), "curves": f.get("profile_curves"), "distance": f.get("distance"), "name": name}})),
-                _ => out.push(json!({"command": "sheet.flange", "params": {
-                    "type": "base", "sketch": profile_sketch(f), "profiles": profiles_of(f), "name": name, "body_names": bodies}})),
-            },
-            Some("sheet_metal_rule_edit") => {
-                let rule = f.get("rule").cloned().unwrap_or(json!("Steel (mm)"));
-                let mut p = json!({"name": rule});
-                if let Some(set) = f.get("set") {
-                    for (from, to) in [("thickness", "thickness"), ("kFactor", "k_factor"), ("bendRadius", "bend_radius")] {
-                        if let Some(v) = set.get(from) {
-                            p[to] = v.clone();
-                        }
-                    }
-                }
-                // "thickness 3 mm (final state…)": the last step of a sequence.
-                if let Some(last) = f.get("sequence").and_then(Value::as_array).and_then(|a| a.last()).and_then(Value::as_str) {
-                    let w: Vec<&str> = last.split_whitespace().collect();
-                    if let (Some(&"thickness"), Some(v), Some(u)) = (w.first(), w.get(1), w.get(2)) {
-                        p["thickness"] = json!(format!("{v} {u}"));
-                    }
-                }
-                out.push(json!({"command": "sheet.manage_rules", "params": p}));
-            }
-            Some("sm_hem") => {
-                let e = f.get("edge").and_then(|e| e.get("point")).cloned().unwrap_or(Value::Null);
-                let mut p = json!({"edges": [e], "length": f.get("length"), "name": name});
-                if f.get("flipped").and_then(Value::as_bool) == Some(true) {
-                    p["flip"] = json!(true);
-                }
-                out.push(json!({"command": "sheet.hem", "params": p}));
-            }
-            Some("sm_unfold") => out.push(json!({"command": "sheet.unfold", "params": {"name": name}})),
-            Some("sm_refold") => out.push(json!({"command": "sheet.refold", "params": {"name": name}})),
-            Some("path_pattern") => {
-                let path = f.get("path").cloned().unwrap_or(Value::Null);
-                let mut p = json!({"path_sketch": path.get("sketch"), "path": path.get("curves"), "count": f.get("count"), "name": name});
-                match f.get("spacing") {
-                    Some(sp) => p["spacing"] = sp.clone(),
-                    None => p["distance"] = f.get("distance").cloned().unwrap_or(Value::Null),
-                }
-                if f.get("pattern_of").and_then(Value::as_str) == Some("bodies") {
-                    p["bodies"] = f.get("bodies").cloned().unwrap_or(Value::Null);
-                } else {
-                    p["features"] = feature_refs(f.get("features"));
-                }
-                out.push(json!({"command": "solid.pattern.path", "params": p}));
-            }
             Some("loft") => {
                 let sections: Vec<Value> = f
                     .get("sections")
@@ -423,38 +364,10 @@ pub fn to_script(recipe: &Value) -> Result<Value, String> {
                     "sketch": profile_sketch(f), "profiles": profiles_of(f), "path_sketch": path.get("sketch"), "path": path.get("curves"),
                     "operation": op(f), "name": name, "body_names": bodies}}));
             }
-            // A boundary surface: a loop of one sketch's curves (`sketch`, `curves`), or a network
-            // (`u`, `v`), as `surface.boundary` takes them.
-            Some("boundary_surface") => {
-                let mut p = json!({"name": name});
-                for k in ["sketch", "curves", "continuity", "u", "v", "operation"] {
-                    if let Some(v) = f.get(k) {
-                        p[k] = v.clone();
-                    }
-                }
-                if let Some(b) = bodies.as_array().and_then(|a| a.first()) {
-                    p["body_name"] = b.clone();
-                }
-                out.push(json!({"command": "surface.boundary", "params": p}));
-            }
-            Some("thicken") => out.push(json!({"command": "surface.thicken", "params": {
-                "bodies": f.get("bodies"), "thickness": f.get("thickness"), "symmetric": f.get("symmetric").cloned().unwrap_or(json!(false)),
-                "operation": op(f), "name": name}})),
             Some("remove") => out.push(json!({"command": "solid.remove", "params": {"bodies": f.get("bodies"), "name": name}})),
             Some("shell") => {
                 let faces: Vec<Value> = f.get("faces_removed").and_then(Value::as_array).into_iter().flatten().filter_map(|x| x.get("point").cloned()).collect();
                 out.push(json!({"command": "solid.shell", "params": {"faces": faces, "thickness": f.get("inside_thickness"), "name": name}}));
-            }
-            Some("draft") => {
-                let faces: Vec<Value> = f.get("faces").and_then(Value::as_array).into_iter().flatten().filter_map(|x| x.get("point").cloned()).collect();
-                let np = f.get("neutral_plane").cloned().unwrap_or(Value::Null);
-                let n = np.get("plane_normal_outward").or(np.get("normal_at_point_on_face")).cloned().unwrap_or(json!([0, 0, 1]));
-                let neutral = json!({"origin": np.get("point").or(np.get("centroid")).cloned().unwrap_or(json!([0, 0, 0])), "normal": n.clone()});
-                let mut angle = f.get("angle").and_then(Value::as_f64).unwrap_or(0.0);
-                if f.get("flipped").and_then(Value::as_bool).unwrap_or(false) {
-                    angle = -angle;
-                }
-                out.push(json!({"command": "solid.draft", "params": {"faces": faces, "angle": angle, "neutral": neutral, "pull": n, "name": name}}));
             }
             Some("thread") => {
                 let face = f.get("face").and_then(|x| x.get("point")).cloned().unwrap_or(Value::Null);

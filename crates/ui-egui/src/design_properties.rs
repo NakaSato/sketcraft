@@ -486,35 +486,6 @@ mod tests {
     use crate::scenario::Harness;
 
     #[test]
-    fn open_surface_properties_show_area_without_volume_rows() {
-        let mut h = Harness::new();
-        for (command, params) in [
-            ("sketch.create", json!({"plane": "XY", "name": "Profile"})),
-            ("sketch.line", json!({"points": [[30, 0], [30, 40]], "ids": ["side"]})),
-            ("sketch.finish", json!({})),
-            ("surface.revolve", json!({"sketch": "Profile", "curves": ["side"], "axis": "y", "angle": "270 deg", "body_name": "OpenTube"})),
-        ] {
-            h.app.run(command, params).unwrap();
-        }
-        let measured = h.app.run("inspect.measure", json!({"bodies": ["OpenTube"]})).unwrap();
-        h.app.menu.props = Some(("OpenTube".into(), measured));
-        h.frames(2);
-        assert!(h.widget("Open surface — no volume").is_some());
-        assert!(h.widget("Area").is_some());
-        for label in ["Volume", "Density", "Mass", "Center of mass", "First moments", "Moment of inertia"] {
-            assert!(h.widget(label).is_none(), "{label} must not be shown for an open surface");
-        }
-        assert!(h.widget("Open bodies (no volume)").is_none());
-        h.app.run("solid.box", json!({"length": 10, "width": 20, "height": 30, "body_name": "Box"})).unwrap();
-        let both = h.app.run("inspect.measure", json!({})).unwrap();
-        h.app.menu.props = Some(("2 bodies".into(), both));
-        h.frames(2);
-        for label in ["Volume", "Mass", "Open bodies (no volume)"] {
-            assert!(h.widget(label).is_some(), "{label} is shown for a solid with an open surface");
-        }
-    }
-
-    #[test]
     fn the_window_edits_properties_in_one_undo_step_and_keeps_other_tools_data() {
         let mut h = Harness::new();
         h.app.run("document.metadata.set", json!({"values": {"author": "Jane", "com.acme.tool": {"id": 7}}})).unwrap();

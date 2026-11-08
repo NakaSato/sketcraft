@@ -548,18 +548,23 @@ fn requested_menu_icons_have_artwork_and_match_manifest() {
         }
         panels(&mut h, &mut requested);
     }
-    // Sheet and assembly contexts expose contextual tabs and browser row kinds that
-    // a single solid part cannot offer. Use repository-owned public sample recipes.
-    for sample in sketcraft_engine::sample::samples().into_iter().filter(|s| matches!(s.name, "Sheet Metal Bracket" | "Hinge Assembly")) {
+    // An assembly exposes component and occurrence rows that a single solid part cannot offer.
+    {
         let mut sample_h = harness();
         sample_h.app.home.open = false;
-        sample_h.app.session.run_script(&(sample.script)()).unwrap();
+        sample_h.app.session.run_script(&json!({"commands": [
+            {"command": "component.create", "params": {"name": "Leaf A"}},
+            {"command": "solid.box", "params": {"length": 40, "width": 30, "height": 3, "corner": [0, 0, 0]}},
+            {"command": "solid.cylinder", "params": {"base": [0, 33, 4], "axis": [1, 0, 0], "radius": 4, "height": 40, "operation": "new"}},
+            {"command": "component.activate", "params": {"component": "root"}},
+            {"command": "component.create", "params": {"name": "Leaf B"}},
+            {"command": "solid.box", "params": {"length": 40, "width": 30, "height": 3, "corner": [0, 40, 0]}},
+            {"command": "solid.cylinder", "params": {"base": [0, 73, 4], "axis": [1, 0, 0], "radius": 4, "height": 40, "operation": "new"}},
+            {"command": "component.activate", "params": {"component": "root"}},
+            {"command": "occurrence.ground", "params": {"occurrence": "Leaf A:1", "grounded": true}}
+        ]})).unwrap();
         sample_h.frames(3);
         ribbon(&mut sample_h, &mut requested);
-        let joints = sample_h.app.session.doc.assembly.joints.iter().map(|j| j.id).collect::<Vec<_>>();
-        for id in joints {
-            menu(&mut sample_h, json!({"type":"joint","id":id}), "assembly joint", &mut requested);
-        }
         let paths = sample_h.app.session.doc.occurrences.iter().map(|o| (o.id, o.component)).collect::<Vec<_>>();
         for (id, component) in paths {
             menu(&mut sample_h, json!({"type":"component","id":component}), "component", &mut requested);
@@ -567,7 +572,7 @@ fn requested_menu_icons_have_artwork_and_match_manifest() {
         }
         context_rows(&mut sample_h, "row:", &mut requested);
         panels(&mut sample_h, &mut requested);
-        collect(&mut sample_h, sample.name, &mut requested);
+        collect(&mut sample_h, "Two components", &mut requested);
     }
     let mut geometry = harness();
     geometry.app.home.open = false;
@@ -575,18 +580,13 @@ fn requested_menu_icons_have_artwork_and_match_manifest() {
     geometry.app.run("solid.split_body", json!({"body":"Audit block","plane":{"origin":[5,0,0],"normal":[1,0,0]}})).unwrap();
     geometry.frames(3);
     collect(&mut geometry, "Split feature history", &mut requested);
-    geometry.app.run("sketch.create", json!({"plane":"XY","name":"Wall profile"})).unwrap();
-    geometry.app.run("sketch.line", json!({"points":[[20,0],[30,0]]})).unwrap();
-    geometry.app.run("sketch.finish", json!({})).unwrap();
-    geometry.app.run("surface.extrude", json!({"sketch":"Wall profile","curves":["l1"],"distance":10,"body_name":"Audit surface"})).unwrap();
     let mesh = geometry.dir.join("audit.obj");
     std::fs::write(&mesh, "o Audit mesh\nv 40 0 0\nv 50 0 0\nv 40 10 0\nv 40 0 10\nf 1 3 2\nf 1 2 4\nf 1 4 3\nf 2 3 4\n").unwrap();
     geometry.app.run("file.insert_mesh", json!({"path":mesh})).unwrap();
     geometry.frames(3);
     let bodies = geometry.app.session.model.state().bodies.iter().map(|b| b.name.clone()).collect::<Vec<_>>();
-    assert!(bodies.iter().any(|b| b == "Audit surface"));
     for name in bodies {
-        menu(&mut geometry, json!({"type":"body","name":name}), &format!("solid/surface/mesh body {name}"), &mut requested);
+        menu(&mut geometry, json!({"type":"body","name":name}), &format!("solid/mesh body {name}"), &mut requested);
         geometry.app.run("select.set", json!({"items":[{"type":"body","name":name}]})).unwrap();
         menu(&mut geometry, json!({"type":"viewport"}), &format!("solid/surface/mesh viewport {name}"), &mut requested);
     }

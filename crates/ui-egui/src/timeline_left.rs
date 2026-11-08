@@ -879,22 +879,6 @@ fn group_depth(groups: &[sketcraft_engine::doc::TimelineGroup], id: u64) -> usiz
     depth
 }
 
-fn group_is_open(app: &SketApp, groups: &[sketcraft_engine::doc::TimelineGroup], id: u64) -> bool {
-    let mut current = Some(id);
-    let mut steps = 0usize;
-    while let Some(group_id) = current {
-        if !crate::timeline_folders::is_open(app, group_id, true) {
-            return false;
-        }
-        steps += 1;
-        if steps > groups.len() {
-            return false;
-        }
-        current = groups.iter().find(|group| group.id == group_id).and_then(|group| group.parent);
-    }
-    true
-}
-
 /// The reference the cached [`RowPlan`] is tested against.
 #[cfg(test)]
 fn group_ancestors_are_open(app: &SketApp, groups: &[sketcraft_engine::doc::TimelineGroup], id: u64) -> bool {
@@ -1172,21 +1156,21 @@ fn vertical_group_row(
     open
 }
 
-fn folder_joint_rows(
-    app: &mut SketApp,
-    ui: &mut egui::Ui,
-    group: &sketcraft_engine::doc::TimelineGroup,
-    groups: &[sketcraft_engine::doc::TimelineGroup],
-) {
-    if !group.joints.is_empty() && group_is_open(app, groups, group.id) {
-        ui.scope_builder(egui::UiBuilder::new().id_salt(("folder_joints", group.id)), |ui| {
-            ui.spacing_mut().item_spacing.x = 0.0;
-            ui.horizontal(|ui| {
-                ui.add_space((group_depth(groups, group.id) + 1) as f32 * FOLDER_INDENT);
-                ui.vertical(|ui| crate::dialogs_assembly::timeline_joint_rows(app, ui, Some(&group.joints)));
-            });
-        });
+#[cfg(test)]
+fn group_is_open(app: &SketApp, groups: &[sketcraft_engine::doc::TimelineGroup], id: u64) -> bool {
+    let mut current = Some(id);
+    let mut steps = 0usize;
+    while let Some(group_id) = current {
+        if !crate::timeline_folders::is_open(app, group_id, true) {
+            return false;
+        }
+        steps += 1;
+        if steps > groups.len() {
+            return false;
+        }
+        current = groups.iter().find(|group| group.id == group_id).and_then(|group| group.parent);
     }
+    true
 }
 
 /// The fold-arrow column of a history row. With sketches listed under their features every row
@@ -1319,7 +1303,6 @@ fn vertical_features(app: &mut SketApp, ui: &mut egui::Ui, names: bool) {
                     &mut folder_drop_zones,
                 );
                 if table.first.get(at).copied().flatten().is_none() {
-                    folder_joint_rows(app, ui, group, groups);
                 }
                 rendered_group_header = true;
             }
@@ -1337,8 +1320,7 @@ fn vertical_features(app: &mut SketApp, ui: &mut egui::Ui, names: bool) {
             feature_row(app, ui, &mut rows, index, indent, RowKind::Own);
             previous_visible_group = group_id;
         }
-        for group in table.ending.get(index).map_or(&[][..], Vec::as_slice).iter().filter_map(|group| groups.get(*group)) {
-            folder_joint_rows(app, ui, group, groups);
+        for _group in table.ending.get(index).map_or(&[][..], Vec::as_slice).iter().filter_map(|group| groups.get(*group)) {
         }
     }
     for &at in &table.trailing {
@@ -1361,7 +1343,6 @@ fn vertical_features(app: &mut SketApp, ui: &mut egui::Ui, names: bool) {
                 &mut slots,
                 &mut folder_drop_zones,
             );
-            folder_joint_rows(app, ui, group, groups);
         }
     }
     slots.push(VerticalSlot { y: ui.cursor().top(), position: n, group: None, indent_group: previous_visible_group });
@@ -1370,7 +1351,6 @@ fn vertical_features(app: &mut SketApp, ui: &mut egui::Ui, names: bool) {
         // Below the marker at the end: a feature dropped here is rolled back.
         slots.push(VerticalSlot { y: ui.cursor().top(), position: n, group: None, indent_group: previous_visible_group });
     }
-    crate::dialogs_assembly::timeline_joints_vertical(app, ui);
 
     let mut drag = rows.drag.take();
     if drag.is_some() {
@@ -2561,55 +2541,6 @@ mod tests {
         let [x, y] = harness.widget(entry).unwrap_or_else(|| panic!("`{entry}` is in the folder's menu"));
         harness.step(&json!({"click": [x, y]})).unwrap();
         harness.frames(4);
-    }
-
-    #[test]
-    fn joint_folder_rows_follow_their_nested_folder_before_its_sibling() {
-        let mut h = Harness::new();
-        h.app.home.open = false;
-        h.app.preferences.timeline_left = true;
-        h.app.run("sketch.create", json!({"plane":"XY", "name":"Profile"})).unwrap();
-        h.app.run("sketch.finish", json!({})).unwrap();
-        h.app.run("component.create", json!({"name":"Part"})).unwrap();
-        for name in ["A", "B", "C"] {
-            h.app.run("joint.as_built", json!({"type":"rigid", "a":0, "b":"Part", "name":name})).unwrap();
-        }
-        let outer = h.app.run("timeline.group", json!({"name":"Outer", "features":["Profile"]})).unwrap()["group"].as_u64().unwrap();
-        let first = h.app.run("timeline.group", json!({"name":"First", "joints":["A"], "parent":outer})).unwrap()["group"].as_u64().unwrap();
-        h.app.run("timeline.group", json!({"name":"Second", "joints":["C"], "parent":outer})).unwrap();
-        h.app.run("timeline.group", json!({"name":"Nested", "joints":["B"], "parent":first})).unwrap();
-        h.frames(4);
-        let y = |name| handle_at(name).unwrap().y;
-        assert!(y("timeline-folder:First") < y("timeline-joint:A"));
-        assert!(y("timeline-joint:A") < y("timeline-folder:Nested"));
-        assert!(y("timeline-folder:Nested") < y("timeline-joint:B"));
-        assert!(y("timeline-joint:B") < y("timeline-folder:Second"));
-        assert!(y("timeline-folder:Second") < y("timeline-joint:C"));
-        crate::timeline_folders::set_open(&mut h.app, first, false);
-        h.frames(4);
-        assert!(handle_at("timeline-joint:A").is_none() && handle_at("timeline-joint:B").is_none());
-        assert!(handle_at("timeline-joint:C").is_some());
-    }
-
-    #[test]
-    fn joint_folder_menu_suppresses_and_deletes_joints_in_one_step() {
-        let mut h = Harness::new();
-        h.app.home.open = false;
-        h.app.preferences.timeline_left = true;
-        h.app.run("component.create", json!({"name":"Part"})).unwrap();
-        let joint = h.app.run("joint.as_built", json!({"type":"revolute", "a":0, "b":"Part", "name":"Hinge"})).unwrap()["joint"].as_u64().unwrap();
-        h.app.run("timeline.group", json!({"name":"Folder", "joints":[joint]})).unwrap();
-        h.frames(4);
-        folder_menu(&mut h, "Folder", "Suppress Selected Folders");
-        assert!(h.app.session.doc.assembly.joints[0].suppressed);
-        folder_menu(&mut h, "Folder", "Unsuppress Selected Folders");
-        assert!(!h.app.session.doc.assembly.joints[0].suppressed);
-        let before = h.app.session.doc.clone();
-        folder_menu(&mut h, "Folder", "Delete Folders and Features…");
-        assert!(h.app.session.doc.assembly.joints.is_empty());
-        assert!(h.app.session.doc.timeline_groups.is_empty());
-        h.app.run("edit.undo", json!({})).unwrap();
-        assert_eq!(*h.app.session.doc, *before);
     }
 
     /// A folder's menu suppresses and unsuppresses every feature in it and in its nested folders,

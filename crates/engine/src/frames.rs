@@ -49,9 +49,6 @@ enum K {
 
 use K::*;
 
-/// What `timeline.redefine` maps for a surface revolve, which no command is called.
-const SURFACE_REVOLVE_EDIT: &str = "surface.revolve (edit)";
-
 /// The parameters each command takes in world coordinates.
 fn table(id: &str) -> &'static [(&'static str, K)] {
     match id {
@@ -59,10 +56,6 @@ fn table(id: &str) -> &'static [(&'static str, K)] {
             &[("face", Pick), ("faces", Picks), ("face_body", Body), ("from", Make), ("to", Make), ("targets", Body), ("participants", Body)]
         }
         "solid.revolve" => &[("face", Pick), ("axis", Axis), ("to", Make), ("targets", Body), ("participants", Body)],
-        // Edit Feature of a surface revolve (`map_local`): its `{origin, dir}` axis. A new surface
-        // revolve has no entry, so it is taken into the active frame whole (`to_active_frame`),
-        // picked edge and face axes too.
-        SURFACE_REVOLVE_EDIT => &[("axis", Axis)],
         "solid.box" | "solid.sphere" => &[("corner", Make), ("center", Make)],
         "solid.cylinder" | "solid.coil" | "solid.torus" | "solid.cone" => &[("base", Make), ("center", Make), ("axis", Dir)],
         "solid.fillet" | "solid.chamfer" => &[("edges", Picks), ("body", Body)],
@@ -71,9 +64,7 @@ fn table(id: &str) -> &'static [(&'static str, K)] {
         "solid.offset_face" | "solid.shell" => &[("faces", Picks), ("body", Body)],
         "solid.thread" => &[("face", Pick), ("from", Pick), ("up_to", Plane)],
         "solid.emboss" => &[("face", Make)],
-        "solid.draft" => &[("faces", Picks), ("neutral", Plane), ("pull", Dir), ("body", Body)],
         "solid.press_pull" => &[("face", Pick), ("edges", Picks)],
-        "solid.replace_face" => &[("faces", Picks), ("target_face", Pick), ("target", Plane), ("body", Body)],
         // Align finds its picks where they are shown and takes both ends into the moved bodies'
         // frame itself: a pick mapped into the frame of the body under it would put the two ends
         // in different frames when they lie on separately placed components.
@@ -86,11 +77,6 @@ fn table(id: &str) -> &'static [(&'static str, K)] {
             &[("position", Pick), ("direction", Dir), ("hook", Dir), ("along", Dir), ("body", Body)]
         }
         "plastic.lip" => &[("face", Pick), ("body", Body)],
-        "sheet.convert" => &[("face", Pick), ("bends", Picks), ("body", Body)],
-        "sheet.flange" | "sheet.hem" => &[("edges", Picks), ("body", Body)],
-        "sheet.fold" => &[("points", Picks), ("fixed", Pick), ("body", Body)],
-        "sheet.path_flange" => &[("edge", Pick), ("body", Body)],
-        "sheet.perforate" => &[("body", Body)],
         "sketch.create" | "sketch.redefine" => &[("plane", HerePlane)],
         "canvas.decal" => &[("face", Here)],
         "canvas.insert" => &[("plane", HerePlane), ("at", Here)],
@@ -104,7 +90,7 @@ fn table(id: &str) -> &'static [(&'static str, K)] {
         "appearance.assign" => &[("faces", Picks), ("bodies", Body), ("body", Body)],
         "solid.move" => &[("bodies", Body), ("translate", Delta), ("axis", Dir), ("origin", Moved)],
         "solid.combine" => &[("target", Body), ("tools", Body)],
-        "solid.remove" | "solid.bounding_solid" | "material.assign" => &[("bodies", Body)],
+        "solid.remove" | "material.assign" => &[("bodies", Body)],
         _ => &[],
     }
 }
@@ -447,7 +433,7 @@ pub fn to_local(s: &Session, id: &str, params: &Value) -> crate::Result<Option<V
     // Edit Feature of a revolve restores its saved axis (and the origin's expressions) even
     // where nothing is placed (`map_local`).
     let revolve_edit =
-        id == "timeline.redefine" && matches!(params.get("command").and_then(Value::as_str), Some("solid.revolve" | "surface.revolve"));
+        id == "timeline.redefine" && matches!(params.get("command").and_then(Value::as_str), Some("solid.revolve"));
     if !picks || (!placed(s) && !revolve_edit) {
         return Ok(None);
     }
@@ -542,21 +528,19 @@ fn map_local(s: &Session, world: &sketcraft_doc::ModelState, id: &str, params: &
         if let sketcraft_doc::FeatureKind::Emboss { face: Some(face), .. } = &feature.kind {
             context.active_occurrence_path = (!face.author_path.is_empty()).then(|| face.author_path.clone());
         }
-        // Nothing to map (a surface revolve has no picks; a design with no placed component needs
-        // none): an untouched explicit axis is still restored below.
-        let edited = if cmd == "surface.revolve" { SURFACE_REVOLVE_EDIT } else { cmd };
-        let mapped = if placed(s) { map_local(&context, world, edited, params.get("params")?) } else { None };
+        // Nothing to map (a design with no placed component needs none): an untouched explicit
+        // axis is still restored below.
+        let mapped = if placed(s) { map_local(&context, world, cmd, params.get("params")?) } else { None };
         let mut inner = match mapped {
             Some(inner) => inner,
-            None if matches!(cmd, "solid.revolve" | "surface.revolve") => params.get("params")?.clone(),
+            None if cmd == "solid.revolve" => params.get("params")?.clone(),
             None => return None,
         };
         // An untouched explicit axis is displayed in world coordinates by Edit
         // Feature. Keep its exact saved values instead of an affine round trip.
         if let (
-            "solid.revolve" | "surface.revolve",
-            sketcraft_doc::FeatureKind::Revolve { axis: sketcraft_doc::AxisRef::Line { origin, dir }, .. }
-            | sketcraft_doc::FeatureKind::SurfaceRevolve { axis: sketcraft_doc::AxisRef::Line { origin, dir }, .. },
+            "solid.revolve",
+            sketcraft_doc::FeatureKind::Revolve { axis: sketcraft_doc::AxisRef::Line { origin, dir }, .. },
         ) = (cmd, &feature.kind)
             && let Ok(at) = s.doc.eval_point(origin)
         {

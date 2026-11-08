@@ -12,7 +12,7 @@ use serde_json::Value;
 use super::types::{
     AngleExpr, AxisDir, AxisLine, ConventionParam, DirectionParam, EdgeRefs, ExtentKeyword, ExtrudeOperation, FacesParam, FeatureCommon,
     FilletCornerParam, FilletFitParam, FilletTurnParam, FilletTypeParam, FromPoint, GeoRefParam, IdOrName, LengthExpr, NumberExpr, OperationParam,
-    PlaneCommon, PlaneOrFace, Point3, PointExpr3, ProfilesParam, ScaleFactors, SketchRef, StringList, ThinSideParam, ToPoint, TouchingParam,
+    PlaneCommon, PlaneOrFace, Point3, PointExpr3, ProfilesParam, ScaleFactors, StringList, ThinSideParam, ToPoint, TouchingParam,
     feature_common, present,
 };
 
@@ -327,46 +327,6 @@ pub struct ConeParams {
     /// Ignored when `participants` lists bodies.
     #[serde(default)]
     pub targets: Option<StringList>,
-    #[serde(flatten, deserialize_with = "feature_common")]
-    pub common: FeatureCommon,
-}
-
-/// Add a solid tube along a path of sketch curves.
-#[derive(Debug, Deserialize, JsonSchema)]
-#[schemars(deny_unknown_fields)]
-pub struct PipeParams {
-    /// The sketch holding the path, by id or name.
-    pub path_sketch: SketchRef,
-    /// The path's curve ids, in order along the path.
-    pub path: StringList,
-    /// The tube's outside diameter.
-    pub diameter: LengthExpr,
-    /// The wall thickness, for a hollow tube: above 0 and less than half `diameter`. Default:
-    /// solid.
-    #[serde(default)]
-    pub wall: Option<LengthExpr>,
-    /// How the pipe combines with existing bodies. Default: new.
-    #[serde(default)]
-    pub operation: Option<OperationParam>,
-    /// The bodies a join, cut or intersect works on; given, they win over `participants`.
-    /// Default: `participants`, else every body in the active component (an intersect removes
-    /// those the pipe doesn't meet), or for a cut or intersect where it has none, every body.
-    #[serde(default)]
-    pub targets: Option<StringList>,
-    #[serde(flatten, deserialize_with = "feature_common")]
-    pub common: FeatureCommon,
-}
-
-/// Add a box around bodies, larger by a margin on every side.
-#[derive(Debug, Deserialize, JsonSchema)]
-#[schemars(deny_unknown_fields)]
-pub struct BoundingSolidParams {
-    /// The bodies to enclose (`participants` doesn't change which). Default: all of them.
-    #[serde(default)]
-    pub bodies: Option<StringList>,
-    /// How much larger than the bodies on every side. Default: 0.
-    #[serde(default)]
-    pub margin: Option<LengthExpr>,
     #[serde(flatten, deserialize_with = "feature_common")]
     pub common: FeatureCommon,
 }

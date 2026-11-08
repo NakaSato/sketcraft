@@ -420,73 +420,6 @@ fn rel(a: f64, b: f64) -> f64 {
     (a - b).abs() / b.abs().max(1e-12)
 }
 
-/// An L bracket: a 40 x 20 x 5 base and a 5 x 20 x 40 wall at x = 0..5.
-fn bracket() -> Session {
-    let mut s = Session::default();
-    run(&mut s, "solid.box", json!({"length": 40, "width": 20, "height": 5, "corner": [0, 0, 0], "body_name": "L"}));
-    run(&mut s, "solid.box", json!({"length": 5, "width": 20, "height": 40, "corner": [0, 0, 0], "operation": "join"}));
-    assert!(rel(volume(&mut s), 4000.0 + 3500.0) < 1e-9);
-    // Mid-plane of the bracket (y = 10): sketch x = X, sketch y = Z.
-    run(&mut s, "sketch.create", json!({"plane": {"origin": [0, 10, 0], "x_dir": [1, 0, 0], "y_dir": [0, 0, 1]}, "name": "RibSketch"}));
-    run(&mut s, "sketch.line", json!({"points": [[5, 25], [25, 5]], "ids": ["l1"]}));
-    run(&mut s, "sketch.finish", json!({}));
-    s
-}
-
-#[test]
-fn rib_to_the_next_face_fills_the_corner() {
-    let mut s = bracket();
-    run(&mut s, "solid.rib", json!({"sketch": "RibSketch", "curves": ["l1"], "thickness": 4}));
-    // The triangle (5,5)-(5,25)-(25,5) of area 200, 4 thick.
-    assert!(rel(volume(&mut s), 7500.0 + 800.0) < 1e-6, "{}", volume(&mut s));
-    assert_eq!(measure(&mut s)["body_count"], 1);
-    // The thickness is a parameter.
-    let t = s.doc.features.last().and_then(|f| f.param_names.first().cloned()).unwrap_or_default();
-    run(&mut s, "parameters.change", json!({"name": t, "expression": "2"}));
-    assert!(rel(volume(&mut s), 7500.0 + 400.0) < 1e-6);
-}
-
-#[test]
-fn rib_with_a_depth_and_web() {
-    let mut s = bracket();
-    run(&mut s, "solid.rib", json!({"sketch": "RibSketch", "curves": ["l1"], "thickness": 4, "depth": 2}));
-    let v = volume(&mut s);
-    assert!(v > 7500.0 + 100.0 && v < 7500.0 + 800.0, "{v}");
-    let mut s = bracket();
-    run(&mut s, "solid.web", json!({"sketch": "RibSketch", "curves": ["l1"], "thickness": 4}));
-    assert!(rel(volume(&mut s), 8300.0) < 1e-6);
-    // Curves that face no body.
-    let mut s = Session::default();
-    run(&mut s, "solid.box", json!({"length": 10, "width": 10, "height": 10}));
-    run(&mut s, "sketch.create", json!({"plane": "XY", "name": "Far"}));
-    run(&mut s, "sketch.line", json!({"points": [[50, 50], [60, 60]], "ids": ["l1"]}));
-    run(&mut s, "sketch.finish", json!({}));
-    let e = s.execute("solid.rib", &json!({"sketch": "Far", "curves": ["l1"], "thickness": 1}));
-    assert!(e.is_err_and(|e| e.to_string().contains("do not face a body")));
-}
-
-#[test]
-fn rib_along_the_sketch_normal_reaches_the_body() {
-    // A 20 x 20 x 10 box; a line along X on a sketch 10 in front of it (y = -10), whose plane
-    // the box does not cross, so only a rib along the sketch normal can reach it.
-    let mut s = Session::default();
-    run(&mut s, "solid.box", json!({"length": 20, "width": 20, "height": 10, "corner": [0, 0, 0]}));
-    run(&mut s, "sketch.create", json!({"plane": {"origin": [0, -10, 0], "x_dir": [1, 0, 0], "y_dir": [0, 0, 1]}, "name": "Front"}));
-    run(&mut s, "sketch.line", json!({"points": [[2, 5], [18, 5]], "ids": ["l1"]}));
-    run(&mut s, "sketch.finish", json!({}));
-    let e = s.execute("solid.rib", &json!({"sketch": "Front", "curves": ["l1"], "thickness": 2}));
-    assert!(e.is_err_and(|e| e.to_string().contains("do not face a body")));
-    run(&mut s, "solid.rib", json!({"sketch": "Front", "curves": ["l1"], "thickness": 2, "direction": "normal"}));
-    // 16 long, 2 thick, 10 from the sketch to the box.
-    assert!(rel(volume(&mut s), 4000.0 + 320.0) < 1e-6, "{}", volume(&mut s));
-    assert_eq!(measure(&mut s)["body_count"], 1);
-    run(&mut s, "edit.undo", json!({}));
-    run(&mut s, "solid.rib", json!({"sketch": "Front", "curves": ["l1"], "thickness": 2, "direction": "normal", "depth": 4}));
-    assert!(rel(volume(&mut s), 4000.0 + 128.0) < 1e-6, "{}", volume(&mut s));
-    let e = s.execute("solid.rib", &json!({"sketch": "Front", "curves": ["l1"], "thickness": 2, "direction": "sideways"}));
-    assert!(e.is_err_and(|e| e.to_string().contains("unknown direction")));
-}
-
 #[test]
 fn emboss_and_deboss_on_a_face() {
     let mut s = Session::default();
@@ -822,34 +755,6 @@ fn check_body_offset(auto: bool) {
             .unwrap()
             .contains(sketcore_record::Vec3::new(0., 10.5, 7.5))
     );
-}
-
-#[test]
-fn replace_face_align_remove() {
-    let mut s = Session::default();
-    run(&mut s, "solid.box", json!({"length": 10, "width": 10, "height": 10, "body_name": "A"}));
-    run(&mut s, "solid.replace_face", json!({"faces": [[5, 5, 10]], "target": {"origin": [0, 0, 15], "normal": [0, 0, 1]}}));
-    assert!(rel(volume(&mut s), 1500.0) < 1e-6);
-    let e = s.execute("solid.replace_face", &json!({"faces": [[5, 5, 15]], "target": {"origin": [0, 0, 15], "normal": [1, 0, 1]}}));
-    assert!(e.is_err() || s.model.results.last().is_some_and(|r| r.error.as_deref().unwrap_or("").contains("parallel")));
-    let mut s = Session::default();
-    run(&mut s, "solid.box", json!({"length": 10, "width": 10, "height": 10, "body_name": "A"}));
-    run(&mut s, "solid.box", json!({"length": 10, "width": 10, "height": 10, "corner": [50, 0, 0], "body_name": "B"}));
-    // B's top face onto A's top face: B turns over and sits on A.
-    run(&mut s, "solid.align", json!({"bodies": ["B"], "from_face": [55, 5, 10], "to_face": [5, 5, 10]}));
-    let m = measure(&mut s);
-    let b = m["bodies"].as_array().unwrap().iter().find(|b| b["name"] == "B").unwrap().clone();
-    let (lo, hi) = (b["bbox"]["min"].clone(), b["bbox"]["max"].clone());
-    for (got, want) in [(&lo[0], 0.0), (&lo[2], 10.0), (&hi[0], 10.0), (&hi[2], 20.0)] {
-        assert!((got.as_f64().unwrap_or(f64::NAN) - want).abs() < 1e-6, "{b}");
-    }
-    // Points only: a plain move.
-    run(&mut s, "solid.align", json!({"bodies": ["B"], "from": [0, 0, 10], "to": [0, 0, 30]}));
-    let m = measure(&mut s);
-    let b = m["bodies"].as_array().unwrap().iter().find(|b| b["name"] == "B").unwrap().clone();
-    assert!((b["bbox"]["min"][2].as_f64().unwrap_or(0.0) - 30.0).abs() < 1e-6, "{b}");
-    run(&mut s, "solid.remove", json!({"bodies": ["B"]}));
-    assert_eq!(measure(&mut s)["body_count"], 1);
 }
 
 #[test]
@@ -2670,13 +2575,9 @@ fn align_axes_are_world_axes_on_a_placed_component() {
 #[test]
 fn an_emboss_that_changes_nothing_says_so() {
     let mut s = Session::default();
-    run(&mut s, "sheet.manage_rules", json!({"name": "T1", "thickness": "0.8 mm", "k_factor": "0.5", "bend_radius": "0.8 mm", "active": true}));
-    run(&mut s, "sketch.create", json!({"plane": "XY", "name": "Base"}));
-    run(&mut s, "sketch.rectangle.two_point", json!({"p0": [0, 0], "p1": [60, 40]}));
-    run(&mut s, "sketch.finish", json!({}));
-    run(&mut s, "sheet.flange", json!({"sketch": "Base"}));
+    run(&mut s, "solid.box", json!({"corner": [0, 0, 0], "length": 60, "width": 40, "height": 0.8}));
     let before = volume(&mut s);
-    // A sketch 5 mm below the sheet: a deboss goes down, away from the sheet, and misses it.
+    // A sketch 5 mm below the plate: a deboss goes down, away from the plate, and misses it.
     run(&mut s, "sketch.create", json!({"plane": {"origin": [0, 0, -5], "x_dir": [1, 0, 0], "y_dir": [0, 1, 0]}, "name": "Logo"}));
     run(&mut s, "sketch.rectangle.two_point", json!({"p0": [10, 10], "p1": [20, 20]}));
     run(&mut s, "sketch.finish", json!({}));
@@ -2699,4 +2600,26 @@ fn an_emboss_that_works_has_no_warning() {
         assert!(reply["warning"].is_null(), "{mode}: {reply}");
         run(&mut s, "edit.undo", json!({}));
     }
+}
+
+#[test]
+fn align_and_remove() {
+    let mut s = Session::default();
+    run(&mut s, "solid.box", json!({"length": 10, "width": 10, "height": 10, "body_name": "A"}));
+    run(&mut s, "solid.box", json!({"length": 10, "width": 10, "height": 10, "corner": [50, 0, 0], "body_name": "B"}));
+    // B's top face onto A's top face: B turns over and sits on A.
+    run(&mut s, "solid.align", json!({"bodies": ["B"], "from_face": [55, 5, 10], "to_face": [5, 5, 10]}));
+    let m = measure(&mut s);
+    let b = m["bodies"].as_array().unwrap().iter().find(|b| b["name"] == "B").unwrap().clone();
+    let (lo, hi) = (b["bbox"]["min"].clone(), b["bbox"]["max"].clone());
+    for (got, want) in [(&lo[0], 0.0), (&lo[2], 10.0), (&hi[0], 10.0), (&hi[2], 20.0)] {
+        assert!((got.as_f64().unwrap_or(f64::NAN) - want).abs() < 1e-6, "{b}");
+    }
+    // Points only: a plain move.
+    run(&mut s, "solid.align", json!({"bodies": ["B"], "from": [0, 0, 10], "to": [0, 0, 30]}));
+    let m = measure(&mut s);
+    let b = m["bodies"].as_array().unwrap().iter().find(|b| b["name"] == "B").unwrap().clone();
+    assert!((b["bbox"]["min"][2].as_f64().unwrap_or(0.0) - 30.0).abs() < 1e-6, "{b}");
+    run(&mut s, "solid.remove", json!({"bodies": ["B"]}));
+    assert_eq!(measure(&mut s)["body_count"], 1);
 }

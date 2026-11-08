@@ -126,17 +126,15 @@ fn ids_names_suppression_marker_and_failures_survive() {
 }
 
 #[test]
-fn units_materials_and_rules_come_back() {
+fn units_and_materials_come_back() {
     let mut s = Session::default();
     run(&mut s, "document.units", json!({"units": "in"}));
     run(&mut s, "material.create", json!({"name": "Test resin", "density_g_cm3": 1.3, "color": "#336699", "opacity": 0.5}));
     run(&mut s, "solid.box", json!({"length": "1 in", "width": "1 in", "height": "1 in", "body_name": "Cube"}));
     run(&mut s, "material.assign", json!({"bodies": ["Cube"], "material": "Test resin"}));
-    run(&mut s, "sheet.manage_rules", json!({"name": "Thin", "thickness": "0.8 mm", "active": true}));
     let mut t = replay(&script(&mut s));
     same(&mut s, &mut t);
     assert_eq!(t.doc.units, "in");
-    assert_eq!(t.doc.sheet, s.doc.sheet);
     let a = run(&mut s, "inspect.measure", json!({}))["total"].clone();
     let b = run(&mut t, "inspect.measure", json!({}))["total"].clone();
     assert_eq!(a, b, "mass comes from the replayed material");

@@ -1232,13 +1232,11 @@ fn repair_body(s: &mut Session, p: &Value) -> Result<Value> {
             .iter()
             .map(|h| {
                 let g = if h.continuity == Continuity::G0 { "g0" } else { "g1" };
-                let edges: Vec<[f64; 3]> = h.edges.iter().map(|q| [q.x, q.y, q.z]).collect();
                 RepairHole {
                     faces: h.faces.clone(),
                     continuity: g.into(),
                     patched: h.patched,
                     why: h.why.clone(),
-                    patch: json!({"command": "surface.patch", "params": {"body": name, "edges": edges, "continuity": g}}),
                 }
             })
             .collect(),
@@ -1559,7 +1557,7 @@ mod tests {
     fn repair_part_patches_a_missing_face_as_one_undoable_feature() {
         let mut s = Session::default();
         run(&mut s, "solid.box", json!({"length": 10, "width": 10, "height": 10, "body_name": "Box"}));
-        run(&mut s, "surface.unstitch", json!({"body": "Box", "faces": [[5, 5, 10]]}));
+        crate::cmd::sheet_fixtures::unstitch(&mut s, json!({"body": "Box", "faces": [[5, 5, 10]]}));
         let open = |s: &Session| s.model.state().body("Box").is_some_and(|b| b.body.is_surface());
         assert!(open(&s));
         // A hole alone: nothing is sewn, and the reason names the hole.
@@ -1571,7 +1569,6 @@ mod tests {
         let done = &v["repair"];
         assert_eq!(done["holes"][0]["patched"], json!(true), "{v}");
         assert_eq!(done["holes"][0]["continuity"], json!("g0"), "{v}");
-        assert_eq!(done["holes"][0]["patch"]["command"], json!("surface.patch"), "{v}");
         assert_eq!(done["faces"], json!([5, 6]));
         assert_eq!((done["closed"].clone(), done["modelling"].clone()), (json!(true), json!(true)));
         assert!((done["volume"].as_f64().unwrap() - 1000.0).abs() < 1e-6, "{v}");
@@ -2518,33 +2515,6 @@ mod tests {
         assert!(!crate::view::sketch_shown(&s, sketch), "the Extrude uses it: it hides itself");
         run(&mut s, "browser.visibility", json!({"items": [sketch], "visible": true}));
         assert!(crate::view::sketch_shown(&s, sketch), "shown on its own, it stays shown");
-    }
-
-    #[test]
-    fn a_sheet_metal_flange_hides_its_sketch_as_an_extrude_does() {
-        // #6804: the base flange's sketch stayed shown; its line on the plate's bottom edge then
-        // took the Flange dialog's click and made a flat contour wall with no bend.
-        let mut s = Session::default();
-        let base = run(&mut s, "sketch.create", json!({"plane": "XY", "name": "Base"}))["sketch"].as_u64().unwrap();
-        run(&mut s, "sketch.rectangle.two_point", json!({"p0": [-33.5, -37], "p1": [27.5, -7]}));
-        run(&mut s, "sketch.finish", json!({}));
-        let wall = run(&mut s, "sketch.create", json!({"plane": "XZ", "name": "Wall"}))["sketch"].as_u64().unwrap();
-        run(&mut s, "sketch.line", json!({"points": [[0, 0], [40, 0], [40, 30]], "ids": ["l1", "l2"]}));
-        run(&mut s, "sketch.finish", json!({}));
-        assert!(crate::view::sketch_shown(&s, base) && crate::view::sketch_shown(&s, wall));
-        run(&mut s, "sheet.flange", json!({"sketch": "Base"}));
-        assert!(!crate::view::sketch_shown(&s, base), "the base flange used its sketch");
-        run(&mut s, "sheet.flange", json!({"sketch": "Wall", "curves": ["l1", "l2"], "distance": 20}));
-        assert!(!crate::view::sketch_shown(&s, wall), "the contour flange used its sketch");
-        let d = run(&mut s, "document.inspect", json!({}));
-        assert!(d["sketches"].as_array().unwrap().iter().all(|x| x["visible"] == false), "{d}");
-        assert_eq!(s.doc.features.iter().filter(|f| matches!(f.kind, sketcraft_doc::FeatureKind::SheetContour { .. })).count(), 1);
-        // Shown on their own, or while their flange is edited, they are drawn again.
-        s.feature_edit_sketch = Some(base);
-        assert!(crate::view::sketch_shown(&s, base));
-        s.feature_edit_sketch = None;
-        run(&mut s, "browser.visibility", json!({"items": [wall], "visible": true}));
-        assert!(crate::view::sketch_shown(&s, wall) && !crate::view::sketch_shown(&s, base));
     }
 
     #[test]

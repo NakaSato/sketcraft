@@ -258,9 +258,6 @@ pub struct ViewportState {
     pub point_drag: Option<(String, usize, Option<Vec2>)>,
     /// Checkpoint and source for a cancellable whole-text drag.
     pub(crate) text_drag: Option<(u64, String)>,
-    /// A part that joints place, being dragged.
-    pub(crate) joint_drag: Option<crate::joint_drag::Drag>,
-    pub(crate) joint_handles: Option<crate::joint_handles::Mode>,
     /// A free part being dragged to a new place (#2804).
     pub(crate) occurrence_drag: Option<crate::occurrence_drag::Drag>,
     /// Extrude by pulling a face or profile.
@@ -4934,7 +4931,6 @@ pub(crate) fn preview_should_roll_back(app: &SketApp, held: crate::tool_modifier
 }
 
 pub fn show(app: &mut SketApp, ui: &mut egui::Ui) {
-    crate::joint_handles::sync(app);
     let t = Tokens::get();
     let rect = ui.max_rect();
     app.viewport.rect = Some(rect);
@@ -4942,12 +4938,7 @@ pub fn show(app: &mut SketApp, ui: &mut egui::Ui) {
     let layered = drag_layer::follow(app);
     refresh_layout(app, ui.ctx());
     let resp = ui.interact(rect, ui.scope_id().with("viewport"), Sense::click_and_drag());
-    let flat = crate::dialogs_sheet::flat_active(app);
-    if !flat {
-        app.flat_view.fitted = false;
-    }
-    let input =
-        if flat { crate::dialogs_sheet::navigate(app, ui, rect, &resp) } else { crate::navigation::handle(app, ui, rect, &resp, NavCaps::MODEL) };
+    let input = crate::navigation::handle(app, ui, rect, &resp, NavCaps::MODEL);
     let CameraInput { hover, scroll, mods, middle, secondary_down, primary_down, primary_pressed, inside, axes, pinch, pan, primary_nav, mode } =
         input;
     app.viewport.physical_scale = ui.ctx().pixels_per_point();
@@ -4993,14 +4984,12 @@ pub fn show(app: &mut SketApp, ui: &mut egui::Ui) {
         || app.viewport.axis_drag.is_some()
         || app.viewport.spin
         || app.cam_anim.is_some();
-    let joint_handle_pointer = hover.is_some_and(|p| inside && crate::joint_handles::owns_pointer(app, &proj, p));
     // Nor while a component's triad drags it as a layer, unless the preference asks for the
-    // highlight (`drag_layer::holds_pointer`). A part dragged along its joint owns the pointer
-    // too: nothing under it lights up (#5137).
+    // highlight (`drag_layer::holds_pointer`).
     let dragging_layer = drag_layer::holds_pointer(app, layered, manipulator_dragging);
     let hits = hover
         .filter(|_| {
-            inside && app.viewport.boxsel.is_none() && !crate::joint_drag::active(app) && !joint_handle_pointer && !navigating && !dragging_layer
+            inside && app.viewport.boxsel.is_none() && !navigating && !dragging_layer
         })
         .map(|p| pick_cached(app, &proj, p))
         .unwrap_or_default();
@@ -5021,7 +5010,7 @@ pub fn show(app: &mut SketApp, ui: &mut egui::Ui) {
     // held Space owns drags, not a still press, so only a navigation that has started cancels
     // it. A preset's modifier binding (Maya Alt, Alias Shift+Alt) or Ctrl+left orbit is a
     // gesture to navigate from the press on, so it still cancels the hold at once.
-    let navigating_from_press = mode.is_some() || app.viewport.primary_nav.is_some() || joint_handle_pointer;
+    let navigating_from_press = mode.is_some() || app.viewport.primary_nav.is_some();
     let held = crate::select_other::track_hold(app, ui.ctx(), &proj, inside, primary_pressed, primary_down, hover, navigating_from_press);
     crate::select_other::hover_override(app);
     list_hover(app);
@@ -5241,6 +5230,11 @@ pub fn show(app: &mut SketApp, ui: &mut egui::Ui) {
         crate::tools::on_hover(app, &proj, p, mods.shift);
         crate::tools::on_click(app, &proj, p, mods.shift);
     }
+    if crate::rotate_tool::active(app) || crate::tape_tool::active(app) {
+        let ctrl = ui.input(|i| i.modifiers.command);
+        crate::rotate_tool::hover(app, &proj, hover.filter(|_| inside), &hits, ctrl);
+        crate::tape_tool::hover(app, &proj, hover.filter(|_| inside), &hits, ctrl);
+    }
     if let Some(p) = hover.filter(|_| inside) {
         if app.tool.is_some() {
             crate::tools::on_hover(app, &proj, p, mods.shift);
@@ -5328,12 +5322,15 @@ pub fn show(app: &mut SketApp, ui: &mut egui::Ui) {
         let push_pull_repeat = resp.double_clicked()
             && !held
             && !reference_pick
-            && !joint_handle_pointer
             && mods.is_none()
             && crate::press_pull_repeat::double_click(app, cand.as_ref().and_then(|c| c.1.as_ref()));
-        if resp.clicked() && !held && !reference_pick && !joint_handle_pointer && !app.viewport.draw_drag_handled && !push_pull_repeat {
+        if resp.clicked() && !held && !reference_pick && !app.viewport.draw_drag_handled && !push_pull_repeat {
             if crate::browser_canvas::click(app, &proj, p) {
                 // Calibrate Canvas: the click sets Point A or B on the image (#9108).
+            } else if crate::rotate_tool::click(app, &proj, p, &hits) {
+                // SketchUp's Rotate: the click places the protractor, its start or the angle.
+            } else if crate::tape_tool::click(app, &proj, p, &hits) {
+                // SketchUp's Tape Measure: the click starts or ends the tape.
             } else if crate::sketchup_draw::pending(app).is_some() {
                 // A SketchUp-tab drawing tool: this click picks its plane and is its first point.
                 crate::sketchup_draw::click(app, &proj, p, &hits, mods.shift);
@@ -5644,35 +5641,18 @@ pub fn show(app: &mut SketApp, ui: &mut egui::Ui) {
             && rect.contains(a)
             && !crate::shell::covered(app, a)
             && !axes.contains(a)
-            && !crate::joint_handles::start_drag(app, &proj, a)
             && !crate::occurrence_drag::start(app, &proj, a)
-            && !crate::joint_drag::start(app, &proj, a)
         {
             crate::drag_extrude::press(app, &proj, a);
         }
         if resp.dragged_by(egui::PointerButton::Primary)
             && let Some(p) = hover
         {
-            if crate::joint_handles::active(app) {
-                // Captured handle motion is handled below, including the release frame.
-            } else if crate::joint_drag::active(app) {
-                crate::joint_drag::to(app, &proj, p);
-            } else if crate::occurrence_drag::active(app) {
+            if crate::occurrence_drag::active(app) {
                 ui.ctx().set_cursor_icon(egui::CursorIcon::Grabbing);
                 crate::occurrence_drag::to(app, &proj, p);
             }
         }
-    }
-    if crate::joint_handles::active(app) && !crate::issue_report::cad_input_blocked() {
-        if let Some(p) = ui.input(|i| i.pointer.interact_pos()).filter(|p| p.is_finite()) {
-            crate::joint_handles::to(app, &proj, p);
-        }
-        if resp.drag_stopped() || !ui.input(|i| i.pointer.primary_down()) {
-            crate::joint_handles::end_drag(app);
-        }
-    }
-    if crate::joint_drag::active(app) && (resp.drag_stopped() || !ui.input(|i| i.pointer.primary_down())) {
-        crate::joint_drag::end(app);
     }
     // A drag whose release never came (focus lost, a tool or dialog took over) ends where it is.
     if crate::occurrence_drag::active(app) && (resp.drag_stopped() || !ui.input(|i| i.pointer.primary_down())) {
@@ -5693,9 +5673,6 @@ pub fn show(app: &mut SketApp, ui: &mut egui::Ui) {
         && primary_nav.is_none()
         && mode.is_none()
         && app.viewport.point_drag.is_none()
-        && !crate::joint_drag::active(app)
-        && !crate::joint_handles::active(app)
-        && !joint_handle_pointer
         && !crate::occurrence_drag::active(app)
         && !crate::drag_extrude::started(app)
         && !crate::dim_view::dragging()
@@ -5733,11 +5710,6 @@ pub fn show(app: &mut SketApp, ui: &mut egui::Ui) {
     crate::ref_images::show(app, ui, &painter, &proj);
     crate::browser_canvas::paint_marks(app, &painter, &proj);
     crate::point_clouds::show(app, &painter, &proj);
-    crate::dialogs_assembly::origins(app, &painter, &proj);
-    if !crate::joint_handles::visible(app) {
-        crate::dialogs_assembly::joint_glyphs(app, &painter, &proj);
-    }
-    crate::joint_handles::show(app, ui, &painter, &proj);
     overlays(app, &painter, &proj);
     crate::dim_view::show(app, ui, &painter, &proj);
     crate::sketch_text_handles::show(app, ui, &painter, &proj, hover);
@@ -5769,6 +5741,8 @@ pub fn show(app: &mut SketApp, ui: &mut egui::Ui) {
         paint_box_selection(&painter, bx, app.session.active_sketch.is_some());
     }
     crate::navigation::paint_zoom_window(app, &painter);
+    crate::rotate_tool::paint(app, &proj, &painter);
+    crate::tape_tool::paint(app, &proj, &painter);
     if let Some(tl) = app.tool.as_ref() {
         crate::tools::preview(app, tl, &painter, &proj);
     }

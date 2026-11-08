@@ -1,0 +1,14 @@
+{
+  "en": {
+    "prefs.show_cad_tools": "Show CAD tools",
+    "prefs.show_cad_tools_note": "Offers the CAD tools SketchUp has no match for, such as Fillet, Shell, Hole and Loft, in the ribbon, the command search, menus and shortcuts. Features already in a design stay editable either way."
+  },
+  "ja": {
+    "prefs.show_cad_tools": "CAD ツールを表示",
+    "prefs.show_cad_tools_note": "フィレット、シェル、穴、ロフトなど、SketchUp にない CAD ツールをリボン、コマンド検索、メニュー、ショートカットに表示します。デザイン内の既存のフィーチャは、どちらの設定でも編集できます。"
+  },
+  "zh": {
+    "prefs.show_cad_tools": "显示 CAD 工具",
+    "prefs.show_cad_tools_note": "在功能区、命令搜索、菜单和快捷键中提供 SketchUp 没有对应的 CAD 工具，例如圆角、抽壳、孔和放样。无论是否开启，设计中已有的特征都可以编辑。"
+  }
+}

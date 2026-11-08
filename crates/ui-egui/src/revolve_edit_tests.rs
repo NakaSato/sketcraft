@@ -292,22 +292,14 @@ fn only_the_active_selection_field_looks_active() {
     assert_ne!(filled, t.control_border, "filled inactive differs from empty inactive");
 }
 
-/// A solid (or surface) revolve named `Turn` about `axis`, made in a new component `Owner` that is
-/// turned and moved afterwards when `moved`, with parameter `W` = 40 mm.
-fn expression_axis_design(surface: bool, moved: bool) -> Harness {
+/// A revolve named `Turn` about `axis`, made in a new component `Owner` that is turned and moved
+/// afterwards when `moved`, with parameter `W` = 40 mm.
+fn expression_axis_design(moved: bool) -> Harness {
     let mut h = Harness::new();
     h.app.run("parameters.add", json!({"name":"W","expression":"40 mm"})).unwrap();
     let owner = h.app.run("component.create", json!({"name":"Owner","grounded":false})).unwrap();
     let axis = json!({"origin":["W / 2", "5 mm", 0],"dir":[0,1,0]});
-    let mut h = if surface {
-        h.app.run("sketch.create", json!({"plane":"XY","name":"Profile"})).unwrap();
-        h.app.run("sketch.rectangle.two_point", json!({"p0":[10,0],"p1":[15,5]})).unwrap();
-        h.app.run("sketch.finish", json!({})).unwrap();
-        h.app.run("surface.revolve", json!({"sketch":"Profile","axis":axis,"angle":"90 deg","name":"Turn"})).unwrap();
-        h
-    } else {
-        make(h, axis)
-    };
+    let mut h = make(h, axis);
     if moved {
         h.app.run("occurrence.move", json!({"occurrence":owner["occurrence"],"translate":[100,0,20],"axis":[0,0,1],"angle":"17 deg"})).unwrap();
         h.app.run("component.create", json!({"name":"Other","parent":0})).unwrap();
@@ -323,22 +315,22 @@ fn saved_axis(h: &Harness) -> Value {
 }
 
 #[test]
-fn untouched_edit_keeps_an_explicit_axis_origin_expression_for_solid_and_surface_revolves() {
-    for (surface, moved) in [(false, false), (true, false), (false, true), (true, true)] {
-        let mut h = expression_axis_design(surface, moved);
+fn untouched_edit_keeps_an_explicit_axis_origin_expression() {
+    for moved in [false, true] {
+        let mut h = expression_axis_design(moved);
         let original = saved_axis(&h);
         assert_eq!(original["origin"][0], json!("W / 2"));
         open(&mut h);
         h.step(&json!({"widget":"OK"})).unwrap();
-        assert!(h.app.dialog.is_none(), "OK did not apply the edit (surface: {surface}, moved: {moved})");
-        assert_eq!(saved_axis(&h), original, "surface: {surface}, moved: {moved}");
+        assert!(h.app.dialog.is_none(), "OK did not apply the edit (moved: {moved})");
+        assert_eq!(saved_axis(&h), original, "moved: {moved}");
     }
 }
 
 #[test]
 fn an_axis_origin_that_cannot_be_evaluated_is_kept_by_an_untouched_edit() {
-    for (surface, moved) in [(false, false), (true, false), (false, true), (true, true)] {
-        let mut h = expression_axis_design(surface, moved);
+    for moved in [false, true] {
+        let mut h = expression_axis_design(moved);
         let original = saved_axis(&h);
         // W is no longer a length: the revolve fails and its origin cannot be shown as numbers.
         // (`parameters.change` refuses that, so the parameter is set directly.)
@@ -347,7 +339,7 @@ fn an_axis_origin_that_cannot_be_evaluated_is_kept_by_an_untouched_edit() {
         h.app.session.doc = std::sync::Arc::new(doc);
         open(&mut h);
         h.step(&json!({"widget":"OK"})).unwrap();
-        assert_eq!(saved_axis(&h), original, "surface: {surface}, moved: {moved}");
+        assert_eq!(saved_axis(&h), original, "moved: {moved}");
     }
 }
 
@@ -466,16 +458,6 @@ fn dialog_revolve_follows_the_highlighted_edge_when_the_curve_id_collides() {
         // the same construction about the profile sketch's line of this id.
         assert_pivots_on(&preview, lift_xy(10.0, 29.5), lift_xy(30.0, 10.5), &format!("named={named:?}"));
     }
-    let (kind, mut inputs) = crate::dialogs_surface::start(&h.app, "surface.revolve").unwrap();
-    let Kind::Surface(mut surf) = kind else { panic!("surface revolve") };
-    if let crate::dialogs_surface::Surf::Revolve { angle, .. } = &mut surf {
-        *angle = "120 deg".into();
-    }
-    inputs[0].items = vec![Sel::Profile { sketch: profile, index: 0 }];
-    inputs[1].items = vec![Sel::SketchCurve { id: right, sketch: Some(axis_sketch) }];
-    let cmds = crate::dialogs_surface::commands(&h.app, &surf, &inputs, &serde_json::Map::new()).unwrap();
-    assert_eq!(cmds[0].0, "surface.revolve");
-    assert!((cmds[0].1["axis"]["origin"][0].as_f64().unwrap() - 10.0).abs() < 1e-6, "{}", cmds[0].1["axis"]);
 }
 
 fn linked_span(app: &crate::SketApp, sketch: u64) -> (f64, f64, f64, f64) {

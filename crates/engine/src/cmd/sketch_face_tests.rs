@@ -74,38 +74,6 @@ fn explicit_rebind_preserves_geometry_dimensions_context_and_one_undo() {
     assert!((reopened.model.state().sketch(id).unwrap().plane.origin.z - 30.).abs() < 1e-6);
 }
 #[test]
-fn unsupported_face_has_explicit_fixed_alternative_and_no_live_projection() {
-    let mut s = Session::default();
-    // A rib's wall: a rib reports no roles for the faces it builds (Traced::unnamed), so the
-    // wall has no construction certificate and no exact history name to attach by.
-    run(&mut s, "solid.box", json!({"length":40,"width":20,"height":5,"corner":[0,0,0],"body_name":"L"}));
-    run(&mut s, "solid.box", json!({"length":5,"width":20,"height":40,"corner":[0,0,0],"operation":"join"}));
-    run(&mut s, "sketch.create", json!({"plane":{"origin":[0,10,0],"x_dir":[1,0,0],"y_dir":[0,0,1]},"name":"RibSketch"}));
-    run(&mut s, "sketch.line", json!({"points":[[5,25],[25,5]],"ids":["l1"]}));
-    run(&mut s, "sketch.finish", json!({}));
-    run(&mut s, "solid.rib", json!({"sketch":"RibSketch","curves":["l1"],"thickness":4}));
-    let mut pick = {
-        let world = s.world_state().unwrap();
-        let body = world.body("L").unwrap();
-        let face = body
-            .body
-            .faces(0.01)
-            .unwrap()
-            .into_iter()
-            .find(|face| face.plane_normal.is_some_and(|n| n.dot(Vec3::Y) > 0.999) && (face.centroid.y - 12.0).abs() < 1e-6)
-            .unwrap();
-        json!({"body":"L","index":face.index,"face":[face.centroid.x,face.centroid.y,face.centroid.z]})
-    };
-    let before = s.doc.to_json();
-    let error = s.execute("sketch.create", &json!({"plane":pick})).unwrap_err();
-    assert!(error.to_string().contains("fixed"), "{error}");
-    assert_eq!(s.doc.to_json(), before);
-    pick["fixed"] = json!(true);
-    let id = run(&mut s, "sketch.create", json!({"plane":pick}))["sketch"].as_u64().unwrap();
-    assert!(matches!(s.doc.feature(id).unwrap().kind, sketcraft_doc::FeatureKind::Sketch { plane: sketcraft_doc::PlaneRef::Custom { .. }, .. }));
-    assert!(s.doc.sketch(id).unwrap().links.is_empty());
-}
-#[test]
 fn malformed_exact_face_and_path_leave_every_session_field_unchanged() {
     let mut s = Session::default();
     run(&mut s, "solid.box", json!({"length":10,"width":10,"height":10,"body_name":"Base"}));

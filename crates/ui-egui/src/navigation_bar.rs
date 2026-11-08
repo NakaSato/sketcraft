@@ -111,7 +111,7 @@ pub(crate) fn shown(app: &SketApp) -> bool {
 }
 
 pub(crate) fn canvas_caps(app: &SketApp) -> NavCaps {
-    if crate::dialogs_sheet::flat_active(app) || crate::render_workspace::result_active(app) {
+    if crate::render_workspace::result_active(app) {
         NavCaps { orbit: false, pick: false }
     } else if crate::render_workspace::active(app) {
         NavCaps::RENDER

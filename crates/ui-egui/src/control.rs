@@ -3286,49 +3286,6 @@ mod tests {
         assert_eq!(h.call("ui.camera", Value::Null)["result"]["fov"], json!(0.0), "a sketch draws parallel");
     }
 
-    /// `ui.start` params set what a dialog opens on: Drive Joints on a joint (by name or id) at
-    /// the given values, driving nothing yet. A param it doesn't take is refused and closes it.
-    #[test]
-    fn ui_start_params_open_drive_joints_where_asked() {
-        let mut s = Session::default();
-        for (name, x) in [("A", 0), ("B", 30), ("C", 60)] {
-            s.execute("component.activate", &json!({"component": "root"})).unwrap();
-            s.execute("component.create", &json!({ "name": name })).unwrap();
-            s.execute("solid.box", &json!({"length": 20, "width": 20, "height": 10, "corner": [x, 0, 0]})).unwrap();
-        }
-        s.execute("component.activate", &json!({"component": "root"})).unwrap();
-        s.execute("occurrence.ground", &json!({"occurrence": "A:1", "grounded": true})).unwrap();
-        let at = |o: &str, x: i32| json!({"occurrence": o, "point": [x, 10, 5], "z": [1, 0, 0]});
-        s.execute("joint.create", &json!({"type": "revolute", "a": at("A", 25), "b": at("B", 25), "flip": true, "name": "Hinge"})).unwrap();
-        s.execute("joint.create", &json!({"type": "slider", "a": at("B", 55), "b": at("C", 55), "flip": true, "name": "Rail"})).unwrap();
-        let mut h = crate::scenario::Harness::new();
-        h.app = SketApp::new(s, Services::default());
-        let before = h.app.session.doc.clone();
-        let drive = |h: &crate::scenario::Harness| match h.app.dialog.as_ref().map(|d| &d.kind) {
-            Some(crate::dialogs::Kind::Assembly(crate::dialogs_assembly::Asm::Drive { joint, values, .. })) => {
-                (h.app.session.doc.assembly.joints[*joint].name.clone(), values.clone())
-            }
-            other => panic!("{other:?}"),
-        };
-        let r = h.call("ui.start", json!({"command": "joint.drive", "params": {"joint": "Rail", "values": [12.5]}}));
-        assert_eq!(r["ok"], true, "{r}");
-        assert_eq!(drive(&h), ("Rail".to_string(), vec!["12.5 mm".to_string()]));
-        let hinge = h.app.session.doc.assembly.joints[0].id;
-        h.call("ui.start", json!({"command": "joint.drive", "params": {"joint": hinge, "values": ["45 deg"]}}));
-        assert_eq!(drive(&h), ("Hinge".to_string(), vec!["45 deg".to_string()]));
-        assert_eq!(h.app.session.doc, before, "nothing is driven until OK");
-        for bad in [json!({"joint": "Nope"}), json!({"joint": "Rail", "value": 3}), json!({"values": [1, 2]}), json!({"values": [f64::MAX]})] {
-            let r = h.call("ui.start", json!({"command": "joint.drive", "params": bad}));
-            assert_eq!(r["ok"], false, "{bad}: {r}");
-            assert!(h.app.dialog.is_none(), "{bad}");
-        }
-        for command in ["solid.extrude", "sketch.create", "inspect.zebra"] {
-            let r = h.call("ui.start", json!({"command": command, "params": {"distance": 5}}));
-            assert!(r["ok"] == false && r["error"].as_str().unwrap().contains("takes no ui.start params"), "{r}");
-            assert!(h.app.dialog.is_none() && h.app.tool.is_none() && h.app.session.analysis.is_none(), "{command} started nothing");
-        }
-    }
-
     /// #9087: the dialog is reported as data (its command, inputs and what OK runs), not as the
     /// form's Debug text; `ui.start` and `ui.editFeature` reply with what they opened, and the
     /// tool windows (Parameters, Bill of Materials) are reported by the command that opens them.

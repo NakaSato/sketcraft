@@ -10,37 +10,22 @@ use sketcraft_geom::prelude::*;
 
 use super::CommandSpec;
 use super::features::{
-    add_feature, axis_dir_param, check_expr, feature_sketch, length_operands, plane_param, point_param, profiles, typed_length_unit,
+    add_feature, axis_dir_param, check_expr, feature_sketch, length_operands, point_param, profiles, typed_length_unit,
 };
 use crate::params::{bad, bool_, expr, req_expr, str_, string_list, vec3};
 use crate::{Result, Session};
 
 pub static COMMANDS: &[CommandSpec] = &[
-    CommandSpec::new("solid.boundary_fill", "Boundary Fill", boundary_fill).at("SOLID", "CREATE").icon("boundary_fill").params(
-        "tools: [bodies]; cells: [[x,y,z] a point inside each cell to fill (a cell: inside some tools, outside the rest)]; operation?: new|join|cut|intersect; remove_tools?: bool",
-    ),
     CommandSpec::new("solid.coil", "Coil", coil).at("SOLID", "CREATE").icon("coil").params(
         "diameter; two of revolutions (or turns), height, pitch; section_size; section?: circular|square; section_position?: inside|center|outside; \
          base?: [x,y,z] (numbers in mm or length expressions; default: the origin); axis?: X|Y|Z|[x,y,z] (default Z); start_angle?; clockwise?: bool; \
          sketch? (a sketch; its plane is the section plane, so its placement sets the radius and start phase), profiles? (default: all; one closed profile without holes); \
          operation?, targets?, name?, body_name?",
     ),
-    CommandSpec::new("solid.rib", "Rib", rib)
-        .at("SOLID", "CREATE")
-        .icon("rib")
-        .params("sketch, curves: [open curve ids, in order]; thickness (across the sketch plane, or across the curves when normal); depth? (default: to the next face); flip?: bool (fill to the other side); direction?: in_plane|normal (grow across the sketch plane, the default, or along its normal)"),
-    CommandSpec::new("solid.web", "Web", web)
-        .at("SOLID", "CREATE")
-        .icon("web")
-        .params("sketch, curves: [open curve ids] (one wall each); thickness; depth? (default: to the next face); flip?: bool; direction?: in_plane|normal"),
     CommandSpec::new("solid.emboss", "Emboss", emboss)
         .at("SOLID", "CREATE")
         .icon("emboss")
         .params("sketch, profiles?; depth; mode?: emboss|deboss; targets?; face?: world point [x,y,z] selecting a planar or complete exterior cylindrical wall (inferred when exactly one supported tangent cylinder matches the selected profiles)"),
-    CommandSpec::new("solid.replace_face", "Replace Face", replace_face)
-        .at("SOLID", "MODIFY")
-        .icon("replace_face")
-        .params("faces: [[x,y,z] points on planar faces, or face names from model.faces]; target: plane (XY|XZ|YZ|construction plane|{origin, normal}) | target_face: [x,y,z] on a parallel planar face; body?"),
     CommandSpec::new("solid.align", "Align", align)
         .at("SOLID", "MODIFY")
         .icon("align")
@@ -132,47 +117,6 @@ fn coil(s: &mut Session, p: &Value) -> Result<Value> {
             targets: string_list(cmd, p, "targets")?.into_iter().map(BodyName).collect(),
         },
     )
-}
-
-fn curves_param(p: &Value, cmd: &str) -> Result<Vec<String>> {
-    let c = string_list(cmd, p, "curves")?;
-    if c.is_empty() || c.len() > 1000 {
-        return Err(bad(cmd, "`curves` must list 1…1000 sketch curve ids"));
-    }
-    Ok(c)
-}
-
-fn rib_like(s: &mut Session, p: &Value, cmd: &str, web: bool) -> Result<Value> {
-    let sketch = feature_sketch(s, p, cmd)?;
-    let curves = curves_param(p, cmd)?;
-    {
-        let st = s.model.state();
-        let ss = st.sketch(sketch).ok_or_else(|| bad(cmd, "the sketch is not evaluated"))?;
-        if let Some(c) = curves.iter().find(|c| ss.sketch.curve_index(c).is_none()) {
-            return Err(bad(cmd, format!("no curve `{c}` in the sketch")));
-        }
-    }
-    let thickness = req_expr(cmd, p, "thickness")?;
-    check_expr(s, &thickness, Kind::Length, cmd, "thickness")?;
-    let depth = expr(p, "depth");
-    if let Some(d) = &depth {
-        check_expr(s, d, Kind::Length, cmd, "depth")?;
-    }
-    let flip = bool_(p, "flip").unwrap_or(false);
-    let normal = match str_(p, "direction").map(str::to_ascii_lowercase).as_deref() {
-        None | Some("in_plane" | "plane") => false,
-        Some("normal") => true,
-        Some(o) => return Err(bad(cmd, format!("unknown direction `{o}` (in_plane or normal)"))),
-    };
-    add_feature(s, p, FeatureKind::Rib { sketch: SketchId(sketch), curves, thickness, depth, flip, web, normal })
-}
-
-fn rib(s: &mut Session, p: &Value) -> Result<Value> {
-    rib_like(s, p, "solid.rib", false)
-}
-
-fn web(s: &mut Session, p: &Value) -> Result<Value> {
-    rib_like(s, p, "solid.web", true)
 }
 
 fn emboss(s: &mut Session, p: &Value) -> Result<Value> {
@@ -370,33 +314,6 @@ fn infer_emboss_selection(
         }
     }
     Ok(chosen)
-}
-fn face_points(s: &Session, p: &Value, k: &str, cmd: &str) -> Result<Vec<Vec3>> {
-    let a = p.get(k).and_then(Value::as_array).ok_or_else(|| bad(cmd, format!("`{k}` must list points [x, y, z] or face names")))?;
-    if a.is_empty() || a.len() > 1000 {
-        return Err(bad(cmd, format!("`{k}` must list 1…1000 points")));
-    }
-    a.iter().map(|v| super::face::face_ref(s, v, str_(p, "body"), cmd)).collect()
-}
-
-fn replace_face(s: &mut Session, p: &Value) -> Result<Value> {
-    let cmd = "solid.replace_face";
-    let faces = face_points(s, p, "faces", cmd)?;
-    for f in &faces {
-        if super::face::face_normal(s, *f).is_none() {
-            return Err(bad(cmd, "not supported yet: replacing a face that is not planar"));
-        }
-    }
-    let target = match p.get("target_face").and_then(vec3) {
-        Some(tp) => {
-            let n = super::face::face_normal(s, tp).ok_or_else(|| bad(cmd, "the target face must be planar"))?;
-            let plane = sketcore_record::Plane::from_normal(tp, n).ok_or_else(|| bad(cmd, "the target face's plane"))?;
-            sketcraft_doc::PlaneRef::Custom { plane }
-        }
-        None => plane_param(s, p.get("target"), cmd)?,
-    };
-    let body = str_(p, "body").map(str::to_string);
-    add_feature(s, p, FeatureKind::ReplaceFace { faces: faces.into_iter().map(FacePick).collect(), target, body: body.map(BodyName) })
 }
 
 /// `axes`: three booleans, one per world axis, for a point-to-point Align.
@@ -638,28 +555,4 @@ pub(crate) fn snap_point(st: &sketcraft_doc::ModelState, kind: &str, at: Vec3) -
         }),
         _ => None,
     }
-}
-
-fn boundary_fill(s: &mut Session, p: &Value) -> Result<Value> {
-    let cmd = "solid.boundary_fill";
-    let tools = string_list(cmd, p, "tools")?;
-    let st = s.model.state();
-    if tools.is_empty() || tools.len() > 64 || tools.iter().any(|t| st.body(t).is_none()) {
-        return Err(bad(cmd, "`tools` must list 1…64 bodies"));
-    }
-    let cells: Vec<Vec3> = p.get("cells").and_then(Value::as_array).map(|a| a.iter().filter_map(vec3).collect()).unwrap_or_default();
-    if cells.is_empty() || cells.len() > 1000 {
-        return Err(bad(cmd, "`cells` must list 1…1000 points [x, y, z], one inside each cell"));
-    }
-    let operation = super::features::operation(p, cmd)?;
-    add_feature(
-        s,
-        p,
-        FeatureKind::BoundaryFill {
-            tools: tools.into_iter().map(BodyName).collect(),
-            cells: cells.into_iter().map(Position).collect(),
-            operation,
-            remove_tools: bool_(p, "remove_tools").unwrap_or(false),
-        },
-    )
 }

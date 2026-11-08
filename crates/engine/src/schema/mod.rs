@@ -69,13 +69,11 @@ pub mod edit;
 pub mod features;
 pub mod file;
 pub mod inspect;
-pub mod joints;
 pub mod libraries;
 pub mod mass_properties;
 pub mod material_properties;
 pub mod materials;
 pub mod metadata;
-pub mod motion;
 pub mod panels;
 pub mod parameter_sweep;
 pub mod parameters;
@@ -95,7 +93,6 @@ pub mod render_stage;
 pub mod render_surface_resources;
 pub mod render_ui;
 pub mod section;
-pub mod sheet;
 pub mod sketch;
 pub mod sketch_clipboard;
 pub mod sketch_constraints;
@@ -105,8 +102,6 @@ pub mod sketch_equation;
 pub mod sketch_inspect;
 pub mod sketch_modify;
 pub mod surface_analysis;
-pub mod surface_boundary;
-pub mod surface_match;
 pub mod ui_prefs;
 pub mod view_navigation;
 
@@ -123,4 +118,19 @@ macro_rules! checked {
     ($id:literal, $handler:path) => {
         |s: &mut $crate::Session, p: &serde_json::Value| $crate::schema::run_checked_as(s, p, $id, $handler)
     };
+}
+
+/// Adds `key` to the schema's `required` list: for a key the type has optional so that the
+/// handler, not the check, refuses it when it's left out.
+pub(crate) fn require(schema: &mut schemars::Schema, key: &str) {
+    match schema.get_mut("required") {
+        Some(serde_json::Value::Array(required)) => {
+            if !required.iter().any(|k| k == key) {
+                required.push(key.into());
+            }
+        }
+        _ => {
+            schema.insert("required".into(), serde_json::Value::Array(vec![key.into()]));
+        }
+    }
 }

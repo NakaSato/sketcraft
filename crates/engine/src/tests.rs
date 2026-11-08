@@ -2245,55 +2245,6 @@ fn holes_at_sketch_points_threads_and_components() {
     assert_eq!(reopened.world_state().unwrap().threads.len(), s.world_state().unwrap().threads.len());
 }
 
-#[test]
-fn pipe_scale_offset_bounding_and_materials() {
-    let mut s = Session::default();
-    // Pipe along an L path (line, arc, line) on XZ.
-    run(&mut s, "sketch.create", json!({"plane": "XY", "name": "Path"}));
-    run(&mut s, "sketch.line", json!({"points": [[0, 0], [30, 0]], "ids": ["l1"]}));
-    run(&mut s, "sketch.arc.center_point", json!({"center": [30, 10], "start": "l1.end", "end": [40, 10], "id": "a1"}));
-    run(&mut s, "sketch.line", json!({"points": ["a1.end", [40, 40]], "ids": ["l2"]}));
-    run(&mut s, "sketch.finish", json!({}));
-    run(&mut s, "solid.pipe", json!({"path_sketch": "Path", "path": ["l1", "a1", "l2"], "diameter": 4, "wall": 1, "body_name": "Tube"}));
-    let len = 30.0 + PI * 10.0 / 2.0 + 30.0;
-    let v = volume(&mut s);
-    assert!(rel(v, PI * (4.0 - 1.0) * len) < 2e-3, "{v} vs {}", PI * 3.0 * len);
-    // Bounding solid around it; then scale a box and push one of its faces.
-    run(&mut s, "solid.bounding_solid", json!({"bodies": ["Tube"], "margin": 1, "body_name": "Stock"}));
-    let m = run(&mut s, "inspect.measure", json!({"bodies": ["Stock"]}));
-    let bb = &m["bodies"][0]["bbox"];
-    assert!((bb["min"][1].as_f64().unwrap() + 3.0).abs() < 1e-6 && (bb["max"][1].as_f64().unwrap() - 41.0).abs() < 1e-6, "{bb}");
-    run(&mut s, "solid.box", json!({"corner": [100, 0, 0], "length": 10, "width": 10, "height": 10, "body_name": "Cube"}));
-    run(&mut s, "solid.scale", json!({"bodies": ["Cube"], "factor": 2, "origin": [100, 0, 0]}));
-    let vc = run(&mut s, "inspect.measure", json!({"bodies": ["Cube"]}))["total"]["volume_mm3"].as_f64().unwrap();
-    assert!(rel(vc, 8000.0) < 1e-9, "{vc}");
-    run(&mut s, "solid.offset_face", json!({"faces": [[110, 10, 20]], "distance": 5}));
-    let vc = run(&mut s, "inspect.measure", json!({"bodies": ["Cube"]}))["total"]["volume_mm3"].as_f64().unwrap();
-    assert!(rel(vc, 20.0 * 20.0 * 25.0) < 1e-9, "{vc}");
-    // Materials and mass.
-    run(&mut s, "material.assign", json!({"bodies": ["Cube"], "material": "aluminum"}));
-    let m = run(&mut s, "inspect.measure", json!({"bodies": ["Cube"]}));
-    assert!((m["bodies"][0]["mass_g"].as_f64().unwrap() - 10_000.0 * 2.7 / 1000.0).abs() < 1e-6, "{m}");
-    assert_eq!(m["bodies"][0]["material"], "Aluminum");
-    assert!(s.execute("material.assign", &json!({"bodies": ["Cube"], "material": "unobtainium"})).is_err());
-}
-
-/// Regression: deleting a pipe's path sketch left the pipe in the timeline ("unknown sketch").
-#[test]
-fn deleting_a_path_sketch_deletes_its_pipe() {
-    let mut s = Session::default();
-    run(&mut s, "sketch.create", json!({"plane": "XY", "name": "Path"}));
-    run(&mut s, "sketch.line", json!({"points": [[0, 0], [30, 0]], "ids": ["l1"]}));
-    run(&mut s, "sketch.finish", json!({}));
-    let pipe = run(&mut s, "solid.pipe", json!({"path_sketch": "Path", "path": ["l1"], "diameter": 4}));
-    let deps = run(&mut s, "timeline.dependents", json!({"feature": "Path"}));
-    assert_eq!(deps["deleted_with_it"].as_array().map(Vec::len), Some(1), "{deps} (pipe {pipe})");
-    let r = run(&mut s, "timeline.delete", json!({"features": ["Path"]}));
-    assert_eq!(r["deleted"].as_array().map(Vec::len), Some(2), "{r}");
-    assert!(s.doc.features.is_empty(), "{:?}", s.doc.features.iter().map(|f| &f.name).collect::<Vec<_>>());
-    assert!(s.model.results.iter().all(|r| r.error.is_none()));
-}
-
 /// Regression: batches were rolled back by undoing as many steps as the undo history grew,
 /// which is none once the history is full, leaving their sketches behind.
 #[test]
@@ -3091,75 +3042,6 @@ mod naming {
         for want in ["F2:side:a", "F2:side:b", "F2:side:c", "F2:side:d", "F2:start", "F2:end"] {
             assert!(n.iter().any(|x| x.starts_with(want)), "{want} in {n:?}");
         }
-    }
-
-    #[test]
-    fn a_sketch_on_a_face_stays_on_that_face() {
-        let mut s = Session::default();
-        run(&mut s, "sketch.create", json!({"plane": "XY", "name": "S"}));
-        run(&mut s, "sketch.rectangle.two_point", json!({"p0": [0, 0], "p1": [40, 30]}));
-        run(&mut s, "sketch.finish", json!({}));
-        run(&mut s, "solid.extrude", json!({"distance": 10, "name": "Block"}));
-        run(&mut s, "sketch.create", json!({"plane": {"face": [30, 15, 10]}, "name": "Top"}));
-        run(&mut s, "sketch.circle.center", json!({"center": [30, 15], "radius": 3}));
-        run(&mut s, "sketch.finish", json!({}));
-        run(&mut s, "solid.extrude", json!({"sketch": "Top", "distance": 5, "operation": "join", "name": "Peg"}));
-        let top = |s: &mut Session| run(s, "inspect.measure", json!({}))["bodies"][0]["bbox"]["max"][2].as_f64().unwrap_or(0.0);
-        assert!((top(&mut s) - 15.0).abs() < 1e-6);
-        let attached = |s: &Session| s.model.state().sketch(s.doc.find_feature("Top").unwrap().id).map(|sketch| sketch.plane.origin.z);
-        assert_eq!(attached(&s), Some(10.));
-        run(&mut s, "timeline.edit", json!({"feature":"Block","set":{"extent":{"distance":"12"}}}));
-        assert_eq!(attached(&s), Some(12.));
-        assert!((top(&mut s) - 17.).abs() < 1e-6);
-        run(&mut s, "edit.undo", json!({}));
-        assert_eq!(attached(&s), Some(10.));
-        assert!((top(&mut s) - 15.).abs() < 1e-6);
-        let reopened = sketcraft_doc::Document::from_json(&s.doc.to_json()).unwrap();
-        let mut model = sketcraft_doc::Model::new();
-        model.evaluate(&reopened);
-        assert_eq!(model.state().sketch(reopened.find_feature("Top").unwrap().id).unwrap().plane.origin.z, 10.);
-        assert!((model.state().bodies[0].mesh().bounds().max.z - 15.).abs() < 1e-6);
-        // A format-10 attachment has only the face name that build worked out from geometry, and
-        // no strong anchor: that name finds no face today. The sketch fails, asking for its face
-        // again, and so does the peg on it; the block builds.
-        let mut old = (*s.doc).clone();
-        let sketcraft_doc::FeatureKind::Sketch { plane: sketcraft_doc::PlaneRef::Face { anchor, name, .. }, sketch } =
-            &mut old.features.iter_mut().find(|f| f.name == "Top").unwrap().kind
-        else {
-            panic!("fixture must contain a face sketch");
-        };
-        *anchor = None;
-        let saved = name.clone().unwrap();
-        for link in &mut sketch.links {
-            if link.auto_face {
-                link.auto_face = false;
-                link.face_name = name.clone();
-            }
-        }
-        old.format = "sketcraft/10".into();
-        let legacy = Session::new(sketcraft_doc::Document::from_json(&old.to_json()).unwrap());
-        let error = |s: &Session, name: &str| s.model.results.iter().find(|r| r.id == s.doc.find_feature(name).unwrap().id).unwrap().error.clone();
-        let reference = format!("{}{saved}", sketcraft_doc::naming::LEGACY_MARK);
-        assert_eq!(error(&legacy, "Top").as_deref().and_then(sketcraft_doc::reselect_parts), Some(("Top", reference.as_str())));
-        assert!(error(&legacy, "Peg").is_some());
-        assert!(error(&legacy, "Block").is_none());
-        // An upstream join that trims the certified face: the attachment stays on what is left
-        // of it and never follows the substitute roof (see face_tests for a face covered whole).
-        run(&mut s, "timeline.roll_to", json!({"feature": "Block"}));
-        run(&mut s, "sketch.create", json!({"plane": "XY", "name": "B"}));
-        run(&mut s, "sketch.rectangle.two_point", json!({"p0": [8, -5], "p1": [45, 35]}));
-        run(&mut s, "sketch.finish", json!({}));
-        run(&mut s, "solid.extrude", json!({"sketch": "B", "distance": 20, "operation": "join", "name": "Boss"}));
-        run(&mut s, "timeline.roll_to", json!({}));
-        let failed = |s: &Session, name: &str| s.model.results.iter().find(|r| r.id == s.doc.find_feature(name).unwrap().id).unwrap().error.is_some();
-        assert!(!failed(&s, "Top"));
-        assert!(!failed(&s, "Peg"));
-        assert_eq!(attached(&s), Some(10.), "the strip of Block's top left beside the boss is still that face");
-        assert!((top(&mut s) - 20.0).abs() < 1e-6, "{}", top(&mut s));
-        run(&mut s, "timeline.suppress", json!({"feature":"Boss","suppressed":true}));
-        assert!(!failed(&s, "Top"));
-        assert_eq!(attached(&s), Some(10.));
-        assert!((top(&mut s) - 15.).abs() < 1e-6);
     }
 
     #[test]
@@ -4005,23 +3887,6 @@ fn align_with_snap_points() {
     assert!(s.execute("solid.align", &json!({"bodies": ["Cube"], "from": {"snap": "nope", "at": [0, 0, 0]}, "to": [0, 0, 0]})).is_err());
 }
 
-/// Boundary Fill: the lens two overlapping boxes share, and one box less the other.
-#[test]
-fn boundary_fill_cells() {
-    let mut s = Session::default();
-    run(&mut s, "solid.box", json!({"length": 20, "width": 20, "height": 20, "body_name": "A"}));
-    run(&mut s, "solid.box", json!({"corner": [10, 0, 0], "length": 20, "width": 20, "height": 20, "body_name": "B"}));
-    let r = run(&mut s, "solid.boundary_fill", json!({"tools": ["A", "B"], "cells": [[15, 10, 10]], "remove_tools": true}));
-    let m = run(&mut s, "inspect.measure", json!({}));
-    assert_eq!(m["body_count"], 1, "{r} {m}");
-    assert!(rel(m["total"]["volume_mm3"].as_f64().unwrap_or(0.0), 10.0 * 20.0 * 20.0) < 1e-9);
-    run(&mut s, "edit.undo", json!({}));
-    run(&mut s, "solid.boundary_fill", json!({"tools": ["A", "B"], "cells": [[5, 10, 10], [25, 10, 10]], "remove_tools": true}));
-    let m = run(&mut s, "inspect.measure", json!({}));
-    assert!(rel(m["total"]["volume_mm3"].as_f64().unwrap_or(0.0), 2.0 * 10.0 * 20.0 * 20.0) < 1e-9, "{m}");
-    assert!(s.execute("solid.boundary_fill", &json!({"tools": ["A"], "cells": [[100, 100, 100]]})).is_err());
-}
-
 /// Rectangles name their sides and corners, so they can be dimensioned without inspecting the
 /// sketch first, whichever way round the corners were given.
 #[test]
@@ -4563,13 +4428,7 @@ fn params_docs_list_working_parameters() {
     let cmds = run(&mut s, "engine.commands", json!({}));
     let params =
         |id: &str| cmds.as_array().unwrap().iter().find(|c| c["id"] == id).and_then(|c| c["params"].as_str()).unwrap_or_default().to_string();
-    // Both work today: a named base flange, and a loft cut limited to its targets.
-    run(&mut s, "sketch.create", json!({"plane": "XY", "name": "A"}));
-    run(&mut s, "sketch.rectangle.two_point", json!({"p0": [0, 0], "p1": [50, 50]}));
-    run(&mut s, "sketch.finish", json!({}));
-    run(&mut s, "sheet.flange", json!({"sketch": "A", "body_name": "Panel A"}));
-    assert!(s.model.state().body("Panel A").is_some());
-    assert!(params("sheet.flange").contains("body_name"), "sheet.flange: {}", params("sheet.flange"));
+    // A loft cut limited to its targets works today.
     assert!(params("solid.loft").contains("targets"), "solid.loft: {}", params("solid.loft"));
 }
 
@@ -4581,8 +4440,8 @@ fn feature_params_docs_list_shared_keys() {
     let cmds = run(&mut s, "engine.commands", json!({}));
     let params =
         |id: &str| cmds.as_array().unwrap().iter().find(|c| c["id"] == id).and_then(|c| c["params"].as_str()).unwrap_or_default().to_string();
-    let with_targets = ["solid.extrude", "solid.revolve", "solid.sweep", "solid.loft", "solid.pipe", "solid.coil"];
-    let without_targets = ["solid.box", "solid.cylinder", "solid.sphere", "solid.torus", "solid.cone", "sheet.flange"];
+    let with_targets = ["solid.extrude", "solid.revolve", "solid.sweep", "solid.loft", "solid.coil"];
+    let without_targets = ["solid.box", "solid.cylinder", "solid.sphere", "solid.torus", "solid.cone"];
     for id in with_targets.iter().chain(&without_targets) {
         let doc = params(id);
         assert!(doc.contains("name?") && doc.contains("body_name?"), "{id}: {doc}");
@@ -5041,19 +4900,6 @@ fn feature_replies_list_the_bodies_they_changed_and_removed() {
     assert_eq!((&r["created_bodies"], &r["changed_bodies"], &r["removed_bodies"]), (&json!(["D"]), &json!([]), &json!([])), "{r}");
 }
 
-/// Drafting a cylinder's side face 5° from the base plane makes a cone frustum (#547): radius 10
-/// at the base, 10 − 20 · tan 5° at the top.
-#[test]
-fn draft_on_a_cylinder_side_makes_a_frustum() {
-    let mut s = Session::default();
-    run(&mut s, "solid.cylinder", json!({"radius": 10, "height": 20}));
-    run(&mut s, "solid.draft", json!({"faces": [[10, 0, 10]], "angle": "5 deg", "neutral": "XY"}));
-    let (big, h) = (10.0, 20.0);
-    let small = big - h * 5f64.to_radians().tan();
-    let expect = PI * h / 3.0 * (big * big + big * small + small * small);
-    assert!(rel(volume(&mut s), expect) < 1e-3, "{} vs {expect}", volume(&mut s));
-}
-
 /// The copies added after a rename keep their numbers through undo/redo, save/reopen and a
 /// further count change; lowering the count drops the last copies (#372).
 #[test]
@@ -5497,4 +5343,22 @@ fn a_command_check_that_panics_refuses_the_command() {
     let r = s.execute("solid.box", &json!({"length": 1, "width": 1, "height": 1}));
     assert!(matches!(r, Err(EngineError::Internal(..))), "{r:?}");
     assert!(s.doc.features.is_empty());
+}
+
+#[test]
+fn scale_offset_face_and_materials() {
+    let mut s = Session::default();
+    run(&mut s, "solid.box", json!({"corner": [100, 0, 0], "length": 10, "width": 10, "height": 10, "body_name": "Cube"}));
+    run(&mut s, "solid.scale", json!({"bodies": ["Cube"], "factor": 2, "origin": [100, 0, 0]}));
+    let vc = run(&mut s, "inspect.measure", json!({"bodies": ["Cube"]}))["total"]["volume_mm3"].as_f64().unwrap();
+    assert!(rel(vc, 8000.0) < 1e-9, "{vc}");
+    run(&mut s, "solid.offset_face", json!({"faces": [[110, 10, 20]], "distance": 5}));
+    let vc = run(&mut s, "inspect.measure", json!({"bodies": ["Cube"]}))["total"]["volume_mm3"].as_f64().unwrap();
+    assert!(rel(vc, 20.0 * 20.0 * 25.0) < 1e-9, "{vc}");
+    // Materials and mass.
+    run(&mut s, "material.assign", json!({"bodies": ["Cube"], "material": "aluminum"}));
+    let m = run(&mut s, "inspect.measure", json!({"bodies": ["Cube"]}));
+    assert!((m["bodies"][0]["mass_g"].as_f64().unwrap() - 10_000.0 * 2.7 / 1000.0).abs() < 1e-6, "{m}");
+    assert_eq!(m["bodies"][0]["material"], "Aluminum");
+    assert!(s.execute("material.assign", &json!({"bodies": ["Cube"], "material": "unobtainium"})).is_err());
 }

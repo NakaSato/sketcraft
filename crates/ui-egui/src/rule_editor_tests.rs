@@ -1,21 +1,7 @@
 //! Freeze rule-manager commands, reload policy and published row/control identities.
-use crate::{SketApp, dialogs::Kind, dialogs_plastic::Pl, dialogs_sheet::Sm, scenario, theme::Tokens};
+use crate::{SketApp, dialogs::Kind, dialogs_plastic::Pl, scenario, theme::Tokens};
 use serde_json::{Value, json};
 
-const SHEET_ROWS: &[&str] = &[
-    "Rule",
-    "Thickness",
-    "K Factor",
-    "Bend Radius",
-    "Relief Width",
-    "Relief Depth",
-    "Corner Relief Shape",
-    "Corner Relief",
-    "Hem Gap",
-    "Flange Gap",
-    "Angle Display",
-    "Active rule",
-];
 const PLASTIC_ROWS: &[&str] = &[
     "Rule",
     "Material",
@@ -36,7 +22,6 @@ fn frame(app: &mut SketApp, ctx: &egui::Context, kind: &mut Kind, labels: &[&str
     scenario::clear_handles();
     let mut output = ctx.run_ui(egui::RawInput::default(), |ui| {
         crate::ui_kit::scope(ui, |ui| match kind {
-            Kind::Sheet(k) => assert!(!crate::dialogs_sheet::rows(app, ui, k, &mut [])),
             Kind::Plastic(k) => assert!(!crate::dialogs_plastic::rows(app, ui, k, &[])),
             _ => panic!("rule dialog"),
         });
@@ -53,48 +38,9 @@ fn frame(app: &mut SketApp, ctx: &egui::Context, kind: &mut Kind, labels: &[&str
 
 fn commands(app: &SketApp, kind: &Kind) -> Vec<(String, Value)> {
     match kind {
-        Kind::Sheet(k) => crate::dialogs_sheet::commands(app, k, &[], &Default::default()).unwrap(),
         Kind::Plastic(k) => crate::dialogs_plastic::commands(app, k, &[], &Default::default()).unwrap(),
         _ => panic!("rule dialog"),
     }
-}
-
-#[test]
-fn sheet_rule_editor_contract() {
-    let mut app = SketApp::new(Default::default(), Default::default());
-    let ctx = crate::fonts::test_context();
-    let (mut kind, _) = crate::dialogs_sheet::start(&app, "sheet.manage_rules").unwrap();
-    frame(&mut app, &ctx, &mut kind, SHEET_ROWS);
-    let mut expected = json!({"name":"Steel (mm)","active":true,"corner_relief_shape":"notch","thickness":"2.5 mm","k_factor":"0.44",
-        "bend_radius":"Thickness","relief_width":"Thickness","relief_depth":"Thickness * 0.5","corner_relief":"Thickness * 4.0","hem_gap":"0.01 mm","gap":"Thickness","angle_display":"bend"});
-    assert_eq!(commands(&app, &kind), vec![("sheet.manage_rules".into(), expected.clone())]);
-    let Kind::Sheet(Sm::Rules { pick, values, relief, .. }) = &mut kind else { panic!() };
-    *pick = 1;
-    values[0] = "99 mm".into();
-    *relief = 3;
-    let mut new_rows = SHEET_ROWS.to_vec();
-    new_rows.insert(1, "Name");
-    frame(&mut app, &ctx, &mut kind, &new_rows);
-    expected["name"] = json!("Rule2");
-    assert_eq!(commands(&app, &kind), vec![("sheet.manage_rules".into(), expected.clone())]);
-    let Kind::Sheet(Sm::Rules { name, values, relief, active, .. }) = &mut kind else { panic!() };
-    *name = "  Custom  ".into();
-    values[0] = "3 mm".into();
-    values[1] = " ".into();
-    *relief = 2;
-    *active = false;
-    frame(&mut app, &ctx, &mut kind, &new_rows);
-    expected["name"] = json!("Custom");
-    expected["thickness"] = json!("3 mm");
-    expected["corner_relief_shape"] = json!("rectangular");
-    expected["active"] = json!(false);
-    expected.as_object_mut().unwrap().remove("k_factor");
-    assert_eq!(commands(&app, &kind), vec![("sheet.manage_rules".into(), expected)]);
-    let Kind::Sheet(Sm::Rules { pick, .. }) = &mut kind else { panic!() };
-    *pick = 0;
-    frame(&mut app, &ctx, &mut kind, SHEET_ROWS);
-    assert_eq!(commands(&app, &kind)[0].1["thickness"], "2.5 mm");
-    assert_eq!(commands(&app, &kind)[0].1["active"], true);
 }
 
 #[test]
@@ -139,27 +85,4 @@ fn plastic_rule_editor_contract() {
         expected.as_object_mut().unwrap().remove(key);
     }
     assert_eq!(commands(&app, &kind), vec![("plastic.manage_rules".into(), expected)]);
-}
-
-#[test]
-fn sheet_rule_editor_delete_reloads_and_plastic_has_no_delete() {
-    for layout in [crate::shell::LayoutMode::Docked, crate::shell::LayoutMode::Floating] {
-        let mut h = scenario::Harness::new();
-        h.app.home.open = false;
-        h.call("ui.set", json!({"layout":layout}));
-        h.app.session.execute("sheet.manage_rules", &json!({"name":"Custom","thickness":"3 mm","active":true})).unwrap();
-        h.app.start("sheet.manage_rules");
-        h.frames(4);
-        assert!(h.widget("Delete rule").is_some());
-        assert_eq!(crate::dialogs::apply_commands(&h.app, h.app.dialog.as_ref().unwrap()).unwrap()[0].1["name"], "Custom");
-        h.step(&json!({"widget":"Delete rule"})).unwrap();
-        h.frames(4);
-        assert!(h.app.session.doc.sheet.rules.is_empty());
-        assert!(h.widget("Delete rule").is_none());
-        assert_eq!(crate::dialogs::apply_commands(&h.app, h.app.dialog.as_ref().unwrap()).unwrap()[0].1["name"], "Steel (mm)");
-        h.app.dialog = None;
-        h.app.start("plastic.manage_rules");
-        h.frames(4);
-        assert!(h.widget("Delete rule").is_none());
-    }
 }

@@ -246,11 +246,6 @@ fn appearance_is_dense_and_preserves_color_opacity_and_targets() {
 }
 
 #[test]
-fn sheet_rule_manager_is_dense() {
-    form("sheet.manage_rules", &["Rule", "Thickness", "K Factor", "Active rule"]);
-}
-
-#[test]
 fn plastic_rule_manager_is_dense() {
     form("plastic.manage_rules", &["Rule", "Material", "Active rule"]);
 }

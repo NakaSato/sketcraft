@@ -145,8 +145,8 @@ fn apply(s: &mut Session, p: &Value) -> Result<Value> {
     }
     features.dedup();
     let mut done = false;
-    for id in &joints {
-        sub(s, "joint.delete", json!({"joint": id}))?;
+    if !joints.is_empty() {
+        super::joints::delete_joints(s.doc_mut(), &joints);
         done = true;
     }
     if !entities.is_empty() {
@@ -462,104 +462,6 @@ mod tests {
         ] {
             assert!(s.execute("selection.delete", &p).is_err(), "{p}");
         }
-    }
-
-    fn joint_assembly() -> Session {
-        let mut s = Session::default();
-        for (name, x) in [("A", 0), ("B", 30), ("C", 60)] {
-            run(&mut s, "component.activate", json!({"component": "root"}));
-            run(&mut s, "component.create", json!({"name": name}));
-            run(&mut s, "solid.box", json!({"length": 20, "width": 20, "height": 10, "corner": [x, 0, 0]}));
-        }
-        run(&mut s, "component.activate", json!({"component": "root"}));
-        run(&mut s, "occurrence.ground", json!({"occurrence": "A:1", "grounded": true}));
-        for (name, other, face) in [("Hinge", "B:1", [40, 10, 0]), ("Glue", "C:1", [70, 10, 0])] {
-            run(
-                &mut s,
-                "joint.create",
-                json!({"type": "revolute", "name": name,
-                "a": {"occurrence": "A:1", "face": [10, 10, 10]}, "b": {"occurrence": other, "face": face}}),
-            );
-        }
-        run(&mut s, "joint.motion_link", json!({"a": "Hinge", "b": "Glue", "ratio": 1}));
-        s
-    }
-
-    #[test]
-    fn selected_joints_and_their_link_are_deleted_in_one_undo_step_with_a_read_only_dry_run() {
-        let mut s = joint_assembly();
-        let features = serde_json::to_value(&s.doc.features).unwrap();
-        let hinge = s.doc.assembly.joints[0].id;
-        let dry = run(&mut s, "selection.delete", json!({"joints": [hinge, "Hinge", "Glue"], "dry_run": true}));
-        assert_eq!(dry["deleted_joints"].as_array().unwrap().len(), 2);
-        assert_eq!(s.doc.assembly.joints.len(), 2);
-        assert_eq!(s.doc.assembly.links.len(), 1);
-        assert_eq!(serde_json::to_value(&s.doc.features).unwrap(), features);
-        run(&mut s, "selection.delete", json!({"joints": [hinge, "Hinge", "Glue"]}));
-        assert!(s.doc.assembly.joints.is_empty() && s.doc.assembly.links.is_empty());
-        assert_eq!(serde_json::to_value(&s.doc.features).unwrap(), features);
-        run(&mut s, "edit.undo", json!({}));
-        assert_eq!(s.doc.assembly.joints.len(), 2);
-        assert_eq!(s.doc.assembly.links.len(), 1);
-        assert_eq!(serde_json::to_value(&s.doc.features).unwrap(), features);
-        run(&mut s, "edit.redo", json!({}));
-        assert!(s.doc.assembly.joints.is_empty() && s.doc.assembly.links.is_empty());
-    }
-
-    #[test]
-    fn an_unknown_joint_refuses_the_whole_delete_without_losing_features_or_other_joints() {
-        let mut s = joint_assembly();
-        let before = serde_json::to_value(&s.doc.features).unwrap();
-        let feature = s.doc.features[0].id;
-        assert!(s.execute("selection.delete", &json!({"items": [{"type": "feature", "id": feature}], "joints": ["Hinge", "missing"]})).is_err());
-        for joints in [json!("Hinge"), json!([null]), json!([-1]), json!([1.5]), json!(vec!["Hinge"; 10_001])] {
-            assert!(s.execute("selection.delete", &json!({"joints": joints})).is_err());
-        }
-        assert_eq!(serde_json::to_value(&s.doc.features).unwrap(), before);
-        assert_eq!(s.doc.assembly.joints.len(), 2);
-        assert_eq!(s.doc.assembly.links.len(), 1);
-    }
-
-    #[test]
-    fn numeric_joint_ids_do_not_delete_a_different_joint_with_that_numeric_name() {
-        for batch in [false, true] {
-            let mut s = joint_assembly();
-            let hinge = s.doc.assembly.joints[0].id;
-            let glue = s.doc.assembly.joints[1].id;
-            run(&mut s, "joint.edit", json!({"joint": hinge, "name": glue.to_string()}));
-            let features = serde_json::to_value(&s.doc.features).unwrap();
-            let (command, params) = if batch { ("selection.delete", json!({"joints": [glue]})) } else { ("joint.delete", json!({"joint": glue})) };
-            run(&mut s, command, params);
-            assert_eq!(s.doc.assembly.joints.len(), 1);
-            assert_eq!(s.doc.assembly.joints[0].id, hinge, "a numeric id must not match another joint's name");
-            assert_eq!(serde_json::to_value(&s.doc.features).unwrap(), features);
-            run(&mut s, "edit.undo", json!({}));
-            assert_eq!(s.doc.assembly.joints.len(), 2);
-        }
-    }
-
-    /// An instance deleted while its component has others goes alone, and the joints on it go
-    /// with it, with their motion links (#7749): left behind, a joint names an occurrence that is
-    /// gone, and every solve reports it.
-    #[test]
-    fn an_instance_deleted_alone_takes_its_joints_with_it() {
-        let mut s = joint_assembly();
-        let b1 = s.doc.occurrences.iter().find(|o| o.name == "B:1").unwrap().id;
-        let b2 = run(&mut s, "occurrence.copy", json!({"occurrence": "B:1", "translate": [0, 40, 0]}))["occurrence"].as_u64().unwrap();
-        let dry = run(&mut s, "selection.delete", json!({"occurrences": [b1], "dry_run": true}));
-        assert_eq!(s.doc.assembly.joints.len(), 2, "a dry run changes nothing");
-        let deleted = run(&mut s, "selection.delete", json!({"occurrences": [b1]}));
-        assert_eq!(deleted, dry);
-        let left: Vec<&str> = s.doc.assembly.joints.iter().map(|j| j.name.as_str()).collect();
-        assert_eq!(left, ["Glue"], "the joint on the deleted instance goes with it");
-        assert!(s.doc.assembly.links.is_empty(), "and so does its motion link");
-        assert_eq!(deleted["deleted_joints"].as_array().map(Vec::len), Some(1), "the reply names it: {deleted}");
-        assert!(s.doc.occurrences.iter().any(|o| o.id == b2), "the other instance stays");
-        let solved = run(&mut s, "joint.solve", json!({}));
-        assert_eq!(solved["errors"], json!([]), "no joint is left pointing at the deleted instance");
-        run(&mut s, "edit.undo", json!({}));
-        assert_eq!(s.doc.assembly.joints.len(), 2);
-        assert_eq!(s.doc.assembly.links.len(), 1);
     }
 
     #[test]

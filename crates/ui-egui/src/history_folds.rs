@@ -21,7 +21,9 @@ const CHOICES_MAX: usize = 10_000;
 /// Keys the History once saved for all designs at once, with the browser's folders. Folders
 /// folded then stay folded in each design that makes no choice of its own for them
 /// ([`legacy_folded`]).
-const SHARED_ONCE: [&str; 3] = [crate::timeline_fold::KEY, crate::timeline_folders::KEY, crate::dialogs_assembly::FOLDER_JOINTS_KEY];
+const SHARED_ONCE: [&str; 3] = [crate::timeline_fold::KEY, crate::timeline_folders::KEY, FOLDER_JOINTS_KEY];
+/// The History's joint folders' key, kept so a choice saved with it is still read.
+const FOLDER_JOINTS_KEY: &str = "timeline_joints:";
 
 /// One design's choices: the History keys of the runs and folders opened and folded.
 #[derive(Clone, Debug, Default, PartialEq, Eq)]

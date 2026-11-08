@@ -66,27 +66,12 @@ pub fn delete_selection(app: &mut SketApp) {
     if crate::sketch3d::delete_selected(app) || crate::sketch_tools::delete_glyph(app) {
         return;
     }
-    let mut params = selection_params(app);
-    // In Edit Joint with nothing else selected, Delete means the joint being edited (#3749).
-    if is_empty(&params)
-        && let Some(id) = edited_joint(app)
-    {
-        params["joints"] = json!([id]);
-    }
-    request(app, params);
+    request(app, selection_params(app));
 }
 
-/// Whether Delete has nothing to act on: nothing selected, and no joint open in Edit Joint.
+/// Whether Delete has nothing to act on: nothing selected.
 pub fn nothing_to_delete(app: &SketApp) -> bool {
-    is_empty(&selection_params(app)) && edited_joint(app).is_none()
-}
-
-/// The joint the open Edit Joint dialog edits.
-fn edited_joint(app: &SketApp) -> Option<u64> {
-    match app.dialog.as_ref().map(|d| &d.kind) {
-        Some(crate::dialogs::Kind::Assembly(crate::dialogs_assembly::Asm::Joint(f))) => f.editing,
-        _ => None,
-    }
+    is_empty(&selection_params(app))
 }
 
 /// Why a joint cannot be deleted now (the history it changes is busy), if it cannot.
@@ -110,14 +95,6 @@ fn joint_delete_blocked(app: &SketApp) -> Option<&'static str> {
 pub fn request(app: &mut SketApp, params: Value) {
     let joints: Vec<u64> = params.get("joints").and_then(Value::as_array).into_iter().flatten().filter_map(Value::as_u64).collect();
     if !joints.is_empty() {
-        // Deleting just the joint Edit Joint edits closes the dialog first, as its Cancel does.
-        let only_edited = edited_joint(app).is_some_and(|id| joints == [id])
-            && ["items", "occurrences", "components", "canvases"]
-                .iter()
-                .all(|k| params.get(*k).and_then(Value::as_array).is_none_or(|a| a.is_empty()));
-        if only_edited && app.applying.is_none() && app.tool.is_none() && app.computing_since().is_none() && !app.file_load.busy() {
-            crate::dialogs::cancel(app);
-        }
         if let Some(why) = joint_delete_blocked(app) {
             app.set_status(why, true);
             return;

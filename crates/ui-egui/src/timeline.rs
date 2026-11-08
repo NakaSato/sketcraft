@@ -1003,12 +1003,8 @@ fn timeline_contents(app: &mut SketApp, ui: &mut egui::Ui, floating: bool) {
                         }
                         continue;
                     }
-                    crate::timeline_fold::Entry::Joints(folder) => {
-                        let joints = history.folders.joints.get(&folder).cloned().unwrap_or_default();
-                        let run = crate::dialogs_assembly::JointRun::Folder { id: folder, name: history.folders.name(folder) };
-                        x = crate::dialogs_assembly::joint_chips(app, ui, &p, x, r, &joints, run);
-                        continue;
-                    }
+                    // A design's joints place its components but are not shown.
+                    crate::timeline_fold::Entry::Joints(_) => continue,
                     crate::timeline_fold::Entry::End(_) => {
                         if let Some((left, tray, depth)) = trays.pop() {
                             let right = x - 4.0 + pad;
@@ -1141,13 +1137,7 @@ fn timeline_contents(app: &mut SketApp, ui: &mut egui::Ui, floating: bool) {
                 crate::ui_kit::history_marker(&p, mr, false, accent);
                 resp.backing_on_hover_text(crate::i18n::tr("ui.history_marker_tip"));
             }
-            // The joints at the end belong to the whole design: a bar with its groups that shows one
-            // component leaves them out. Without the groups they stay, as they always have.
-            let content_end = if history.within.is_none() || !app.preferences.history_bar_groups {
-                crate::dialogs_assembly::timeline_joints(app, ui, &p, end + 10.0, r, &history.folders.held)
-            } else {
-                end
-            };
+            let content_end = end;
             // The scroll range follows the drawn content (the buttons don't take layout space themselves).
             ui.allocate_exact_size(vec2((content_end - origin).max(0.0), r.height()), Sense::hover());
             // Drag feedback, and the drop.
@@ -1248,56 +1238,6 @@ mod tests {
     use sketcraft_engine::doc::{FeatureKind, PlaneRef};
 
     use crate::scenario::Harness;
-
-    #[test]
-    fn joint_folder_hides_fifty_joint_tiles_in_both_history_layouts() {
-        use crate::scenario::handle_at;
-        for left in [false, true] {
-            let mut h = Harness::new();
-            h.app.home.open = false;
-            h.app.preferences.timeline_left = left;
-            h.app.preferences.history_group_joints = true;
-            h.app.preferences.history_bar_groups = true;
-            h.app.run("component.create", json!({"name":"Part"})).unwrap();
-            let mut joints = Vec::new();
-            for index in 0..50 {
-                joints.push(
-                    h.app.run("joint.as_built", json!({"type":"rigid", "a":0, "b":"Part", "name":format!("Hinge{index}")})).unwrap()["joint"]
-                        .as_u64()
-                        .unwrap(),
-                );
-            }
-            let folder = h.app.run("timeline.group", json!({"name":"Joints", "joints":joints})).unwrap()["group"].as_u64().unwrap();
-            crate::timeline_folders::set_open(&mut h.app, folder, false);
-            h.frames(4);
-            // The History bar shows a folder as a chip; the History beside the Browser as a row.
-            let (folders, fold) =
-                if left { ("timeline-folder:", "timeline-folder-fold:Joints") } else { ("timeline-folder-chip:", "timeline-folder-chip:Joints") };
-            assert!(handle_at(&format!("{folders}Joints")).is_some());
-            assert_eq!(crate::scenario::handles(folders).len(), 1);
-            assert!(crate::scenario::handles("timeline-joint:").is_empty());
-            for index in 0..50 {
-                assert!(handle_at(&format!("timeline-joint:Hinge{index}")).is_none());
-            }
-            h.step(&json!({"click":{"handle":fold}})).unwrap();
-            h.frames(4);
-            if !left {
-                // In the History bar an open folder's joints are one button from the second on.
-                assert!(crate::scenario::handles("timeline-joint:").is_empty());
-                h.step(&json!({"click":{"handle":"timeline-folder-joints:Joints"}})).unwrap();
-                h.frames(4);
-            }
-            for index in 0..50 {
-                assert!(handle_at(&format!("timeline-joint:Hinge{index}")).is_some(), "joint {index} missing, left={left}");
-            }
-            assert_eq!(crate::scenario::handles("timeline-joint:").len(), 50, "no trailing duplicates");
-            h.step(&json!({"click":{"handle":"timeline-joint:Hinge0"}})).unwrap();
-            assert_eq!(h.app.tree.picked_joints, [joints[0]]);
-            h.step(&json!({"click":{"handle":fold}})).unwrap();
-            h.frames(4);
-            assert!(handle_at("timeline-joint:Hinge0").is_none());
-        }
-    }
 
     #[test]
     fn history_hiding_a_component_leaves_its_features_out_of_the_bar() {
@@ -1533,28 +1473,6 @@ mod tests {
     }
 
     #[test]
-    fn new_surface_and_web_history_icons_match_their_commands() {
-        let cases = [
-            ("surface.ruled", json!({"type":"surface_ruled", "body":"A", "edges":[], "distance":"5"})),
-            ("surface.untrim", json!({"type":"surface_untrim", "face":{"body":"A", "point":[0,0,0]}})),
-            ("surface.unstitch", json!({"type":"unstitch", "body":"A"})),
-            ("surface.reverse_normal", json!({"type":"reverse_normal", "body":"A"})),
-            ("surface.blend", json!({"type":"surface_blend", "from":{"body":"A", "edges":[]}, "to":{"body":"B", "edges":[]}})),
-            ("surface.boundary", json!({"type":"surface_boundary", "sketch":0, "curves":[]})),
-            ("surface.boundary", json!({"type":"surface_network", "u":[]})),
-            ("surface.match", json!({"type":"surface_match", "body":"A", "target":"B", "edges":[]})),
-            ("surface.fair", json!({"type":"surface_fair", "body":"A", "tolerance":"0.001"})),
-            ("solid.rib", json!({"type":"rib", "sketch":0, "curves":[], "thickness":"2"})),
-            ("solid.web", json!({"type":"rib", "sketch":0, "curves":[], "thickness":"2", "web":true})),
-        ];
-        for (id, definition) in cases {
-            let feature: sketcraft_engine::doc::FeatureKind = serde_json::from_value(definition).unwrap();
-            let command = sketcraft_engine::find_command(id).unwrap();
-            assert_eq!(super::icon_of(&feature), command.icon, "{id}: history and toolbar disagree");
-        }
-    }
-
-    #[test]
     fn a_path_pattern_keeps_its_path_icon_in_history() {
         use sketcraft_engine::doc::{FeatureKind, PatternKind};
         let feature = FeatureKind::Pattern {
@@ -1570,7 +1488,8 @@ mod tests {
                 orient: false,
             },
         };
-        assert_eq!(super::icon_of(&feature), sketcraft_engine::find_command("solid.pattern.path").unwrap().icon);
+        // Pattern on Path is no longer a command; features made by it keep its icon.
+        assert_eq!(super::icon_of(&feature), "pattern_path");
     }
 
     fn two_boxes(left: bool) -> Harness {

@@ -102,33 +102,6 @@ fn delete_face_takes_the_faces_of_the_hole_by_name() {
     assert_eq!(s.doc.features.last().map(|f| f.face_names.clone()), Some(walls));
 }
 
-#[test]
-fn convert_to_sheet_metal_takes_the_plates_face_by_name() {
-    // A 100 x 60 x 2.5 plate with a hole in the middle: the centroid of its large face is in the
-    // hole, where no point of the face is.
-    let mut s = Session::default();
-    plate_with_hole(&mut s, 100.0, 60.0, 2.5);
-    let (top, _) = top_and_hole_names(&mut s);
-    run(&mut s, "sheet.convert", json!({"body": "Plate", "face": top}));
-    let flat = run(&mut s, "sheet.flat_pattern", json!({}));
-    for (i, want) in [100.0, 60.0, 2.5].into_iter().enumerate() {
-        assert!((flat["flat_size_mm"][i].as_f64().unwrap_or(f64::NAN) - want).abs() < 1e-6, "{flat}");
-    }
-    assert_eq!(flat["cutouts"].as_array().map(Vec::len), Some(1), "{flat}");
-    // The hole is 10 across (its outline is a polygon on the circle, a little less across).
-    let hole = flat["cutouts"][0].as_array().cloned().unwrap_or_default();
-    for k in 0..2 {
-        let at: Vec<f64> = hole.iter().filter_map(|p| p[k].as_f64()).collect();
-        let span = at.iter().cloned().fold(f64::MIN, f64::max) - at.iter().cloned().fold(f64::MAX, f64::min);
-        assert!(span > 9.8 && span < 10.0 + 1e-6, "{span}");
-    }
-    // The plate is still 100 x 60 x 2.5 less the hole, which is round: 15000 - π·5²·2.5 =
-    // 14803.65 mm³, within the measure's accuracy (SMLib's mass properties come within 2e-7 of
-    // a closed form).
-    let (v, round) = (volume(&mut s, "Plate"), 15000.0 - 25.0 * PI * 2.5);
-    assert!((v - round).abs() < 2e-7 * round, "{v} vs {round}");
-}
-
 /// Shell, draft and offset face share the parser of Delete Face.
 #[test]
 fn shell_takes_the_face_to_open_by_name() {
@@ -206,40 +179,6 @@ fn offset_face_takes_the_face_by_name() {
     run(&mut s, "solid.offset_face", json!({"faces": [top], "distance": 5, "body": "Tray"}));
     // The top moves out 5 mm: 100 x 60 x 35.
     assert!((volume(&mut s, "Tray") - 100.0 * 60.0 * 35.0).abs() < 1e-6, "{}", volume(&mut s, "Tray"));
-}
-
-/// A cylinder of radius 10 and height 20 has one side face (SMLib's, closed on its seam), which
-/// `model.faces` describes (its axis and radius); drafting it 5 degrees from the base plane makes
-/// a frustum of radius 10 at the base and 10 - 20 tan 5 degrees at the top.
-#[test]
-fn draft_takes_a_cylinders_side_by_name() {
-    let mut s = Session::default();
-    run(&mut s, "solid.cylinder", json!({"radius": 10, "height": 20, "body_name": "Pin"}));
-    let all = faces(&mut s, "Pin");
-    let sides: Vec<&Value> = all.iter().filter(|f| f.get("cylinder").is_some()).collect();
-    assert_eq!(sides.len(), 1, "one side: {all:?}");
-    for side in &sides {
-        assert!((side["cylinder"]["radius"].as_f64().unwrap_or(f64::NAN) - 10.0).abs() < 1e-9, "{side}");
-    }
-    let names: Vec<Value> = sides.iter().map(|f| f["name"].clone()).collect();
-    run(&mut s, "solid.draft", json!({"faces": names, "angle": "5 deg", "neutral": "XY", "body": "Pin"}));
-    let small = 10.0 - 20.0 * 5f64.to_radians().tan();
-    let want = PI * 20.0 / 3.0 * (100.0 + 10.0 * small + small * small);
-    assert!((volume(&mut s, "Pin") - want).abs() < 1e-3 * want, "{} vs {want}", volume(&mut s, "Pin"));
-}
-
-/// Replace Face takes the faces to replace by name; for a target on another body, the `point`
-/// `model.faces` gives picks that body's face.
-#[test]
-fn replace_face_takes_the_face_by_name() {
-    let mut s = Session::default();
-    run(&mut s, "solid.box", json!({"length": 10, "width": 10, "height": 10, "body_name": "A"}));
-    run(&mut s, "solid.box", json!({"length": 10, "width": 10, "height": 15, "corner": [20, 0, 0], "body_name": "B"}));
-    let (top_a, top_b) = (top_name(&faces(&mut s, "A")), top_name(&faces(&mut s, "B")));
-    let on_b = faces(&mut s, "B").into_iter().find(|f| f["name"] == top_b).map(|f| f["point"].clone());
-    run(&mut s, "solid.replace_face", json!({"faces": [top_a], "target_face": on_b, "body": "A"}));
-    // A's top moves up to B's, 15 high: 10 x 10 x 15.
-    assert!((volume(&mut s, "A") - 1500.0).abs() < 1e-6, "{}", volume(&mut s, "A"));
 }
 
 /// A face name on two bodies, each with one such face (two bodies one extrude made, the pieces of

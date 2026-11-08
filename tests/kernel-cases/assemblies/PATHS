@@ -3,12 +3,9 @@
 crates/doc/src/joints*.rs
 crates/doc/src/assembly.rs
 crates/engine/src/cmd/joints.rs
-crates/engine/src/cmd/joints_inspect.rs
 # Motion studies, plots, traces, interference, sweeps, contact and exploded views.
 crates/doc/src/motion.rs
 crates/engine/src/cmd/motion.rs
-crates/engine/src/cmd/motion_analysis.rs
-crates/engine/src/cmd/motion_sweep.rs
 crates/engine/src/cmd/motion_trace.rs
 crates/engine/src/cmd/contact_sweep.rs
 # Components and occurrences (their placement in the world is crates/doc/src/eval.rs: shared core).

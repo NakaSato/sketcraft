@@ -210,7 +210,7 @@ fn status_lines_wrap_at_form_width_and_leave_room_for_the_next_row() {
         for width in [160.0, 280.0] {
             for font_label in [base.font_label, base.font_label * 1.8] {
                 let _theme = crate::theme::scoped_tokens(Tokens { font_label, ..base });
-                for (tone, ink) in [(StatusTone::Dim, base.text_dim), (StatusTone::Warning, base.warning), (StatusTone::Error, base.error)] {
+                for (tone, ink) in [(StatusTone::Dim, base.text_dim), (StatusTone::Error, base.error)] {
                     let ctx = crate::fonts::test_context();
                     let message = "needs a joint that turns and one that slides";
                     let mut message_rect = egui::Rect::NOTHING;

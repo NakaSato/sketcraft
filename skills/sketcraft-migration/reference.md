@@ -14,8 +14,8 @@ Companion to `SKILL.md`. Facts here describe the tree today; update them in the 
 
 | SketchUp | SketCraft command | Key | Notes |
 |---|---|---|---|
-| Select | `select.clear` (clear) | Space | Selection itself is the viewport's |
-| Eraser | `sketch.erase` (click or drag across sketch curves); `selection.delete` | E deletes the selection | Erases sketch curves, not model edges |
+| Select | `select.clear` (clear) | | Selection itself is the viewport's, with no tool command of its own, so SketchUp's Space has nothing to run (Space plays the timeline) |
+| Eraser | `sketch.erase` (click or drag across sketch curves); `selection.delete` | E deletes the selection | Erases sketch curves, not model edges. E stays on Delete: `use_sketchup_keys` takes a key from every other command, sketch tools included |
 | Paint Bucket | `appearance.paint` | B | |
 | Line | `sketch.line` | L | First click picks the plane on the SketchUp tab |
 | Arc (3 point) | `sketch.arc.three_point` | A | |
@@ -28,15 +28,15 @@ Companion to `SKILL.md`. Facts here describe the tree today; update them in the 
 | Offset | `solid.offset_face` (tab), `sketch.offset` (key) | F | |
 | Move | `solid.move` | M | |
 | Scale | `solid.scale` | | S stays the S box |
-| Rotate | `solid.rotate` (opens Move/Copy on its Rotate type) | Q | A Move feature turned about an axis through a point |
+| Rotate | `solid.rotate`: on the tab the protractor (`ui-egui/src/rotate_tool.rs`), elsewhere Move/Copy's Rotate type | Q | A Move feature turned about an axis through a point; centre, start and angle by clicks, 15° snaps, typed degrees, Ctrl tap for Copy |
 | Follow Me | `solid.sweep` | | |
-| Tape Measure | `inspect.measure` | T | |
+| Tape Measure | `inspect.measure`: on the tab the tape (`ui-egui/src/tape_tool.rs`) | T | Guide lines from edges (`construct.axis.two_points`), guide points from vertices (`construct.point.vertex`); Ctrl tap for no guides |
 | Dimension, Text | `sketch.dimension`, `sketch.text` | | |
 | Section Plane | `inspect.section` | | |
 | Make Component | `component.create` | G | Groups and components are both SketCraft components |
 | Tags (Layers) | `tags.manage` | | The Tags & Layers panel |
 | Orbit, Pan, Zoom, Zoom Extents | `view.tool.orbit`, `view.tool.pan`, `view.tool.zoom`, `view.fit` | O, H, Z, Shift+Z | |
-| Zoom Window, Previous, Next | `view.zoom_window`, `view.previous`, `view.next` | | Camera history lives in `ui-egui/src/view_history.rs`, per design tab |
+| Zoom Window, Previous, Next | `view.zoom_window`, `view.previous`, `view.next` | | SketchUp's Ctrl+Shift+W closes the window in a browser, so Zoom Window has no key. Camera history lives in `ui-egui/src/view_history.rs`, per design tab |
 | Import `.skp` | `file.insert_mesh` through `crates/io/src/skp_in.rs` | | Mesh bodies in a component named after the file |
 
 The tab's `Section`s in `crates/ui-egui/src/workspace.rs` and `SKETCHUP_LARGE_TOOLSET` in `crates/ui-egui/src/toolbar_custom.rs` are the source of truth for the first two columns; `SKETCHUP_KEYS` in `crates/ui-egui/src/keymap.rs` for the third.
@@ -45,14 +45,15 @@ Inference while drawing (parallel, perpendicular, extension, tangent, centre) is
 
 ## Defaults the SketchUp workspace sets
 
-Perspective; no grid; Browser and timeline hidden; ground shadow off; tool icon at the cursor on; the sky-and-ground model screen (`sketchup_screen`, Preferences › Layout); Surface, Assemble, Sheet Metal and Weldments tabs hidden (`HIDDEN_BY_DEFAULT`) until shown from the toolbar menu or Preferences › Layout › Toolbar tabs. Every one of them is a preference, so a user can go back to the classic CAD workspace.
+Perspective; no grid; Browser and timeline hidden; ground shadow off; tool icon at the cursor on; the sky-and-ground model screen (`sketchup_screen`, Preferences › Layout); the Assemble tab hidden (`HIDDEN_BY_DEFAULT`) until shown from the toolbar menu or Preferences › Layout › Toolbar tabs; the CAD-only tools (`CAD_ONLY`) left out of the ribbon, search, menus and keys until Preferences › Layout › Show CAD tools. Every one of them is a preference, so a user can go back to the classic CAD workspace.
 
 ## What stays from the CAD core, and why
 
 - The B-rep kernel (`crates/kernel` over `sketcore`), the sketch solver and constraints: they are what Push/Pull, Offset and inference run on.
 - Components, tags, materials, undo, autosave and recovery: SketchUp has the same ideas under other names.
 - The command registry and schemas: every SketchUp tool is a command, so the CLI, control channel and MCP drive it too.
-- The CAD-only tabs and their commands (joints, motion, sheet metal, weldments, parameters, drawings): hidden, not removed. Removing one is a whole-subsystem change (see `SKILL.md`).
+- Parameters and drawings: hidden, not removed. Removing one is a whole-subsystem change (see `SKILL.md`).
+- Removed (Nov 2026): the Surface, Sheet Metal and Weldments tabs, and joints, motion studies and contact sets. Their saved features and joints still open and rebuild, but can't be edited.
 
 ## Open items
 

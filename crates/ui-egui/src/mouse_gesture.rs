@@ -54,8 +54,6 @@ pub(crate) enum Studio {
     Part,
     /// A sketch is being edited.
     Sketch,
-    Surface,
-    SheetMetal,
     Plastic,
     Mesh,
     /// The Render workspace.
@@ -65,8 +63,6 @@ pub(crate) enum Studio {
 const PART: [&str; 8] = ["repeat", "delete", "solid.press_pull", "solid.hole", "sketch.create", "solid.extrude", "undo", "solid.move"];
 const SKETCH: [&str; 8] =
     ["repeat", "delete", "sketch.line", "sketch.rectangle.two_point", "ui.finishSketch", "sketch.circle.center", "undo", "sketch.dimension"];
-const SURFACE: [&str; 8] = ["repeat", "delete", "surface.extrude", "surface.loft", "sketch.create", "surface.patch", "undo", "surface.trim"];
-const SHEET_METAL: [&str; 8] = ["repeat", "delete", "sheet.flange", "sheet.hem", "sketch.create", "sheet.fold", "undo", "sheet.flat_pattern"];
 const PLASTIC: [&str; 8] = ["repeat", "delete", "plastic.boss", "plastic.lip", "sketch.create", "plastic.snap_fit", "undo", "plastic.rest"];
 const MESH: [&str; 8] = ["repeat", "delete", "file.save_mesh", "inspect.measure", "inspect.section", "solid.move", "undo", "inspect.interference"];
 const RENDER: [&str; 8] = [
@@ -81,8 +77,7 @@ const RENDER: [&str; 8] = [
 ];
 
 impl Studio {
-    pub(crate) const ALL: [Studio; 7] =
-        [Studio::Part, Studio::Sketch, Studio::Surface, Studio::SheetMetal, Studio::Plastic, Studio::Mesh, Studio::Render];
+    pub(crate) const ALL: [Studio; 5] = [Studio::Part, Studio::Sketch, Studio::Plastic, Studio::Mesh, Studio::Render];
 
     /// The studio the application is in now.
     pub(crate) fn of(app: &SketApp) -> Studio {
@@ -92,8 +87,6 @@ impl Studio {
             Studio::Sketch
         } else {
             match app.ui.tab.as_str() {
-                "SURFACE" => Studio::Surface,
-                "SHEET METAL" => Studio::SheetMetal,
                 "PLASTIC" => Studio::Plastic,
                 "MESH" => Studio::Mesh,
                 _ => Studio::Part,
@@ -106,8 +99,6 @@ impl Studio {
         match self {
             Studio::Part => "part",
             Studio::Sketch => "sketch",
-            Studio::Surface => "surface",
-            Studio::SheetMetal => "sheet_metal",
             Studio::Plastic => "plastic",
             Studio::Mesh => "mesh",
             Studio::Render => "render",
@@ -118,8 +109,6 @@ impl Studio {
         match self {
             Studio::Part => "Part",
             Studio::Sketch => "Sketch",
-            Studio::Surface => "Surface",
-            Studio::SheetMetal => "Sheet Metal",
             Studio::Plastic => "Plastic",
             Studio::Mesh => "Mesh",
             Studio::Render => "Render",
@@ -131,8 +120,6 @@ impl Studio {
         match self {
             Studio::Part => &PART,
             Studio::Sketch => &SKETCH,
-            Studio::Surface => &SURFACE,
-            Studio::SheetMetal => &SHEET_METAL,
             Studio::Plastic => &PLASTIC,
             Studio::Mesh => &MESH,
             Studio::Render => &RENDER,
@@ -880,9 +867,9 @@ mod tests {
         assert_eq!(Studio::of(&app), Studio::Part);
         for (tab, studio) in [
             ("SOLID", Studio::Part),
-            ("SURFACE", Studio::Surface),
+            ("SURFACE", Studio::Part),
             ("MESH", Studio::Mesh),
-            ("SHEET METAL", Studio::SheetMetal),
+            ("SHEET METAL", Studio::Part),
             ("PLASTIC", Studio::Plastic),
             ("UTILITIES", Studio::Part),
         ] {

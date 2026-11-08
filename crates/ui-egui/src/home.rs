@@ -1434,7 +1434,7 @@ mod tests {
         }
         assert!(!app.home.open, "the recent worker is still blocked, but the sample must open");
         assert!(app.home.rx.is_some());
-        assert_eq!(app.session.doc.name, "Sheet Metal Bracket");
+        assert_eq!(app.session.doc.name, sketcraft_engine::sample::samples()[1].name);
         assert!(!app.session.is_dirty());
     }
 

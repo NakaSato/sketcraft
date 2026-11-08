@@ -1817,41 +1817,6 @@ mod tests {
         std::fs::remove_file(format!("{}.bak", path.display())).unwrap();
     }
 
-    /// The model a save keeps writes each distinct sheet-metal body once, and every state names
-    /// the records of exactly the sheets it holds (found by the sheet's text, not by building its
-    /// record again for every state, which took most of a large sheet-metal design's save).
-    #[test]
-    fn a_saved_model_writes_each_sheet_once_for_the_states_that_hold_it() {
-        let mut s = Session::new(Document::new("Sheets"));
-        let sheet_rule = json!({"name": "AL2", "thickness": "2 mm", "k_factor": "0.5", "bend_radius": "1 mm", "active": true});
-        s.execute("sheet.manage_rules", &sheet_rule).unwrap();
-        for (i, x) in [0.0, 200.0, 400.0].into_iter().enumerate() {
-            s.execute("sketch.create", &json!({"plane": "XY", "name": format!("Base{i}")})).unwrap();
-            s.execute("sketch.rectangle.two_point", &json!({"p0": [x, 0], "p1": [x + 150.0, 100]})).unwrap();
-            s.execute("sketch.finish", &json!({})).unwrap();
-            s.execute("sheet.flange", &json!({"sketch": format!("Base{i}")})).unwrap();
-            s.execute("sheet.flange", &json!({"edges": [[x + 75.0, 0, 2]], "height": 20})).unwrap();
-        }
-        let saved = saved_geometry(&s, &s.doc).unwrap();
-        let records = &saved.records;
-        let sheets = records["sheets"].as_array().unwrap();
-        let texts: std::collections::HashSet<String> = sheets.iter().map(Value::to_string).collect();
-        assert_eq!(texts.len(), sheets.len(), "each sheet once");
-        let mut held = std::collections::HashSet::new();
-        for (r, feature) in s.model.results.iter().zip(records["features"].as_array().unwrap()) {
-            let state = &records["states"][feature["state"].as_u64().unwrap() as usize];
-            let named = state["sheets"].as_array().unwrap();
-            assert_eq!(named.len(), r.state.sheets.len());
-            for (i, sheet) in named.iter().zip(&r.state.sheets) {
-                let written = &sheets[i.as_u64().unwrap() as usize];
-                assert_eq!(*written, serde_json::to_value(sheet).unwrap(), "{}: the record of its own sheet", r.name);
-                held.insert(written.to_string());
-            }
-        }
-        assert_eq!(held, texts, "every record written is one a state holds");
-        assert!(sheets.len() >= 6, "each part's base, then with its flange: {}", sheets.len());
-    }
-
     /// A design whose saved model would give a body back with other topology opens with the
     /// bodies it was saved with. A pattern copy cut by an automatic extrude came back from the
     /// native codec with two loose vertices more (10 faces, 18 edges, 12 vertices instead of 10);
@@ -1980,49 +1945,6 @@ mod tests {
         let volume = |s: &mut Session| s.execute("inspect.measure", &json!({})).unwrap()["total"]["volume_mm3"].as_f64().unwrap();
         let (saved, opened) = (volume(&mut session), volume(&mut reopened));
         assert!((opened - saved).abs() < 1e-9 && (saved - (3. * 8000. + 1000. / 6.)).abs() < 1e-6, "{opened} vs {saved}");
-    }
-
-    /// A sheet-metal design keeps each sheet body once in its saved model, not again with every
-    /// later feature's state: a design of many features after its sheet metal wrote the sheets
-    /// over and over, and past the cache's size limit kept only some of its states.
-    #[test]
-    fn a_saved_model_keeps_each_sheet_body_once() {
-        let design = |boxes: usize| {
-            let mut s = Session::new(Document::new("Sheet"));
-            let run = |s: &mut Session, id: &str, p: Value| s.execute(id, &p).unwrap();
-            run(
-                &mut s,
-                "sheet.manage_rules",
-                json!({"name":"AL2","thickness":"2 mm","k_factor":0.5,"bend_radius":"1 mm","gap":"0.5 mm","active":true}),
-            );
-            run(&mut s, "sketch.create", json!({"plane":"XY","name":"Base"}));
-            run(&mut s, "sketch.rectangle.two_point", json!({"p0":[0,0],"p1":[200,150]}));
-            run(&mut s, "sketch.finish", json!({}));
-            run(&mut s, "sheet.flange", json!({"sketch":"Base"}));
-            run(&mut s, "sheet.flange", json!({"edges":[[100,0,2],[200,75,2],[100,150,2],[0,75,2]],"height":"20 mm","angle":"90 deg"}));
-            // A panel's holes: each one is a cut-out the sheet keeps.
-            for i in 0..16 {
-                run(&mut s, "solid.hole", json!({"position":[25 + 10 * i,40,2],"diameter":5}));
-            }
-            for i in 0..boxes {
-                run(&mut s, "solid.box", json!({"length":5,"width":5,"height":5,"corner":[300 + 10 * i,0,0],"operation":"new"}));
-            }
-            s
-        };
-        let size = |s: &Session| serde_json::to_vec(&saved_geometry(s, &s.doc).unwrap().records).unwrap().len();
-        let (few, many) = (design(2), design(12));
-        let sheet = serde_json::to_vec(&many.model.state().sheets).unwrap().len();
-        let per_feature = (size(&many) - size(&few)) / 10;
-        assert!(per_feature * 2 < sheet, "each later feature adds {per_feature} bytes, the sheet is {sheet}");
-        // Taken from the file as saved: the sheet is the one evaluated.
-        let flat = many.model.state().sheets.clone();
-        let path = std::env::temp_dir().join(format!("sketcraft-sheet-cache-{}.sketcraft", std::process::id()));
-        std::fs::write(&path, many.design_container(sketcraft_io::DesignCompression::Fast, false, true).unwrap()).unwrap();
-        let mut reopened = Session::default();
-        reopened.execute("doc.open", &json!({"path":path})).unwrap();
-        assert!(reopened.model.results.iter().zip(&many.model.results).all(|(a, b)| a.ms == b.ms), "taken from the file, not evaluated");
-        assert_eq!(serde_json::to_value(&reopened.model.state().sheets).unwrap(), serde_json::to_value(&flat).unwrap());
-        std::fs::remove_file(path).unwrap();
     }
 
     /// A design's saved model keeps each set of sketch keys once, not again with every state:

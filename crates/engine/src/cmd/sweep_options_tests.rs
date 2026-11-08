@@ -66,9 +66,6 @@ fn scaled_sweep_is_a_frustum() {
     let m = measure(&s, "Frustum");
     assert!((m.volume - volume).abs() < 2e-3 * volume, "volume {} vs {volume}", m.volume);
     assert!((m.area - PI * (big * big + small * small) - lateral).abs() < 2e-3 * lateral, "area {}", m.area);
-    run(&mut s, "surface.sweep", json!({"sketch": "C", "curves": ["c"], "path_sketch": "P", "path": ["up"], "scale": "1/2", "body_name": "Cone"}));
-    let a = measure(&s, "Cone").area;
-    assert!((a - lateral).abs() < 2e-3 * lateral, "sheet {a} vs {lateral}");
     // The options are saved with the feature and evaluate the same when reopened.
     let doc = sketcraft_doc::Document::from_json(&s.doc.to_json()).unwrap();
     let reopened = Session::new(doc);
@@ -155,9 +152,6 @@ fn hostile_sweep_options_are_refused() {
         json!({"orientation": [0, 0, 1]}),
     ] {
         assert!(sweep(&mut s, "Q", "Bad", bad.clone()).is_err(), "{bad}");
-        let mut p = json!({"sketch": "Q", "curves": ["a", "b"], "path_sketch": "P", "path": ["up"]});
-        p.as_object_mut().unwrap().extend(bad.as_object().unwrap().clone());
-        assert!(s.execute("surface.sweep", &p).is_err(), "surface {bad}");
         assert_eq!(s.doc.features.len(), before, "{bad}");
     }
 }

@@ -17,6 +17,7 @@ robust = "1.2"
 glam = { version = "0.30", features = ["serde"] }
 # internal sketcraft
 sketcraft-geom = { path = "crates/geom" }
+sketcraft-mesh = { path = "crates/mesh" }
 sketcraft-profile = { path = "crates/profile" }
 sketcraft-sketch = { path = "crates/sketch" }
 sketcraft-kernel = { path = "crates/kernel" }

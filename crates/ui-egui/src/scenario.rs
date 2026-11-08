@@ -190,6 +190,7 @@ pub(crate) fn classic_view(app: &mut SketApp) {
     app.ui.ground_shadow = true;
     app.ui.tool_cursor = false;
     app.preferences.sketchup_screen = false;
+    app.preferences.show_cad_tools = true;
 }
 
 /// [`classic_view`] in a window that opens on the Model tab with every toolbar tab shown, as the

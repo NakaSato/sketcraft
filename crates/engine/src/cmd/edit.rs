@@ -1801,24 +1801,13 @@ fn redefine(s: &mut Session, p: &Value) -> Result<Value> {
         .iter()
         .chain(super::features_more::COMMANDS)
         .chain(super::construct::COMMANDS)
-        .chain(super::surface::COMMANDS)
-        .chain(super::surface_boundary::COMMANDS)
         .any(|candidate| candidate.id == spec.id)
         || matches!(
             spec.id,
-            "sheet.flange"
-                | "sheet.hem"
-                | "sheet.perforate"
-                | "sheet.fold"
-                | "sheet.path_flange"
-                | "sheet.unfold"
-                | "sheet.refold"
-                | "sheet.convert"
-                | "plastic.boss"
+            "plastic.boss"
                 | "plastic.lip"
                 | "plastic.snap_fit"
                 | "plastic.rest"
-                | "frame.member"
         );
     if !constructor {
         return Err(bad(cmd, format!("`{cid}` does not make a feature")));
@@ -1826,8 +1815,8 @@ fn redefine(s: &mut Session, p: &Value) -> Result<Value> {
     let mut params = p.get("params").cloned().unwrap_or_else(|| json!({}));
     let idx = s.doc.feature_index(id).ok_or_else(|| bad(cmd, "feature"))?;
     let old = s.doc.feature(id).cloned().ok_or_else(|| bad(cmd, "feature"))?;
-    if let FeatureKind::Extrude { extent, .. } | FeatureKind::SurfaceExtrude { extent, .. } = &old.kind
-        && matches!(cid, "solid.extrude" | "surface.extrude")
+    if let FeatureKind::Extrude { extent, .. } = &old.kind
+        && cid == "solid.extrude"
         && let Some(parameters) = params.as_object_mut()
     {
         let convention =
@@ -1848,14 +1837,6 @@ fn redefine(s: &mut Session, p: &Value) -> Result<Value> {
         && parameters.get("designation").is_none_or(|d| d.is_null() || d.as_str().is_some_and(|d| d.trim().is_empty()))
     {
         parameters.entry("old_auto_size").or_insert_with(|| json!(true));
-    }
-    // Members keep their names through an edit, unless it gives them another name.
-    if let FeatureKind::FrameMember { names, body_name, .. } = &old.kind
-        && cid == "frame.member"
-        && let Some(parameters) = params.as_object_mut()
-        && parameters.get("body_name").and_then(Value::as_str) == body_name.as_deref()
-    {
-        parameters.entry("names").or_insert_with(|| json!(names));
     }
     if !old.participants.is_empty()
         && let Some(parameters) = params.as_object_mut()

@@ -43,46 +43,10 @@ pub struct Sample {
 pub fn samples() -> Vec<Sample> {
     vec![
         Sample { name: "Sample Plate", about: "Parametric plate with fillets, holes and a bored boss", script },
-        Sample { name: "Sheet Metal Bracket", about: "Base flange with edge flanges and a hem on a 2 mm rule", script: bracket },
-        Sample { name: "Hinge Assembly", about: "Two components and a revolute joint, driven to 60°", script: hinge },
         Sample { name: "Plastic Enclosure", about: "Shelled box with a lip, screw bosses, a rest and a snap fit", script: enclosure },
         Sample { name: "Bolted Flange", about: "Hub and flange with a circular pattern driven by a parameter", script: flange },
         Sample { name: "Vent Plate", about: "Slots in a rectangular pattern: rows, columns and pitch are parameters", script: vents },
     ]
-}
-
-fn bracket() -> Value {
-    json!({"commands": [
-        {"command": "sheet.manage_rules", "params": {"name": "Steel 2mm", "thickness": "2 mm", "bend_radius": "Thickness", "active": true}},
-        {"command": "sketch.create", "params": {"plane": "XY", "name": "Base"}},
-        {"command": "sketch.rectangle.two_point", "params": {"p0": [0, 0], "p1": [120, 60]}},
-        {"command": "sketch.finish", "params": {}},
-        {"command": "sheet.flange", "params": {"sketch": "Base"}},
-        {"command": "sheet.flange", "params": {"edges": [[60, 0, 2], [60, 60, 2]], "height": 30}},
-        {"command": "sheet.flange", "params": {"edges": [[120, 30, 2]], "height": 20, "angle": "60 deg"}},
-        {"command": "sheet.hem", "params": {"edges": [[0, 30, 2]], "length": 8}},
-    ]})
-}
-
-fn hinge() -> Value {
-    let mut cmds = Vec::new();
-    for name in ["Leaf A", "Leaf B"] {
-        cmds.extend([
-            json!({"command": "component.activate", "params": {"component": "root"}}),
-            json!({"command": "component.create", "params": {"name": name}}),
-            json!({"command": "solid.box", "params": {"length": 40, "width": 30, "height": 3, "corner": [0, 0, 0]}}),
-            json!({"command": "solid.cylinder", "params": {"base": [0, 33, 4], "axis": [1, 0, 0], "radius": 4, "height": 40, "operation": "new"}}),
-        ]);
-    }
-    cmds.extend([
-        json!({"command": "component.activate", "params": {"component": "root"}}),
-        json!({"command": "occurrence.ground", "params": {"occurrence": "Leaf A:1", "grounded": true}}),
-        json!({"command": "joint.create", "params": {"type": "revolute", "name": "Hinge",
-            "a": {"occurrence": "Leaf A:1", "circle": [1, 37, 4]}, "b": {"occurrence": "Leaf B:1", "circle": [1, 37, 4]},
-            "limits": [["0 deg", "180 deg"]]}}),
-        json!({"command": "joint.drive", "params": {"joint": "Hinge", "value": 60}}),
-    ]);
-    json!({ "commands": cmds })
 }
 
 fn enclosure() -> Value {

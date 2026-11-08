@@ -1,7 +1,6 @@
 //! The Sweep and Surface Sweep dialogs' options (#771): orientation, twist and end scale reach
 //! the commands, and editing a sweep keeps them.
 use crate::dialogs::Kind;
-use crate::dialogs_surface::Surf;
 use crate::scenario::Harness;
 use serde_json::json;
 use sketcore_record::Vec3;
@@ -71,28 +70,20 @@ fn editing_sweeps_keeps_their_options() {
             json!({"sketch":"Q","path_sketch":"P","path":["up"],"orientation":[1,1,0],"twist":"30 deg","scale":"2","operation":"new","name":"Solid"}),
         )
         .unwrap();
-    h.app
-        .run(
-            "surface.sweep",
-            json!({"sketch":"Q","path_sketch":"P","path":["up"],"orientation":"parallel","twist":"45 deg","scale":"0.5","name":"Sheet"}),
-        )
-        .unwrap();
     h.frames(4);
-    for name in ["Solid", "Sheet"] {
+    for name in ["Solid"] {
         let before = h.app.session.doc.find_feature(name).unwrap().clone();
         h.step(&json!({"call":"ui.editFeature","params":{"feature":name}})).unwrap();
         h.frames(8);
         match &h.app.dialog.as_ref().unwrap().kind {
-            Kind::Sweep { opts, .. } | Kind::Surface(Surf::Sweep(opts)) => assert_eq!(opts.twist, if name == "Solid" { "30 deg" } else { "45 deg" }),
+            Kind::Sweep { opts, .. } => assert_eq!(opts.twist, "30 deg"),
             k => panic!("{k:?}"),
         }
         h.step(&json!({"widget":"OK"})).unwrap();
         assert!(h.app.dialog.is_none(), "{:?}", h.app.session.log);
         // The options come back as they were (the profile pick is stored by its curves).
         let options = |k: &FeatureKind| match k {
-            FeatureKind::Sweep { orientation, twist, scale, .. } | FeatureKind::SurfaceSweep { orientation, twist, scale, .. } => {
-                (*orientation, twist.clone(), scale.clone())
-            }
+            FeatureKind::Sweep { orientation, twist, scale, .. } => (*orientation, twist.clone(), scale.clone()),
             k => panic!("{k:?}"),
         };
         let after = h.app.session.doc.find_feature(name).unwrap();

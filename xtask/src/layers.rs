@@ -36,6 +36,8 @@ impl Class {
 /// prefix.
 pub const TABLE: &[(&str, Class)] = &[
     ("geom", Class::Layer(0)),
+    // the edge/face model the SketchUp tools work on (geom only); see docs/edge-face-rewrite-plan.md
+    ("mesh", Class::Layer(1)),
     // the derive macros (proc-macro, no workspace dependencies)
     ("derive", Class::Standalone),
     // the profiler: timed spans for every layer, the kernel's calls to commands (no workspace dependencies)

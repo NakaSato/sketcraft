@@ -489,7 +489,7 @@ fn open_revolve(s: &mut Session) {
     run(s, "sketch.create", json!({"plane": "XY", "name": "Profile"}));
     run(s, "sketch.line", json!({"points": [[30, 0], [30, 40]], "ids": ["side"]}));
     run(s, "sketch.finish", json!({}));
-    run(s, "surface.revolve", json!({"sketch": "Profile", "curves": ["side"], "axis": "y", "angle": "270 deg", "body_name": "OpenTube"}));
+    crate::cmd::sheet_fixtures::revolve(s, json!({"sketch": "Profile", "curves": ["side"], "axis": "y", "angle": "270 deg", "body_name": "OpenTube"}));
 }
 
 #[test]

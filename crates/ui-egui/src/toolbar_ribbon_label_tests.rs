@@ -252,7 +252,6 @@ fn every_promoted_label_wraps_only_at_word_boundaries() {
             ("sketch.create", vec!["新規", "スケッチ"]),
             ("config.table", vec!["構成", "テーブル"]),
             ("construct.plane.offset", vec!["オフセット", "平面"]),
-            ("surface.loft", vec!["サーフェス", "ロフト"]),
             ("mesh.convert", vec!["メッシュを", "変換"]),
             ("component.create", vec!["新規", "コンポ"]),
             ("joint.origin", vec!["ジョイント", "原点"]),

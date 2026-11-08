@@ -22,7 +22,7 @@ fn replies_match_the_output_schema() {
     assert!(!required.contains(&"param_warnings"));
     let mut s = Session::default();
     s.execute("solid.box", &json!({"length": 10, "width": 10, "height": 10, "body_name": "Box"})).unwrap();
-    s.execute("surface.unstitch", &json!({"body": "Box", "faces": [[5, 5, 10]]})).unwrap();
+    crate::cmd::sheet_fixtures::unstitch(&mut s, json!({"body": "Box", "faces": [[5, 5, 10]]}));
     s.param_check = ParamCheck::Warn;
     let r = s.execute("body.repair", &json!({"body": "Box", "gap": "0.1 mm", "patch_holes": true, "name": "Mend"})).unwrap();
     assert!(r.get("param_warnings").is_none(), "{r}");

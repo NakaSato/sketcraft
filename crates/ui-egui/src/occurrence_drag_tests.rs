@@ -149,43 +149,6 @@ fn the_active_placement_decides_which_occurrence_moves() {
     assert!(origin(&h, &[free, leaf]).dist(Vec3::new(10.0, 20.0, 0.0)) < 0.5, "its part moves: {:?}", origin(&h, &[free, leaf]));
 }
 
-#[test]
-fn either_member_of_a_floating_hinge_drags_the_whole_chain() {
-    let (mut h, base, free) = two_parts();
-    run(&mut h, "occurrence.ground", json!({"occurrence": base, "grounded": false}));
-    let at = |o| json!({"occurrence": o, "point": [0, 0, 0], "z": [0, 0, 1]});
-    run(&mut h, "joint.create", json!({"type": "revolute", "a": at(base), "b": at(free), "flip": true}));
-    // The base's centre is under the joint glyph; grab its face away from that glyph.
-    for grab in [Vec3::new(25.0, 5.0, 10.0), Vec3::new(4.0, 4.0, 10.0)] {
-        h.frames(2);
-        h.step(&json!({"shot": "floating-chain-before"})).unwrap();
-        let before = h.app.session.doc.to_json();
-        let values = h.app.session.doc.assembly.joints[0].values.clone();
-        let undo = h.app.session.undo.len();
-        let (a, b) = (screen(&mut h, grab), screen(&mut h, grab + Vec3::new(0.0, 30.0, 0.0)));
-        press_and_move(&mut h, a, b, Default::default());
-        assert!(
-            h.app.viewport.occurrence_drag.is_some(),
-            "grab={grab:?}, base={:?}, free={:?}, group={:?}, joint={:?}, box={:?}",
-            origin(&h, &[base]),
-            origin(&h, &[free]),
-            h.app.session.drag_group(&[free]),
-            h.app.viewport.joint_drag,
-            h.app.viewport.boxsel
-        );
-        assert!(h.app.viewport.joint_drag.is_none());
-        release(&mut h, b);
-        h.step(&json!({"shot": "floating-chain-after"})).unwrap();
-        for o in [base, free] {
-            assert!(origin(&h, &[o]).dist(Vec3::new(0.0, 30.0, 0.0)) < 0.5);
-        }
-        assert_eq!(h.app.session.doc.assembly.joints[0].values, values);
-        assert_eq!(h.app.session.undo.len(), undo + 1);
-        run(&mut h, "edit.undo", json!({}));
-        assert_eq!(h.app.session.doc.to_json(), before);
-    }
-}
-
 fn key(h: &mut Harness, key: egui::Key, pressed: bool) {
     h.app.synthetic.push(egui::Event::Key { key, physical_key: None, pressed, repeat: false, modifiers: Default::default() });
     play(h);

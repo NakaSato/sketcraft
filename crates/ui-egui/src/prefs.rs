@@ -1236,6 +1236,10 @@ preference_settings! {
     /// Show the ribbon's panel drop-downs as a grid of large icons, their names in the tooltips,
     /// instead of a list of small icons with names (#4739).
     ribbon_icon_grid: bool = false, PAGE_LAYOUT;
+    /// Offer the CAD-only tools SketchUp has no match for (Fillet, Shell, Hole, Loft, ...;
+    /// `workspace::CAD_ONLY`) in the ribbon, the command search, menus and shortcuts. Off by
+    /// default; on gives the old ribbon. Features already in a design stay editable either way.
+    show_cad_tools: bool = false, PAGE_LAYOUT;
     /// After a ribbon panel menu is open, hover another panel to switch to its menu.
     ribbon_menus_follow_hover: bool = false, PAGE_LAYOUT;
     /// Leave the commands the ribbon shows as buttons (pinned ones) out of its panel drop-downs,
@@ -1431,9 +1435,6 @@ preference_settings! {
     /// Personal Hole parameter combinations, shared by every design in this profile.
     /// No page reset discards this user-authored library.
     hole_presets: crate::hole_presets::Library = crate::hole_presets::Library::default();
-    /// Personal Sheet Metal Rules, offered by the rule manager of every design in this profile
-    /// (#9346). No page reset discards this user-authored library.
-    personal_sheet_rules: crate::personal_sheet_rules::Library = crate::personal_sheet_rules::Library::default();
     /// Save as mesh: the last format (`stl` or `3mf`). Older versions also kept a "send to slicer"
     /// choice here (`save_mesh_send`, `save_mesh_slicer`); a settings file that still has them loads,
     /// and they are ignored.

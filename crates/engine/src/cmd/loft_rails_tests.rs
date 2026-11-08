@@ -105,22 +105,6 @@ fn a_rail_turns_a_loft_into_its_solid_of_revolution_and_stretching_is_an_edit() 
     assert!((stretched.bbox.max.y - 10.0).abs() < 1e-3, "{:?}", stretched.bbox);
 }
 
-/// A sheet lofted between the two lines with the arc rail from one end: the lines between grow
-/// about their middles, 2r long; area 2∫r dz.
-#[test]
-fn a_surface_loft_follows_its_rail() {
-    let mut s = setup();
-    run(
-        &mut s,
-        "surface.loft",
-        json!({"sections": [{"sketch": "Low", "curves": ["l"]}, {"sketch": "High", "curves": ["l"]}], "rails": [{"sketch": "Rail", "curves": ["arc"]}], "body_name": "Sail"}),
-    );
-    let m = measure(&s, "Sail");
-    let area = 2.0 * (40.0 * C + root_integral());
-    assert!((m.area - area).abs() < 2e-3 * area, "area {} vs {area}", m.area);
-    assert!((m.bbox.min.x + 15.0).abs() < 1e-2, "{:?}", m.bbox);
-}
-
 /// Hostile rails are refused with an error and leave the design as it was.
 #[test]
 fn hostile_rails_are_refused() {
@@ -143,9 +127,6 @@ fn hostile_rails_are_refused() {
         json!({"rails": [{"sketch": "Rail", "curves": ["arc"]}, {"sketch": "Rail", "curves": ["arc"]}]}),
     ] {
         assert!(loft(&mut s, "Bad", bad.clone()).is_err(), "{bad}");
-        let mut p = json!({"sections": [{"sketch": "Low", "curves": ["l"]}, {"sketch": "High", "curves": ["l"]}]});
-        p.as_object_mut().unwrap().extend(bad.as_object().unwrap().clone());
-        assert!(s.execute("surface.loft", &p).is_err(), "surface {bad}");
     }
     // Rails on what the railed loft does not build yet.
     let apex = json!({"sections": [{"sketch": "Base"}, {"sketch": "Rail", "point": "arc.start"}], "rails": rail});
@@ -155,9 +136,5 @@ fn hostile_rails_are_refused() {
     let rings = json!({"sections": [ring("RingLow"), ring("RingHigh")], "operation": "new", "rails": rail});
     let refused = s.execute("solid.loft", &rings).unwrap_err().to_string();
     assert!(refused.contains("not supported yet") && refused.contains("holes"), "{refused}");
-    let g1 =
-        json!({"sections": [{"sketch": "Low", "curves": ["l"]}, {"sketch": "High", "curves": ["l"]}], "rails": rail, "continuity": ["g1", "g0"]});
-    let refused = s.execute("surface.loft", &g1).unwrap_err().to_string();
-    assert!(refused.contains("not supported yet"), "{refused}");
     assert_eq!(s.doc.features.len(), before, "nothing was added");
 }

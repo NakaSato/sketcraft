@@ -556,7 +556,7 @@ fn surface_revolve_axis_origin_follows_a_parameter() {
     run(&mut s, "parameters.add", json!({"name": "W", "expression": "40 mm"}));
     profile(&mut s, false);
     let axis = json!({"origin": ["W / 2 - 20", 0, 0], "dir": [0, 1, 0]});
-    run(&mut s, "surface.revolve", json!({"sketch": "Profile", "axis": axis, "name": "Wall"}));
+    crate::cmd::sheet_fixtures::revolve(&mut s, json!({"sketch": "Profile", "axis": axis, "name": "Wall"}));
     let min_x = |s: &Session| s.model.state().bodies[0].body.mesh(&sketcraft_kernel::MeshTolerance::chord(1e-3)).unwrap().bounds().min.x;
     // W / 2 - 20 is 0 mm: the profile (x from 2 to 4) sweeps out to x = -4.
     assert!((min_x(&s) + 4.0).abs() < 0.05, "{}", min_x(&s));

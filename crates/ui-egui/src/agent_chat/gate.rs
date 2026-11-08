@@ -266,10 +266,6 @@ mod tests {
     #[test]
     fn geometry_named_path_is_not_a_file() {
         assert_eq!(exec("solid.sweep", json!({"profile": "S1", "path_sketch": "S2", "path": ["c1", "c2"]})), Verdict::Run { change: true });
-        assert_eq!(
-            exec("solid.pattern.path", json!({"features": ["F1"], "path_sketch": "S2", "path": ["c1"], "count": 4})),
-            Verdict::Run { change: true }
-        );
         assert_eq!(exec("construct.plane.along_path", json!({"path": "edge-3", "t": 0.5})), Verdict::Run { change: true });
         assert_eq!(exec("component.move", json!({"component": 2, "path": [4, 7], "translate": [1, 0, 0]})), Verdict::Run { change: true });
         assert_eq!(exec("occurrence.move", json!({"occurrence": 3, "path": [1, 2]})), Verdict::Run { change: true });

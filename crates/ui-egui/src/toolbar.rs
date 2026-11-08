@@ -1330,11 +1330,9 @@ fn ribbon_galley(ui: &egui::Ui, at: egui::Pos2, galley: std::sync::Arc<egui::Gal
     ui.painter().galley(origin, galley, color);
 }
 
-/// SKETCH while editing a sketch and SHEET METAL while a sheet body is active take the contextual
-/// tab style; SHEET METAL is an ordinary tab otherwise. WELDMENTS selects itself on a frame member
-/// but keeps the ordinary tab look, as MODEL has when selected.
-pub(crate) fn contextual_tab(app: &SketApp, tab: &str) -> bool {
-    tab == "SKETCH" || (tab == "SHEET METAL" && crate::workspace::sheet_body(app).is_some())
+/// SKETCH while editing a sketch takes the contextual tab style.
+pub(crate) fn contextual_tab(_app: &SketApp, tab: &str) -> bool {
+    tab == "SKETCH"
 }
 
 /// How one ribbon tab is painted: its fill, its label colour and an outline
@@ -1506,7 +1504,7 @@ fn ribbon_tabs(app: &mut SketApp, ui: &mut egui::Ui, row: Rect) -> Option<bool> 
                 }
             });
     });
-    if matches!(app.ui.tab.as_str(), "SKETCH" | "SHEET METAL") {
+    if app.ui.tab == "SKETCH" {
         ui.painter().line_segment(
             [row.left_bottom() - vec2(0.0, 1.0), row.right_bottom() - vec2(0.0, 1.0)],
             Stroke::new(2.0, panel_accent(&t, &app.ui.tab, "")),
@@ -1797,6 +1795,8 @@ fn ribbon_contents(app: &mut SketApp, ui: &mut egui::Ui, shape: RibbonShape) -> 
         let lists: Vec<_> = crate::toolbar_custom::panel_lists(&tab)
             .into_iter()
             .filter(|(panel, _, _)| editing_in_place || !(tab == "MODEL" && *panel == "FINISH EDITING"))
+            // A panel whose every command is a hidden CAD tool (Model › Create) leaves the ribbon.
+            .filter(|(_, cmds, _)| cmds.is_empty() || cmds.iter().any(|c| crate::workspace::offered(app, c.id)))
             .map(|(panel, mut cmds, promote)| {
                 let promote = if tab == "SKETCH" && panel == "CREATE" && !app.preferences.sketch_construction_lines {
                     promote.saturating_sub(1)
@@ -1806,7 +1806,13 @@ fn ribbon_contents(app: &mut SketApp, ui: &mut egui::Ui, shape: RibbonShape) -> 
                 if !app.preferences.sketch_construction_lines {
                     cmds.retain(|c| sketcraft_engine::cmd::construction_line_mode(c.id).is_none());
                 }
+                // Hidden CAD tools leave the panel; its buttons are the promoted ones still
+                // offered, or its first command when none is.
+                let kept = cmds.iter().take(promote).filter(|c| crate::workspace::offered(app, c.id)).count();
+                cmds.retain(|c| crate::workspace::offered(app, c.id));
+                let promote = if kept == 0 { promote.min(cmds.len()).min(1) } else { kept };
                 let mut shown = crate::toolbar_custom::buttons(app, &tab, panel, &cmds, promote);
+                shown.retain(|c| crate::workspace::offered(app, c.id));
                 // Gallery cells are painted together after the large buttons, in reading order.
                 if tab == "SKETCH" && panel == "CONSTRAIN" {
                     shown.sort_by_key(|c| {
@@ -3501,8 +3507,6 @@ pub const ESCAPE_TWICE_S: f64 = 0.4;
 pub(crate) fn unfinished(app: &SketApp) -> bool {
     app.tool.is_some()
         || crate::select_other::is_open(app)
-        || app.menu.joint_move_warning.is_some()
-        || app.viewport.joint_handles.is_some()
         || app.viewport.text_drag.is_some()
         || crate::occurrence_drag::active(app)
 }
@@ -3511,7 +3515,7 @@ pub(crate) fn unfinished(app: &SketApp) -> bool {
 /// a drag, the Select Other list, or the active tool's points and then the tool. The view's
 /// corner Cancel (#6709) takes this step first too. Returns whether anything was cancelled.
 pub(crate) fn cancel_unfinished(app: &mut SketApp) -> bool {
-    if crate::joint_handles::cancel(app) || crate::sketch_text_move::cancel_drag(app) || crate::occurrence_drag::cancel(app) {
+    if crate::sketch_text_move::cancel_drag(app) || crate::occurrence_drag::cancel(app) {
         return true;
     }
     if crate::select_other::is_open(app) {
@@ -3586,8 +3590,7 @@ pub fn shortcuts(app: &mut SketApp, ctx: &egui::Context) {
     // starting with L or D), even on the frame before its field holds the focus.
     let popup_owner = egui::Popup::is_any_open(ctx)
         || crate::dialogs_save_mesh::popup_open(ctx)
-        || crate::hole_presets::name_prompt_open(ctx, app.dialog.as_ref())
-        || crate::personal_sheet_rules::name_prompt_open(ctx, app.dialog.as_ref());
+        || crate::hole_presets::name_prompt_open(ctx, app.dialog.as_ref());
     let inline_editor = crate::dim_view::editing();
     if !popup_owner
         && app.viewport_status.open_key.is_some()
@@ -3644,6 +3647,10 @@ pub fn shortcuts(app: &mut SketApp, ctx: &egui::Context) {
         // Only Esc pressed twice in a row finishes a sketch: any other key in between resets it.
         if k != Key::Escape {
             app.last_escape = None;
+        }
+        // SketchUp's Rotate takes its typed angle, arrow-key axis locks and Escape first.
+        if shown && (crate::rotate_tool::key(app, k, mods) || crate::tape_tool::key(app, k, mods)) {
+            continue;
         }
         if shown && (crate::keymap::drag_zoom_key(app, k, mods) || crate::navigation::view_key(app, ctx, k, mods, repeat)) {
             continue;

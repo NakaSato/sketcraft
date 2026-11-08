@@ -524,8 +524,8 @@ fn a_draft_leaves_no_mark() {
     }
 }
 
-/// A stepped block, 40 x 30 x 10 with its half x < 20 raised to 20 (rig case
-/// shell/cov-replace-face-step-onto-the-higher-face, the fork's `offset_faces_close_a_step_wall`):
+/// A stepped block, 40 x 30 x 10 with its half x < 20 raised to 20 (the fork's
+/// `offset_faces_close_a_step_wall`):
 /// a top moved onto the other's plane closes the step wall between them to nothing, and the tops
 /// are one face of a 6-faced box.
 #[test]

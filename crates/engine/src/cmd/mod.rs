@@ -9,17 +9,6 @@ macro_rules! created_doc {
     };
 }
 
-/// A command that is designed and registered (id, toolbar place, icon, params doc) but not built
-/// yet. It is disabled with the reason, so the toolbar greys it and says why, and its `run`
-/// refuses too, however it is reached. `$issue` is the GitHub issue that tracks building it.
-macro_rules! planned {
-    ($id:literal, $label:literal, $issue:literal) => {
-        CommandSpec::new($id, $label, |_, _| Err(crate::EngineError::Other(concat!("not supported yet: ", $label, " (issue #", $issue, ")").into())))
-            .enabled(|_| Err(concat!("not supported yet (issue #", $issue, ")").into()))
-            .planned($issue)
-    };
-}
-
 mod bom;
 pub(crate) mod browser;
 pub(crate) mod clearance;
@@ -66,7 +55,6 @@ pub use component_link::resolve_design_links;
 mod config;
 mod design_link;
 mod file;
-mod frame;
 pub(crate) mod inspect;
 mod interference;
 pub(crate) mod joints;
@@ -100,11 +88,8 @@ pub(crate) use render_ui::batch_request;
 mod render_ui;
 #[cfg(test)]
 mod script_tests;
-mod sheet;
-pub(crate) use sheet::{
-    FlangeType, ThenStep, flange_edge, flange_edge_list, flange_position, flange_type, fold_points, fold_position, perforation_pattern, sheet_points,
-    sheet_rule_name, then_list,
-};
+#[cfg(test)]
+pub(crate) mod sheet_fixtures;
 mod silhouette;
 mod sketch;
 pub(crate) use sketch::author_path_for_rebind;
@@ -127,10 +112,7 @@ mod sketch_inspect;
 mod sketch_modify;
 mod sketch_project;
 mod sketch_store;
-mod surface;
 mod surface_analysis;
-mod surface_boundary;
-mod surface_match;
 mod view_dxf;
 mod view_navigation;
 
@@ -327,21 +309,16 @@ pub fn command_specs() -> Vec<&'static CommandSpec> {
     v.extend(point_cloud::COMMANDS.iter());
     v.extend(sketch_3d::COMMANDS.iter());
     v.extend(surface_analysis::COMMANDS.iter());
-    v.extend(surface_boundary::COMMANDS.iter());
-    v.extend(surface::COMMANDS.iter());
-    v.extend(surface_match::COMMANDS.iter());
     v.extend(sketch_modify::COMMANDS.iter());
     v.extend(sketch_project::COMMANDS.iter());
     v.extend(features::COMMANDS.iter());
     v.extend(features_more::COMMANDS.iter());
     v.extend(mesh::COMMANDS.iter());
     v.extend(construct::COMMANDS.iter());
-    v.extend(sheet::COMMANDS.iter());
     v.extend(plastic::COMMANDS.iter());
-    v.extend(frame::COMMANDS.iter());
     v.extend(component::COMMANDS.iter());
     v.extend(component_link::COMMANDS.iter());
-    v.extend(joints::COMMANDS.iter());
+    v.extend(interference::COMMANDS.iter());
     v.extend(clearance::COMMANDS.iter());
     v.extend(motion::COMMANDS.iter());
     v.extend(panels::COMMANDS.iter());

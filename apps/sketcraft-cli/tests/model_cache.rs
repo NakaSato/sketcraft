@@ -134,10 +134,20 @@ fn sample_designs_open_from_their_model_as_evaluated() {
 
 #[test]
 fn imported_assemblies_open_from_their_model_as_evaluated() {
-    // A STEP assembly of the hinge sample: parts placed several times.
+    // A STEP assembly of two parts, placed several times.
     let mut source = Session::default();
-    let hinge = sketcraft_engine::sample::samples().into_iter().find(|s| s.name == "Hinge Assembly").unwrap();
-    for c in (hinge.script)()["commands"].as_array().unwrap() {
+    let leaves = json!({"commands": [
+        {"command": "component.create", "params": {"name": "Leaf A"}},
+        {"command": "solid.box", "params": {"length": 40, "width": 30, "height": 3, "corner": [0, 0, 0]}},
+        {"command": "solid.cylinder", "params": {"base": [0, 33, 4], "axis": [1, 0, 0], "radius": 4, "height": 40, "operation": "new"}},
+        {"command": "component.activate", "params": {"component": "root"}},
+        {"command": "component.create", "params": {"name": "Leaf B"}},
+        {"command": "solid.box", "params": {"length": 40, "width": 30, "height": 3, "corner": [0, 40, 0]}},
+        {"command": "solid.cylinder", "params": {"base": [0, 73, 4], "axis": [1, 0, 0], "radius": 4, "height": 40, "operation": "new"}},
+        {"command": "component.activate", "params": {"component": "root"}},
+        {"command": "occurrence.ground", "params": {"occurrence": "Leaf A:1", "grounded": true}}
+    ]});
+    for c in leaves["commands"].as_array().unwrap() {
         source.execute(c["command"].as_str().unwrap(), &c["params"]).unwrap();
     }
     let step = std::env::temp_dir().join(format!("sketcraft-model-cache-{}-hinge.step", std::process::id()));

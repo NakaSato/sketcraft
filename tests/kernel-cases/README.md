@@ -45,16 +45,15 @@ One directory per area, one per case: `tests/kernel-cases/<area>/<id>/`.
 | `shell` (shell, offset, thicken) | booleans/shell/import/crash rig |
 | `import` (STEP and IGES geometry) | booleans/shell/import/crash rig |
 | `crashes` (crashes and hangs inside kernel operations) | booleans/shell/import/crash rig |
-| `fillets`, `sweeps`, `threads`, `sheet-metal`, `tessellation` | history rig |
+| `fillets`, `sweeps`, `threads`, `tessellation` | history rig |
 | `continuity` (designed seams of known order, G0 to G4, that prove the continuity measurement itself) | history rig |
 | `solids` (cones, scale, align, bounding solids) | tool coverage |
 | `frames` (frame members, inserted profiles) | tool coverage |
 | `plastic` (boss, lip and groove, rest, snap fit, plastic rules) | tool coverage rig |
-| `surfaces` (every `surface.*` tool: offset, ruled, untrim, unstitch, reverse normal, boundary, blend, match, fair, and a normal and an edge case of each of the others) | surfaces rig |
 | `construction` (construction planes, axes and points: `construct.*`) | tool coverage rig |
 | `inspect` (the inspect commands that return numbers) | tool coverage rig |
 | `history` (the timeline's suppress, reorder, delete, roll back, edit and folders; configuration rows, columns and rules; parameters that drive geometry) | tool coverage rig |
-| `assemblies` (joints and couplings, motion studies, contact, components and occurrences, interference and clearance between placed parts: placements and answers worked out by hand) | rig coverage |
+| `assemblies` (components and occurrences, exploded views, interference and clearance between placed parts: placements and answers worked out by hand) | rig coverage |
 
 Each area also has its gate files: `KNOWN_FAILING` and `PATHS` (see [the gate](#the-kernel-rig-gate)).
 

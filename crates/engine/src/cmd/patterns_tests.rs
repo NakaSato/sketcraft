@@ -31,9 +31,6 @@ fn plate_with_hole() -> Session {
     s
 }
 
-const PLATE: f64 = 100.0 * 50.0 * 5.0;
-const HOLE: f64 = PI * 4.0 * 5.0;
-
 fn feature_pattern_plate() -> Session {
     let mut s = Session::default();
     run(&mut s, "solid.box", json!({"length":120,"width":120,"height":5,"corner":[0,0,0],"name":"Plate"}));
@@ -357,33 +354,6 @@ fn circular_numeric_axis_origin_preserves_hole_geometry_and_reopens() {
 }
 
 #[test]
-fn pattern_on_path_spacing_extent_and_flip() {
-    let mut s = plate_with_hole();
-    assert!(rel(volume(&mut s), PLATE - HOLE) < 1e-4);
-    run(&mut s, "solid.pattern.path", json!({"features": ["Hole1"], "path_sketch": "Path", "path": ["l1"], "count": 5, "spacing": 20}));
-    assert!(rel(volume(&mut s), PLATE - 5.0 * HOLE) < 1e-4);
-    // The count is a parameter like any other input.
-    let n = s.doc.features.last().and_then(|f| f.param_names.first().cloned()).unwrap_or_default();
-    run(&mut s, "parameters.change", json!({"name": n, "expression": "3"}));
-    assert!(rel(volume(&mut s), PLATE - 3.0 * HOLE) < 1e-4);
-    // Instances past the end of the path are an error.
-    run(&mut s, "parameters.change", json!({"name": n, "expression": "6"}));
-    let err = s.model.results.last().and_then(|r| r.error.clone()).unwrap_or_default();
-    assert!(err.contains("past the end of the path"), "{err}");
-
-    // Distance = first to last instance.
-    let mut s = plate_with_hole();
-    run(&mut s, "solid.pattern.path", json!({"features": ["Hole1"], "path_sketch": "Path", "path": ["l1"], "count": 3, "distance": 80}));
-    assert!(rel(volume(&mut s), PLATE - 3.0 * HOLE) < 1e-4);
-
-    // Flipped, the path runs from (90,10) back toward (10,10).
-    let mut s = plate_with_hole();
-    run(&mut s, "solid.pattern.path", json!({"features": ["Hole1"], "path_sketch": "Path", "path": ["l1"], "count": 2, "spacing": 30, "flip": true}));
-    // The copy moves by path(30) − path(0) = (60,10) − (90,10) = −30: off the plate side → only 1 hole.
-    assert!(rel(volume(&mut s), PLATE - HOLE) < 1e-4);
-}
-
-#[test]
 fn patterns_of_bodies() {
     let mut s = Session::default();
     run(&mut s, "solid.box", json!({"length": 10, "width": 10, "height": 10, "corner": [20, 0, 0], "body_name": "Cube"}));
@@ -448,7 +418,6 @@ fn patterns_of_components_place_occurrences() {
 #[test]
 fn patterns_of_a_body_in_a_moved_component_follow_its_placement() {
     for (kind, params, want) in [
-        ("solid.pattern.path", json!({"bodies": ["Pin"], "path_sketch": "Path", "path": ["l1"], "count": 2, "spacing": 10}), [70.0, 0.0]),
         ("solid.pattern.rectangular", json!({"bodies": ["Pin"], "dir1": [1, 0, 0], "count1": 2, "spacing1": 10}), [70.0, 0.0]),
         ("solid.pattern.circular", json!({"bodies": ["Pin"], "axis": "Z", "count": 2, "angle": "90 deg"}), [-4.0, 60.0]),
     ] {
@@ -473,30 +442,6 @@ fn patterns_of_a_body_in_a_moved_component_follow_its_placement() {
         let copy = at("Pin (2)");
         assert!((copy[0] - want[0]).abs() < 1e-6 && (copy[1] - want[1]).abs() < 1e-6, "{kind}: the copy is at {copy:?}, want {want:?}");
     }
-}
-
-#[test]
-fn path_pattern_orientation_follows_the_path() {
-    let width_of_copy = |orient: &str| {
-        let mut s = Session::default();
-        run(&mut s, "solid.box", json!({"length": 2, "width": 4, "height": 2, "corner": [19, -2, 0], "body_name": "Tab"}));
-        run(&mut s, "sketch.create", json!({"plane": "XY", "name": "Arc"}));
-        run(&mut s, "sketch.arc.center_point", json!({"center": [0, 0], "start": [20, 0], "sweep": 90, "id": "a1"}));
-        run(&mut s, "sketch.finish", json!({}));
-        run(
-            &mut s,
-            "solid.pattern.path",
-            json!({"bodies": ["Tab"], "path_sketch": "Arc", "path": ["a1"], "count": 2, "distance": "pi * 10", "orientation": orient}),
-        );
-        let m = run(&mut s, "inspect.measure", json!({}));
-        let b = m["bodies"].as_array().unwrap().iter().find(|b| b["name"] != "Tab").unwrap().clone();
-        let (lo, hi) = (b["bbox"]["min"].clone(), b["bbox"]["max"].clone());
-        // The copy sits at the arc's end (0, 20).
-        assert!(((lo[1].as_f64().unwrap() + hi[1].as_f64().unwrap()) / 2.0 - 20.0).abs() < 1e-6, "{b}");
-        hi[0].as_f64().unwrap() - lo[0].as_f64().unwrap()
-    };
-    assert!((width_of_copy("identical") - 2.0).abs() < 1e-6);
-    assert!((width_of_copy("path") - 4.0).abs() < 1e-6);
 }
 
 /// Patterns of a blind hole drill every copy to the full depth from the face at the copy
@@ -823,50 +768,6 @@ fn copies_of_a_join_that_merged_its_targets_join_the_merged_body() {
     }
 }
 
-/// #4593: a rib is the source of a pattern or mirror. Each copy is built again where it is, its
-/// walls run until they meet the body there. An 80 × 80 × 5 plate with a 16 × 16 × 30 boss in the
-/// middle; the rib's triangle (8, 5)-(8, 25)-(30, 5) in the XZ plane, 4 thick, is 880 mm³.
-#[test]
-fn patterns_and_mirrors_of_a_rib() {
-    use sketcore_record::Vec3;
-    let rib = 0.5 * 22.0 * 20.0 * 4.0;
-    let ribbed = || {
-        let mut s = Session::default();
-        run(&mut s, "solid.box", json!({"length": 80, "width": 80, "height": 5, "corner": [-40, -40, 0]}));
-        run(&mut s, "solid.box", json!({"length": 16, "width": 16, "height": 30, "corner": [-8, -8, 0], "operation": "join"}));
-        run(&mut s, "sketch.create", json!({"plane": {"origin": [0, 0, 0], "x_dir": [1, 0, 0], "y_dir": [0, 0, 1]}, "name": "RibSketch"}));
-        run(&mut s, "sketch.line", json!({"points": [[8, 25], [30, 5]], "ids": ["l1"]}));
-        run(&mut s, "sketch.finish", json!({}));
-        let before = volume(&mut s);
-        run(&mut s, "solid.rib", json!({"sketch": "RibSketch", "curves": ["l1"], "thickness": 4, "name": "Rib"}));
-        assert!(rel(volume(&mut s), before + rib) < 1e-6, "the rib itself");
-        (s, before)
-    };
-    // The issue's step: a circular pattern of the rib (here four, a quarter turn apart).
-    let (mut s, before) = ribbed();
-    run(&mut s, "solid.pattern.circular", json!({"features": ["Rib"], "axis": {"origin": [0, 0, -100], "dir": [0, 0, 1]}, "count": 4, "angle": 360}));
-    let ribs = [Vec3::new(12.0, 0.0, 8.0), Vec3::new(0.0, 12.0, 8.0), Vec3::new(-12.0, 0.0, 8.0), Vec3::new(0.0, -12.0, 8.0)];
-    let check = |s: &Session, inside: &[Vec3]| {
-        let st = s.world_state().unwrap();
-        assert!(s.model.results.iter().all(|r| r.error.is_none()), "{:?}", s.model.results.iter().map(|r| &r.error).collect::<Vec<_>>());
-        assert_eq!(st.bodies.len(), 1);
-        let body = &st.bodies[0].body;
-        for p in inside {
-            assert_eq!(body.classify_point(*p).unwrap(), sketcraft_kernel::PointClass::Inside, "a rib at {p:?}");
-            // Beside it, across its thickness: no material (clear of the boss too).
-            let side = if p.y == 0.0 { Vec3::new(0.0, 3.0, 0.0) } else { Vec3::new(3.0, 0.0, 0.0) };
-            assert_eq!(body.classify_point(*p + side).unwrap(), sketcraft_kernel::PointClass::Outside, "nothing beside the rib at {p:?}");
-        }
-    };
-    check(&s, &ribs);
-    assert!(rel(volume(&mut s), before + 4.0 * rib) < 1e-6, "four ribs: {} vs {}", volume(&mut s), before + 4.0 * rib);
-    // A mirror of the rib across YZ.
-    let (mut s, before) = ribbed();
-    run(&mut s, "solid.mirror", json!({"features": ["Rib"], "plane": {"origin": [0, 0, 0], "normal": [1, 0, 0]}}));
-    check(&s, &[ribs[0], ribs[2]]);
-    assert!(rel(volume(&mut s), before + 2.0 * rib) < 1e-6, "two ribs: {} vs {}", volume(&mut s), before + 2.0 * rib);
-}
-
 /// #395: a pattern or mirror of features takes a pattern or mirror of features as a source: it
 /// copies what that one made (its copies, not its source). The issue's design: a 40 × 30 × 20
 /// box with a hole `H` at (−15, −10) and `Pat`, two more holes along x at 10 mm steps.
@@ -1055,7 +956,6 @@ fn pattern_count_units_explain_how_to_use_a_parameter() -> Result<(), Box<dyn st
             json!({"bodies": ["Seed"], "dir1": [1, 0, 0], "spacing1": 10, "count1": 2, "dir2": [0, 1, 0], "spacing2": 10}),
         ),
         ("solid.pattern.circular", "count", json!({"bodies": ["Seed"], "axis": "Z"})),
-        ("solid.pattern.path", "count", json!({"bodies": ["Seed"], "path_sketch": "Path", "path": ["line"], "spacing": 10})),
     ] {
         for (expression, message) in [
             ("columns", "`columns` is a length (mm); set its Unit to none to use it as a count"),

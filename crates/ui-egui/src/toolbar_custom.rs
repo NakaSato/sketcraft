@@ -556,7 +556,8 @@ pub fn window(app: &mut SketApp, ctx: &egui::Context) {
                         .min(crate::theme::Tokens::get().control_height * 20.0),
                 )
                 .show(ui, |ui| {
-                    for (panel, cmds, n) in panel_lists(&tab) {
+                    for (panel, mut cmds, n) in panel_lists(&tab) {
+                        cmds.retain(|c| crate::workspace::offered(app, c.id));
                         if cmds.is_empty() {
                             continue;
                         }

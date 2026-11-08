@@ -81,7 +81,7 @@ fn revolve_about_a_cylinder_wall() {
 fn surface_revolve_about_a_circular_edge() {
     let mut s = shaft();
     ring_profile(&mut s);
-    run(&mut s, "surface.revolve", json!({"sketch": "Profile", "axis": {"edge": [45, 0, 0]}, "angle": "180 deg"}));
+    crate::cmd::sheet_fixtures::revolve(&mut s, json!({"sketch": "Profile", "axis": {"edge": [45, 0, 0]}, "angle": "180 deg"}));
     run(&mut s, "parameters.change", json!({"name": "cx", "expression": "41 mm"}));
     let st = s.world_state().unwrap();
     // A half turn about x = 41: the far side of the profile ends up at x = 41 − 7 ± 1.
@@ -188,7 +188,6 @@ fn hostile_model_axes_are_refused_without_panicking() {
     ] {
         for (cmd, p) in [
             ("solid.revolve", json!({"sketch": "Profile", "axis": axis})),
-            ("surface.revolve", json!({"sketch": "Profile", "axis": axis})),
             ("solid.pattern.circular", json!({"bodies": ["Shaft"], "axis": axis, "count": 3})),
             ("construct.plane.at_angle", json!({"base": "XZ", "axis": axis, "angle": "10 deg"})),
         ] {

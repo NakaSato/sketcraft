@@ -334,35 +334,11 @@ fn one_move_of_bodies_in_differently_turned_frames_moves_each_in_the_world() {
     }
 }
 
-/// Edit Feature passes a primitive's placement through as saved, so changing the radius of
-/// Leaf B's rod in the Hinge Assembly leaves the leaf where it was (#2926).
-#[test]
-fn editing_a_primitive_in_a_turned_component_keeps_its_placement() {
-    let sample = crate::sample::samples().into_iter().find(|x| x.name == "Hinge Assembly").unwrap();
-    let mut s = Session::default();
-    s.run_script(&(sample.script)()).unwrap();
-    let (plate_lo, plate_hi) = world_bbox(&s, "Body3");
-    let (rod_lo, rod_hi) = world_bbox(&s, "Body4");
-    // What the dialog sends: the saved definition, with the new radius.
-    let definition = run(&mut s, "timeline.inspect", json!({"feature": "Cylinder2"}))["definition"].clone();
-    let params = json!({"base": definition["base"], "axis": definition["axis"], "radius": "6", "height": "40", "operation": "new_body"});
-    run(&mut s, "timeline.redefine", json!({"feature": "Cylinder2", "command": "solid.cylinder", "params": params}));
-    let after = run(&mut s, "timeline.inspect", json!({"feature": "Cylinder2"}))["definition"].clone();
-    assert_eq!((&after["base"], &after["axis"]), (&definition["base"], &definition["axis"]));
-    let (lo, hi) = world_bbox(&s, "Body3");
-    assert!(near(lo, plate_lo) && near(hi, plate_hi), "the leaf moved: {lo:?} {hi:?}");
-    // The rod grows about its own axis (its mesh is faceted, so its size is close, not exact).
-    let (lo, hi) = world_bbox(&s, "Body4");
-    assert!(((lo + hi) * 0.5).dist((rod_lo + rod_hi) * 0.5) < 1e-3, "the rod moved: {lo:?} {hi:?}");
-    let (size, before) = (hi - lo, rod_hi - rod_lo);
-    assert!((size.x - before.x).abs() < 1e-6 && (size.y - 12.0).abs() < 0.05 && (size.z - 12.0).abs() < 0.05, "{size:?}");
-}
-
 /// Edit Feature shows an explicit revolve axis with its origin evaluated; sending that back
-/// untouched keeps the saved expressions, for a solid and a surface revolve alike.
+/// untouched keeps the saved expressions.
 #[test]
 fn an_untouched_revolve_axis_keeps_its_origin_expressions_through_redefine() {
-    for (command, name) in [("solid.revolve", "Turn"), ("surface.revolve", "Shell")] {
+    for (command, name) in [("solid.revolve", "Turn")] {
         let mut s = Session::default();
         run(&mut s, "parameters.add", json!({"name": "W", "expression": "40 mm"}));
         run(&mut s, "sketch.create", json!({"name": "Profile", "plane": "XY"}));
@@ -398,62 +374,6 @@ fn an_untouched_revolve_axis_keeps_its_origin_expressions_through_redefine() {
         run(&mut s, "timeline.redefine", json!({"feature": name, "command": command, "params": params}));
         assert_eq!(saved(&mut s), ["21", "0", "0"], "{command}");
     }
-}
-
-/// A surface revolve's `{origin, dir}` axis is a world axis in a moved or turned component, as a
-/// solid revolve's is, when the revolve is made and when its axis is changed in Edit Feature.
-#[test]
-fn a_surface_revolve_axis_maps_into_a_moved_component() {
-    let made = |command: &str, turned: bool| {
-        let mut s = moved_part();
-        if turned {
-            run(&mut s, "occurrence.move", json!({"occurrence": "Part:1", "axis": [0, 0, 1], "angle": "90 deg", "origin": [50, 0, 0]}));
-        }
-        run(&mut s, "sketch.create", json!({"plane": "XZ", "name": "Ring"}));
-        run(&mut s, "sketch.rectangle.two_point", json!({"p0": [5, 0], "p1": [10, 5]}));
-        run(&mut s, "sketch.finish", json!({}));
-        let mut p = json!({"sketch": "Ring", "axis": {"origin": [50, 0, 0], "dir": [0, 0, 1]}, "name": "Turn"});
-        if command == "solid.revolve" {
-            p["operation"] = json!("new");
-        }
-        run(&mut s, command, p.clone());
-        let body = s.model.state().bodies.last().map(|b| b.name.clone()).unwrap();
-        let first = world_bbox(&s, &body);
-        // Edit Feature with a new axis, also given in the world: 2 mm along the sketch's X, which
-        // the quarter turn lays along the world's Y.
-        p["axis"]["origin"] = if turned { json!([50, 2, 0]) } else { json!([52, 0, 0]) };
-        run(&mut s, "timeline.redefine", json!({"feature": "Turn", "command": command, "params": p}));
-        let body = s.model.state().bodies.last().map(|b| b.name.clone()).unwrap();
-        (first, world_bbox(&s, &body))
-    };
-    for turned in [false, true] {
-        let (solid, solid_edit) = made("solid.revolve", turned);
-        let (surface, surface_edit) = made("surface.revolve", turned);
-        assert!(near(solid.0, surface.0) && near(solid.1, surface.1), "turned {turned}: {solid:?} against {surface:?}");
-        assert!(
-            near(solid_edit.0, surface_edit.0) && near(solid_edit.1, surface_edit.1),
-            "turned {turned}, edited: {solid_edit:?} against {surface_edit:?}"
-        );
-    }
-}
-
-/// A surface revolve about a picked edge of a moved component turns about that edge where it is
-/// shown, as one about the same axis given as `{origin, dir}` does.
-#[test]
-fn a_surface_revolve_about_a_picked_edge_of_a_moved_component() {
-    let made = |axis: Value| {
-        let mut s = moved_part();
-        run(&mut s, "sketch.create", json!({"plane": "XZ", "name": "Ring"}));
-        run(&mut s, "sketch.rectangle.two_point", json!({"p0": [5, 0], "p1": [10, 5]}));
-        run(&mut s, "sketch.finish", json!({}));
-        run(&mut s, "surface.revolve", json!({"sketch": "Ring", "axis": axis, "name": "Turn"}));
-        let body = s.model.state().bodies.last().map(|b| b.name.clone()).unwrap();
-        world_bbox(&s, &body)
-    };
-    // The block's vertical edge at its corner, shown at world x = 50.
-    let edge = made(json!({"edge": [50, 0, 5]}));
-    let line = made(json!({"origin": [50, 0, 0], "dir": [0, 0, 1]}));
-    assert!(near(edge.0, line.0) && near(edge.1, line.1), "{edge:?} against {line:?}");
 }
 
 /// A new placement given to `timeline.redefine` is still a world point.

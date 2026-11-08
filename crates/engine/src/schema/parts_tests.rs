@@ -98,10 +98,10 @@ fn part_commands_reply_with_their_schemas() {
         json!({"family": "hex_nut", "size": "M6", "point": [60, 0, 0], "direction": {"x": 1, "y": 0, "z": 0}, "name": "Nut"}),
     );
     matches(&inserted, &r, false);
-    assert!(r.get("joint").is_none() && r["name"] == "Nut", "{r}");
+    assert_eq!(r["name"], "Nut", "{r}");
     let r = run(&mut s, "parts.fastener", json!({"family": "socket_head_cap_screw", "size": "M6", "length": 20, "at": holes}));
     matches(&inserted, &r, false);
-    assert_eq!((r["occurrences"].as_array().map(Vec::len), r["joints"].as_array().map(Vec::len)), (Some(2), Some(2)), "{r}");
+    assert_eq!(r["occurrences"].as_array().map(Vec::len), Some(2), "{r}");
     let screw = r["component"].clone();
     let r = run(&mut s, "parts.resize", json!({"component": screw, "size": "M8", "length": 25}));
     matches(&resized, &r, false);

@@ -240,8 +240,7 @@ fn actions(s: &Session) -> Vec<Action> {
             let Some(&(p, _)) = inside.get(&i).filter(|(p, _)| p.is_finite()) else { continue };
             let entity = face_name(i);
             let pick = json!({"face": pt(p), "body": world, "index": i, "path": path});
-            if let Some(Some((_, n))) = planes.get(i) {
-                let n = *n;
+            if let Some(Some(_)) = planes.get(i) {
                 let mut add = |action, act| out.push(Action { entity: entity.clone(), action, act });
                 add("face.sketch", Act::Run("sketch.create", json!({"plane": pick})));
                 add("face.offset_plane", Act::Run("construct.plane.offset", json!({"base": pick, "offset": round3(size * 0.1)})));
@@ -287,22 +286,6 @@ fn actions(s: &Session) -> Vec<Action> {
                 if room.is_finite() && room > 0.15 {
                     let dia = round3((room * 0.8).min(6.0));
                     add("face.hole", Act::Run("solid.hole", json!({"position": pt(p), "diameter": dia})));
-                }
-                // Draft the walls square to the face, the face neutral (as the Draft dialog sends a picked face).
-                let walls: Vec<Value> = edges_of(i)
-                    .into_iter()
-                    .filter_map(|e| mesh.edge_faces.get(e))
-                    .flat_map(|fs| fs.iter().map(|f| *f as usize).collect::<Vec<_>>())
-                    .filter(|f| *f != i)
-                    .collect::<BTreeSet<usize>>()
-                    .into_iter()
-                    .filter_map(|f| planes.get(f).copied().flatten().filter(|(_, m)| m.dot(n).abs() < 1e-6).map(|(q, _)| pt(q)))
-                    .collect();
-                if !walls.is_empty() {
-                    add(
-                        "face.draft_neutral",
-                        Act::Run("solid.draft", json!({"faces": walls, "angle": "2 deg", "neutral": {"origin": pt(p), "normal": pt(n)}})),
-                    );
                 }
                 add("face.shell", Act::Run("solid.shell", json!({"faces": [pt(p)], "thickness": round3((size * 0.01).clamp(0.1, 0.5))})));
             } else {
@@ -688,26 +671,6 @@ fn action_matrix_worker() {
             Act::Project { plane, edge } => json!({"command": "sketch.project", "params": {"refs": [edge]}, "sketch_plane": plane}),
         };
         emit(line);
-        // With ACTION_MATRIX_UNFOLD, sheet metal must still unfold and fold back after the action.
-        if r.is_ok() && std::env::var_os("ACTION_MATRIX_UNFOLD").is_some() {
-            let t = Instant::now();
-            let sheets: Vec<String> = scratch.model.state().sheets.iter().map(|sh| sh.body.clone()).collect();
-            let mut r = Ok(());
-            for body in &sheets {
-                for id in ["sheet.unfold", "sheet.refold"] {
-                    if r.is_ok() {
-                        r = scratch
-                            .execute(id, &json!({"body": body}))
-                            .map(|_| ())
-                            .map_err(|e| (command_kind(&e).to_string(), format!("{body}: {e}")));
-                    }
-                }
-            }
-            if !sheets.is_empty() {
-                let unfold: &'static str = Box::leak(format!("{}+unfold", a.action).into_boxed_str());
-                emit(outcome(&design, &a.entity, unfold, &r, t.elapsed().as_millis()));
-            }
-        }
         // The edit round: a driving parameter changes; the new feature still resolves.
         if r.is_ok()
             && let Some((name, expr)) = &edit
@@ -1390,32 +1353,6 @@ fn a_small_hole_through_the_wall_of_a_plastic_rest() {
     assert!(gone > 1.2 && gone < 1.7, "the hole took {gone} mm³");
 }
 
-// #1255: a hole square to a flange bent at 45°. The drill's cap, evaluated at that angle, lay
-// 2.9e-11 mm off the plane it was made on against a bound of 2.2e-11, so the sheet didn't take
-// the hole as a cut-out of its flat pattern and the cut was refused. The sheet keeps the hole
-// and still unfolds and folds back.
-#[test]
-fn a_hole_square_to_a_45_degree_flange() {
-    let mut s = load(&root().join("tests/oracle/70-sm-flange-45/recipe.json")).unwrap();
-    let volume = |s: &Session| {
-        s.model.state().bodies.iter().map(|b| b.body.mesh(&sketcraft_kernel::MeshTolerance::chord(0.002)).unwrap().measure().volume).sum::<f64>()
-    };
-    let before = volume(&s);
-    s.execute("solid.hole", &json!({"diameter": 3.448, "position": [66.666_667, -4.511_845, 4.511_845]})).unwrap();
-    check(&s, 0, &BTreeMap::new()).unwrap_or_else(|(kind, e)| panic!("{kind}: {e}"));
-    // Through the 2.5 mm flange.
-    let gone = before - volume(&s);
-    let expected = std::f64::consts::PI * 1.724 * 1.724 * 2.5;
-    assert!((gone - expected).abs() < 0.1, "the hole took {gone} mm³, not {expected}");
-    let sheets: Vec<String> = s.model.state().sheets.iter().map(|sh| sh.body.clone()).collect();
-    assert!(!sheets.is_empty());
-    for body in sheets {
-        for id in ["sheet.unfold", "sheet.refold"] {
-            s.execute(id, &json!({"body": body})).unwrap_or_else(|e| panic!("{id}: {e}"));
-        }
-    }
-}
-
 // #1255: an axis through a corner round of the sensor enclosure's lid, then a parameter that
 // widens the lid. The round is found again by name, but its point nearest the old pick is the
 // end of its arc, on the edge it shares with the flat side, and picking again by that point
@@ -1503,39 +1440,6 @@ fn an_oblique_through_hole_beside_a_thin_bar() {
 }
 
 #[test]
-fn a_hole_through_a_sheet_metal_base() {
-    let mut c: Vec<Value> = rectangle(json!("XY"), [0., 0.], [60., 40.]).into();
-    c.extend([
-        json!({"command": "sheet.flange", "params": {"type": "base"}}),
-        json!({"command": "solid.hole", "params": {"position": [30, 20, 0], "direction": [0, 0, 1], "diameter": 5}}),
-    ]);
-    reproduces(None, Value::Array(c));
-}
-
-/// `face.hole` on a rim of the sheet metal corpus (#560): drilled along the panel, the hole is a
-/// bore of that panel, and the part still unfolds and folds back.
-#[test]
-fn a_hole_drilled_into_a_sheet_metal_rim() {
-    // What the matrix sends: the face's point, the hole square into it.
-    for (design, at, diameter) in [
-        // The base's end rim of the L bracket, through to the other end.
-        ("typical/sheet-metal-bracket", [60.0, 7.777777777777779, 0.8333333333333333], 0.667),
-        // The end rim of a tray's wall, beside the corner.
-        ("oracle/69-sm-tray", [99.58333333333333, 4.267766952966369, 15.0], 0.333),
-    ] {
-        let Some((_, path)) = designs().into_iter().find(|(n, _)| n == design) else { panic!("no design {design}") };
-        let mut s = load(&path).unwrap();
-        let before = errors(&s);
-        let start = s.doc.features.len();
-        s.execute("solid.hole", &json!({"position": at, "diameter": diameter})).unwrap_or_else(|e| panic!("{design}: {e}"));
-        check(&s, start, &before).unwrap_or_else(|(kind, e)| panic!("{design}: {kind}: {e}"));
-        for id in ["sheet.unfold", "sheet.refold"] {
-            s.execute(id, &json!({})).unwrap_or_else(|e| panic!("{design} {id}: {e}"));
-        }
-    }
-}
-
-#[test]
 fn sketches_on_loft_and_sweep_faces() {
     let mut loft: Vec<Value> = rectangle(json!("XY"), [-20., -20.], [20., 20.]).into();
     loft.extend([
@@ -1573,16 +1477,7 @@ fn press_pull_on_the_pi_case_floor() {
 }
 
 #[test]
-fn sketches_after_a_draft_and_on_a_tapered_extrude() {
-    reproduces(
-        None,
-        json!([
-            {"command": "solid.box", "params": {"corner": [-20, -20, 0], "length": 40, "width": 40, "height": 30}},
-            {"command": "solid.draft", "params": {"faces": [[20, 0, 15], [-20, 0, 15], [0, 20, 15], [0, -20, 15]], "angle": "3 deg", "neutral": "XY"}},
-            {"command": "sketch.create", "params": {"plane": {"face": [0, 0, 30]}}},
-            {"command": "sketch.finish", "params": {}}
-        ]),
-    );
+fn sketches_on_a_tapered_extrude() {
     let mut taper: Vec<Value> = rectangle(json!("XY"), [-20., -20.], [20., 20.]).into();
     taper.extend([
         json!({"command": "solid.extrude", "params": {"distance": 30, "taper": "5 deg"}}),

@@ -83,8 +83,6 @@ file.save_as                      saving the design
 file.save_mesh                    saving a display mesh
 file.send_to_slicer               hands the file to a slicer
 file.slicers                      a listing of slicers
-frame.profile.list                a listing of the profile library
-frame.profile.properties          a profile's section properties from the library
 inspect.accessibility             display analysis: shading
 inspect.analysis                  display analysis: which one is on
 inspect.colored_components        display: component colours
@@ -110,10 +108,6 @@ material.properties.validate      materials and their properties
 model.edges                       a listing of the model's topology
 model.faces                       a listing of the model's topology
 model.threads                     a listing of the model's topology
-motion.delete                     removes a motion study
-motion.export                     writes a study's results to a file
-motion.export_animation           writes an animation
-motion.list                       a listing of motion studies
 panel.action                      controller actions; no geometry (crates/engine/src/panels/tests.rs and crates/ui-egui/src/panel_runtime/tests.rs)
 panel.activate                    application panel layout; no geometry (engine/UI/MCP tests)
 panel.close                       application panel layout; no geometry (engine/UI/MCP tests)
@@ -224,7 +218,6 @@ settings.profile.import           settings profiles: preferences saved, applied 
 settings.profile.list             settings profiles: preferences saved, applied and shared
 settings.profile.rename           settings profiles: preferences saved, applied and shared
 settings.profile.save             settings profiles: preferences saved, applied and shared
-sheet.rules                       a listing of sheet metal rules
 sketch.arc.tangent                2D sketch only (the sketch solver and engine tests); no kernel operation
 sketch.auto_constrain             2D sketch only (the sketch solver and engine tests); no kernel operation
 sketch.auto_constrain_from_datum  2D sketch only (the sketch solver and engine tests); no kernel operation
@@ -376,8 +369,6 @@ file.export_view_dxf              drawings: the projection of the model a view D
 inspect.draft                     inspect: the number or curves it reports
 inspect.parameter_sweep           inspect: results rebuilt over a parameter range
 inspect.section                   inspect: the number or curves it reports
-motion.trace.edit                 assemblies: motion results
-motion.trace.keep                 assemblies: motion results
 parts.fastener                    standard parts: a fastener body
 parts.insert                      standard parts: a part body
 parts.resize                      standard parts: a part resized

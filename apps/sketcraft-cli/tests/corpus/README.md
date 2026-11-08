@@ -13,9 +13,6 @@ it.
 | `m0-box-fillet-hole` | 3714342 | M0: sketch, parameters, extrude, fillet, cut |
 | `m0-revolve-primitives` | 3714342 | M0: revolve, primitives, combine, chamfer, timeline edit |
 | `components-arm` | 97d03e3 | components and occurrences: move, copy, Paste New, ground |
-| `joints-hinge` | c2309eb | joints: revolute hinge driven by a parameter |
-| `modern-sheet-metal` | bd98035 | sheet metal contour flange (oracle 72) |
-| `modern-path-pattern` | bd98035 | pattern on path (oracle 53) |
 | `modern-plastic` | bd98035 | shell, lip, boss, rest, snap fit, plastic rule |
 | `naming-split-pieces` | 9a979cf | format 13 names: a slot splits the top; fillet, chamfer and offset face name its pieces by number (`F2:top#2`) |
 | `move-bodies` | 00baf1d | `solid.move` before it could copy: two bodies, one translated in place, one translated and turned 90 deg about Z (no `copy` key anywhere in the file) |

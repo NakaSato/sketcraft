@@ -386,7 +386,7 @@ macro_rules! reads {
 /// A key the handlers refuse when it is left out, with their message: optional in the type, so
 /// the check leaves the refusal to the handler, and required in the schema.
 fn require(schema: &mut Schema, key: &str) {
-    super::motion::require(schema, key);
+    super::require(schema, key);
 }
 
 fn mode_required(schema: &mut Schema) {

@@ -56,6 +56,7 @@ const PROFILE_KEYS: &[&str] = &[
     "free_orbit",
     "free_orbit_upright",
     "hidden_toolbar_tabs",
+    "show_cad_tools",
     "hide_constraint_glyphs_zoomed_out",
     "history_in_browser",
     "history_play_button",

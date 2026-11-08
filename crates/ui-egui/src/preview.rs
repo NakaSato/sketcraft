@@ -386,9 +386,6 @@ pub fn update(app: &mut SketApp, ctx: &egui::Context) {
         }
     };
     let mut colors = Colors::for_tool(&Tokens::get(), &app.ui.tab, app.tool.is_some() || app.dialog.is_some());
-    if app.dialog.as_ref().is_some_and(|d| matches!(d.kind, crate::dialogs::Kind::Assembly(crate::dialogs_assembly::Asm::Drive { .. }))) {
-        colors.ghost = app.preferences.drive_joints_ghost;
-    }
     colors.tint_new = app.preferences.preview_tint_new_faces;
     colors.cut_tint = app.preferences.cut_preview_tint;
     let key = job_key(&cmds, app.session.revision, colors);
@@ -1143,58 +1140,6 @@ mod tests {
             assert!(pv.error.is_none(), "obsolete errors must not block Apply");
             assert!(pv.running.is_none());
         }
-    }
-
-    #[test]
-    fn motion_context_changes_only_when_the_joint_setup_changes() {
-        let commands = |angle| {
-            vec![
-                ("joint.edit".into(), json!({"joint": 1, "flip": true})),
-                ("joint.limits".into(), json!({"joint": 1, "min": "-135 deg", "max": "0 deg"})),
-                ("joint.drive".into(), json!({"joint": 1, "values": [angle]})),
-            ]
-        };
-        let key = motion_key(&commands("-30 deg"), 7, colors());
-        assert!(key.is_some());
-        assert_eq!(key, motion_key(&commands("-60 deg"), 7, colors()));
-        assert_ne!(key, motion_key(&commands("-60 deg"), 8, colors()));
-        let mut different = commands("-60 deg");
-        different[2].1["joint"] = json!(2);
-        assert_ne!(key, motion_key(&different, 7, colors()));
-        different = commands("-60 deg");
-        different[1].1["min"] = json!("-90 deg");
-        assert_ne!(key, motion_key(&different, 7, colors()));
-        different = commands("-60 deg");
-        different[0].1["flip"] = json!(false);
-        assert_ne!(key, motion_key(&different, 7, colors()));
-        let mut other_colors = colors();
-        other_colors.body = [9, 9, 9, 255];
-        assert_ne!(key, motion_key(&commands("-60 deg"), 7, other_colors));
-        assert!(motion_key(&[("solid.extrude".into(), json!({"distance": 10}))], 7, colors()).is_none());
-        for command in ["joint.create", "joint.drive"] {
-            assert_eq!(
-                motion_key(&[(command.into(), json!({"joint": 1, "values": [0]}))], 7, colors()),
-                motion_key(&[(command.into(), json!({"joint": 1, "values": [90]}))], 7, colors()),
-            );
-        }
-        // A gear dialog playing its driving joint streams its poses too.
-        let gear = |angle: &str| {
-            vec![
-                ("joint.gear".to_string(), json!({"a": 1, "b": 2, "ra": 10, "rb": 20})),
-                ("joint.drive".to_string(), json!({"joint": 1, "values": [angle]})),
-            ]
-        };
-        assert!(motion_key(&gear("0 deg"), 7, colors()).is_some());
-        assert_eq!(motion_key(&gear("0 deg"), 7, colors()), motion_key(&gear("90 deg"), 7, colors()));
-        // So does a cam dialog turning its cam.
-        let cam = |angle: &str| {
-            vec![
-                ("joint.cam".to_string(), json!({"a": 1, "b": 2, "profile": {"sketch": 3}})),
-                ("joint.drive".to_string(), json!({"joint": 1, "values": [angle]})),
-            ]
-        };
-        assert!(motion_key(&cam("0 deg"), 7, colors()).is_some());
-        assert_eq!(motion_key(&cam("0 deg"), 7, colors()), motion_key(&cam("90 deg"), 7, colors()));
     }
 
     #[test]

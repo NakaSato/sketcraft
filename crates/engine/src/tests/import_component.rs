@@ -6,7 +6,6 @@
 
 use serde_json::{Value, json};
 use sketcore_record::Vec3;
-use sketcraft_geom::Aabb3;
 use sketcraft_kernel::{ExportBody, ExportProduct, StepHeader, box_solid, step_export_products};
 
 use super::run;
@@ -94,33 +93,6 @@ fn component<'a>(list: &'a [Value], name: &str) -> &'a Value {
     list.iter().find(|c| c["name"] == name).unwrap_or_else(|| panic!("no component {name}: {list:?}"))
 }
 
-fn occurrence_named(s: &Session, name: &str) -> u64 {
-    s.doc.occurrences.iter().find(|o| o.name == name).unwrap_or_else(|| panic!("no occurrence {name}")).id
-}
-
-/// The world corner of the bodies of one occurrence (by name) nearest -∞.
-fn corner_of(s: &Session, occurrence: &str) -> Vec3 {
-    let occ = occurrence_named(s, occurrence);
-    let path = {
-        let mut path = vec![occ];
-        let mut parent = s.doc.occurrences.iter().find(|o| o.id == occ).unwrap().parent;
-        while parent != 0 {
-            let o = s.doc.occurrence_of(parent).unwrap();
-            path.insert(0, o.id);
-            parent = o.parent;
-        }
-        path
-    };
-    let names = s.occurrence_bodies(&path, true).unwrap();
-    assert!(!names.is_empty());
-    let world = s.world_state().unwrap();
-    world.bodies.iter().filter(|b| names.contains(&b.name)).fold(Aabb3::EMPTY, |a, b| a.union(&sketcraft_kernel::measure(&b.body).unwrap().bbox)).min
-}
-
-fn close(a: Vec3, b: Vec3) -> bool {
-    a.dist(b) < 1e-6
-}
-
 /// A box exported as `name.step` in `dir`.
 fn part_file(dir: &std::path::Path, name: &str) -> String {
     let mut s = Session::default();
@@ -194,71 +166,6 @@ fn a_step_assembly_comes_in_as_nested_components_with_its_instances() {
     run(&mut again, "doc.open", json!({"path": design}));
     assert_eq!(shown_boxes(&again), file_boxes(&path));
     assert_eq!(again.doc.components.len(), 5);
-    let _ = std::fs::remove_dir_all(&dir);
-}
-
-/// Each occurrence's degrees of freedom, as `joint.list` gives them.
-fn dofs(s: &mut Session) -> (std::collections::BTreeMap<u64, u64>, Value) {
-    let r = run(s, "joint.list", json!({}));
-    let dof = r["dof"].as_array().unwrap().iter().map(|d| (d["occurrence"].as_u64().unwrap(), d["dof"].as_u64().unwrap())).collect();
-    (dof, r)
-}
-
-#[test]
-fn an_imported_assembly_moves_as_one_until_it_is_unlocked() {
-    let dir = temp_dir("rigid");
-    let path = rig_file(&dir);
-    let mut s = Session::default();
-    run(&mut s, "file.insert_step", json!({"path": path}));
-    let rig = occurrence_named(&s, "rig:1");
-    let inside: Vec<u64> = s.doc.occurrences.iter().filter(|o| o.id != rig).map(|o| o.id).collect();
-    assert_eq!(inside.len(), 6);
-    let pin = corner_of(&s, "Pin:2");
-    let arm = corner_of(&s, "Arm:1");
-
-    // The whole import is one rigid body: no part of it moves against the others.
-    let (dof, r) = dofs(&mut s);
-    assert!(r["conflicts"].as_array().unwrap().is_empty(), "{r}");
-    for o in &inside {
-        assert_eq!(dof.get(o), dof.get(&rig), "occurrence {o} moves only with the import: {r}");
-    }
-    // The design's first part is grounded when it comes in; free, it moves.
-    run(&mut s, "occurrence.ground", json!({"occurrence": "rig:1", "grounded": false}));
-
-    // Moving the import's component moves everything in it.
-    run(&mut s, "occurrence.move", json!({"occurrence": "rig:1", "translate": [0, 0, 50]}));
-    assert!(close(corner_of(&s, "Pin:2"), pin + Vec3::new(0.0, 0.0, 50.0)), "{:?}", corner_of(&s, "Pin:2"));
-    assert!(close(corner_of(&s, "Arm:1"), arm + Vec3::new(0.0, 0.0, 50.0)));
-    // A part inside doesn't move on its own; the refusal says what to move instead.
-    for part in ["Pin:2", "Pin:1"] {
-        let e = s.execute("occurrence.move", &json!({"occurrence": part, "translate": [30, 0, 0]})).unwrap_err().to_string();
-        assert!(e.contains("move rig"), "{e}");
-    }
-    assert!(close(corner_of(&s, "Pin:2"), pin + Vec3::new(0.0, 0.0, 50.0)));
-
-    // Next to a grounded part of mine the import is still one rigid body.
-    run(&mut s, "component.create", json!({"name": "Mine"}));
-    run(&mut s, "solid.box", json!({"length": 5, "width": 5, "height": 5, "corner": [-50, 0, 0]}));
-    run(&mut s, "component.activate", json!({"component": "root"}));
-    run(&mut s, "occurrence.ground", json!({"occurrence": "Mine:1", "grounded": true}));
-    let (dof, r) = dofs(&mut s);
-    for o in &inside {
-        assert_eq!(dof.get(o), dof.get(&rig), "{r}");
-    }
-    assert!(r["conflicts"].as_array().unwrap().is_empty(), "{r}");
-
-    // Unlocked (one undo step), the parts move one by one.
-    let undo = s.undo.len();
-    let r = run(&mut s, "component.unlock", json!({"component": "rig"}));
-    assert_eq!(r["joints"].as_array().unwrap().len(), 6, "{r}");
-    assert_eq!(s.undo.len(), undo + 1);
-    run(&mut s, "occurrence.move", json!({"occurrence": "Pin:2", "translate": [30, 0, 0]}));
-    assert!(close(corner_of(&s, "Pin:2"), pin + Vec3::new(30.0, 0.0, 50.0)), "{:?}", corner_of(&s, "Pin:2"));
-    assert!(close(corner_of(&s, "Arm:1"), arm + Vec3::new(0.0, 0.0, 50.0)), "the others stay");
-    run(&mut s, "edit.undo", json!({}));
-    run(&mut s, "edit.undo", json!({}));
-    assert_eq!(s.doc.assembly.joints.len(), 6, "undo locks it again");
-    assert!(s.execute("component.unlock", &json!({"component": "Mine"})).is_err(), "nothing holds my own component");
     let _ = std::fs::remove_dir_all(&dir);
 }
 
@@ -459,64 +366,6 @@ fn group_refusal_says_why_a_selection_cannot_be_grouped() {
     assert_eq!(s.group_refusal(&[b], Some(run_id)), None, "inside the folder it nests");
     assert_eq!(s.group_refusal(&[c, d], None), None, "a folder's last feature leaves it for the new folder");
     assert!(s.group_refusal(&[], None).is_some());
-}
-
-/// The parts of one STEP import share their face names, and each keeps its body where the file
-/// has it, placed in its component by an offset. A joint on one part's hole takes that part's
-/// hole, not the other part's hole of that name, though the pick (in the part's own coordinates)
-/// lies nearer that one as the bodies lie.
-#[test]
-fn a_joint_on_an_imported_part_takes_its_own_hole() {
-    // Two 40 × 30 × 5 plates with a 6.2 mm hole through each: A's at (28, 20), B's at (10, 10);
-    // B placed 60 mm along X, so its hole is at (70, 10) in the world.
-    let plate = |x: f64, y: f64| {
-        let mut s = Session::default();
-        run(&mut s, "solid.box", json!({"length": 40, "width": 30, "height": 5}));
-        run(&mut s, "solid.hole", json!({"position": [x, y, 5], "diameter": 6.2, "depth": 5}));
-        s.model.state().bodies[0].body.clone()
-    };
-    let (a, b) = (plate(28.0, 20.0), plate(10.0, 10.0));
-    let part = |name: &str, body| ExportProduct {
-        name: name.into(),
-        bodies: vec![ExportBody { name: name.into(), body, color: None }],
-        children: Vec::new(),
-    };
-    let products = vec![
-        ExportProduct {
-            name: "Pair".into(),
-            bodies: Vec::new(),
-            children: vec![(1, at(0.0, 0.0, 0.0), "A-1".into()), (2, at(60.0, 0.0, 0.0), "B-1".into())],
-        },
-        part("A", &a),
-        part("B", &b),
-    ];
-    let dir = temp_dir("own-hole");
-    let path = dir.join("pair.step");
-    std::fs::write(&path, step_export_products(&products, 0, &StepHeader::default()).unwrap()).unwrap();
-    let mut s = Session::default();
-    run(&mut s, "file.insert_step", json!({"path": path.to_string_lossy()}));
-    let _ = std::fs::remove_dir_all(&dir);
-
-    // A pin jointed into B's hole, picked on its wall.
-    let on_b = occurrence_named(&s, "B:1");
-    let pin = run(&mut s, "component.create", json!({"name": "Pin"}))["occurrence"].as_u64().unwrap();
-    run(&mut s, "solid.cylinder", json!({"radius": 3, "height": 10, "base": [0, -40, 0]}));
-    run(&mut s, "component.activate", json!({"component": "root"}));
-    let a = json!({"occurrence": pin, "point": [0, -40, 0]});
-    run(&mut s, "joint.create", json!({"type": "rigid", "name": "Into B", "a": a, "b": {"occurrence": on_b, "circle": [73.1, 10, 2.5]}}));
-    let o = s.doc.assembly.joints.iter().find(|j| j.name == "Into B").unwrap().b.clone();
-    let st = s.model.state();
-    // A's hole has the very name B's has (the case this is about).
-    let sketcraft_doc::joints::Snap::CircleCenter { face: Some(name), .. } = &o.snap else { panic!("{:?}", o.snap) };
-    let a_comp = s.doc.occurrences.iter().find(|x| x.id == occurrence_named(&s, "A:1")).unwrap().component;
-    let a_body = st.bodies.iter().find(|x| s.doc.model_body_component(x) == a_comp).unwrap();
-    assert!(sketcraft_doc::naming::face_names(a_body).iter().any(|n| n == name), "{name}");
-    let f = sketcraft_doc::joints::resolve_origin(&s.doc, &st, &o).unwrap();
-    let at = sketcraft_doc::apply_point(&sketcraft_doc::joints::occurrence_world(&s.doc, on_b), Vec3::new(f[3][0], f[3][1], f[3][2]));
-    assert!(Vec3::new(at.x, at.y, 0.0).dist(Vec3::new(70.0, 10.0, 0.0)) < 1e-6, "B's hole is at (70, 10), the joint at {at:?}");
-    // And the pin stands in it.
-    let pin_at = sketcraft_doc::apply_point(&sketcraft_doc::joints::occurrence_world(&s.doc, pin), Vec3::new(0.0, -40.0, 0.0));
-    assert!(Vec3::new(pin_at.x, pin_at.y, 0.0).dist(Vec3::new(70.0, 10.0, 0.0)) < 1e-6, "the pin's base is at {pin_at:?}");
 }
 
 /// Each component's bodies, by component name.

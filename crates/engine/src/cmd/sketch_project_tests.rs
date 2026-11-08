@@ -532,7 +532,7 @@ fn intersection_curve_of_picked_faces_spans_the_whole_surface() {
     run(&mut s, "sketch.create", json!({"plane": "XY", "name": "Wave"}));
     let wave = ids(&run(&mut s, "sketch.spline.fit_point", json!({"points": [[0, 0], [9.5, 12], [30.5, 7], [52, 15]]}))["curves"])[0].clone();
     run(&mut s, "sketch.finish", json!({}));
-    run(&mut s, "surface.extrude", json!({"sketch": "Wave", "curves": [wave], "distance": "wall_h", "body_name": "Wall"}));
+    crate::cmd::sheet_fixtures::extrude(&mut s, json!({"sketch": "Wave", "curves": [wave], "distance": "wall_h", "body_name": "Wall"}));
     run(&mut s, "sketch.create", json!({"plane": "XZ", "name": "Roof"}));
     // XZ sketch y is world -Z, so the arc peaks at world z = 15.
     let arc = run(&mut s, "sketch.arc.three_point", json!({"start": [0, 0], "end": [50, 0], "through": [25, -15]}))["created"]["curves"][0]
@@ -540,7 +540,7 @@ fn intersection_curve_of_picked_faces_spans_the_whole_surface() {
         .unwrap()
         .to_string();
     run(&mut s, "sketch.finish", json!({}));
-    run(&mut s, "surface.extrude", json!({"sketch": "Roof", "curves": [arc], "distance": 30, "body_name": "Roof"}));
+    crate::cmd::sheet_fixtures::extrude(&mut s, json!({"sketch": "Roof", "curves": [arc], "distance": 30, "body_name": "Roof"}));
 
     let st = s.model.state();
     let wall = st.body("Wall").unwrap();
@@ -701,7 +701,7 @@ fn intersection_curve_of_two_sketch_curves() {
     check(&s, id, 45.0);
 
     // A curve against a face: the side curve's surface, extruded for real, gives the same crossing.
-    run(&mut s, "surface.extrude", json!({"sketch": "Side", "curves": [side], "distance": 30, "body_name": "Roof"}));
+    crate::cmd::sheet_fixtures::extrude(&mut s, json!({"sketch": "Side", "curves": [side], "distance": 30, "body_name": "Roof"}));
     run(&mut s, "sketch.create", json!({"plane": "XY"}));
     let on_face = s.active_sketch.unwrap();
     run(&mut s, "sketch.intersection_curve", json!({"a": {"face": [10, 15, 6], "body": "Roof"}, "b": {"sketch": "Top", "curve": top}}));
@@ -793,51 +793,6 @@ fn tilted_circles_project_to_exact_ellipses_and_splines_stay_splines() {
     let c = si["curves"].as_array().unwrap().iter().find(|c| c["id"] == r["links"][0]["curves"][0]).unwrap().clone();
     assert_eq!(c["type"], "spline", "{c}");
     assert_eq!(c["points"].as_array().unwrap().len(), 3);
-}
-
-#[test]
-fn sweeps_and_pipes_follow_3d_sketch_curves() {
-    // A line projected onto a sphere: a 3D arc on its top.
-    let mut s = Session::default();
-    run(&mut s, "solid.sphere", json!({"center": [0, 0, 0], "radius": 20}));
-    run(&mut s, "sketch.create", json!({"plane": "XY", "offset": 50}));
-    let l = ids(&run(&mut s, "sketch.line", json!({"points": [[-12, 0], [12, 0]]}))["curves"])[0].clone();
-    run(&mut s, "sketch.finish", json!({}));
-    let src = s.doc.features.last().unwrap().id;
-    run(&mut s, "sketch.create", json!({"plane": "XY"}));
-    let r = run(&mut s, "sketch.project_to_surface", json!({"curves": [{"sketch": src, "curve": l}], "face": [0, 0, 20]}));
-    let wid = r["links"][0]["wires"][0].as_str().unwrap().to_string();
-    let path_sketch = s.active_sketch.unwrap();
-    let pts = {
-        let st = s.model.state();
-        let sk = &st.sketch(path_sketch).unwrap().sketch;
-        sk.wires[sk.wire_index(&wid).unwrap()].pts.clone()
-    };
-    run(&mut s, "sketch.finish", json!({}));
-    let len: f64 = pts.windows(2).map(|w| w[0].dist(w[1])).sum();
-    // A pipe along it: volume ≈ π r² × length.
-    let before = s.model.state().bodies.len();
-    run(&mut s, "solid.pipe", json!({"path_sketch": path_sketch, "path": [wid.clone()], "diameter": "2 mm", "operation": "new"}));
-    let st = s.model.state();
-    assert_eq!(st.bodies.len(), before + 1);
-    let v = st.bodies.last().unwrap().mesh().measure().volume;
-    let want = std::f64::consts::PI * len;
-    assert!((v - want).abs() < 0.05 * want, "{v} vs {want}");
-    drop(st);
-    // A sweep of a square profile drawn square to the curve at its start.
-    let (a, b) = (pts[0], pts[1]);
-    let t = (b - a).normalized().unwrap();
-    let x = t.cross(sketcore_record::Vec3::Z).normalized().unwrap();
-    let y = t.cross(x);
-    run(&mut s, "sketch.create", json!({"plane": {"origin": [a.x, a.y, a.z], "x_dir": [x.x, x.y, x.z], "y_dir": [y.x, y.y, y.z]}}));
-    run(&mut s, "sketch.rectangle.two_point", json!({"p0": [-1, -1], "p1": [1, 1]}));
-    let prof = s.active_sketch.unwrap();
-    run(&mut s, "sketch.finish", json!({}));
-    run(&mut s, "solid.sweep", json!({"sketch": prof, "path_sketch": path_sketch, "path": [wid], "operation": "new"}));
-    let st = s.model.state();
-    assert_eq!(st.bodies.len(), before + 2);
-    let v = st.bodies.last().unwrap().mesh().measure().volume;
-    assert!((v - 4.0 * len).abs() < 0.05 * 4.0 * len, "{v} vs {}", 4.0 * len);
 }
 
 /// #47: references to other bodies: an edge, a face's loops and a silhouette of a second body

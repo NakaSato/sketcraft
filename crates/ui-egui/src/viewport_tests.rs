@@ -5582,30 +5582,6 @@ fn a_marquee_in_a_design_with_a_body_takes_only_the_bodies() {
     assert!(taken.iter().all(|s| matches!(s, Sel::Body { .. })), "a design with a body takes the bodies alone, not the regions: {taken:?}");
 }
 
-/// #7058: a mask that asks for edges or faces never takes the regions: the regions are
-/// neither. The Patch dialog's boundary input takes profiles or edges, so the marquee must
-/// leave it the edges alone.
-#[test]
-fn a_marquee_in_a_dialog_that_asks_for_edges_takes_no_region() {
-    let mut h = crate::scenario::Harness::new();
-    let svg = r#"<svg width="40mm" height="40mm" viewBox="0 0 40 40"><path d="M0 0 H40 V40 H0 Z"/></svg>"#;
-    let imported = h.app.run("sketch.insert_svg", json!({"text": svg})).unwrap();
-    let sketch = imported["sketch"].as_u64().unwrap();
-    h.app.run("sketch.finish", json!({})).unwrap();
-    h.call("ui.view", json!({"view": "top"}));
-    // The Patch dialog takes its boundary from profiles or edges.
-    h.step(&json!({"start": "surface.patch"})).unwrap();
-    assert!(h.app.dialog.is_some(), "the patch dialog is open");
-    let st = crate::open_meshing::session_world(&h.app.session);
-    let ss = st.sketch(sketch).unwrap();
-    let (low, high) = ss.sketch.bounds().unwrap();
-    let a = ss.plane.to_world(Vec2::new(low.x - 5.0, low.y - 5.0));
-    let b = ss.plane.to_world(Vec2::new(high.x + 5.0, high.y + 5.0));
-    h.step(&json!({"drag": [{"world": [a.x, a.y, a.z]}, {"world": [b.x, b.y, b.z]}]})).unwrap();
-    let items = h.app.dialog.as_ref().unwrap().inputs[0].items.clone();
-    assert!(!items.iter().any(|s| matches!(s, Sel::Profile { .. })), "a mask that asks for edges takes no region: {items:?}");
-}
-
 /// #4376: with the Lasso selection shape, a drag in a sketch draws a freehand loop and takes
 /// the curves wholly inside it. An L shaped loop leaves out a line in its notch and a line
 /// that cuts across the notch, which no rectangle could; Shift adds to the selection.

@@ -131,12 +131,6 @@ pub fn anchor(app: &SketApp, d: &Dialog) -> Option<(Vec3, Option<Vec3>)> {
             (at, along_face.or_else(|| st.body(body).and_then(|b| blend_grow_dir(&b.mesh(), *index, at))))
         }
         Kind::Fillet { .. } | Kind::Shell { .. } => (at, normal.map(|n| -n)),
-        // A hem's handle starts on the centre line of its layer and runs to its tip (#5828).
-        Kind::Sheet(crate::dialogs_sheet::Sm::Hem { .. }) => match crate::dialogs_sheet::hem_handle(app, d) {
-            Some((start, dir)) => (start, Some(dir)),
-            None => (at, normal),
-        },
-        Kind::Sheet(_) => (at, crate::dialogs_sheet::arrow(app, d).or(normal)),
         Kind::Plastic(_) => (at, normal),
         Kind::PatternRect { .. } => (at, d.inputs.get(1).and_then(|i| i.items.first()).and_then(|x| crate::dialogs::axis_of(app, x)).map(|a| a.1)),
         // A sketch move's X Distance grows along the sketch's own x axis, so its drag arrow
@@ -322,8 +316,7 @@ pub(crate) fn chamfer_face_dirs(app: &SketApp, d: &Dialog, at: Vec3) -> Option<(
 pub(crate) fn owns_pointer(app: &SketApp, proj: &Proj, p: Pos2) -> bool {
     // The triad only registers an egui hit widget after a handle is under the pointer.
     // Test its geometry before navigation, including the first frame entering a handle.
-    crate::joint_handles::owns_pointer(app, proj, p)
-        || app.dialog.as_ref().and_then(|d| crate::dialogs_move::triad(app, d)).is_some_and(|t| crate::gizmo::contains_pointer(proj, &t, p))
+    app.dialog.as_ref().and_then(|d| crate::dialogs_move::triad(app, d)).is_some_and(|t| crate::gizmo::contains_pointer(proj, &t, p))
         || app
             .dialog
             .as_ref()
@@ -350,10 +343,6 @@ pub fn show(app: &mut SketApp, ui: &mut egui::Ui, painter: &egui::Painter, proj:
     let Some(mut d) = app.dialog.take() else { return };
     if matches!(d.kind, Kind::Assembly(_)) {
         crate::dialogs_assembly::overlay(app, painter, proj, &mut d);
-        app.dialog = Some(d);
-        return;
-    }
-    if crate::dialogs_sheet::overlay(app, painter, proj.rect, &d) {
         app.dialog = Some(d);
         return;
     }

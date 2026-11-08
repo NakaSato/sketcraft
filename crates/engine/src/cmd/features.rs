@@ -13,8 +13,8 @@ use sketcraft_geom::prelude::*;
 use super::{CommandSpec, not_in_sketch};
 use crate::params::{UNKNOWN_COMMAND, bad, bool_, expr, expr_problem, req_expr, str_, string_list, string_list_or_default, vec2, vec3};
 use crate::schema::features::{
-    AppliedRadius, BoundingSolidParams, BoxParams, ConeParams, CylinderParams, ExtrudeParams, FeatureNotice, FeatureResult, FilletParams,
-    FilletResult, NoticeAction, OffsetPlaneParams, PipeParams, PlaneAtAngleParams, RotateParams, ScaleParams, SphereParams, TorusParams,
+    AppliedRadius, BoxParams, ConeParams, CylinderParams, ExtrudeParams, FeatureNotice, FeatureResult, FilletParams,
+    FilletResult, NoticeAction, OffsetPlaneParams, PlaneAtAngleParams, RotateParams, ScaleParams, SphereParams, TorusParams,
 };
 use crate::schema::{TypedContract, output_schema_for};
 use crate::{EngineError, Result, Session};
@@ -25,8 +25,6 @@ const CYLINDER_CONTRACT: TypedContract<CylinderParams> = TypedContract::new();
 const SPHERE_CONTRACT: TypedContract<SphereParams> = TypedContract::new();
 const TORUS_CONTRACT: TypedContract<TorusParams> = TypedContract::new();
 const CONE_CONTRACT: TypedContract<ConeParams> = TypedContract::new();
-const PIPE_CONTRACT: TypedContract<PipeParams> = TypedContract::new();
-const BOUNDING_SOLID_CONTRACT: TypedContract<BoundingSolidParams> = TypedContract::new();
 const SCALE_CONTRACT: TypedContract<ScaleParams> = TypedContract::new();
 const ROTATE_CONTRACT: TypedContract<RotateParams> = TypedContract::new();
 const OFFSET_PLANE_CONTRACT: TypedContract<OffsetPlaneParams> = TypedContract::new();
@@ -97,28 +95,12 @@ pub static COMMANDS: &[CommandSpec] = &[
         .at("SOLID", "CREATE")
         .icon("pattern_circ")
         .params("features: [names] | bodies: [names] | components: [names]; axis: X|Y|Z | construction axis name (followed when edited) | {origin, dir} (origin coordinates may be length expressions; the pattern follows them) | {edge|face: [x,y,z]} (a straight or circular edge, or a cylinder, cone or torus face: about its axis, followed as the model changes); count; angle? (default 360 deg; partial arcs include both ends); alignment?: left|center|right (default right; original stays fixed); reversed?: bool (Flip; selects the extra side for even centered counts)"),
-    CommandSpec::new("solid.pattern.path", "Pattern on Path", pattern_path)
-        .at("SOLID", "CREATE")
-        .icon("pattern_path")
-        .params("features: [names] | bodies: [names]; path_sketch: sketch; path: [curve ids in order]; count; spacing (between instances) | distance (first to last); orientation?: identical|path; flip?: bool"),
     CommandSpec::new("solid.mirror", "Mirror", mirror).at("SOLID", "CREATE").icon("mirror").params("features: [names] | bodies: [names] (combine?: join with the original); plane: XY|XZ|YZ|construction plane name or id|{origin, normal}|{origin, x_dir, y_dir} (origin coordinates may be length expressions; the mirror follows them, or a construction plane)"),
     CommandSpec::new("solid.hole", "Hole", hole)
         .at("SOLID", "CREATE")
         .icon("hole")
         .key("H")
         .params("position: [x,y,z] on a face (numbers, or length expressions the hole follows) | sketch + points: [sketch point ids] (one hole each, perpendicular to the sketch, into the material on whichever side of the sketch plane it is) | sketch alone (every sketch point: standalone points and circle centres); flip?: bool (sketch points: drill to the other side); single?: bool (with one sketch point: a Single hole that follows the point, drilled into the face there); direction?: [x,y,z] (default: into the face, against its outward normal; where faces of several bodies meet there, the face of a body in `targets`; one that leaves the face is mirrored into it; ignored with sketch points unless single); diameter | thread (a tapped hole, drilled with the tap maker's tabulated drill: ISO metric (a custom metric size: major minus pitch), UNC/UNF, G, Rp, Rc 1/16 to 4, NPT 1/16 to 3; a `diameter` given with it chooses another drill, from the thread's minor diameter to 5% over the tap maker's) | clearance: \"M6\" with fit?: close|normal|loose (ISO 273); depth? (default through all) | to?: [x,y,z] (To Object: drill to that face or point); references?: [{edge: [x,y,z] on a straight edge of the face, distance: expr}] (at most two; the centre goes that far from each edge's line, in the face's plane, and follows the edges; with a numeric position only); type?: simple|drilled|counterbore|countersink; tip_angle?; cb_diameter?, cb_depth?, bridge?: length (counterbore: two 3D-printing bridge layers this thick below its floor, a slot along X then a square; e.g. 0.2 mm); cs_diameter?, cs_angle?; thread?: \"M6\", \"1/4-20 UNC\", \"G 1/4\", \"Rp 1/4\", \"Rc 1/4\" or \"1/4-18 NPT\" (cosmetic unless modeled); hand?: right|left (the tapped thread's hand; default right; needs thread); thread_depth?: positive length independent of drill depth (default: full useful cylindrical wall; must fit that wall); modeled?: bool (needs thread: the tapped thread cut into the wall, the groove between its teeth, as solid.thread's modelled one; default false: listed only); ease_out?: expr|standard|short (modelled tapped threads: the inner end, towards the bottom, fades out over this length, ISO 3508's runout, standard 2.5 P, short 1.25 P; without it the groove stops square at thread_depth, or clear of a blind hole's bottom); targets?: [body] (the bodies to drill; holes at the points of a sketch on a body's face default to that body, found along the holes' direction on it alone; explicit targets or participants override, [\"*\"] every body)"),
-    CommandSpec::new("solid.pipe", "Pipe", crate::checked!("solid.pipe", pipe))
-        .at("SOLID", "CREATE")
-        .icon("pipe")
-        .contract(&PIPE_CONTRACT)
-        .output(output_schema_for::<FeatureResult>)
-        .params("path_sketch: sketch; path: [curve ids in order]; diameter: expr; wall?: expr (hollow); operation?, targets?, name?, body_name?"),
-    CommandSpec::new("solid.bounding_solid", "Bounding Solid", crate::checked!("solid.bounding_solid", bounding_solid))
-        .at("SOLID", "CREATE")
-        .icon("bounding_solid")
-        .contract(&BOUNDING_SOLID_CONTRACT)
-        .output(output_schema_for::<FeatureResult>)
-        .params("bodies?: [names] (default: all); margin?: expr; name?, body_name?"),
     CommandSpec::new("solid.scale", "Scale", crate::checked!("solid.scale", scale))
         .at("SOLID", "MODIFY")
         .icon("scale")
@@ -141,10 +123,6 @@ pub static COMMANDS: &[CommandSpec] = &[
         .at("SOLID", "MODIFY")
         .icon("shell")
         .params("faces: [[x,y,z] points on the faces to remove, or face names from model.faces; none: a closed hollow body]; thickness: expr; direction?: inside|outside|both; tangent_chain?: bool (also open faces joined smoothly to the picked ones); body? (needed with no faces when there are several bodies)"),
-    CommandSpec::new("solid.draft", "Draft", draft)
-        .at("SOLID", "MODIFY")
-        .icon("draft")
-        .params("faces: [[x,y,z] points, or face names from model.faces]; angle: expr; neutral: XY|XZ|YZ|plane name|{origin, normal}; pull?: [x,y,z] (default: neutral plane normal); body?"),
     CommandSpec::new("construct.plane.offset", "Offset Plane", crate::checked!("construct.plane.offset", plane_offset))
         .at("SOLID", "CONSTRUCT")
         .icon("plane")
@@ -2338,32 +2316,6 @@ fn pattern_circ(s: &mut Session, p: &Value) -> Result<Value> {
     finish_pattern(s, p, features, pattern, bodies)
 }
 
-fn pattern_path(s: &mut Session, p: &Value) -> Result<Value> {
-    let cmd = "solid.pattern.path";
-    let (features, bodies) = pattern_sources(s, p, cmd)?;
-    let path_sketch = sketch_id(s, p.get("path_sketch").or_else(|| p.get("sketch")), cmd, "path_sketch")?;
-    let path = string_list(cmd, p, "path")?;
-    if path.is_empty() || path.len() > 1000 {
-        return Err(bad(cmd, "`path` must list 1…1000 curve ids"));
-    }
-    let count = req_expr(cmd, p, "count")?;
-    check_count(s, &count, cmd, "count")?;
-    let (spacing, extent) = match (expr(p, "spacing"), expr(p, "distance")) {
-        (Some(x), _) => (x, false),
-        (None, Some(x)) => (x, true),
-        (None, None) => return Err(bad(cmd, "give `spacing` (between instances) or `distance` (first to last)")),
-    };
-    check_expr(s, &spacing, Kind::Length, cmd, "spacing")?;
-    let orient = match str_(p, "orientation") {
-        None | Some("identical") => false,
-        Some("path" | "path_direction" | "along_path") => true,
-        Some(o) => return Err(bad(cmd, format!("unknown orientation `{o}` (identical or path)"))),
-    };
-    let flip = bool_(p, "flip").unwrap_or(false);
-    let pattern = sketcraft_doc::PatternKind::Path { path_sketch: SketchId(path_sketch), path, count, spacing, extent, flip, orient };
-    finish_pattern(s, p, features, pattern, bodies)
-}
-
 fn mirror(s: &mut Session, p: &Value) -> Result<Value> {
     let cmd = "solid.mirror";
     let bodies = string_list(cmd, p, "bodies")?;
@@ -3151,28 +3103,6 @@ fn shell(s: &mut Session, p: &Value) -> Result<Value> {
     )
 }
 
-fn draft(s: &mut Session, p: &Value) -> Result<Value> {
-    let cmd = "solid.draft";
-    let faces = face_points(s, p, cmd)?;
-    let angle = req_expr(cmd, p, "angle")?;
-    check_expr(s, &angle, Kind::Angle, cmd, "angle")?;
-    let neutral = plane_param(s, p.get("neutral"), cmd)?;
-    let (vals, _) = s.doc.param_values();
-    let pl = s.doc.resolve_plane_in(&vals, &neutral, 0, Some(&s.model.state()))?;
-    let pull = p.get("pull").and_then(vec3).unwrap_or_else(|| pl.normal());
-    add_feature(
-        s,
-        p,
-        FeatureKind::Draft {
-            faces: faces.into_iter().map(FacePick).collect(),
-            angle,
-            neutral,
-            pull: Dir(pull),
-            body: str_(p, "body").map(BodyName::from),
-        },
-    )
-}
-
 pub(super) fn sketch_id(s: &Session, v: Option<&Value>, cmd: &str, what: &str) -> Result<u64> {
     let key = sketch_key(v).ok_or_else(|| bad(cmd, format!("`{what}` must be a sketch id or name")))?;
     match s.doc.find_feature(&key) {
@@ -3484,40 +3414,6 @@ fn thread(s: &mut Session, p: &Value) -> Result<Value> {
         reply["warning"] = w.clone();
     }
     Ok(reply)
-}
-
-fn pipe(s: &mut Session, p: &Value) -> Result<Value> {
-    let cmd = "solid.pipe";
-    let path_sketch = sketch_id(s, p.get("path_sketch"), cmd, "path_sketch")?;
-    let path = string_list(cmd, p, "path")?;
-    if path.is_empty() {
-        return Err(bad(cmd, "`path` must list curve ids"));
-    }
-    let diameter = req_expr(cmd, p, "diameter")?;
-    check_expr(s, &diameter, Kind::Length, cmd, "diameter")?;
-    let wall = expr(p, "wall");
-    if let Some(w) = &wall {
-        check_expr(s, w, Kind::Length, cmd, "wall")?;
-    }
-    add_feature(
-        s,
-        p,
-        FeatureKind::Pipe {
-            path_sketch: SketchId(path_sketch),
-            path,
-            diameter,
-            wall,
-            operation: operation(p, cmd)?,
-            targets: string_list(cmd, p, "targets")?.into_iter().map(BodyName).collect(),
-        },
-    )
-}
-
-fn bounding_solid(s: &mut Session, p: &Value) -> Result<Value> {
-    let cmd = "solid.bounding_solid";
-    let margin = expr(p, "margin").unwrap_or_else(|| "0".into());
-    check_expr(s, &margin, Kind::Length, cmd, "margin")?;
-    add_feature(s, p, FeatureKind::BoundingSolid { bodies: string_list(cmd, p, "bodies")?.into_iter().map(BodyName).collect(), margin })
 }
 
 fn scale(s: &mut Session, p: &Value) -> Result<Value> {

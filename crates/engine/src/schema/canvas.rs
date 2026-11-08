@@ -15,7 +15,7 @@ use serde::{Deserialize, Deserializer, Serialize};
 use serde_json::{Value, json};
 
 use super::check::whole;
-use super::motion::require;
+use super::require;
 use super::types::{LengthExpr, Point2, Point3};
 use crate::params;
 

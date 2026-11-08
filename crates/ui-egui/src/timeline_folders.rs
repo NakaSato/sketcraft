@@ -11,7 +11,7 @@
 //!
 //! How folders and the automatic component fold combine is in `timeline_fold`.
 use crate::ui_kit::BackingTooltipExt as _;
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 
 use serde_json::json;
 use sketcraft_engine::doc::{Document, TimelineGroup};
@@ -60,8 +60,6 @@ pub(crate) struct Folders {
     names: HashMap<u64, String>,
     /// Each folder's own joints, in the design's order.
     pub joints: HashMap<u64, Vec<u64>>,
-    /// Every joint some folder shows, which the joints chip after the history leaves out.
-    pub held: HashSet<u64>,
     /// Each folder's items: its features and the joints in it and its folders.
     count: HashMap<u64, usize>,
 }
@@ -79,9 +77,8 @@ impl Folders {
             count_items(span, &joints, &mut count);
         }
         // Only the folders shown hold their joints; a folder left out leaves them to the chip.
-        let held = count.keys().filter_map(|id| joints.get(id)).flatten().copied().collect();
         let names = doc.timeline_groups.iter().map(|g| (g.id, g.name.clone())).collect();
-        Self { spans, names, joints, held, count }
+        Self { spans, names, joints, count }
     }
 
     pub(crate) fn name(&self, id: u64) -> &str {

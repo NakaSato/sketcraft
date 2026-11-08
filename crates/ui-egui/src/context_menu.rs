@@ -76,10 +76,6 @@ pub enum Target {
     SelectionFilter,
     /// The mouse mappings (Preferences › Navigation), from the status bar (#7023).
     Navigation,
-    /// An assembly joint.
-    Joint {
-        id: u64,
-    },
     /// A command (toolbar button, panel drop-down row, S box row).
     ToolbarCommand {
         id: String,
@@ -264,8 +260,6 @@ pub struct MenuState {
     pub rename: Option<Rename>,
     /// A delete waiting for its confirmation (it takes or breaks other features).
     pub confirm: Option<crate::delete::Pending>,
-    /// A selected part has no free joint value for the explicit assembly Move command.
-    pub(crate) joint_move_warning: Option<crate::joint_handles::Blocked>,
     /// Identical copies Extract to File found, waiting to be linked too.
     pub link_copies: Option<crate::linked_source::Copies>,
     /// The Properties window: title and measurements.
@@ -298,7 +292,6 @@ pub enum RenameWhat {
     TimelineGroup(u64),
     Canvas(u64),
     View(String),
-    Joint(u64),
 }
 
 #[derive(Clone, Debug)]
@@ -395,9 +388,10 @@ pub fn radial_items(app: &SketApp) -> Vec<Item> {
         repeat,
         delete,
         cmd(app, "solid.press_pull", "Press Pull"),
-        cmd(app, "solid.hole", "Hole"),
+        // Without the CAD tools the ring keeps its eight places with SketchUp's Rotate and Offset.
+        if app.preferences.show_cad_tools { cmd(app, "solid.hole", "Hole") } else { cmd(app, "solid.rotate", "Rotate") },
         cmd(app, "sketch.create", "Create Sketch"),
-        cmd(app, "solid.extrude", "Extrude"),
+        if app.preferences.show_cad_tools { cmd(app, "solid.extrude", "Extrude") } else { cmd(app, "solid.offset_face", "Offset") },
         cmd(app, "edit.undo", "Undo").on(!app.session.undo.is_empty()),
         cmd(app, "solid.move", "Move/Copy"),
     ]
@@ -431,7 +425,6 @@ pub fn items(app: &SketApp, target: &Target) -> Vec<Item> {
         Target::NamedViews => vec![act("ui.newView", "New Named View", "perspective")],
         Target::ViewGizmo => crate::view_gizmo::menu_items(app),
         Target::Section => crate::browser::section_items(app),
-        Target::Joint { id } => joint_items(app, *id),
         Target::ToolbarCommand { id } => crate::toolbar_custom::command_items(app, id),
         Target::Toolbar => crate::toolbar_custom::toolbar_items(app),
         Target::HistoryControls => crate::timeline::transport_items(app),
@@ -554,6 +547,7 @@ pub fn items(app: &SketApp, target: &Target) -> Vec<Item> {
         v.push(Item::sep());
         v.push(act("ui.groupSelected", "Group Selected", "folder").with(p));
     }
+    drop_hidden(app, &mut v);
     each_item(&mut v, &mut |item: &mut Item| {
         if item.id != "ui.appearance" {
             return;
@@ -710,7 +704,7 @@ fn viewport_items(app: &SketApp) -> Vec<Item> {
         v.push(cmd(app, "solid.extrude", "Extrude"));
         v.push(cmd(app, "construct.plane.offset", "Offset Plane"));
         v.push(cmd(app, "solid.shell", "Shell"));
-        if crate::joint_handles::selected_occurrence(app).is_some() {
+        if crate::occurrence_move::selected_occurrence(app).is_some() {
             v.push(cmd(app, "occurrence.move", "Move"));
         }
         v.push(act("ui.editFeature", "Edit Feature", "edit").with(json!({ "feature": feature })).on(feature.is_some()));
@@ -936,32 +930,6 @@ fn origin_axis_items(app: &SketApp, name: &str) -> Vec<Item> {
     vec![act("ui.originPart", "Show/Hide", "eye").key("V").with(json!({ "keys": [name], "show": !visible }))]
 }
 
-/// An assembly joint: edit, drive, suppress, delete.
-fn joint_items(app: &SketApp, id: u64) -> Vec<Item> {
-    let Some(j) = app.session.doc.assembly.joints.iter().find(|j| j.id == id) else { return Vec::new() };
-    let rigid = j.kind == sketcraft_engine::doc::joints::JointKind::Rigid;
-    // Show/Hide acts on every joint picked in the browser (this one among them).
-    let mut joints = app.tree.picked_joints.clone();
-    if !joints.contains(&id) {
-        joints = vec![id];
-    }
-    let hidden = !joints.iter().any(|j| app.session.joint_visible(*j));
-    vec![
-        act("ui.editJoint", "Edit Joint", "joint").with(json!({ "joint": id })),
-        act("ui.editJointLimits", "Edit Joint Limits", "joint").with(json!({ "joint": id })).on(!rigid),
-        act("ui.driveJoint", "Drive Joint", "drive").with(json!({ "joint": id })).on(!rigid),
-        act("ui.animateJoint", "Animate Joint", "play").with(json!({ "joint": id })).on(!rigid && !j.suppressed),
-        act("ui.findJoint", "Find in Window", "fit").with(json!({ "joint": id })),
-        cmd(app, "joint.edit", if j.suppressed { "Unsuppress" } else { "Suppress" }).with(json!({ "joint": id, "suppressed": !j.suppressed })),
-        Item::sep(),
-        act("ui.delete", "Delete", "delete").key("Del").with(json!({ "joints": [id] })),
-        act("ui.rename", "Rename", "rename").with(json!({ "joint": id })),
-        Item::sep(),
-        // Hiding a joint hides only its glyph: it still constrains and moves the parts.
-        act("browser.visibility", "Show/Hide", "eye").key("V").with(json!({ "joints": joints, "visible": hidden })),
-    ]
-}
-
 fn occurrence_items(app: &SketApp, path: &[u64]) -> Vec<Item> {
     let Ok(placement) = app.session.occurrence_placement(path) else { return Vec::new() };
     let mut entries = component_items(app, placement.component);
@@ -1020,6 +988,37 @@ fn each_item(items: &mut [Item], f: &mut dyn FnMut(&mut Item)) {
         each_item(&mut item.children, f);
         f(item);
     }
+}
+
+/// Take out the commands not offered now (hidden CAD tools, `workspace::offered`), at every
+/// level, with the separators and empty flyouts they leave behind.
+fn drop_hidden(app: &SketApp, items: &mut Vec<Item>) {
+    let before = items.len();
+    items.retain_mut(|i| {
+        if sketcraft_engine::find_command(&i.id).is_some() && !crate::workspace::offered(app, &i.id) {
+            return false;
+        }
+        if i.children.is_empty() {
+            return true;
+        }
+        // A flyout whose every row was hidden goes too.
+        drop_hidden(app, &mut i.children);
+        !i.children.is_empty()
+    });
+    if items.len() == before {
+        return;
+    }
+    let mut tidy: Vec<Item> = Vec::with_capacity(items.len());
+    for item in items.drain(..) {
+        if item.is_sep() && tidy.last().is_none_or(Item::is_sep) {
+            continue;
+        }
+        tidy.push(item);
+    }
+    while tidy.last().is_some_and(Item::is_sep) {
+        tidy.pop();
+    }
+    *items = tidy;
 }
 
 /// "Turn Up Axis": a quarter turn about X of a component's occurrence for a file saved with the
@@ -1623,8 +1622,6 @@ pub fn run_item(app: &mut SketApp, item: &Item, at: Pos2) {
                 RenameWhat::Canvas(c)
             } else if let Some(v) = p.get("view").and_then(Value::as_str) {
                 RenameWhat::View(v.to_string())
-            } else if let Some(j) = id_of(&p, "joint") {
-                RenameWhat::Joint(j)
             } else {
                 return;
             };
@@ -1782,9 +1779,6 @@ pub fn run_item(app: &mut SketApp, item: &Item, at: Pos2) {
         }
         "ui.moveOccurrence" => {
             if let Some(o) = id_of(&p, "occurrence") {
-                if crate::joint_handles::begin(app, o) {
-                    return;
-                }
                 let mut movement = crate::browser::OccMove::new(o);
                 movement.had_pending = app.session.pending_moves.contains_key(&o);
                 movement.path = p.get("path").and_then(Value::as_array).map(|p| p.iter().filter_map(Value::as_u64).collect()).unwrap_or_default();
@@ -1833,25 +1827,6 @@ pub fn run_item(app: &mut SketApp, item: &Item, at: Pos2) {
                 && let Err(e) = crate::render_workspace::enter(app, workspace == "render")
             {
                 app.set_status(e, true);
-            }
-        }
-        "ui.findJoint" => {
-            if let Some(id) = id_of(&p, "joint") {
-                crate::dialogs_assembly::find_joint(app, id);
-            }
-        }
-        "ui.editJoint" | "ui.editJointLimits" | "ui.driveJoint" | "ui.animateJoint" => {
-            if let Some(id) = id_of(&p, "joint") {
-                let d = match item.id.as_str() {
-                    "ui.editJoint" => crate::dialogs_assembly::edit_joint(app, id),
-                    "ui.editJointLimits" => crate::dialogs_assembly::edit_joint_limits(app, id),
-                    "ui.animateJoint" => crate::dialogs_assembly::animate_joint(app, id),
-                    _ => crate::dialogs_assembly::drive_joint(app, id),
-                };
-                if let Some(d) = d {
-                    app.tool = None;
-                    app.dialog = Some(d);
-                }
             }
         }
         "ui.newView" => drop(crate::browser::save_view(app, None)),
@@ -2149,7 +2124,6 @@ pub fn start_rename(app: &mut SketApp, what: RenameWhat, at: Pos2) {
         RenameWhat::TimelineGroup(g) => doc.timeline_groups.iter().find(|group| group.id == *g).map(|group| group.name.clone()).unwrap_or_default(),
         RenameWhat::Canvas(c) => doc.canvases.iter().find(|x| x.id == *c).map(|x| x.name.clone()).unwrap_or_default(),
         RenameWhat::View(v) => v.clone(),
-        RenameWhat::Joint(j) => doc.assembly.joints.iter().find(|x| x.id == *j).map(|x| x.name.clone()).unwrap_or_default(),
     };
     app.menu.rename = Some(Rename { what, text, at, focused: false, inline: false });
 }
@@ -2173,7 +2147,6 @@ pub(crate) fn commit_rename(app: &mut SketApp, r: &Rename) -> Result<(), String>
         RenameWhat::TimelineGroup(g) => app.run("timeline.rename_group", json!({ "group": g, "name": name })).map(|_| ()),
         RenameWhat::Canvas(c) => app.run("canvas.edit", json!({ "canvas": c, "name": name })).map(|_| ()),
         RenameWhat::View(v) => app.run("view.rename", json!({ "view": v, "name": name })).map(|_| ()),
-        RenameWhat::Joint(j) => app.run("joint.edit", json!({ "joint": j, "name": name })).map(|_| ()),
     };
     // The command's own status line explains a refusal; the caller decides whether to keep the
     // editor open on it.
@@ -2341,7 +2314,6 @@ pub fn check_target(app: &SketApp, target: &Target) -> Result<(), String> {
         Target::Folder { component: id, folder, scope } => {
             component(*id) && ["bodies", "sketches", "construction"].contains(&folder.as_str()) && crate::browser::scope_shows(app, scope, *id)
         }
-        Target::Joint { id } => doc.assembly.joints.iter().any(|j| j.id == *id),
         Target::ToolbarCommand { id } => sketcraft_engine::find_command(id).is_some(),
         Target::NamedView { name } => {
             doc.named_views.iter().any(|v| v.name == *name) || crate::browser::STANDARD_VIEWS.iter().any(|(label, _)| label == name)

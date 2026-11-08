@@ -301,45 +301,6 @@ mod tests {
     }
 
     #[test]
-    fn opening_a_design_that_differs_only_in_its_properties_refreshes_it() {
-        // Two revisions of one assembly, B held on A by a rigid joint. The open session's B was
-        // moved off the joint and never solved since; the file is the same design with another
-        // author. Opening it is no property edit: the new session's joints are solved.
-        let dir = scratch("revision");
-        let mut s = Session::default();
-        for (name, x) in [("A", 0), ("B", 20)] {
-            run(&mut s, "component.activate", json!({"component": "root"}));
-            run(&mut s, "component.create", json!({"name": name}));
-            run(&mut s, "solid.box", json!({"length": 10, "width": 10, "height": 10, "corner": [x, 0, 0]}));
-        }
-        let placement =
-            |s: &Session, name: &str| s.doc.find_component(name).and_then(|c| s.doc.occurrence_of(c)).map(|o| (o.id, o.transform)).unwrap();
-        let a = placement(&s, "A").0;
-        run(&mut s, "occurrence.ground", json!({"occurrence": a, "grounded": true}));
-        run(&mut s, "joint.create", json!({"type": "rigid", "a": {"face": [5, 5, 10]}, "b": {"face": [25, 5, 0]}}));
-        let (b, solved) = placement(&s, "B");
-        let mut unsolved = (*s.doc).clone();
-        unsolved.name = "Bracket".into();
-        if let Some(o) = unsolved.occurrences.iter_mut().find(|o| o.id == b) {
-            o.transform[3][0] += 3.0;
-        }
-        let mut s = Session::new(unsolved.clone());
-        let mut revision_c = unsolved;
-        revision_c.metadata.set(Owner::Design, "author", json!("Jane")).unwrap();
-        let path = dir.join("bracket-rev-c.json");
-        std::fs::write(&path, revision_c.to_json()).unwrap();
-        let (read, _) = sketcraft_io::read_design_file(path.to_str().unwrap(), None::<fn(sketcraft_io::DesignPreview)>).unwrap();
-        assert!(read.differs_only_in_part_properties(&s.doc), "the two revisions differ only in their properties");
-
-        run(&mut s, "doc.open", json!({"path": path}));
-        assert_eq!(s.doc.metadata.author(), Some("Jane"));
-        let opened = s.doc.occurrences.iter().find(|o| o.id == b).map(|o| o.transform).unwrap();
-        let off = opened.iter().flatten().zip(solved.iter().flatten()).map(|(p, q)| (p - q).abs()).fold(0.0, f64::max);
-        assert!(off < 1e-6, "the opened design's joint is solved: B is {off} mm off it");
-        let _ = std::fs::remove_dir_all(&dir);
-    }
-
-    #[test]
     fn every_key_the_design_took_before_is_still_taken() {
         let mut s = Session::default();
         let keys = ["project", "part_number", "revision", "author", "organization", "description", "license"];
